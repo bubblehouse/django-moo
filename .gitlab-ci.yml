@@ -1,0 +1,36 @@
+---
+stages:
+  - release
+
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+
+release:
+  stage: release
+  tags:
+    - shacklyn
+  image: node:19-bullseye
+  variables:
+    GIT_COMMITTER_EMAIL: phil@bubblehouse.org
+    GIT_COMMITTER_NAME: Phil Christensen
+    GIT_AUTHOR_EMAIL: phil@bubblehouse.org
+    GIT_AUTHOR_NAME: Phil Christensen
+    GIT_CREDENTIALS: "philchristensen:${GITLAB_TOKEN}"
+    DOCKER_REGISTRY_USER: philchristensen
+    DOCKER_REGISTRY_PASSWORD: "${GITLAB_TOKEN}"
+    DOCKER_BUILDKIT: 1
+  script:
+    - apt update && apt install -y software-properties-common lsb-release
+    - curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
+    - add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
+    - apt update && apt install -y docker-ce docker-buildx-plugin python3-pip
+    - npm install
+    - docker buildx install
+    - docker buildx create --bootstrap --use --name=$CI_PROJECT_NAME --driver=kubernetes '--driver-opt="nodeselector=kubernetes.io/arch=amd64"'
+    - docker buildx create --bootstrap --append --name=$CI_PROJECT_NAME --driver=kubernetes '--driver-opt="nodeselector=kubernetes.io/arch=arm64","tolerations=key=kubernetes.io/arch,value=arm64,operator=Equal,effect=NoSchedule"'
+    - npx semantic-release
+  cache:
+    paths:
+      - .venv
+      - .cache/pip
+      - node_modules/
