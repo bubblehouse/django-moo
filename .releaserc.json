@@ -128,7 +128,6 @@
       {
         "assets": [
           "Dockerfile",
-          "setup.py",
           "termiverse/__init__.py",
           "helm/termiverse/Chart.yaml",
           "package.json",
