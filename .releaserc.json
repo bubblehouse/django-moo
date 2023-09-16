@@ -141,7 +141,8 @@
       {
         "gitlabUrl": "https://gitlab.com",
         "assets": [
-          "dist/termiverse-*.gz"
+          "dist/termiverse-*.gz",
+          "dist/termiverse-*.whl"
         ]
       }
     ]

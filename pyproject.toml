@@ -6,7 +6,6 @@ authors = ["Phil Christensen <phil@bubblehouse.org>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.10"
 django = "^4.2.5"
 psycopg2 = "^2.9.7"
 uwsgi = "^2.0.22"
