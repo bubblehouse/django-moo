@@ -6,7 +6,7 @@
 .tm_properties
 docker-compose.*
 .reload
-dataset/*.sql
+*.sql
 static/*
 .local/*
 .git/*
