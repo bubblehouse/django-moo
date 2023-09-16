@@ -1,0 +1,14 @@
+*.gz
+*.egg
+*.pyc
+*.sqlite
+.DS_Store
+.tm_properties
+docker-compose.*
+.reload
+dataset/*.sql
+static/*
+.local/*
+.git/*
+.venv/*
+node_modules/*

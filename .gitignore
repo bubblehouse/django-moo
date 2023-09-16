@@ -1,0 +1,15 @@
+*.gz
+*.egg
+*.pyc
+*.sqlite
+*.key
+*.pem
+*.sql
+.DS_Store
+.tm_properties
+docker-compose.override.yml
+.reload
+/static
+/.local
+.dccache
+node_modules
