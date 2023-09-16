@@ -24,6 +24,7 @@ release:
     - curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
     - add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
     - apt update && apt install -y docker-ce docker-buildx-plugin python3-pip
+    - pip install poetry
     - npm install
     - docker buildx install
     - docker buildx create --bootstrap --use --name=$CI_PROJECT_NAME --driver=kubernetes '--driver-opt="nodeselector=kubernetes.io/arch=amd64"'
