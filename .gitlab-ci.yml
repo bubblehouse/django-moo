@@ -2,9 +2,6 @@
 stages:
   - release
 
-variables:
-  GIT_SUBMODULE_STRATEGY: recursive
-
 release:
   stage: release
   tags:
