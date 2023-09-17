@@ -5,17 +5,28 @@ repos:
     hooks:
       - id: dockerfilelint
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.3.0
+    rev: v4.4.0
     hooks:
-      - id: trailing-whitespace
-      - id: fix-encoding-pragma
       - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-case-conflict
       - id: check-merge-conflict
-  - repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.1.7
+      - id: check-added-large-files
+      - id: mixed-line-ending
+  - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
+    rev: 0.2.2
     hooks:
-      - id: forbid-crlf
-      - id: forbid-tabs
+      - id: yamlfmt
+        args: [--mapping, '2', --sequence, '4', --offset, '2']
+        exclude: ^chart/templates/
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.30.0
+    hooks:
+      - id: yamllint
+  - repo: https://github.com/norwoodj/helm-docs
+    rev: v1.11.0
+    hooks:
+      - id: helm-docs
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
     rev: v2.2.0
     hooks:
