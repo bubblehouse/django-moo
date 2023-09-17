@@ -2,6 +2,12 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+termiverse:
+  aws:
+    region: us-east-2
+  django:
+    settings: termiverse.settings.dev
+
 replicaCount: 1
 
 image:
@@ -26,25 +32,26 @@ serviceAccount:
 podAnnotations: {}
 
 podSecurityContext: {}
-  # fsGroup: 2000
+  fsGroup: 33
 
-securityContext: {}
+securityContext:
   # capabilities:
   #   drop:
   #   - ALL
   # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+  runAsNonRoot: true
+  runAsUser: 33
 
 service:
   type: ClusterIP
-  port: 80
+  port: 8443
 
 ingress:
   enabled: false
   className: ""
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    nginx.org/redirect-to-https: "true"
     # kubernetes.io/tls-acme: "true"
   hosts:
     - host: chart-example.local
