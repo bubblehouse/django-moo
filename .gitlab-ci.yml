@@ -9,7 +9,7 @@ release:
   stage: release
   tags:
     - shacklyn
-  image: node:19-bullseye
+  image: registry.gitlab.com/bubblehouse/runner-base:1.0.1
   variables:
     GIT_COMMITTER_EMAIL: phil@bubblehouse.org
     GIT_COMMITTER_NAME: Phil Christensen
@@ -20,10 +20,6 @@ release:
     DOCKER_REGISTRY_PASSWORD: "${GITLAB_TOKEN}"
     DOCKER_BUILDKIT: 1
   script:
-    - apt update && apt install -y software-properties-common lsb-release
-    - curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
-    - add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable"
-    - apt update && apt install -y docker-ce docker-buildx-plugin python3-pip
     - pip install poetry
     - npm install
     - docker buildx install
