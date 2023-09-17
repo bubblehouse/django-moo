@@ -1,3 +1,11 @@
+## [0.2.2](https://gitlab.com/bubblehouse/termiverse/compare/v0.2.1...v0.2.2) (2023-09-17)
+
+
+### Bug Fixes
+
+* chart typo ([53872e6](https://gitlab.com/bubblehouse/termiverse/commit/53872e673d68dcff7b57fd5fd2189529805ad559))
+* force release ([f750eb3](https://gitlab.com/bubblehouse/termiverse/commit/f750eb3aaef3e1311af394676df3a908bc155c8b))
+
 ## [0.2.1](https://gitlab.com/bubblehouse/termiverse/compare/v0.2.0...v0.2.1) (2023-09-17)
 
 
