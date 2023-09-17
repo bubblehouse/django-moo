@@ -1,3 +1,15 @@
+## [0.2.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.1.4...v0.2.0) (2023-09-17)
+
+
+### Features
+
+* added Rich library ([72787b5](https://gitlab.com/bubblehouse/termiverse/commit/72787b569d4d40b6655537af459e7dfb9d41f115))
+
+
+### Bug Fixes
+
+* disabled DBs and cache temporarily in dev, moved around environment names ([29462b6](https://gitlab.com/bubblehouse/termiverse/commit/29462b6778b1e17be8e8355ed50837c5d5d0ca93))
+
 ## [0.1.4](https://gitlab.com/bubblehouse/termiverse/compare/v0.1.3...v0.1.4) (2023-09-17)
 
 
