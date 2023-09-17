@@ -33,18 +33,33 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+          - name: DJANGO_SETTINGS_MODULE
+            value: {{ .Values.termiverse.django.settings }}
+          - name: AWS_DEFAULT_REGION
+            value: {{ .Values.termiverse.aws.region }}
+          - name: AWS_STS_REGIONAL_ENDPOINTS
+            value: regional
           ports:
-            - name: http
+            - name: https
               containerPort: {{ .Values.service.port }}
               protocol: TCP
           livenessProbe:
             httpGet:
               path: /
-              port: http
+              port: https
+              scheme: HTTPS
+              httpHeaders:
+              - name: Host
+                value: probe.cluster.local
           readinessProbe:
             httpGet:
               path: /
-              port: http
+              port: https
+              scheme: HTTPS
+              httpHeaders:
+              - name: Host
+                value: probe.cluster.local
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
