@@ -1,3 +1,10 @@
+## [0.2.3](https://gitlab.com/bubblehouse/termiverse/compare/v0.2.2...v0.2.3) (2023-09-17)
+
+
+### Bug Fixes
+
+* ingress port correction ([6af8a74](https://gitlab.com/bubblehouse/termiverse/commit/6af8a743b05b6febdce8ed5501c976839e93ccdc))
+
 ## [0.2.2](https://gitlab.com/bubblehouse/termiverse/compare/v0.2.1...v0.2.2) (2023-09-17)
 
 
