@@ -1,3 +1,11 @@
+## [0.1.4](https://gitlab.com/bubblehouse/termiverse/compare/v0.1.3...v0.1.4) (2023-09-17)
+
+
+### Bug Fixes
+
+* chart semantic-release version missing files ([bbccce5](https://gitlab.com/bubblehouse/termiverse/commit/bbccce510cbb11a825b95253ee3ee62220732bb9))
+* chart semantic-release version missing files ([579ca1a](https://gitlab.com/bubblehouse/termiverse/commit/579ca1a305716b0a97b88b6712e03514cf8e1b1c))
+
 ## [0.1.3](https://gitlab.com/bubblehouse/termiverse/compare/v0.1.2...v0.1.3) (2023-09-17)
 
 
