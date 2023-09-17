@@ -1,3 +1,10 @@
+## [0.1.2](https://gitlab.com/bubblehouse/termiverse/compare/v0.1.1...v0.1.2) (2023-09-17)
+
+
+### Bug Fixes
+
+* update chart image ([9bf0976](https://gitlab.com/bubblehouse/termiverse/commit/9bf0976ae25f28e194ccc5bb713733e5b1772551))
+
 ## [0.1.1](https://gitlab.com/bubblehouse/termiverse/compare/v0.1.0...v0.1.1) (2023-09-17)
 
 
