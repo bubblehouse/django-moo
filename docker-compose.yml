@@ -22,7 +22,7 @@ services:
      - postgres
      - redis
     environment:
-      DJANGO_SETTINGS_MODULE: termiverse.settings.dev
+      DJANGO_SETTINGS_MODULE: termiverse.settings.docker
   postgres:
     image: postgres
     ports:
