@@ -74,7 +74,7 @@
             "files": [
               "chart/termiverse/Chart.yaml"
             ],
-            "from": "^appVersion: \".*\"$",
+            "from": "^appVersion: \".*?\"$",
             "to": "appVersion: \"${nextRelease.version}\"",
             "results": [
               {
@@ -90,7 +90,7 @@
             "files": [
               "chart/termiverse/Chart.yaml"
             ],
-            "from": "^version: .*$",
+            "from": "^version: .*?$",
             "to": "version: ${nextRelease.version}",
             "results": [
               {
