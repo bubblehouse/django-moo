@@ -1,0 +1,13 @@
+version: '3.7'
+services:
+  nginx:
+    # # nginx gets noisy
+    # logging:
+    #   driver: none
+    volumes:
+      - .:/usr/src/app
+  webapp:
+    environment:
+      DJANGO_SETTINGS_MODULE: termiverse.settings.docker
+    volumes:
+      - .:/usr/src/app
