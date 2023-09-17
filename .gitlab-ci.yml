@@ -6,7 +6,7 @@ release:
   stage: release
   tags:
     - shacklyn
-  image: registry.gitlab.com/bubblehouse/runner-base:1.0.1
+  image: registry.gitlab.com/bubblehouse/runner-base:1.1.0
   variables:
     GIT_COMMITTER_EMAIL: phil@bubblehouse.org
     GIT_COMMITTER_NAME: Phil Christensen
@@ -17,7 +17,6 @@ release:
     DOCKER_REGISTRY_PASSWORD: "${GITLAB_TOKEN}"
     DOCKER_BUILDKIT: 1
   script:
-    - pip install poetry
     - npm install
     - docker buildx install
     - docker buildx create --bootstrap --use --name=$CI_PROJECT_NAME --driver=kubernetes '--driver-opt="nodeselector=kubernetes.io/arch=amd64"'
