@@ -6,7 +6,7 @@
     "@alexbabel/semantic-release-docker": "",
     "@commitlint/cli": "",
     "@commitlint/config-conventional": "",
-    "@google/semantic-release-replace-plugin": "",
+    "semantic-release-replace-plugin": "",
     "@semantic-release/changelog": "",
     "@semantic-release/exec": "",
     "@semantic-release/git": "",
