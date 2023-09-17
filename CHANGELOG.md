@@ -1,3 +1,10 @@
+## [0.2.1](https://gitlab.com/bubblehouse/termiverse/compare/v0.2.0...v0.2.1) (2023-09-17)
+
+
+### Bug Fixes
+
+* more setup and Django settings refactoring ([47a0bac](https://gitlab.com/bubblehouse/termiverse/commit/47a0bacb129ca7047de78b9e748fd09de9ef0420))
+
 ## [0.2.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.1.4...v0.2.0) (2023-09-17)
 
 
