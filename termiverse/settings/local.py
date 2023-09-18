@@ -8,7 +8,7 @@ SECRET_KEY = "django-insecure-06xo%2f39ohlfrgu&)%1lsrlx6jqy)s%#_-$rc5l_z1+p6w(=r
 DEBUG = True
 
 ALLOWED_HOSTS = ['localhost']
-CSRF_TRUSTED_ORIGINS = ['localhost']
+CSRF_TRUSTED_ORIGINS = ['https://localhost']
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases

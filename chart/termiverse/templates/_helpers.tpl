@@ -50,6 +50,11 @@ app.kubernetes.io/name: {{ include "termiverse.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
+{{- define "termiverse.shellSelectorLabels" -}}
+app.kubernetes.io/name: {{ include "termiverse.name" . }}-shell
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
 {{/*
 Create the name of the service account to use
 */}}
