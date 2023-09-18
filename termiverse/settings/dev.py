@@ -8,7 +8,7 @@ SECRET_KEY = "django-insecure-06xo%2f39ohlfrgu&)%1lsrlx6jqy)s%#_-$rc5l_z1+p6w(=r
 DEBUG = True
 
 ALLOWED_HOSTS = ['termiverse.dev.shacklyn.net', 'probe.cluster.local']
-CSRF_TRUSTED_ORIGINS = ['termiverse.dev.shacklyn.net', 'probe.cluster.local']
+CSRF_TRUSTED_ORIGINS = ['https://termiverse.dev.shacklyn.net', 'https://probe.cluster.local']
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
