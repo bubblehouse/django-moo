@@ -1,3 +1,10 @@
+## [0.3.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.2.3...v0.3.0) (2023-09-18)
+
+
+### Features
+
+* implement a trivial SSH server as a Django Management command ([9291f50](https://gitlab.com/bubblehouse/termiverse/commit/9291f50ff55ad31c227b974ef42d94152bf278da))
+
 ## [0.2.3](https://gitlab.com/bubblehouse/termiverse/compare/v0.2.2...v0.2.3) (2023-09-17)
 
 
