@@ -8,6 +8,6 @@ services:
       - .:/usr/src/app
   webapp:
     environment:
-      DJANGO_SETTINGS_MODULE: termiverse.settings.docker
+      DJANGO_SETTINGS_MODULE: termiverse.settings.local
     volumes:
       - .:/usr/src/app
