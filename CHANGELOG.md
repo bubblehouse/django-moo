@@ -1,3 +1,14 @@
+## [0.3.3](https://gitlab.com/bubblehouse/termiverse/compare/v0.3.2...v0.3.3) (2023-09-19)
+
+
+### Bug Fixes
+
+* force release ([c977ec7](https://gitlab.com/bubblehouse/termiverse/commit/c977ec75a8f3aaaa927918844d97f02aebaac0cd))
+* generate a key inside the Dockfile ([9bcf9e8](https://gitlab.com/bubblehouse/termiverse/commit/9bcf9e8646224cce521a0a5ff82974931a4b8e8a))
+* generate a key inside the Dockfile ([a46d0cc](https://gitlab.com/bubblehouse/termiverse/commit/a46d0cc8fedb6b631eee8f58f5ea9edd2f686c29))
+* install ssh ([e6e3f3f](https://gitlab.com/bubblehouse/termiverse/commit/e6e3f3f2951c630672c05bc2705ef684694d7021))
+* mixed up service ports ([0376e5b](https://gitlab.com/bubblehouse/termiverse/commit/0376e5b424edb20e7b35a7085b0c6c58a3f48f77))
+
 ## [0.3.2](https://gitlab.com/bubblehouse/termiverse/compare/v0.3.1...v0.3.2) (2023-09-19)
 
 
