@@ -1,3 +1,10 @@
+## [0.3.6](https://gitlab.com/bubblehouse/termiverse/compare/v0.3.5...v0.3.6) (2023-09-19)
+
+
+### Bug Fixes
+
+* remove broken redirect ([fd38705](https://gitlab.com/bubblehouse/termiverse/commit/fd3870595ee758c17955ac9622c5794ec651a074))
+
 ## [0.3.5](https://gitlab.com/bubblehouse/termiverse/compare/v0.3.4...v0.3.5) (2023-09-19)
 
 
