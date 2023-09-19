@@ -33,5 +33,7 @@ RUN mkdir -p /usr/src/app/static
 RUN chgrp www-data /usr/src/app/static/
 RUN chmod ug+rwx /usr/src/app/static/
 
+RUN ssh-keygen -q -N "" -f /usr/src/app/.ssh/id_rsa
+
 # Custom entrypoint for improved ad-hoc command support
 ENTRYPOINT ["/entrypoint.sh"]
