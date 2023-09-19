@@ -46,6 +46,10 @@ service:
   type: ClusterIP
   port: 8443
 
+sshService:
+  type: ClusterIP
+  port: 8022
+
 ingress:
   enabled: false
   className: ""

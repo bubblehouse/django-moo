@@ -43,14 +43,14 @@ spec:
             value: regional
           ports:
             - name: ssh
-              containerPort: {{ .Values.service.port }}
+              containerPort: {{ .Values.sshService.port }}
               protocol: TCP
           livenessProbe:
             tcpSocket:
-              port: 8022
+              port: {{ .Values.sshService.port }}
           readinessProbe:
             tcpSocket:
-              port: 8022
+              port: {{ .Values.sshService.port }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
