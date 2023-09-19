@@ -1,6 +1,6 @@
 # termiverse
 
-![Version: 0.2.2](https://img.shields.io/badge/Version-0.2.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.2.2](https://img.shields.io/badge/AppVersion-0.2.2-informational?style=flat-square)
+![Version: 0.2.3](https://img.shields.io/badge/Version-0.2.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.2.3](https://img.shields.io/badge/AppVersion-0.2.3-informational?style=flat-square)
 
 A Helm chart for Kubernetes
 
@@ -39,6 +39,8 @@ A Helm chart for Kubernetes
 | serviceAccount.annotations | object | `{}` |  |
 | serviceAccount.create | bool | `true` |  |
 | serviceAccount.name | string | `""` |  |
+| sshService.port | int | `8022` |  |
+| sshService.type | string | `"ClusterIP"` |  |
 | termiverse.aws.region | string | `"us-east-2"` |  |
 | termiverse.django.settings | string | `"termiverse.settings.dev"` |  |
 | tolerations | list | `[]` |  |
