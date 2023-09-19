@@ -1,3 +1,10 @@
+## [0.3.2](https://gitlab.com/bubblehouse/termiverse/compare/v0.3.1...v0.3.2) (2023-09-19)
+
+
+### Bug Fixes
+
+* chart typo ([00bcb1a](https://gitlab.com/bubblehouse/termiverse/commit/00bcb1a218c6353f31a36850fb41c9f29a5cf015))
+
 ## [0.3.1](https://gitlab.com/bubblehouse/termiverse/compare/v0.3.0...v0.3.1) (2023-09-19)
 
 
