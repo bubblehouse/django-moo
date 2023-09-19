@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "termiverse.fullname" . }}-shell
+  name: {{ include "termiverse.fullname" . }}
   labels:
     {{- include "termiverse.labels" . | nindent 4 }}
 spec:
