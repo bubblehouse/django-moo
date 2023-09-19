@@ -1,3 +1,10 @@
+## [0.3.1](https://gitlab.com/bubblehouse/termiverse/compare/v0.3.0...v0.3.1) (2023-09-19)
+
+
+### Bug Fixes
+
+* port updates ([4041617](https://gitlab.com/bubblehouse/termiverse/commit/4041617ea99f9e287ab95d429b9d337cdc3e9164))
+
 ## [0.3.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.2.3...v0.3.0) (2023-09-18)
 
 
