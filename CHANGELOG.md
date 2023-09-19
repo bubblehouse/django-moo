@@ -1,3 +1,10 @@
+## [0.3.4](https://gitlab.com/bubblehouse/termiverse/compare/v0.3.3...v0.3.4) (2023-09-19)
+
+
+### Bug Fixes
+
+* change ownership of server key ([cf23255](https://gitlab.com/bubblehouse/termiverse/commit/cf232550c426c054327a8cc4c55bb0f8a36b3c08))
+
 ## [0.3.3](https://gitlab.com/bubblehouse/termiverse/compare/v0.3.2...v0.3.3) (2023-09-19)
 
 
