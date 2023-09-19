@@ -1,3 +1,10 @@
+## [0.3.5](https://gitlab.com/bubblehouse/termiverse/compare/v0.3.4...v0.3.5) (2023-09-19)
+
+
+### Bug Fixes
+
+* disable liveness/readiness for ssh server for now ([221434b](https://gitlab.com/bubblehouse/termiverse/commit/221434bb18b30432707feabbdee4b8ede2de6fb6))
+
 ## [0.3.4](https://gitlab.com/bubblehouse/termiverse/compare/v0.3.3...v0.3.4) (2023-09-19)
 
 
