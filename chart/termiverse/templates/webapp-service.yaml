@@ -8,8 +8,8 @@ spec:
   type: {{ .Values.service.type }}
   ports:
     - port: {{ .Values.service.port }}
-      targetPort: 22
+      targetPort: https
       protocol: TCP
-      name: ssh
+      name: https
   selector:
     {{- include "termiverse.selectorLabels" . | nindent 4 }}
