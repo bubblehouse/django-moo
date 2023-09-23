@@ -1,3 +1,10 @@
+## [0.3.7](https://gitlab.com/bubblehouse/termiverse/compare/v0.3.6...v0.3.7) (2023-09-23)
+
+
+### Bug Fixes
+
+* installed uwsgi-python3 and net-tools ([7ded073](https://gitlab.com/bubblehouse/termiverse/commit/7ded073f9acb9e965bb98c7eeb9e6edf2c94d2ef))
+
 ## [0.3.6](https://gitlab.com/bubblehouse/termiverse/compare/v0.3.5...v0.3.6) (2023-09-19)
 
 
