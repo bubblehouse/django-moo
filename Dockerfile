@@ -7,8 +7,7 @@ LABEL Version="0.3.7"
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
        apt-transport-https curl unzip gnupg2 gcc g++ libc-dev libssl-dev libpq-dev \
-       sqlite3 ssl-cert git python3-pip ca-certificates ssh python3-psycopg2 uwsgi \
-       uwsgi-plugin-python3 net-tools \
+       sqlite3 ssl-cert git python3-pip ca-certificates ssh net-tools \
     && rm -rf /var/lib/apt/lists/*
 
 RUN chgrp www-data /etc/ssl/private/
