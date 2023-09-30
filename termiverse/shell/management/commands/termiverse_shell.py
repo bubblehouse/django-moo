@@ -11,5 +11,6 @@ class Command(BaseCommand):
     help = 'Run the termiverse SSH server.'
 
     def handle(self, *args, **options):
+        log.info("Starting shell server...")
         server = SshServer('/etc/ssh/termiverse_private_key')
-        server.start()
+        server.start(address='0.0.0.0')
