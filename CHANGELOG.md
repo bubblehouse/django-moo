@@ -1,3 +1,17 @@
+## [0.4.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.3.7...v0.4.0) (2023-09-30)
+
+
+### Features
+
+* add shell to compose file ([7704588](https://gitlab.com/bubblehouse/termiverse/commit/77045880128cc934bd912e6d5b8c7e0e1d6fc62d))
+
+
+### Bug Fixes
+
+* configure logging ([942743b](https://gitlab.com/bubblehouse/termiverse/commit/942743b6da1346e0de481624b8c9e69f58584245))
+* dont try to install native python modules ([48a7a9c](https://gitlab.com/bubblehouse/termiverse/commit/48a7a9c4b9301d28bad97b6778ccc0d4823aaabb))
+* use correct listening address ([1cbed76](https://gitlab.com/bubblehouse/termiverse/commit/1cbed76ac2e888ac29f674052facf1a686589642))
+
 ## [0.3.7](https://gitlab.com/bubblehouse/termiverse/compare/v0.3.6...v0.3.7) (2023-09-23)
 
 
