@@ -1,3 +1,10 @@
+## [0.4.2](https://gitlab.com/bubblehouse/termiverse/compare/v0.4.1...v0.4.2) (2023-10-10)
+
+
+### Bug Fixes
+
+* use port name ([26b7379](https://gitlab.com/bubblehouse/termiverse/commit/26b73791b1a9c2fe4aabf240423eb5688c113a0e))
+
 ## [0.4.1](https://gitlab.com/bubblehouse/termiverse/compare/v0.4.0...v0.4.1) (2023-10-10)
 
 
