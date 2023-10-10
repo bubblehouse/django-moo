@@ -1,3 +1,10 @@
+## [0.4.3](https://gitlab.com/bubblehouse/termiverse/compare/v0.4.2...v0.4.3) (2023-10-10)
+
+
+### Bug Fixes
+
+* helm chart selector labels for shell service ([02beba3](https://gitlab.com/bubblehouse/termiverse/commit/02beba38f8e71f797884d56eb09c8bf448622656))
+
 ## [0.4.2](https://gitlab.com/bubblehouse/termiverse/compare/v0.4.1...v0.4.2) (2023-10-10)
 
 
