@@ -1,3 +1,10 @@
+## [0.4.1](https://gitlab.com/bubblehouse/termiverse/compare/v0.4.0...v0.4.1) (2023-10-10)
+
+
+### Bug Fixes
+
+* port for shell service ([4d0df41](https://gitlab.com/bubblehouse/termiverse/commit/4d0df4146e895a9ebf5c343861766c01dd8a1a34))
+
 ## [0.4.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.3.7...v0.4.0) (2023-09-30)
 
 

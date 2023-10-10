@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "termiverse"
-version = "0.4.0"
+version = "0.4.1"
 description = ""
 authors = ["Phil Christensen <phil@bubblehouse.org>"]
 readme = "README.md"
