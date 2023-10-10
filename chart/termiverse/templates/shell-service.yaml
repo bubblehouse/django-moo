@@ -5,9 +5,9 @@ metadata:
   labels:
     {{- include "termiverse.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.service.type }}
+  type: {{ .Values.sshService.type }}
   ports:
-    - port: {{ .Values.service.port }}
+    - port: {{ .Values.sshService.port }}
       targetPort: 22
       protocol: TCP
       name: ssh
