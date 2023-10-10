@@ -3,14 +3,14 @@ kind: Deployment
 metadata:
   name: {{ include "termiverse.fullname" . }}-shell
   labels:
-    {{- include "termiverse.labels" . | nindent 4 }}
+    {{- include "termiverse.shellLabels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "termiverse.selectorLabels" . | nindent 6 }}
+      {{- include "termiverse.shellSelectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -18,7 +18,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "termiverse.selectorLabels" . | nindent 8 }}
+        {{- include "termiverse.shellSelectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
