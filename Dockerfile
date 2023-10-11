@@ -22,7 +22,7 @@ ADD pyproject.toml /usr/src/app/pyproject.toml
 WORKDIR /usr/src/app
 RUN pip install --no-cache-dir -q -U poetry
 RUN poetry export -o requirements.txt
-RUN pip install -r requirements.txt
+RUN pip install -q -r requirements.txt
 
 ADD . /usr/src/app
 RUN chgrp www-data /usr/src/app
