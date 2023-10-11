@@ -4,7 +4,7 @@ import asyncio
 
 from django.core.management.base import BaseCommand
 
-from ...interface.server import server
+from ...server import server
 
 log = logging.getLogger(__name__)
 
