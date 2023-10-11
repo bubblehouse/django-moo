@@ -11,3 +11,8 @@ services:
       DJANGO_SETTINGS_MODULE: termiverse.settings.local
     volumes:
       - .:/usr/src/app
+  shell:
+    environment:
+      DJANGO_SETTINGS_MODULE: termiverse.settings.local
+    volumes:
+      - .:/usr/src/app
