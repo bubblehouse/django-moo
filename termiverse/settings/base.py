@@ -184,6 +184,10 @@ LOGGING = {
         'termiverse': {
             'handlers': ['console'],
             'level': 'DEBUG',
+        },
+        'asyncssh': {
+            'handlers': ['console'],
+            'level': 'INFO',
         }
     }
 }
