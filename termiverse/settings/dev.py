@@ -13,15 +13,15 @@ CSRF_TRUSTED_ORIGINS = ['https://termiverse.dev.shacklyn.net', 'https://probe.cl
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         "ENGINE": "django.db.backends.postgresql_psycopg2",
-#         "NAME": "termiverse",
-#         "HOST": "postgres",
-#         "USER": "termiverse",
-#         "PASSWORD": "termiverse"
-#     }
-# }
+DATABASES = {
+    'default': {
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "NAME": "termiverse",
+        "HOST": "termiverse-db.dev.shacklyn.net",
+        "USER": "termiverse",
+        "PASSWORD": "termiverse"
+    }
+}
 
 # CACHES = {
 #     'default': {
