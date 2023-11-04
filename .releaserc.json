@@ -43,7 +43,7 @@
               "pyproject.toml"
             ],
             "from": "^version = \".*\"",
-            "to": "^version = \"${nextRelease.version}\"",
+            "to": "version = \"${nextRelease.version}\"",
             "results": [
               {
                 "file": "pyproject.toml",
