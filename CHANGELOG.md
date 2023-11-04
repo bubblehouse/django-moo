@@ -1,3 +1,19 @@
+## [0.5.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.4.3...v0.5.0) (2023-11-04)
+
+
+### Features
+
+* fully interactive SSH prompt using `python-prompt-toolkit` ([d9e567d](https://gitlab.com/bubblehouse/termiverse/commit/d9e567d3674c93ad210c2fc6c1f412f4c07f6a7f))
+* setup postgres settings for dev and local ([7361ccf](https://gitlab.com/bubblehouse/termiverse/commit/7361ccfff781b98f9c4c51e364217bd91e2e164f))
+
+
+### Bug Fixes
+
+* force release ([014d462](https://gitlab.com/bubblehouse/termiverse/commit/014d4620de1cf6eea0aebcfde2e65642a5401464))
+* force release ([1e8641c](https://gitlab.com/bubblehouse/termiverse/commit/1e8641c39e250b3f9d7f6d35d1b0fcf5211559af))
+* force release ([f3b4a8f](https://gitlab.com/bubblehouse/termiverse/commit/f3b4a8fb7b061802115480c48ed9b7491d50449f))
+* force release ([6d296a1](https://gitlab.com/bubblehouse/termiverse/commit/6d296a1ed3a53ef78776ec4bb169188aa648e285))
+
 ## [0.4.3](https://gitlab.com/bubblehouse/termiverse/compare/v0.4.2...v0.4.3) (2023-10-10)
 
 
