@@ -1,3 +1,10 @@
+## [0.6.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.5.0...v0.6.0) (2023-11-14)
+
+
+### Features
+
+* created core app with model imported from antioch ([1cd61be](https://gitlab.com/bubblehouse/termiverse/commit/1cd61be9ef33e52c77d1088ff75403aa3d9c3d87))
+
 ## [0.5.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.4.3...v0.5.0) (2023-11-04)
 
 
