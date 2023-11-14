@@ -23,6 +23,8 @@ DATABASES = {
     }
 }
 
+STATIC_ROOT = "static"
+
 # CACHES = {
 #     'default': {
 #         'BACKEND': 'redis_cache.RedisCache',
