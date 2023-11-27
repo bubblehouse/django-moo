@@ -25,6 +25,20 @@ ALLOWED_HOSTS = []
 
 # Application definition
 
+DEFAULT_PERMISSIONS = (
+    'anything',
+    'read',
+    'write',
+    'entrust',
+    'grant',
+    'execute',
+    'move',
+    'transmute',
+    'derive',
+    'develop',
+    'administer',
+)
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
