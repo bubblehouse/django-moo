@@ -300,6 +300,21 @@ files = [
 plugins = ["importlib-metadata"]
 
 [[package]]
+name = "restrictedpython"
+version = "7.0"
+description = "RestrictedPython is a defined subset of the Python language which allows to provide a program input into a trusted environment."
+optional = false
+python-versions = ">=3.7, <3.13"
+files = [
+    {file = "RestrictedPython-7.0-py3-none-any.whl", hash = "sha256:8bb40a822090bed9c7b814d69345b0796db70cc86715d141efc937862f37c6d2"},
+    {file = "RestrictedPython-7.0.tar.gz", hash = "sha256:53704afbbc350fdc8fb245441367be671c9f8380869201b2e8452e74fce3db14"},
+]
+
+[package.extras]
+docs = ["Sphinx", "sphinx-rtd-theme"]
+test = ["pytest", "pytest-mock"]
+
+[[package]]
 name = "rich"
 version = "13.5.3"
 description = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
@@ -379,4 +394,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.10"
-content-hash = "2255a51c34cb691e79ed6356c48128a4dea8ed5027c9bd8c20d6b329753abd6d"
+content-hash = "69101bb52a14bfa9d8643654fb6c220323276a3bfdbed5e1e68afde223f2e5af"
