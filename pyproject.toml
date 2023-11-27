@@ -13,6 +13,7 @@ uwsgi = "^2.0.22"
 rich = "^13.5.3"
 prompt-toolkit = "^3.0.39"
 asyncssh = {extras = ["bcrypt"], version = "^2.14.0"}
+restrictedpython = "^7.0"
 
 [build-system]
 requires = ["poetry-core"]
