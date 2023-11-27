@@ -1,3 +1,10 @@
+## [0.7.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.6.0...v0.7.0) (2023-11-27)
+
+
+### Features
+
+* begin implementing code execution ([ec1ad55](https://gitlab.com/bubblehouse/termiverse/commit/ec1ad55d3778a8ac4121db714401b0d158cb20fe))
+
 ## [0.6.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.5.0...v0.6.0) (2023-11-14)
 
 
