@@ -1,9 +1,9 @@
 from django.db import models
 from django.core import validators
 
-from ..code import ExecutableVerbMixin
+from ..code import get_caller, r_exec
 
-class Verb(models.Model, ExecutableVerbMixin):
+class Verb(models.Model):
     code = models.TextField(blank=True, null=True)
     repo = models.ForeignKey("Repository", related_name='+', blank=True, null=True, on_delete=models.SET_NULL)
     filename = models.CharField(max_length=255, blank=True, null=True)
@@ -17,6 +17,16 @@ class Verb(models.Model, ExecutableVerbMixin):
         return "%s {#%s on %s}" % (
             self.annotated(), self.id, self.origin
         )
+
+    def __call__(self, *args, **kwargs):
+        if not(self.method):
+            raise RuntimeError("%s is not a method." % self)
+        caller = get_caller()
+        # self.check('execute', self)
+        env = {}
+        env['args'] = args
+        env['kwargs'] = kwargs
+        return r_exec(caller, self.code, env, filename=repr(self), runtype="method")
 
     def annotated(self):
         ability_decoration = ['', '@'][self.ability]

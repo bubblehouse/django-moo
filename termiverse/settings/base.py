@@ -24,7 +24,7 @@ ALLOWED_HOSTS = []
 
 
 # Application definition
-
+DEFAULT_GIT_REPO_URL = "https://gitlab.com/bubblehouse/termiverse.git"
 DEFAULT_PERMISSIONS = (
     'anything',
     'read',

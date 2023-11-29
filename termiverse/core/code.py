@@ -19,11 +19,6 @@ def get_caller():
 def set_caller(obj):
     user_context.user = obj
 
-class ExecutableVerbMixin(object):
-    def __call__(self, *args, **kwargs):
-        caller = get_caller()
-        r_exec(caller, self.code)
-
 def is_frame_access_allowed():
     return False
 
@@ -50,7 +45,7 @@ def r_eval(caller, src, environment={}, filename='<string>', runtype="eval"):
     def _writer(s, is_error=False):
         if(s.strip()):
             # TODO: print should instead write to client
-            print(environment.get('parser'))#(caller, s, is_error=is_error)
+            log.error(s)#(caller, s, is_error=is_error)
 
     env = get_restricted_environment(_writer, environment.get('parser'))
     env['runtype'] = runtype
@@ -76,7 +71,7 @@ def r_exec(caller, src, environment={}, filename='<string>', runtype="exec"):
     def _writer(s, is_error=False):
         if(s.strip()):
             # TODO: print should instead write to client
-            print(environment.get('parser'))#(caller, s, is_error=is_error)
+            log.error(s)#(caller, s, is_error=is_error)
 
     env = get_restricted_environment(_writer, environment.get('parser'))
     env['runtype'] = runtype
