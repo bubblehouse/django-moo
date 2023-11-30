@@ -1,5 +1,7 @@
 from django.db import models
 
+from .acl import AccessibleMixin
+
 class Property(models.Model):
     class Meta:
         verbose_name_plural = 'properties'
@@ -12,3 +14,7 @@ class Property(models.Model):
 
     def __str__(self):
         return '%s {#%s on %s}' % (self.name, self.id, self.origin)
+
+class AccessibleProperty(Property, AccessibleMixin):
+    class Meta:
+        proxy = True
