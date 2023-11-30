@@ -1,3 +1,16 @@
+## [0.8.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.7.0...v0.8.0) (2023-11-30)
+
+
+### Features
+
+* created db init script ([6436a54](https://gitlab.com/bubblehouse/termiverse/commit/6436a54df2628baed601cf8b875a1f1884992613))
+
+
+### Bug Fixes
+
+* continuing to address init issues ([05b7fa9](https://gitlab.com/bubblehouse/termiverse/commit/05b7fa9786215e8d16bef6d54e490b02496620e9))
+* implementing more permissions details, refactoring ([f7534fc](https://gitlab.com/bubblehouse/termiverse/commit/f7534fca30242f4ab346b16747f1eeb880926acb))
+
 ## [0.7.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.6.0...v0.7.0) (2023-11-27)
 
 
