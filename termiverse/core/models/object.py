@@ -1,5 +1,7 @@
 from django.db import models
 
+from .acl import AccessibleMixin
+
 class Object(models.Model):
     name = models.CharField(max_length=255)
     unique_name = models.BooleanField(default=False)
@@ -10,6 +12,16 @@ class Object(models.Model):
 
     def __str__(self):
         return "#%s (%s)" % (self.id, self.name)
+
+class AccessibleObject(Object, AccessibleMixin):
+    class Meta:
+        proxy = True
+
+    def owns(self, subject):
+        pass
+
+    def is_allowed(self, permission, subject, fatal=False):
+        pass
 
 class Relationship(models.Model):
     class Meta:

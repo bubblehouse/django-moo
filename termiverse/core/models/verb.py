@@ -2,6 +2,7 @@ from django.db import models
 from django.core import validators
 
 from ..code import get_caller, r_exec
+from .acl import AccessibleMixin
 
 class Verb(models.Model):
     code = models.TextField(blank=True, null=True)
@@ -36,6 +37,10 @@ class Verb(models.Model):
 
     def name(self):
         return self.names.all()[0].name
+
+class AccessibleVerb(Verb, AccessibleMixin):
+    class Meta:
+        proxy = True
 
 class VerbName(models.Model):
     verb = models.ForeignKey(Verb, related_name='names', on_delete=models.CASCADE)
