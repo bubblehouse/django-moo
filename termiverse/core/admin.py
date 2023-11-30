@@ -1,15 +1,15 @@
-from . import models
+from .models import verb, object, property, auth, task
 from django.contrib import admin
 
 class VerbInline(admin.TabularInline):
-    model = models.Verb
+    model = verb.Verb
     fk_name = 'origin'
     extra = 1
     exclude = ('code',)
     readonly_fields = ('filename', 'ability', 'method', 'owner')
 
 class PropertyInline(admin.TabularInline):
-    model = models.Property
+    model = property.Property
     fk_name = 'origin'
     extra = 1
     readonly_fields = ('name', 'value', 'owner')
@@ -20,11 +20,11 @@ class ObjectAdmin(admin.ModelAdmin):
         VerbInline,
         PropertyInline,
     ]
-admin.site.register(models.Object, ObjectAdmin)
+admin.site.register(object.Object, ObjectAdmin)
 
-admin.site.register(models.Verb)
-admin.site.register(models.Property)
-admin.site.register(models.Permission)
+admin.site.register(verb.Verb)
+admin.site.register(property.Property)
+admin.site.register(auth.Permission)
 
 class AccessAdmin(admin.ModelAdmin):
     list_display = ('rule', 'actor', 'action', 'entity', 'origin')
@@ -40,7 +40,7 @@ class AccessAdmin(admin.ModelAdmin):
 
     def action(self, obj):
         return obj.permission.name
-admin.site.register(models.Access, AccessAdmin)
+admin.site.register(auth.Access, AccessAdmin)
 
-admin.site.register(models.Player)
-admin.site.register(models.Task)
+admin.site.register(auth.Player)
+admin.site.register(task.Task)
