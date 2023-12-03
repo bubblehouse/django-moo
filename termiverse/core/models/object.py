@@ -1,5 +1,6 @@
 from django.db import models
 
+from .. import bootstrap
 from .acl import AccessibleMixin, Access
 
 class Object(models.Model):
@@ -10,11 +11,29 @@ class Object(models.Model):
     parents = models.ManyToManyField('self', related_name='children', blank=True, symmetrical=False, through='Relationship')
     observers = models.ManyToManyField('self', related_name='observations', blank=True, symmetrical=False, through='Observation')
 
+    def __str__(self):
+        return "#%s (%s)" % (self.id, self.name)
+
     def get_type(self):
         return 'object'
 
-    def __str__(self):
-        return "#%s (%s)" % (self.id, self.name)
+    def add_verb(self, *names, code=None, filename=None, method=False):
+        verb = models.Verb.objects.create(
+            method = method,
+            origin = self,
+            code = bootstrap.get_source(filename) if filename else code
+        )
+        for name in names:
+            verb.names.add(models.VerbName.objects.create(
+                verb=verb,
+                name=name
+            ))
+        set_default_permissions = models.Verb.objects.get(
+            origin = self.objects.get(pk=0),
+            name = 'set_default_permissions'
+        )
+        set_default_permissions(verb)
+        self.verbs.add(verb)
 
 class AccessibleObject(Object, AccessibleMixin):
     class Meta:
