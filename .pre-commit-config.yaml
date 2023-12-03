@@ -33,3 +33,8 @@ repos:
       - id: commitlint
         stages: [commit-msg]
         additional_dependencies: ['@commitlint/config-conventional']
+  - repo: https://github.com/adamchainz/django-upgrade
+    rev: 1.15.0
+    hooks:
+      - id: django-upgrade
+        args: [--target-version, '4.2']   # Replace with Django version
