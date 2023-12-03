@@ -1,3 +1,10 @@
+## [0.10.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.9.0...v0.10.0) (2023-12-03)
+
+
+### Features
+
+* ownership and ACL support ([a1c96ca](https://gitlab.com/bubblehouse/termiverse/commit/a1c96ca82e55eb0a40a03c4a4909ef67593ad022))
+
 ## [0.9.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.8.0...v0.9.0) (2023-12-03)
 
 
