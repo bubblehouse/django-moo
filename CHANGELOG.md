@@ -1,3 +1,10 @@
+## [0.9.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.8.0...v0.9.0) (2023-12-03)
+
+
+### Features
+
+* replace temp shell with python repl ([ed75b0a](https://gitlab.com/bubblehouse/termiverse/commit/ed75b0ac1c5eb49f901c3af55e1fd0499e4983c8))
+
 ## [0.8.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.7.0...v0.8.0) (2023-11-30)
 
 
