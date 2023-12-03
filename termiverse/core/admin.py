@@ -1,5 +1,8 @@
-from .models import verb, object, property, auth, task, acl
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import User
+
+from .models import verb, object, property, auth, task, acl
 
 class VerbInline(admin.TabularInline):
     model = verb.Verb
@@ -14,20 +17,29 @@ class PropertyInline(admin.TabularInline):
     extra = 1
     readonly_fields = ('name', 'value', 'owner')
 
+@admin.register(object.Object)
 class ObjectAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'unique_name', 'owner', 'location')
     inlines = [
         VerbInline,
         PropertyInline,
     ]
-admin.site.register(object.Object, ObjectAdmin)
+    raw_id_fields = ('owner', 'location')
 
-admin.site.register(verb.Verb)
-admin.site.register(property.Property)
-admin.site.register(acl.Permission)
+@admin.register(verb.Verb)
+class VerbAdmin(admin.ModelAdmin):
+    raw_id_fields = ('owner', 'origin')
 
+@admin.register(property.Property)
+class PropertyAdmin(admin.ModelAdmin):
+    raw_id_fields = ('owner', 'origin')
+
+admin.register(acl.Permission)
+
+@admin.register(acl.Access)
 class AccessAdmin(admin.ModelAdmin):
     list_display = ('rule', 'actor', 'action', 'entity', 'origin')
+    raw_id_fields = ('object', 'verb', 'property', 'accessor')
 
     def actor(self, obj):
         return obj.actor()
@@ -40,7 +52,15 @@ class AccessAdmin(admin.ModelAdmin):
 
     def action(self, obj):
         return obj.permission.name
-admin.site.register(acl.Access, AccessAdmin)
 
-admin.site.register(auth.Player)
-admin.site.register(task.Task)
+class PlayerInline(admin.StackedInline):
+    model = auth.Player
+    can_delete = False
+
+admin.site.unregister(User)
+@admin.register(User)
+class UserAdmin(BaseUserAdmin):
+    inlines = [PlayerInline]
+    raw_id_fields = ('avatar')
+
+admin.register(task.Task)
