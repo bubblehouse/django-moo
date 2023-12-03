@@ -14,6 +14,9 @@ class Verb(models.Model):
     ability = models.BooleanField(default=False)
     method = models.BooleanField(default=False)
 
+    def get_type(self):
+        return 'verb'
+
     def __str__(self):
         return "%s {#%s on %s}" % (
             self.annotated(), self.id, self.origin
