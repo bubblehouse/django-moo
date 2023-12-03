@@ -1,3 +1,11 @@
+## [0.10.2](https://gitlab.com/bubblehouse/termiverse/compare/v0.10.1...v0.10.2) (2023-12-03)
+
+
+### Bug Fixes
+
+* add Player model for User/Avatar integration ([02b8f68](https://gitlab.com/bubblehouse/termiverse/commit/02b8f6867266d184749aaa2df09f9d1af2ebb10b))
+* add Player model for User/Avatar integration ([4554112](https://gitlab.com/bubblehouse/termiverse/commit/45541125224c2fe43915f07feea48f3f011ea626))
+
 ## [0.10.1](https://gitlab.com/bubblehouse/termiverse/compare/v0.10.0...v0.10.1) (2023-12-03)
 
 
