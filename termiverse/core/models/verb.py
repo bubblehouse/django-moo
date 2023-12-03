@@ -22,16 +22,6 @@ class Verb(models.Model):
             self.annotated(), self.id, self.origin
         )
 
-    def __call__(self, *args, **kwargs):
-        if not(self.method):
-            raise RuntimeError("%s is not a method." % self)
-        caller = get_caller()
-        # self.check('execute', self)
-        env = {}
-        env['args'] = args
-        env['kwargs'] = kwargs
-        return r_exec(caller, self.code, env, filename=repr(self), runtype="method")
-
     def annotated(self):
         ability_decoration = ['', '@'][self.ability]
         method_decoration = ['', '()'][self.method]
@@ -44,6 +34,17 @@ class Verb(models.Model):
 class AccessibleVerb(Verb, AccessibleMixin):
     class Meta:
         proxy = True
+
+    def __call__(self, *args, **kwargs):
+        if not(self.method):
+            raise RuntimeError("%s is not a method." % self)
+        caller = get_caller()
+        # self.check('execute', self)
+        env = {}
+        env['args'] = args
+        env['kwargs'] = kwargs
+        return r_exec(caller, self.code, env, filename=repr(self), runtype="method")
+
 
 class VerbName(models.Model):
     verb = models.ForeignKey(Verb, related_name='names', on_delete=models.CASCADE)
