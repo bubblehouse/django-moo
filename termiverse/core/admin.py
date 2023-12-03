@@ -61,6 +61,5 @@ admin.site.unregister(User)
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     inlines = [PlayerInline]
-    raw_id_fields = ('avatar',)
 
 admin.register(task.Task)
