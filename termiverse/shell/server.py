@@ -5,28 +5,18 @@ import crypt
 import asyncssh
 
 from prompt_toolkit.contrib.ssh import PromptToolkitSSHServer, PromptToolkitSSHSession
-from prompt_toolkit.shortcuts.prompt import PromptSession
-from prompt_toolkit.shortcuts import print_formatted_text as print
-
-from prompt_toolkit.history import InMemoryHistory
-from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 
 log = logging.getLogger(__name__)
 
 async def interact(ssh_session: PromptToolkitSSHSession) -> None:
-    prompt_session = PromptSession(
-        auto_suggest = AutoSuggestFromHistory(),
-        history      = InMemoryHistory()
-    )
-    while(True):
-        try:
-            text = await prompt_session.prompt_async("> ")
-            print("You typed", text)
-        except EOFError as e:
-            log.info("User disconnected.")
-            break
-        except KeyboardInterrupt as e:
-            pass
+    from ptpython.repl import embed
+    try:
+        await embed(return_asyncio_coroutine=True)
+    except EOFError:
+        pass
+    except KeyboardInterrupt:
+        pass
+    log.info("User disconnected.")
 
 async def server(port=8022):
     await asyncssh.create_server(
