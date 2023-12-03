@@ -15,7 +15,7 @@ CSRF_TRUSTED_ORIGINS = ['https://localhost']
 
 DATABASES = {
     'default': {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "ENGINE": "django.db.backends.postgresql",
         "NAME": "termiverse",
         "HOST": "postgres",
         "USER": "termiverse",
