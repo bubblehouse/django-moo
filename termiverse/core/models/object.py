@@ -1,6 +1,6 @@
 from django.db import models
 
-from .acl import AccessibleMixin
+from .acl import AccessibleMixin, Access
 
 class Object(models.Model):
     name = models.CharField(max_length=255)
@@ -10,6 +10,9 @@ class Object(models.Model):
     parents = models.ManyToManyField('self', related_name='children', blank=True, symmetrical=False, through='Relationship')
     observers = models.ManyToManyField('self', related_name='observations', blank=True, symmetrical=False, through='Observation')
 
+    def get_type(self):
+        return 'object'
+
     def __str__(self):
         return "#%s (%s)" % (self.id, self.name)
 
@@ -18,10 +21,54 @@ class AccessibleObject(Object, AccessibleMixin):
         proxy = True
 
     def owns(self, subject):
-        pass
+        return subject.owner == self
 
     def is_allowed(self, permission, subject, fatal=False):
-        pass
+        rules = Access.objects.filter(
+            object = subject if subject.get_type() == 'object' else None,
+            verb = subject if subject.get_type() == 'verb' else None,
+            property = subject if subject.get_type() == 'property' else None,
+            type = 'accessor',
+            accessor = self,
+            permission__in = (permission, "anything")
+        )
+        rules.union(Access.objects.filter(
+            object = subject if subject.get_type() == 'object' else None,
+            verb = subject if subject.get_type() == 'verb' else None,
+            property = subject if subject.get_type() == 'property' else None,
+            type = 'group',
+            group = 'everyone',
+            permission__in = (permission, "anything")
+        ))
+        if self.owns(subject):
+            rules.union(Access.objects.filter(
+                object = subject if subject.get_type() == 'object' else None,
+                verb = subject if subject.get_type() == 'verb' else None,
+                property = subject if subject.get_type() == 'property' else None,
+                type = 'group',
+                group = 'owners',
+                permission__in = (permission, "anything")
+            ))
+        if self.is_wizard():
+            rules.union(Access.objects.filter(
+                object = subject if subject.get_type() == 'object' else None,
+                verb = subject if subject.get_type() == 'verb' else None,
+                property = subject if subject.get_type() == 'property' else None,
+                type = 'group',
+                group = 'wizards',
+                permission__in = (permission, "anything")
+            ))
+        if rules:
+            for rule in rules.order_by("rule", "type"):
+                if fatal and rule.rule == 'deny':
+                    raise PermissionError(f"{self} is explicitly denied {permission} on {subject}")
+                else:
+                    return False
+            return True
+        elif fatal:
+            raise PermissionError(f"{self} is not allowed {permission} on {subject}")
+        else:
+            return False
 
 class Relationship(models.Model):
     class Meta:
