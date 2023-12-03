@@ -10,12 +10,7 @@ log = logging.getLogger(__name__)
 
 async def interact(ssh_session: PromptToolkitSSHSession) -> None:
     from ptpython.repl import embed
-    try:
-        await embed(return_asyncio_coroutine=True)
-    except EOFError:
-        pass
-    except KeyboardInterrupt:
-        pass
+    await embed(return_asyncio_coroutine=True)
     log.info("User disconnected.")
 
 async def server(port=8022):
