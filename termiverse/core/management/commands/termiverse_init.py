@@ -19,7 +19,7 @@ class Command(BaseCommand):
     def handle(self, bootstrap='default', *args, **config):
         try:
             repo = Repository.objects.get(slug='default')
-            # raise RuntimeError("Looks like this database has already been initialized.")
+            raise RuntimeError("Looks like this database has already been initialized.")
         except Repository.DoesNotExist:
             repo = Repository(
                 slug='default',
