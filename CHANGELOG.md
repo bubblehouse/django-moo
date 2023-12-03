@@ -1,3 +1,10 @@
+## [0.10.1](https://gitlab.com/bubblehouse/termiverse/compare/v0.10.0...v0.10.1) (2023-12-03)
+
+
+### Bug Fixes
+
+* bootstrapping issues, refactoring ([f24f4d3](https://gitlab.com/bubblehouse/termiverse/commit/f24f4d3aa6be6427d1a29a90cbbb97e455e6f932))
+
 ## [0.10.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.9.0...v0.10.0) (2023-12-03)
 
 
