@@ -15,7 +15,7 @@ CSRF_TRUSTED_ORIGINS = ['https://termiverse.dev.shacklyn.net', 'https://probe.cl
 
 DATABASES = {
     'default': {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "ENGINE": "django.db.backends.postgresql",
         "NAME": "termiverse",
         "HOST": "termiverse-db.dev.shacklyn.net",
         "USER": "termiverse",
