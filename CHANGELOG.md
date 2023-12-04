@@ -1,3 +1,10 @@
+## [0.12.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.11.0...v0.12.0) (2023-12-04)
+
+
+### Features
+
+* add support for SSH key login ([cbb00b4](https://gitlab.com/bubblehouse/termiverse/commit/cbb00b49a92459ee8d881edde061d46ea04efb95))
+
 ## [0.11.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.10.4...v0.11.0) (2023-12-04)
 
 
