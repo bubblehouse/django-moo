@@ -1,9 +1,10 @@
 import asyncio
 import logging
-import crypt
+
+from django.contrib.auth.models import User
 
 import asyncssh
-
+from asgiref.sync import sync_to_async
 from prompt_toolkit.contrib.ssh import PromptToolkitSSHServer, PromptToolkitSSHSession
 
 log = logging.getLogger(__name__)
@@ -23,18 +24,16 @@ async def server(port=8022):
     await asyncio.Future()
 
 class SSHServer(PromptToolkitSSHServer):
-    passwords = {
-        'guest': '',
-        'admin': 'qV2iEadIGV2rw' #secretpw
-    }
-
-    def begin_auth(self, username: str) -> bool:
-        # If the user's password is the empty string, no auth is required
-        return self.passwords.get(username) != ''
+    def begin_auth(self, _: str) -> bool:
+        return True
 
     def password_auth_supported(self) -> bool:
         return True
 
+    @sync_to_async
     def validate_password(self, username: str, password: str) -> bool:
-        pw = self.passwords.get(username, '*')
-        return crypt.crypt(password, pw) == pw
+        try:
+            user = User.objects.get(username=username)
+        except Exception as e:
+            log.error(e)
+        return user.check_password(password)
