@@ -1,3 +1,10 @@
+## [0.11.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.10.4...v0.11.0) (2023-12-04)
+
+
+### Features
+
+* use Django user to authenticate ([8e11f94](https://gitlab.com/bubblehouse/termiverse/commit/8e11f9407bb87c918e6c92dcf8ebbaa2b32d42c7))
+
 ## [0.10.4](https://gitlab.com/bubblehouse/termiverse/compare/v0.10.3...v0.10.4) (2023-12-03)
 
 
