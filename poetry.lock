@@ -213,6 +213,19 @@ argon2 = ["argon2-cffi (>=19.1.0)"]
 bcrypt = ["bcrypt"]
 
 [[package]]
+name = "django-simplesshkey"
+version = "2.1.0"
+description = "Associates multiple SSH public keys with Django user accounts (fork of django-sshkey without SSHD integration)"
+optional = false
+python-versions = "*"
+files = [
+    {file = "django-simplesshkey-2.1.0.tar.gz", hash = "sha256:5bee57b5564469f35c8711fe0ac78b0cbe6094c46099055e7058e411ec18e4f4"},
+]
+
+[package.dependencies]
+pyasn1 = "*"
+
+[[package]]
 name = "jedi"
 version = "0.19.1"
 description = "An autocompletion tool for Python that can be used for text editors."
@@ -339,6 +352,17 @@ all = ["black"]
 ptipython = ["ipython"]
 
 [[package]]
+name = "pyasn1"
+version = "0.5.1"
+description = "Pure-Python implementation of ASN.1 types and DER/BER/CER codecs (X.208)"
+optional = false
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,>=2.7"
+files = [
+    {file = "pyasn1-0.5.1-py2.py3-none-any.whl", hash = "sha256:4439847c58d40b1d0a573d07e3856e95333f1976294494c325775aeca506eb58"},
+    {file = "pyasn1-0.5.1.tar.gz", hash = "sha256:6d391a96e59b23130a5cfa74d6fd7f388dbbe26cc8f1edf39fdddf08d9d6676c"},
+]
+
+[[package]]
 name = "pycparser"
 version = "2.21"
 description = "C parser in Python"
@@ -459,4 +483,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.10"
-content-hash = "826b060ceff8b09056444380680f8d2ad91537d2a7cb06294cc83f020c1e93f8"
+content-hash = "7955036c0bef15198eb0d9c2555f5d2ede1fe79e6e6853c13b1d010d7d417898"
