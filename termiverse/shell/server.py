@@ -1,7 +1,9 @@
 import asyncio
 import logging
+import base64
 
 from django.contrib.auth.models import User
+from simplesshkey.models import UserKey
 
 import asyncssh
 from asgiref.sync import sync_to_async
@@ -36,4 +38,21 @@ class SSHServer(PromptToolkitSSHServer):
             user = User.objects.get(username=username)
         except Exception as e:
             log.error(e)
+            return False
         return user.check_password(password)
+
+    def public_key_auth_supported(self) -> bool:
+        return True
+
+    @sync_to_async
+    def validate_public_key(self, username: str, key: asyncssh.SSHKey):
+        try:
+            for user_key in UserKey.objects.filter(user__username=username):
+                user_pem = ' '.join(user_key.key.split()[:2]) + "\n"
+                server_pem = key.export_public_key().decode('utf8')
+                if user_pem == server_pem:
+                    return True
+        except Exception as e:
+            log.error(e)
+            return False
+        return False
