@@ -1,3 +1,10 @@
+## [0.10.4](https://gitlab.com/bubblehouse/termiverse/compare/v0.10.3...v0.10.4) (2023-12-03)
+
+
+### Bug Fixes
+
+* raw id field ([a79710d](https://gitlab.com/bubblehouse/termiverse/commit/a79710de92b247f63705d7aed330daa326048363))
+
 ## [0.10.3](https://gitlab.com/bubblehouse/termiverse/compare/v0.10.2...v0.10.3) (2023-12-03)
 
 
