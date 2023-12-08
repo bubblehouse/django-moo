@@ -1,3 +1,15 @@
+## [0.13.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.12.0...v0.13.0) (2023-12-08)
+
+
+### Features
+
+* integrate Python shell with restricted environment ([f1155e3](https://gitlab.com/bubblehouse/termiverse/commit/f1155e3314050c7112cb7f13b363480dcfd444b4))
+
+
+### Bug Fixes
+
+* remove os.system() loophole and prep for further customization ([84f3985](https://gitlab.com/bubblehouse/termiverse/commit/84f3985cf2b635a96e9c1e34f755bdf7e9ae4351))
+
 ## [0.12.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.11.0...v0.12.0) (2023-12-04)
 
 
