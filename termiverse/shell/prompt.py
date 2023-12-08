@@ -73,7 +73,7 @@ class CustomRepl(PythonRepl):
         # Try eval first
         log.error(f"{caller}: {line}")
         try:
-            result = code.r_eval(caller, line, self.get_locals(), filename='<string>', runtype="eval")
+            result = code.r_eval(caller, line, self.get_locals())
             self._store_eval_result(result)
             return result
         except SyntaxError:
@@ -81,5 +81,5 @@ class CustomRepl(PythonRepl):
         # If not a valid `eval` expression, compile as `exec` expression
         # but still run with eval to get an awaitable in case of a
         # awaitable expression.
-        result = code.r_exec(caller, line, self.get_locals(), filename='<string>', runtype="exec")
+        result = code.r_exec(caller, line, self.get_locals())
         return result
