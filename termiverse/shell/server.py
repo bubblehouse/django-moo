@@ -1,19 +1,19 @@
 import asyncio
 import logging
-import base64
 
 from django.contrib.auth.models import User
-from simplesshkey.models import UserKey
 
+from simplesshkey.models import UserKey
 import asyncssh
 from asgiref.sync import sync_to_async
 from prompt_toolkit.contrib.ssh import PromptToolkitSSHServer, PromptToolkitSSHSession
 
+from .prompt import embed
+
 log = logging.getLogger(__name__)
 
 async def interact(ssh_session: PromptToolkitSSHSession) -> None:
-    from ptpython.repl import embed
-    await embed(return_asyncio_coroutine=True)
+    await embed()
     log.info("User disconnected.")
 
 async def server(port=8022):
