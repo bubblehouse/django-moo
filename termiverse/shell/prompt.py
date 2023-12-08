@@ -1,9 +1,14 @@
-import asyncio
+from asgiref.sync import sync_to_async
 import builtins
+import logging
 from typing import Callable
 
 from prompt_toolkit.utils import DummyContext
 from ptpython.repl import PythonRepl
+
+from ..core import code
+
+log = logging.getLogger(__name__)
 
 def embed(
     globals=None,
@@ -42,7 +47,7 @@ def embed(
         return locals
 
     # Create REPL.
-    repl = PythonRepl(
+    repl = CustomRepl(
         get_globals=get_globals,
         get_locals=get_locals,
         vi_mode=vi_mode,
@@ -59,35 +64,22 @@ def embed(
     return coroutine()  # type: ignore
 
 class CustomRepl(PythonRepl):
-    def __init__(self, *a, **kw) -> None:
-        super().__init__(*a, **kw)
-        self._load_start_paths()
-
-    def eval(self, line: str) -> object:
+    @sync_to_async
+    def eval_async(self, line: str) -> object:
         """
         Evaluate the line and print the result.
         """
+        caller = code.get_caller()
         # Try eval first
+        log.error(f"{caller}: {line}")
         try:
-            code = self._compile_with_flags(line, "eval")
-        except SyntaxError:
-            pass
-        else:
-            # No syntax errors for eval. Do eval.
-            result = eval(code, self.get_globals(), self.get_locals())
-
-            result = asyncio.get_event_loop().run_until_complete(result)
-
+            result = code.r_eval(caller, line, self.get_locals(), filename='<string>', runtype="eval")
             self._store_eval_result(result)
             return result
-
-        # If not a valid `eval` expression, run using `exec` instead.
-        # Note that we shouldn't run this in the `except SyntaxError` block
-        # above, then `sys.exc_info()` would not report the right error.
-        # See issue: https://github.com/prompt-toolkit/ptpython/issues/435
-        code = self._compile_with_flags(line, "exec")
-        result = eval(code, self.get_globals(), self.get_locals())
-
-        result = asyncio.get_event_loop().run_until_complete(result)
-
-        return None
+        except SyntaxError:
+            pass
+        # If not a valid `eval` expression, compile as `exec` expression
+        # but still run with eval to get an awaitable in case of a
+        # awaitable expression.
+        result = code.r_exec(caller, line, self.get_locals(), filename='<string>', runtype="exec")
+        return result
