@@ -38,7 +38,7 @@ def massage_verb_code(code):
     )
     return code
 
-def r_eval(caller, src, environment={}, filename='<string>', runtype="eval"):
+def r_eval(caller, src, environment={}, filename='<string>'):
     """
     Evaluate an expression in the provided environment.
     """
@@ -48,7 +48,7 @@ def r_eval(caller, src, environment={}, filename='<string>', runtype="eval"):
             log.error(s)#(caller, s, is_error=is_error)
 
     env = get_restricted_environment(_writer, environment.get('parser'))
-    env['runtype'] = runtype
+    env['runtype'] = 'eval'
     env['caller'] = caller
     env.update(environment)
 
@@ -64,7 +64,7 @@ def r_eval(caller, src, environment={}, filename='<string>', runtype="eval"):
 
     return value
 
-def r_exec(caller, src, environment={}, filename='<string>', runtype="exec"):
+def r_exec(caller, src, environment={}, filename='<string>'):
     """
     Execute an expression in the provided environment.
     """
@@ -74,7 +74,7 @@ def r_exec(caller, src, environment={}, filename='<string>', runtype="exec"):
             log.error(s)#(caller, s, is_error=is_error)
 
     env = get_restricted_environment(_writer, environment.get('parser'))
-    env['runtype'] = runtype
+    env['runtype'] = 'exec'
     env['caller'] = caller
     env.update(environment)
 
