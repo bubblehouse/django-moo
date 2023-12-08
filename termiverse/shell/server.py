@@ -8,6 +8,7 @@ import asyncssh
 from asgiref.sync import sync_to_async
 from prompt_toolkit.contrib.ssh import PromptToolkitSSHServer, PromptToolkitSSHSession
 
+from ..core import code
 from .prompt import embed
 
 log = logging.getLogger(__name__)
@@ -39,7 +40,10 @@ class SSHServer(PromptToolkitSSHServer):
         except Exception as e:
             log.error(e)
             return False
-        return user.check_password(password)
+        if user.check_password(password):
+            code.set_caller(user)
+            return True
+        return False
 
     def public_key_auth_supported(self) -> bool:
         return True
@@ -51,6 +55,7 @@ class SSHServer(PromptToolkitSSHServer):
                 user_pem = ' '.join(user_key.key.split()[:2]) + "\n"
                 server_pem = key.export_public_key().decode('utf8')
                 if user_pem == server_pem:
+                    code.set_caller(user_key.user)
                     return True
         except Exception as e:
             log.error(e)
