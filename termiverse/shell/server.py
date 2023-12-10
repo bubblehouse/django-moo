@@ -8,14 +8,13 @@ import asyncssh
 from asgiref.sync import sync_to_async
 from prompt_toolkit.contrib.ssh import PromptToolkitSSHServer, PromptToolkitSSHSession
 
-from ..core import code
 from .prompt import embed
 
 log = logging.getLogger(__name__)
 
 async def interact(ssh_session: PromptToolkitSSHSession) -> None:
-    await embed(ssh_session.user_id)
-    log.info("User disconnected.")
+    await embed(ssh_session.user)
+    log.info(f"{ssh_session.user} disconnected.")
 
 async def server(port=8022):
     await asyncssh.create_server(
@@ -41,7 +40,7 @@ class SSHServer(PromptToolkitSSHServer):
             log.error(e)
             return False
         if user.check_password(password):
-            self.user_id = user.pk
+            self.user = user.pk
             return True
         return False
 
@@ -55,7 +54,7 @@ class SSHServer(PromptToolkitSSHServer):
                 user_pem = ' '.join(user_key.key.split()[:2]) + "\n"
                 server_pem = key.export_public_key().decode('utf8')
                 if user_pem == server_pem:
-                    self.user_id = user_key.user.pk
+                    self.user = user_key.user
                     return True
         except Exception as e:
             log.error(e)
@@ -64,5 +63,5 @@ class SSHServer(PromptToolkitSSHServer):
 
     def session_requested(self) -> PromptToolkitSSHSession:
         session = PromptToolkitSSHSession(self.interact, enable_cpr=self.enable_cpr)
-        session.user_id = self.user_id
+        session.user = self.user
         return session
