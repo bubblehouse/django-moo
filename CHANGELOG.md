@@ -1,3 +1,11 @@
+## [0.13.1](https://gitlab.com/bubblehouse/termiverse/compare/v0.13.0...v0.13.1) (2023-12-10)
+
+
+### Bug Fixes
+
+* active user not so simple ([96d17cb](https://gitlab.com/bubblehouse/termiverse/commit/96d17cb1b4f518503b86040342cf824893ead91a))
+* instead of trying to use contextvars within a thread, just pass the user_id along ([24a2a3f](https://gitlab.com/bubblehouse/termiverse/commit/24a2a3fea13b8818995727d5306d6695ec4755ab))
+
 ## [0.13.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.12.0...v0.13.0) (2023-12-08)
 
 
