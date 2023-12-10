@@ -6,11 +6,12 @@ from typing import Callable
 from prompt_toolkit.utils import DummyContext
 from ptpython.repl import PythonRepl
 
-from ..core import code
+from ..core import code, models
 
 log = logging.getLogger(__name__)
 
 def embed(
+    user_id,
     globals=None,
     locals=None,
     configure: Callable[[PythonRepl], None] | None = None,
@@ -48,6 +49,7 @@ def embed(
 
     # Create REPL.
     repl = CustomRepl(
+        user_id=user_id,
         get_globals=get_globals,
         get_locals=get_locals,
         vi_mode=vi_mode,
@@ -64,12 +66,17 @@ def embed(
     return coroutine()  # type: ignore
 
 class CustomRepl(PythonRepl):
+    def __init__(self, user_id, *a, **kw):
+        self.user_id = user_id
+        super().__init__(*a, **kw)
+
     @sync_to_async
     def eval_async(self, line: str) -> object:
         """
         Evaluate the line and print the result.
         """
-        caller = code.get_caller()
+        # does this need to be called from outside the synchronous function?
+        caller = models.User.objects.get(pk=self.user_id)
         # Try eval first
         log.error(f"{caller}: {line}")
         try:

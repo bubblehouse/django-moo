@@ -14,7 +14,7 @@ from .prompt import embed
 log = logging.getLogger(__name__)
 
 async def interact(ssh_session: PromptToolkitSSHSession) -> None:
-    await embed()
+    await embed(ssh_session.user_id)
     log.info("User disconnected.")
 
 async def server(port=8022):
@@ -41,7 +41,7 @@ class SSHServer(PromptToolkitSSHServer):
             log.error(e)
             return False
         if user.check_password(password):
-            code.set_caller(user)
+            self.user_id = user.pk
             return True
         return False
 
@@ -55,9 +55,14 @@ class SSHServer(PromptToolkitSSHServer):
                 user_pem = ' '.join(user_key.key.split()[:2]) + "\n"
                 server_pem = key.export_public_key().decode('utf8')
                 if user_pem == server_pem:
-                    code.set_caller(user_key.user)
+                    self.user_id = user_key.user.pk
                     return True
         except Exception as e:
             log.error(e)
             return False
         return False
+
+    def session_requested(self) -> PromptToolkitSSHSession:
+        session = PromptToolkitSSHSession(self.interact, enable_cpr=self.enable_cpr)
+        session.user_id = self.user_id
+        return session
