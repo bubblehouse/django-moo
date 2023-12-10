@@ -12,6 +12,13 @@ allowed_modules = (
 
 log = logging.getLogger(__name__)
 
+user_context = contextvars.ContextVar("user")
+def get_caller():
+    return user_context.get(None)
+
+def set_caller(obj):
+    user_context.set(obj)
+
 def is_frame_access_allowed():
     return False
 
