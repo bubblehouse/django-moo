@@ -1,3 +1,11 @@
+## [0.13.2](https://gitlab.com/bubblehouse/termiverse/compare/v0.13.1...v0.13.2) (2023-12-10)
+
+
+### Bug Fixes
+
+* hold on to get/set_caller until we have a replacement for verb to use ([18c07ad](https://gitlab.com/bubblehouse/termiverse/commit/18c07ad62701b643b79aa16748ec55f07e4f4ef1))
+* its okay to save the whole model object ([bade6a0](https://gitlab.com/bubblehouse/termiverse/commit/bade6a0c199bf5ca65eb8350894c33cc9835c6b1))
+
 ## [0.13.1](https://gitlab.com/bubblehouse/termiverse/compare/v0.13.0...v0.13.1) (2023-12-10)
 
 
