@@ -33,8 +33,5 @@ RUN mkdir -p /usr/src/app/static
 RUN chgrp www-data /usr/src/app/static/
 RUN chmod ug+rwx /usr/src/app/static/
 
-RUN ssh-keygen -q -N "" -f /etc/ssh/termiverse_private_key
-RUN chown www-data /etc/ssh/termiverse_private_key
-
 # Custom entrypoint for improved ad-hoc command support
 ENTRYPOINT ["/entrypoint.sh"]
