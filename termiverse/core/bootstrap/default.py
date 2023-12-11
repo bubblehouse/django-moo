@@ -2,10 +2,12 @@ from termiverse.core import models, bootstrap
 
 from django.conf import settings
 
+create_object = models.Object.objects.create
+
 for name in settings.DEFAULT_PERMISSIONS:
     p = models.Permission.objects.create(name=name)
 
-system = models.Object.objects.create(name="System Object", unique_name=True)
+system = create_object(name="System Object", unique_name=True)
 
 # Configure `set_default_permissions` the long way
 set_default_permissions = models.Verb.objects.create(
@@ -22,7 +24,7 @@ set_default_permissions(set_default_permissions)
 set_default_permissions(system)
 
 # Create the first real user
-wizard = models.Object.objects.create(name="Wizard", unique_name=True)
+wizard = create_object(name="Wizard", unique_name=True)
 wizard.owner = wizard
 wizard.save()
 
@@ -33,3 +35,72 @@ system.save()
 # ...and the default permissions verb
 set_default_permissions.owner = wizard
 set_default_permissions.save()
+
+bag = create_object(
+    name = 'bag of holding',
+    owner = wizard,
+    location = wizard,
+)
+
+hammer = create_object(
+    name = 'wizard hammer',
+    owner = wizard,
+    location = bag,
+)
+
+book = create_object(
+    name = 'class book',
+    owner = wizard,
+    location = bag,
+)
+
+player = create_object(
+    name = 'player class',
+    owner = wizard,
+    location = book,
+)
+
+guest = create_object(
+    name = 'guest class',
+    owner = wizard,
+    location = book,
+)
+guest.parents.add(player)
+
+author = create_object(
+    name = 'author class',
+    owner = wizard,
+    location = book,
+)
+author.parents.add(player)
+
+programmer = create_object(
+    name = 'programmer class',
+    owner = wizard,
+    location = book,
+)
+programmer.parents.add(author)
+
+Wizard = create_object(
+    name = 'wizard class',
+    owner = wizard,
+    location = book,
+)
+Wizard.parents.add(programmer)
+
+wizard.parents.add(Wizard)
+
+room = create_object(
+    name = 'room class',
+    owner = wizard,
+    location = book,
+)
+
+lab = create_object(
+    name = 'The Laboratory',
+    owner = wizard,
+)
+lab.parents.add(room)
+
+wizard.location = lab
+wizard.save()
