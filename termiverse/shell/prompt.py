@@ -79,13 +79,15 @@ class CustomRepl(PythonRepl):
         # Try eval first
         log.error(f"{self.user}: {line}")
         try:
-            result = code.r_eval(self.user, line, self.get_locals())
-            self._store_eval_result(result)
+            with code.context(self.user) as caller:
+                result = code.r_eval(caller, line, self.get_locals())
+                self._store_eval_result(result)
             return result
         except SyntaxError:
             pass
         # If not a valid `eval` expression, compile as `exec` expression
         # but still run with eval to get an awaitable in case of a
         # awaitable expression.
-        result = code.r_exec(self.user, line, self.get_locals())
+        with code.context(self.user) as caller:
+            result = code.r_exec(caller, line, self.get_locals())
         return result
