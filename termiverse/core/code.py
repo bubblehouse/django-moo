@@ -47,7 +47,7 @@ def massage_verb_code(code):
     )
     return code
 
-def r_eval(caller, src, environment={}, filename='<string>'):
+def r_eval(caller, src, environment={}, filename='<string>', runtype='eval'):
     """
     Evaluate an expression in the provided environment.
     """
@@ -57,11 +57,12 @@ def r_eval(caller, src, environment={}, filename='<string>'):
             log.error(s)#(caller, s, is_error=is_error)
 
     env = get_restricted_environment(_writer, environment.get('parser'))
-    env['runtype'] = 'eval'
+    env['runtype'] = runtype
     env['caller'] = caller
     env.update(environment)
 
     code = compile_restricted(src, filename, 'eval')
+    value = None
     try:
         value =  eval(code, env)
     # except errors.UsageError as e:
@@ -73,7 +74,7 @@ def r_eval(caller, src, environment={}, filename='<string>'):
 
     return value
 
-def r_exec(caller, src, environment={}, filename='<string>'):
+def r_exec(caller, src, environment={}, filename='<string>', runtype='exec'):
     """
     Execute an expression in the provided environment.
     """
@@ -83,7 +84,7 @@ def r_exec(caller, src, environment={}, filename='<string>'):
             log.error(s)#(caller, s, is_error=is_error)
 
     env = get_restricted_environment(_writer, environment.get('parser'))
-    env['runtype'] = 'exec'
+    env['runtype'] = runtype
     env['caller'] = caller
     env.update(environment)
 
