@@ -40,7 +40,7 @@ class SSHServer(PromptToolkitSSHServer):
             log.error(e)
             return False
         if user.check_password(password):
-            self.user = user.pk
+            self.user = user
             return True
         return False
 
