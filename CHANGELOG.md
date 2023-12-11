@@ -1,3 +1,10 @@
+## [0.14.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.13.2...v0.14.0) (2023-12-11)
+
+
+### Features
+
+* use a context manager around code invocations ([f82a23c](https://gitlab.com/bubblehouse/termiverse/commit/f82a23c88d2a9c76db53cf5742120dfce3193ff4))
+
 ## [0.13.2](https://gitlab.com/bubblehouse/termiverse/compare/v0.13.1...v0.13.2) (2023-12-10)
 
 

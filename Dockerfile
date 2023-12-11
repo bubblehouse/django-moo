@@ -1,7 +1,7 @@
 FROM python:3.10-slim-bullseye
 LABEL Maintainer="Phil Christensen <phil@bubblehouse.org>"
 LABEL Name="termiverse"
-LABEL Version="0.13.2"
+LABEL Version="0.14.0"
 
 # Install base dependencies
 RUN apt-get update \
