@@ -16,8 +16,17 @@ user_context = contextvars.ContextVar("user")
 def get_caller():
     return user_context.get(None)
 
-def set_caller(obj):
-    user_context.set(obj)
+class context(object):
+    def __init__(self, user):
+        self.user = user
+
+    def __enter__(self):
+        caller = self.user.player.avatar
+        user_context.set(caller)
+        return caller
+
+    def __exit__(self, type, value, traceback):
+        user_context.set(None)
 
 def is_frame_access_allowed():
     return False
