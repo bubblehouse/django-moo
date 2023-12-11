@@ -1,3 +1,10 @@
+## [0.14.1](https://gitlab.com/bubblehouse/termiverse/compare/v0.14.0...v0.14.1) (2023-12-11)
+
+
+### Bug Fixes
+
+* other login fixes, still having exec trouble ([e1d7a3e](https://gitlab.com/bubblehouse/termiverse/commit/e1d7a3ecf5f4736c10081d798eb5ef050cb94af4))
+
 ## [0.14.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.13.2...v0.14.0) (2023-12-11)
 
 
