@@ -1,3 +1,12 @@
+## [0.14.2](https://gitlab.com/bubblehouse/termiverse/compare/v0.14.1...v0.14.2) (2023-12-16)
+
+
+### Bug Fixes
+
+* bootstrap naming tweaks, trying to add first properties with little success ([4295497](https://gitlab.com/bubblehouse/termiverse/commit/4295497b3ee25bae264d75580cc6258ccd2d352a))
+* correct verb handling scenarios ([6e5a5d8](https://gitlab.com/bubblehouse/termiverse/commit/6e5a5d83301643f465961911c573533161444be9))
+* include repo for reloadable verbs ([c057478](https://gitlab.com/bubblehouse/termiverse/commit/c057478327c040c2547ea7446f0b28db5c72ab66))
+
 ## [0.14.1](https://gitlab.com/bubblehouse/termiverse/compare/v0.14.0...v0.14.1) (2023-12-11)
 
 
