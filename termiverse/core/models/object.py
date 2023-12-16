@@ -2,6 +2,8 @@ from django.db import models
 
 from .. import bootstrap
 from .acl import AccessibleMixin, Access
+from .verb import Verb, VerbName
+from .property import Property
 
 class Object(models.Model):
     name = models.CharField(max_length=255)
@@ -18,22 +20,36 @@ class Object(models.Model):
         return 'object'
 
     def add_verb(self, *names, code=None, filename=None, method=False):
-        verb = models.Verb.objects.create(
+        verb = Verb.objects.create(
             method = method,
             origin = self,
             code = bootstrap.get_source(filename) if filename else code
         )
         for name in names:
-            verb.names.add(models.VerbName.objects.create(
+            verb.names.add(VerbName.objects.create(
                 verb=verb,
                 name=name
             ))
-        set_default_permissions = models.Verb.objects.get(
-            origin = self.objects.get(pk=0),
+        set_default_permissions = Verb.objects.get(
+            origin = Object.objects.get(pk=0),
             name = 'set_default_permissions'
         )
         set_default_permissions(verb)
         self.verbs.add(verb)
+
+    def add_property(self, name, value):
+        prop = Property.objects.create(
+            name = name,
+            value = value,
+            origin = self,
+            type = "python"
+        )
+        set_default_permissions = Verb.objects.get(
+            origin = Object.objects.get(pk=0),
+            name = 'set_default_permissions'
+        )
+        set_default_permissions(prop)
+        self.properties.add(prop)
 
 class AccessibleObject(Object, AccessibleMixin):
     class Meta:
