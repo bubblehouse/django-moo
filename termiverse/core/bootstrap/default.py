@@ -56,43 +56,43 @@ book = create_object(
     location = bag,
 )
 
-player = create_object(
+players = create_object(
     name = 'player class',
     owner = wizard,
     location = book,
 )
 
-guest = create_object(
+guests = create_object(
     name = 'guest class',
     owner = wizard,
     location = book,
 )
-guest.parents.add(player)
+guests.parents.add(players)
 
-author = create_object(
+authors = create_object(
     name = 'author class',
     owner = wizard,
     location = book,
 )
-author.parents.add(player)
+authors.parents.add(players)
 
-programmer = create_object(
+programmers = create_object(
     name = 'programmer class',
     owner = wizard,
     location = book,
 )
-programmer.parents.add(author)
+programmers.parents.add(authors)
 
-Wizard = create_object(
+wizards = create_object(
     name = 'wizard class',
     owner = wizard,
     location = book,
 )
-Wizard.parents.add(programmer)
+wizards.parents.add(programmers)
 
-wizard.parents.add(Wizard)
+wizard.parents.add(wizards)
 
-room = create_object(
+rooms = create_object(
     name = 'room class',
     owner = wizard,
     location = book,
@@ -102,7 +102,10 @@ lab = create_object(
     name = 'The Laboratory',
     owner = wizard,
 )
-lab.parents.add(room)
+lab.parents.add(rooms)
+lab.add_property("description", """A cavernous laboratory filled with gadgetry of every kind,
+this seems like a dumping ground for every piece of dusty forgotten
+equipment a mad scientist might require.""")
 
 wizard.location = lab
 wizard.save()
