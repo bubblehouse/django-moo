@@ -7,12 +7,14 @@ create_object = models.Object.objects.create
 for name in settings.DEFAULT_PERMISSIONS:
     p = models.Permission.objects.create(name=name)
 
+repo = models.Repository.objects.get(slug='default')
 system = create_object(name="System Object", unique_name=True)
 
 # Configure `set_default_permissions` the long way
 set_default_permissions = models.Verb.objects.create(
     method = True,
     origin = system,
+    repo = repo,
     code = bootstrap.get_source('system_set_default_permissions.py')
 )
 set_default_permissions.names.add(models.VerbName.objects.create(
