@@ -29,7 +29,10 @@ class Verb(models.Model):
         return ''.join([ability_decoration, verb_name, method_decoration])
 
     def name(self):
-        return self.names.all()[0].name
+        names = self.names.all()
+        if not names:
+            return "(untitled)"
+        return names[0].name
 
 class AccessibleVerb(Verb, AccessibleMixin):
     class Meta:
@@ -49,6 +52,11 @@ class AccessibleVerb(Verb, AccessibleMixin):
 class VerbName(models.Model):
     verb = models.ForeignKey(Verb, related_name='names', on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint("verb", "name", name="unique_verb_name")
+        ]
 
     def __str__(self):
         return "%s {#%s on %s}" % (
