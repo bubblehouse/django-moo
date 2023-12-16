@@ -31,7 +31,7 @@ class Object(models.Model):
                 name=name
             ))
         set_default_permissions = Verb.objects.get(
-            origin = Object.objects.get(pk=0),
+            origin = Object.objects.get(pk=1),
             name = 'set_default_permissions'
         )
         set_default_permissions(verb)
@@ -45,7 +45,7 @@ class Object(models.Model):
             type = "python"
         )
         set_default_permissions = Verb.objects.get(
-            origin = Object.objects.get(pk=0),
+            origin = Object.objects.get(pk=1),
             name = 'set_default_permissions'
         )
         set_default_permissions(prop)
