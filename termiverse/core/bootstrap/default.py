@@ -1,4 +1,4 @@
-from termiverse.core import models, bootstrap
+from termiverse.core import models, bootstrap, code
 
 from django.conf import settings
 
@@ -103,9 +103,10 @@ lab = create_object(
     owner = wizard,
 )
 lab.parents.add(rooms)
-lab.add_property("description", """A cavernous laboratory filled with gadgetry of every kind,
-this seems like a dumping ground for every piece of dusty forgotten
-equipment a mad scientist might require.""")
+with code.context(wizard):
+    lab.add_property("description", """A cavernous laboratory filled with gadgetry of every kind,
+    this seems like a dumping ground for every piece of dusty forgotten
+    equipment a mad scientist might require.""")
 
 wizard.location = lab
 wizard.save()
