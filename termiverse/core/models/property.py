@@ -12,7 +12,8 @@ class Property(models.Model):
     owner = models.ForeignKey("Object", related_name='+', null=True, on_delete=models.SET_NULL)
     origin = models.ForeignKey("Object", related_name='properties', on_delete=models.CASCADE)
 
-    def get_type(self):
+    @property
+    def kind(self):
         return 'property'
 
     def __str__(self):
