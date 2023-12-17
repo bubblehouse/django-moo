@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-__version__ = "0.14.4"
+__version__ = "0.14.5"
 
 def get_version():
     return __version__
