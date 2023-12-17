@@ -61,6 +61,8 @@ players = create_object(
     owner = wizard,
     location = book,
 )
+with code.context(wizard):
+    players.add_verb(["look", "inspect"], filename="players_look.py", ability=True)
 
 guests = create_object(
     name = 'guest class',
