@@ -2,8 +2,8 @@ from django.db import models
 
 from .. import bootstrap
 from .acl import AccessibleMixin, Access
-from .verb import AccessibleVerb, Verb, VerbName
-from .property import AccessibleProperty, Property
+from .verb import AccessibleVerb, VerbName
+from .property import AccessibleProperty
 
 class Object(models.Model):
     name = models.CharField(max_length=255)
@@ -16,7 +16,8 @@ class Object(models.Model):
     def __str__(self):
         return "#%s (%s)" % (self.id, self.name)
 
-    def get_type(self):
+    @property
+    def kind(self):
         return 'object'
 
     def add_verb(self, *names, code=None, filename=None, method=False):
@@ -60,35 +61,35 @@ class AccessibleObject(Object, AccessibleMixin):
 
     def is_allowed(self, permission, subject, fatal=False):
         rules = Access.objects.filter(
-            object = subject if subject.get_type() == 'object' else None,
-            verb = subject if subject.get_type() == 'verb' else None,
-            property = subject if subject.get_type() == 'property' else None,
+            object = subject if subject.kind == 'object' else None,
+            verb = subject if subject.kind == 'verb' else None,
+            property = subject if subject.kind == 'property' else None,
             type = 'accessor',
             accessor = self,
             permission__in = (permission, "anything")
         )
         rules.union(Access.objects.filter(
-            object = subject if subject.get_type() == 'object' else None,
-            verb = subject if subject.get_type() == 'verb' else None,
-            property = subject if subject.get_type() == 'property' else None,
+            object = subject if subject.kind == 'object' else None,
+            verb = subject if subject.kind == 'verb' else None,
+            property = subject if subject.kind == 'property' else None,
             type = 'group',
             group = 'everyone',
             permission__in = (permission, "anything")
         ))
         if self.owns(subject):
             rules.union(Access.objects.filter(
-                object = subject if subject.get_type() == 'object' else None,
-                verb = subject if subject.get_type() == 'verb' else None,
-                property = subject if subject.get_type() == 'property' else None,
+                object = subject if subject.kind == 'object' else None,
+                verb = subject if subject.kind == 'verb' else None,
+                property = subject if subject.kind == 'property' else None,
                 type = 'group',
                 group = 'owners',
                 permission__in = (permission, "anything")
             ))
         if self.is_wizard():
             rules.union(Access.objects.filter(
-                object = subject if subject.get_type() == 'object' else None,
-                verb = subject if subject.get_type() == 'verb' else None,
-                property = subject if subject.get_type() == 'property' else None,
+                object = subject if subject.kind == 'object' else None,
+                verb = subject if subject.kind == 'verb' else None,
+                property = subject if subject.kind == 'property' else None,
                 type = 'group',
                 group = 'wizards',
                 permission__in = (permission, "anything")
