@@ -6,6 +6,14 @@ from .acl import AccessibleMixin, Access
 from .verb import AccessibleVerb, VerbName
 from .property import AccessibleProperty
 
+def create_object(name, *a, **kw):
+    kw['name'] = name
+    if 'owner' not in kw:
+        kw['owner'] =  get_caller()
+    if 'location' not in kw and kw['owner']:
+        kw['location'] = kw['owner'].location
+    return AccessibleObject.objects.create(*a, **kw)
+
 class Object(models.Model):
     name = models.CharField(max_length=255)
     unique_name = models.BooleanField(default=False)
@@ -19,6 +27,10 @@ class Object(models.Model):
     @property
     def kind(self):
         return 'object'
+
+class AccessibleObject(Object, AccessibleMixin):
+    class Meta:
+        proxy = True
 
     def add_verb(self, *names, code=None, owner=None, filename=None, ability=False, method=False):
         owner = get_caller() or owner or self
@@ -56,10 +68,6 @@ class Object(models.Model):
         )
         set_default_permissions(prop)
         self.properties.add(prop)
-
-class AccessibleObject(Object, AccessibleMixin):
-    class Meta:
-        proxy = True
 
     def owns(self, subject):
         return subject.owner == self

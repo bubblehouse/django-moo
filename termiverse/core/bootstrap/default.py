@@ -1,8 +1,7 @@
 from termiverse.core import models, bootstrap, code
+from termiverse.core.models.object import create_object
 
 from django.conf import settings
-
-create_object = models.Object.objects.create
 
 for name in settings.DEFAULT_PERMISSIONS:
     p = models.Permission.objects.create(name=name)
@@ -29,86 +28,37 @@ set_default_permissions(system)
 wizard = create_object(name="Wizard", unique_name=True)
 wizard.owner = wizard
 wizard.save()
-
 # Wizard owns the system...
 system.owner = wizard
 system.save()
-
 # ...and the default permissions verb
 set_default_permissions.owner = wizard
 set_default_permissions.save()
 
-bag = create_object(
-    name = 'bag of holding',
-    owner = wizard,
-    location = wizard,
-)
-
-hammer = create_object(
-    name = 'wizard hammer',
-    owner = wizard,
-    location = bag,
-)
-
-book = create_object(
-    name = 'class book',
-    owner = wizard,
-    location = bag,
-)
-
-players = create_object(
-    name = 'player class',
-    owner = wizard,
-    location = book,
-)
 with code.context(wizard):
+    bag = create_object('bag of holding', location=wizard)
+    hammer = create_object('wizard hammer', location=bag)
+    book = create_object('class book', location=bag)
+    players = create_object('player class', location=book)
     players.add_verb(["look", "inspect"], filename="players_look.py", ability=True)
+    guests = create_object('guest class', location=book)
+    guests.parents.add(players)
+    authors = create_object('author class', location=book)
+    authors.parents.add(players)
+    programmers = create_object('programmer class', location=book)
+    programmers.parents.add(authors)
+    wizards = create_object('wizard class', location=book)
+    wizards.parents.add(programmers)
 
-guests = create_object(
-    name = 'guest class',
-    owner = wizard,
-    location = book,
-)
-guests.parents.add(players)
+    wizard.parents.add(wizards)
 
-authors = create_object(
-    name = 'author class',
-    owner = wizard,
-    location = book,
-)
-authors.parents.add(players)
+    rooms = create_object('room class', location=book)
 
-programmers = create_object(
-    name = 'programmer class',
-    owner = wizard,
-    location = book,
-)
-programmers.parents.add(authors)
-
-wizards = create_object(
-    name = 'wizard class',
-    owner = wizard,
-    location = book,
-)
-wizards.parents.add(programmers)
-
-wizard.parents.add(wizards)
-
-rooms = create_object(
-    name = 'room class',
-    owner = wizard,
-    location = book,
-)
-
-lab = create_object(
-    name = 'The Laboratory',
-    owner = wizard,
-)
-lab.parents.add(rooms)
-with code.context(wizard):
+    lab = create_object('The Laboratory')
+    lab.parents.add(rooms)
     lab.add_property("description", """A cavernous laboratory filled with gadgetry of every kind,
     this seems like a dumping ground for every piece of dusty forgotten
     equipment a mad scientist might require.""")
 
-wizard.location = lab
-wizard.save()
+    wizard.location = lab
+    wizard.save()
