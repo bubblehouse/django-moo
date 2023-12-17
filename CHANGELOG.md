@@ -1,3 +1,11 @@
+## [0.14.4](https://gitlab.com/bubblehouse/termiverse/compare/v0.14.3...v0.14.4) (2023-12-17)
+
+
+### Bug Fixes
+
+* add owner variable to add_* methods ([b4796da](https://gitlab.com/bubblehouse/termiverse/commit/b4796dade2b65c7085b6fd8a2120a276659bd5ac))
+* remove observations, that concept doesnt exist here ([58935da](https://gitlab.com/bubblehouse/termiverse/commit/58935daf262fe4c192f27ce7f1a65b6c1bc3ae06))
+
 ## [0.14.3](https://gitlab.com/bubblehouse/termiverse/compare/v0.14.2...v0.14.3) (2023-12-17)
 
 
