@@ -1,3 +1,11 @@
+## [0.14.3](https://gitlab.com/bubblehouse/termiverse/compare/v0.14.2...v0.14.3) (2023-12-17)
+
+
+### Bug Fixes
+
+* add_propery and add_verb updates ([3fbfe4c](https://gitlab.com/bubblehouse/termiverse/commit/3fbfe4ca38c1ec160b6dc3cc8b033336eac47301))
+* use correct PK for system ([afbd6ea](https://gitlab.com/bubblehouse/termiverse/commit/afbd6ea965ddf7b0f4280889915d4aaad1a42c0d))
+
 ## [0.14.2](https://gitlab.com/bubblehouse/termiverse/compare/v0.14.1...v0.14.2) (2023-12-16)
 
 
