@@ -1,3 +1,12 @@
+## [0.14.5](https://gitlab.com/bubblehouse/termiverse/compare/v0.14.4...v0.14.5) (2023-12-17)
+
+
+### Bug Fixes
+
+* sketching out first verb ([9c779ec](https://gitlab.com/bubblehouse/termiverse/commit/9c779ec0e08f7c7cac4a96f8265c0b3da9832e2f))
+* starting to implement proper context support ([ffc2159](https://gitlab.com/bubblehouse/termiverse/commit/ffc2159f848b009317c2e695c822aabaf59312f1))
+* updated to Django 5.0 ([47e30c6](https://gitlab.com/bubblehouse/termiverse/commit/47e30c6ba0cce2db4b16365124df7aede8447de3))
+
 ## [0.14.4](https://gitlab.com/bubblehouse/termiverse/compare/v0.14.3...v0.14.4) (2023-12-17)
 
 
