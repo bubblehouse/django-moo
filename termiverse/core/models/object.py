@@ -11,7 +11,6 @@ class Object(models.Model):
     owner = models.ForeignKey('self', related_name='+', blank=True, null=True, on_delete=models.SET_NULL,)
     location = models.ForeignKey('self', related_name='contents', blank=True, null=True, on_delete=models.SET_NULL)
     parents = models.ManyToManyField('self', related_name='children', blank=True, symmetrical=False, through='Relationship')
-    observers = models.ManyToManyField('self', related_name='observations', blank=True, symmetrical=False, through='Observation')
 
     def __str__(self):
         return "#%s (%s)" % (self.id, self.name)
@@ -116,10 +115,6 @@ class Relationship(models.Model):
     child = models.ForeignKey(Object, related_name='parent', on_delete=models.CASCADE)
     parent = models.ForeignKey(Object, related_name='child', on_delete=models.CASCADE)
     weight = models.IntegerField(default=0)
-
-class Observation(models.Model):
-    object = models.ForeignKey(Object, related_name='observer', on_delete=models.CASCADE)
-    observer = models.ForeignKey(Object, related_name='object', on_delete=models.CASCADE)
 
 class Alias(models.Model):
     class Meta:
