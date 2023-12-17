@@ -1,6 +1,7 @@
 from django.db import models
 
 from .. import bootstrap
+from ..code import get_caller
 from .acl import AccessibleMixin, Access
 from .verb import AccessibleVerb, VerbName
 from .property import AccessibleProperty
@@ -20,11 +21,12 @@ class Object(models.Model):
         return 'object'
 
     def add_verb(self, *names, code=None, owner=None, filename=None, ability=False, method=False):
+        owner = get_caller() or owner or self
         verb = AccessibleVerb.objects.create(
             method = method,
             ability = ability,
             origin = self,
-            owner = owner if owner else self,
+            owner = owner,
             code = bootstrap.get_source(filename) if filename else code
         )
         for name in names:
@@ -40,12 +42,13 @@ class Object(models.Model):
         self.verbs.add(verb)
 
     def add_property(self, name, value, owner=None):
+        owner = get_caller() or owner or self
         prop = AccessibleProperty.objects.create(
             name = name,
             value = value,
             origin = self,
-            owner = owner if owner else self,
-            type = "python"
+            owner = owner,
+            type = "string"
         )
         set_default_permissions = AccessibleVerb.objects.get(
             origin = Object.objects.get(pk=1),
