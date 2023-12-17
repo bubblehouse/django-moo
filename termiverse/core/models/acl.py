@@ -29,9 +29,9 @@ class AccessibleMixin(object):
         """
         self.check_permission('grant', self)
         Access.objects.create(
-            object = self if self.get_type() == 'object' else None,
-            verb = self if self.get_type() == 'verb' else None,
-            property = self if self.get_type() == 'property' else None,
+            object = self if self.kind == 'object' else None,
+            verb = self if self.kind == 'verb' else None,
+            property = self if self.kind == 'property' else None,
             rule = 'allow',
             permission = Permission.objects.get(name=permission),
             type = 'group' if isinstance(accessor, str) else 'accessor',
@@ -47,9 +47,9 @@ class AccessibleMixin(object):
         """
         self.check_permission('grant', self)
         Access.objects.create(
-            object = self if self.get_type() == 'object' else None,
-            verb = self if self.get_type() == 'verb' else None,
-            property = self if self.get_type() == 'property' else None,
+            object = self if self.kind == 'object' else None,
+            verb = self if self.kind == 'verb' else None,
+            property = self if self.kind == 'property' else None,
             rule = 'deny',
             permission = Permission.objects.get(name=permission),
             type = 'group' if isinstance(accessor, str) else 'accessor',

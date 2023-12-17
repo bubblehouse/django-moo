@@ -14,7 +14,8 @@ class Verb(models.Model):
     ability = models.BooleanField(default=False)
     method = models.BooleanField(default=False)
 
-    def get_type(self):
+    @property
+    def kind(self):
         return 'verb'
 
     def __str__(self):
