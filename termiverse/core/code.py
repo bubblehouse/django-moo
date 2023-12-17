@@ -17,13 +17,12 @@ def get_caller():
     return user_context.get(None)
 
 class context(object):
-    def __init__(self, user):
-        self.user = user
+    def __init__(self, caller):
+        self.caller = caller
 
     def __enter__(self):
-        caller = self.user.player.avatar
-        user_context.set(caller)
-        return caller
+        user_context.set(self.caller)
+        return self.caller
 
     def __exit__(self, type, value, traceback):
         user_context.set(None)
