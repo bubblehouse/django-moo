@@ -20,10 +20,12 @@ class Object(models.Model):
     def kind(self):
         return 'object'
 
-    def add_verb(self, *names, code=None, filename=None, method=False):
+    def add_verb(self, *names, code=None, owner=None, filename=None, ability=False, method=False):
         verb = AccessibleVerb.objects.create(
             method = method,
+            ability = ability,
             origin = self,
+            owner = owner if owner else self,
             code = bootstrap.get_source(filename) if filename else code
         )
         for name in names:
@@ -38,11 +40,12 @@ class Object(models.Model):
         set_default_permissions(verb)
         self.verbs.add(verb)
 
-    def add_property(self, name, value):
+    def add_property(self, name, value, owner=None):
         prop = AccessibleProperty.objects.create(
             name = name,
             value = value,
             origin = self,
+            owner = owner if owner else self,
             type = "python"
         )
         set_default_permissions = AccessibleVerb.objects.get(
