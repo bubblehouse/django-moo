@@ -1,3 +1,10 @@
+## [0.14.6](https://gitlab.com/bubblehouse/termiverse/compare/v0.14.5...v0.14.6) (2023-12-17)
+
+
+### Bug Fixes
+
+* further improvements to syntax sugar ([bcf34a5](https://gitlab.com/bubblehouse/termiverse/commit/bcf34a5d6dc3fc7f61b54795decda013c87f5baf))
+
 ## [0.14.5](https://gitlab.com/bubblehouse/termiverse/compare/v0.14.4...v0.14.5) (2023-12-17)
 
 
