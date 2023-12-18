@@ -16,13 +16,19 @@ user_context = contextvars.ContextVar("user")
 def get_caller():
     return user_context.get(None)
 
+output_context = contextvars.ContextVar("output")
+def get_output():
+    return output_context.get(None)
+
 class context(object):
-    def __init__(self, caller):
+    def __init__(self, caller, writer):
         self.caller = caller
+        self.writer = writer
 
     def __enter__(self):
         user_context.set(self.caller)
-        return self.caller
+        output_context.set(self.writer)
+        return self
 
     def __exit__(self, type, value, traceback):
         user_context.set(None)
@@ -52,8 +58,12 @@ def r_eval(caller, src, environment={}, filename='<string>', runtype='eval'):
     """
     def _writer(s, is_error=False):
         if(s.strip()):
-            # TODO: print should instead write to client
-            log.error(s)#(caller, s, is_error=is_error)
+            writer = get_output()
+            if writer:
+                writer(s + "\n")
+            else:
+                # TODO: print should instead write to client
+                log.error(s)#(caller, s, is_error=is_error)
 
     env = get_restricted_environment(_writer, environment.get('parser'))
     env['runtype'] = runtype
@@ -79,8 +89,12 @@ def r_exec(caller, src, environment={}, filename='<string>', runtype='exec'):
     """
     def _writer(s, is_error=False):
         if(s.strip()):
-            # TODO: print should instead write to client
-            log.error(s)#(caller, s, is_error=is_error)
+            writer = get_output()
+            if writer:
+                writer(s + "\n")
+            else:
+                # TODO: print should instead write to client
+                log.error(s)#(caller, s, is_error=is_error)
 
     env = get_restricted_environment(_writer, environment.get('parser'))
     env['runtype'] = runtype
