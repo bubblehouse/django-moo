@@ -1,3 +1,11 @@
+## [0.14.7](https://gitlab.com/bubblehouse/termiverse/compare/v0.14.6...v0.14.7) (2023-12-18)
+
+
+### Bug Fixes
+
+* more verb reload updates ([ea9e984](https://gitlab.com/bubblehouse/termiverse/commit/ea9e984edd79df4f5f09f7bee7026a26236ac3e8))
+* output now sent to client instead of log ([7858155](https://gitlab.com/bubblehouse/termiverse/commit/7858155c4d6dd08d9cb43c806725c59b366e4db6))
+
 ## [0.14.6](https://gitlab.com/bubblehouse/termiverse/compare/v0.14.5...v0.14.6) (2023-12-17)
 
 
