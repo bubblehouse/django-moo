@@ -1,7 +1,11 @@
+import logging
+
+from django.conf import settings
+
 from termiverse.core import models, bootstrap, code
 from termiverse.core.models.object import create_object
 
-from django.conf import settings
+log = logging.getLogger(__name__)
 
 for name in settings.DEFAULT_PERMISSIONS:
     p = models.Permission.objects.create(name=name)
@@ -35,7 +39,7 @@ system.save()
 set_default_permissions.owner = wizard
 set_default_permissions.save()
 
-with code.context(wizard):
+with code.context(wizard, log.info):
     bag = create_object('bag of holding', location=wizard)
     hammer = create_object('wizard hammer', location=bag)
     book = create_object('class book', location=bag)
