@@ -77,10 +77,11 @@ class CustomRepl(PythonRepl):
         """
         # does this need to be called from outside the synchronous function?
         # Try eval first
-        log.error(f"{self.user}: {line}")
+        caller = self.user.player.avatar
+        log.error(f"{caller}: {line}")
         try:
-            with code.context(self.user) as caller:
-                result = code.r_eval(caller, line, self.get_locals())
+            with code.context(caller, self.app.output.write) as ctx:
+                result = code.r_eval(ctx.caller, line, self.get_locals())
                 self._store_eval_result(result)
             return result
         except SyntaxError:
@@ -88,6 +89,6 @@ class CustomRepl(PythonRepl):
         # If not a valid `eval` expression, compile as `exec` expression
         # but still run with eval to get an awaitable in case of a
         # awaitable expression.
-        with code.context(self.user) as caller:
-            result = code.r_exec(caller, line, self.get_locals())
+        with code.context(caller, self.app.output.write) as ctx:
+            result = code.r_exec(ctx.caller, line, self.get_locals())
         return result
