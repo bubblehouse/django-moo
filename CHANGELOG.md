@@ -1,3 +1,10 @@
+## [0.14.8](https://gitlab.com/bubblehouse/termiverse/compare/v0.14.7...v0.14.8) (2023-12-18)
+
+
+### Bug Fixes
+
+* provide an output for the context ([02a09d6](https://gitlab.com/bubblehouse/termiverse/commit/02a09d655407d0ba1993daec3072a3754291912b))
+
 ## [0.14.7](https://gitlab.com/bubblehouse/termiverse/compare/v0.14.6...v0.14.7) (2023-12-18)
 
 
