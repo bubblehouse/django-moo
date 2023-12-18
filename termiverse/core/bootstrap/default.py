@@ -40,7 +40,7 @@ with code.context(wizard):
     hammer = create_object('wizard hammer', location=bag)
     book = create_object('class book', location=bag)
     players = create_object('player class', location=book)
-    players.add_verb(["look", "inspect"], filename="players_look.py", ability=True)
+    players.add_verb(["look", "inspect"], filename="players_look.py", repo=repo, ability=True)
     guests = create_object('guest class', location=book)
     guests.parents.add(players)
     authors = create_object('author class', location=book)
