@@ -32,13 +32,15 @@ class AccessibleObject(Object, AccessibleMixin):
     class Meta:
         proxy = True
 
-    def add_verb(self, *names, code=None, owner=None, filename=None, ability=False, method=False):
+    def add_verb(self, *names, code=None, owner=None, repo=None, filename=None, ability=False, method=False):
         owner = get_caller() or owner or self
         verb = AccessibleVerb.objects.create(
             method = method,
             ability = ability,
             origin = self,
             owner = owner,
+            repo = repo,
+            filename = filename,
             code = bootstrap.get_source(filename) if filename else code
         )
         for name in names:
