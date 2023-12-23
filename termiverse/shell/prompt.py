@@ -4,7 +4,9 @@ import logging
 from typing import Callable
 
 from prompt_toolkit.utils import DummyContext
+from prompt_toolkit.formatted_text import AnyFormattedText
 from ptpython.repl import PythonRepl
+from ptpython.prompt_style import PromptStyle
 
 from ..core import code, models
 
@@ -65,16 +67,37 @@ def embed(
 
     return coroutine()  # type: ignore
 
+class MudPrompt(PromptStyle):
+    def in_prompt(self) -> AnyFormattedText:
+        return [("class:prompt", "==> ")]
+
+    def in2_prompt(self, width: int) -> AnyFormattedText:
+        return [("class:prompt.dots", "--> ")]
+
+    def out_prompt(self) -> AnyFormattedText:
+        return []
+
 class CustomRepl(PythonRepl):
     def __init__(self, user, *a, **kw):
         self.user = user
         super().__init__(*a, **kw)
+        self.all_prompt_styles["mud"] = MudPrompt()
+        self.prompt_style = "mud"
 
     @sync_to_async
     def eval_async(self, line: str) -> object:
         """
         Evaluate the line and print the result.
         """
+        if self.prompt_style == "mud":
+            return self.prompt_mud(line)
+        else:
+            return self.prompt_eval(line)
+
+    def prompt_mud(self, line: str) -> object:
+        self.app.output.write("Parser not implemented, switch to another mode.\n")
+
+    def prompt_eval(self, line: str) -> object:
         # does this need to be called from outside the synchronous function?
         # Try eval first
         caller = self.user.player.avatar
