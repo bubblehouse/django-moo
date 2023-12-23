@@ -39,7 +39,7 @@ def embed(
             "__builtins__": builtins,
         }
 
-    locals = locals or globals
+    locals = {}
 
     def get_globals():
         return globals
@@ -81,7 +81,7 @@ class CustomRepl(PythonRepl):
         log.error(f"{caller}: {line}")
         try:
             with code.context(caller, self.app.output.write) as ctx:
-                result = code.r_eval(ctx.caller, line, self.get_locals())
+                result = code.do_eval(ctx.caller, line, self.get_locals())
                 self._store_eval_result(result)
             return result
         except SyntaxError:
@@ -90,5 +90,5 @@ class CustomRepl(PythonRepl):
         # but still run with eval to get an awaitable in case of a
         # awaitable expression.
         with code.context(caller, self.app.output.write) as ctx:
-            result = code.r_exec(ctx.caller, line, self.get_locals())
+            result = code.do_eval(ctx.caller, line, self.get_locals(), compileas='exec')
         return result

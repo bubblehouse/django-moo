@@ -53,12 +53,14 @@ def massage_verb_code(code):
     return code
 
 def r_eval(caller, src, locals={}, filename='<string>', runtype='eval'):
-    return eval(caller, src, locals, filename, runtype, 'eval')
+    src = massage_verb_code(src)
+    return do_eval(caller, src, locals, filename, runtype, 'eval')
 
 def r_exec(caller, src, locals={}, filename='<string>', runtype='exec'):
-    return eval(caller, src, locals, filename, runtype, 'exec')
+    src = massage_verb_code(src)
+    return do_eval(caller, src, locals, filename, runtype, 'exec')
 
-def eval(caller, src, locals={}, filename='<string>', runtype='exec', compileas='eval'):
+def do_eval(caller, src, locals={}, filename='<string>', runtype='exec', compileas='eval'):
     """
     Execute an expression in the provided environment.
     """
@@ -76,18 +78,19 @@ def eval(caller, src, locals={}, filename='<string>', runtype='exec', compileas=
     env['caller'] = caller
     locals.update(env)
 
-    code = compile_restricted(massage_verb_code(src), filename, compileas)
+    code = compile_restricted(src, filename, compileas)
+    value = None
     try:
-        exec(code, env)
+        value = eval(code, locals)
     # except errors.UsageError as e:
     except Exception as e:
         if(caller):
             _writer(str(e), is_error=True)
         else:
             raise e
-
     if("returnValue" in locals):
         return locals["returnValue"]
+    return value
 
 def get_restricted_environment(writer, p=None):
     """
@@ -95,7 +98,7 @@ def get_restricted_environment(writer, p=None):
     """
     class _print_(object):
         def _call_print(self, s):
-            writer(s)
+            writer(str(s))
 
     class _write_(object):
         def __init__(self, obj):
@@ -138,7 +141,7 @@ def get_restricted_environment(writer, p=None):
 
     safe_builtins['__import__'] = restricted_import
 
-    for name in ['dict', 'getattr', 'hasattr']:
+    for name in ['dict', 'dir', 'getattr', 'hasattr']:
         safe_builtins[name] = __builtins__[name]
 
     env = dict(
