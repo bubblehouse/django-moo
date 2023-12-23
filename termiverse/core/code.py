@@ -52,38 +52,13 @@ def massage_verb_code(code):
     )
     return code
 
-def r_eval(caller, src, environment={}, filename='<string>', runtype='eval'):
-    """
-    Evaluate an expression in the provided environment.
-    """
-    def _writer(s, is_error=False):
-        if(s.strip()):
-            writer = get_output()
-            if writer:
-                writer(s + "\n")
-            else:
-                # TODO: print should instead write to client
-                log.error(s)#(caller, s, is_error=is_error)
+def r_eval(caller, src, locals={}, filename='<string>', runtype='eval'):
+    return eval(caller, src, locals, filename, runtype, 'eval')
 
-    env = get_restricted_environment(_writer, environment.get('parser'))
-    env['runtype'] = runtype
-    env['caller'] = caller
-    env.update(environment)
+def r_exec(caller, src, locals={}, filename='<string>', runtype='exec'):
+    return eval(caller, src, locals, filename, runtype, 'exec')
 
-    code = compile_restricted(src, filename, 'eval')
-    value = None
-    try:
-        value =  eval(code, env)
-    # except errors.UsageError as e:
-    except Exception as e:
-        if(caller):
-            _writer(str(e), is_error=True)
-        else:
-            raise e
-
-    return value
-
-def r_exec(caller, src, environment={}, filename='<string>', runtype='exec'):
+def eval(caller, src, locals={}, filename='<string>', runtype='exec', compileas='eval'):
     """
     Execute an expression in the provided environment.
     """
@@ -96,12 +71,12 @@ def r_exec(caller, src, environment={}, filename='<string>', runtype='exec'):
                 # TODO: print should instead write to client
                 log.error(s)#(caller, s, is_error=is_error)
 
-    env = get_restricted_environment(_writer, environment.get('parser'))
+    env = get_restricted_environment(_writer, locals.get('parser'))
     env['runtype'] = runtype
     env['caller'] = caller
-    env.update(environment)
+    locals.update(env)
 
-    code = compile_restricted(massage_verb_code(src), filename, 'exec')
+    code = compile_restricted(massage_verb_code(src), filename, compileas)
     try:
         exec(code, env)
     # except errors.UsageError as e:
@@ -111,8 +86,8 @@ def r_exec(caller, src, environment={}, filename='<string>', runtype='exec'):
         else:
             raise e
 
-    if("returnValue" in env):
-        return env["returnValue"]
+    if("returnValue" in locals):
+        return locals["returnValue"]
 
 def get_restricted_environment(writer, p=None):
     """
