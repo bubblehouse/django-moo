@@ -1,7 +1,7 @@
 from django.db import models
 from django.core import validators
 
-from ..code import get_caller, r_exec
+from ..code import get_caller, get_output, get_restricted_environment, r_exec
 from .acl import AccessibleMixin
 
 class Verb(models.Model):
@@ -43,11 +43,12 @@ class AccessibleVerb(Verb, AccessibleMixin):
         if not(self.method):
             raise RuntimeError("%s is not a method." % self)
         caller = get_caller()
+        globals = get_restricted_environment(get_output())
         # self.check('execute', self)
         env = {}
-        env['args'] = args
-        env['kwargs'] = kwargs
-        return r_exec(caller, self.code, env, filename=repr(self), runtype="method")
+        globals['args'] = args
+        globals['kwargs'] = kwargs
+        return r_exec(caller, self.code, env, globals, filename=repr(self), runtype="method")
 
 
 class VerbName(models.Model):
