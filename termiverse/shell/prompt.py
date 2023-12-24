@@ -1,7 +1,5 @@
-from asgiref.sync import sync_to_async
-import builtins
 import logging
-from typing import Callable
+from asgiref.sync import sync_to_async
 
 from prompt_toolkit.utils import DummyContext
 from prompt_toolkit.formatted_text import AnyFormattedText
@@ -14,38 +12,25 @@ log = logging.getLogger(__name__)
 
 def embed(
     user: models.User,
-    globals=None,
     locals=None,
-    configure: Callable[[PythonRepl], None] | None = None,
     vi_mode: bool = False
 ) -> None:
     """
-    Call this to embed  Python shell at the current point in your program.
-    It's similar to `IPython.embed` and `bpython.embed`. ::
-
-        from prompt_toolkit.contrib.repl import embed
-        embed(globals(), locals())
-
+    Call this to embed  Python shell at the current point.
     :param vi_mode: Boolean. Use Vi instead of Emacs key bindings.
     :param configure: Callable that will be called with the `PythonRepl` as a first
                       argument, to trigger configuration.
-    :param patch_stdout:  When true, patch `sys.stdout` so that background
-        threads that are printing will print nicely above the prompt.
     """
-    # Default globals/locals
-    if globals is None:
-        globals = {
-            "__name__": "__main__",
-            "__package__": None,
-            "__doc__": None,
-            "__builtins__": builtins,
-        }
-
+    # Default locals
     locals = {}
+    globals = {
+        "__name__": "__main__",
+        "__package__": None,
+        "__doc__": None
+    }
 
     def get_globals():
         return globals
-
     def get_locals():
         return locals
 
@@ -57,8 +42,7 @@ def embed(
         vi_mode=vi_mode,
     )
 
-    if configure:
-        configure(repl)
+    globals.update(code.get_restricted_environment(repl.writer))
 
     # Start repl.
     async def coroutine() -> None:
@@ -82,7 +66,11 @@ class CustomRepl(PythonRepl):
         self.user = user
         super().__init__(*a, **kw)
         self.all_prompt_styles["mud"] = MudPrompt()
-        self.prompt_style = "mud"
+        self.prompt_style = "classic"
+
+    def writer(self, s, is_error=False):
+        if(s.strip()):
+            self.app.output.write(f"{s}\n")
 
     @sync_to_async
     def eval_async(self, line: str) -> object:
@@ -95,7 +83,7 @@ class CustomRepl(PythonRepl):
             return self.prompt_eval(line)
 
     def prompt_mud(self, line: str) -> object:
-        self.app.output.write("Parser not implemented, switch to another mode.\n")
+        self.writer("Parser not implemented, switch to another mode.")
 
     def prompt_eval(self, line: str) -> object:
         # does this need to be called from outside the synchronous function?
@@ -103,8 +91,8 @@ class CustomRepl(PythonRepl):
         caller = self.user.player.avatar
         log.error(f"{caller}: {line}")
         try:
-            with code.context(caller, self.app.output.write) as ctx:
-                result = code.do_eval(ctx.caller, line, self.get_locals())
+            with code.context(caller, self.writer) as ctx:
+                result = code.do_eval(ctx.caller, line, self.get_locals(), self.get_globals())
                 self._store_eval_result(result)
             return result
         except SyntaxError:
@@ -112,6 +100,6 @@ class CustomRepl(PythonRepl):
         # If not a valid `eval` expression, compile as `exec` expression
         # but still run with eval to get an awaitable in case of a
         # awaitable expression.
-        with code.context(caller, self.app.output.write) as ctx:
-            result = code.do_eval(ctx.caller, line, self.get_locals(), compileas='exec')
+        with code.context(caller, self.writer) as ctx:
+            result = code.do_eval(ctx.caller, line, self.get_locals(), self.get_globals(), compileas='exec')
         return result
