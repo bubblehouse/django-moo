@@ -52,52 +52,35 @@ def massage_verb_code(code):
     )
     return code
 
-def r_eval(caller, src, locals={}, filename='<string>', runtype='eval'):
+def r_eval(caller, src, locals, globals, filename='<string>', runtype='eval'):
     src = massage_verb_code(src)
-    return do_eval(caller, src, locals, filename, runtype, 'eval')
+    return do_eval(caller, src, locals, globals, filename, runtype, 'eval')
 
-def r_exec(caller, src, locals={}, filename='<string>', runtype='exec'):
+def r_exec(caller, src, locals, globals, filename='<string>', runtype='exec'):
     src = massage_verb_code(src)
-    return do_eval(caller, src, locals, filename, runtype, 'exec')
+    return do_eval(caller, src, locals, globals, filename, runtype, 'exec')
 
-def do_eval(caller, src, locals={}, filename='<string>', runtype='exec', compileas='eval'):
+def do_eval(caller, src, locals, globals, filename='<string>', runtype='exec', compileas='eval'):
     """
     Execute an expression in the provided environment.
     """
-    def _writer(s, is_error=False):
-        if(s.strip()):
-            writer = get_output()
-            if writer:
-                writer(s + "\n")
-            else:
-                # TODO: print should instead write to client
-                log.error(s)#(caller, s, is_error=is_error)
-
-    env = get_restricted_environment(_writer, locals.get('parser'))
+    env = {}
     env['runtype'] = runtype
     env['caller'] = caller
     locals.update(env)
 
     code = compile_restricted(src, filename, compileas)
-    value = None
-    try:
-        value = eval(code, locals)
-    # except errors.UsageError as e:
-    except Exception as e:
-        if(caller):
-            _writer(str(e), is_error=True)
-        else:
-            raise e
+    value = eval(code, globals, locals)
     if("returnValue" in locals):
         return locals["returnValue"]
     return value
 
-def get_restricted_environment(writer, p=None):
+def get_restricted_environment(writer):
     """
-    Given the provided parser object, construct an environment dictionary.
+    Construct an environment dictionary.
     """
     class _print_(object):
-        def _call_print(self, s):
+        def _call_print(self,s):
             writer(str(s))
 
     class _write_(object):
@@ -146,7 +129,8 @@ def get_restricted_environment(writer, p=None):
 
     env = dict(
         _apply_           = lambda f,*a,**kw: f(*a, **kw),
-        _print_           = lambda x: _print_(),
+        # _print_           = lambda x: _print_(),
+        _print            = _print_(),
         _write_           = _write_,
         _getattr_         = get_protected_attribute,
         _getitem_         = lambda obj, key: obj[key],
