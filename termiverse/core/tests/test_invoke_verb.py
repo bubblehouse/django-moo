@@ -30,7 +30,6 @@ def test_dir(termiverse_init):
         raise Exception("print called")
     with code.context(user, _writer):
         writer = code.get_output()
-        caller = code.get_caller()
         locals = {}
         globals = {
             "__name__": "__main__",
@@ -49,7 +48,6 @@ def test_print(termiverse_init):
         printed.append(msg)
     with code.context(user, _writer):
         writer = code.get_output()
-        caller = code.get_caller()
         locals = {}
         globals = {
             "__name__": "__main__",
@@ -69,7 +67,6 @@ def test_caller_print(termiverse_init):
         printed.append(msg)
     with code.context(user, _writer):
         writer = code.get_output()
-        caller = code.get_caller()
         locals = {}
         globals = {
             "__name__": "__main__",
@@ -91,7 +88,6 @@ def test_caller_look(termiverse_init):
         printed.append(msg)
     with code.context(user, _writer):
         writer = code.get_output()
-        caller = code.get_caller()
         locals = {}
         globals = {
             "__name__": "__main__",

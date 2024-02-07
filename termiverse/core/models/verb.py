@@ -1,7 +1,7 @@
 from django.db import models
 from django.core import validators
 
-from ..code import get_caller, get_output, get_restricted_environment, r_exec, args_context
+from ..code import get_output, get_restricted_environment, r_exec, args_context
 from .acl import AccessibleMixin
 
 class Verb(models.Model):
