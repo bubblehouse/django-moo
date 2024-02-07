@@ -42,12 +42,11 @@ class AccessibleVerb(Verb, AccessibleMixin):
     def __call__(self, *args, **kwargs):
         if not(self.method):
             raise RuntimeError("%s is not a method." % self)
-        caller = get_caller()
         globals = get_restricted_environment(get_output())
         # self.check('execute', self)
         env = {}
         args_context.set((args, kwargs))
-        result = r_exec(self.code, env, globals, filename=repr(self), runtype="method")
+        result = r_exec(self.code, env, globals, filename=repr(self))
         return result
 
 
