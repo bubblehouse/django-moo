@@ -1,3 +1,5 @@
+import logging
+
 from django.db import models
 
 from .. import bootstrap
@@ -5,6 +7,8 @@ from ..code import get_caller
 from .acl import AccessibleMixin, Access
 from .verb import AccessibleVerb, VerbName
 from .property import AccessibleProperty
+
+log = logging.getLogger(__name__)
 
 def create_object(name, *a, **kw):
     kw['name'] = name
@@ -28,12 +32,34 @@ class Object(models.Model):
     def kind(self):
         return 'object'
 
-class AccessibleObject(Object, AccessibleMixin):
-    class Meta:
-        proxy = True
+    def get_ancestors(self):
+        """
+        Get the ancestor tree for this object.
+
+        One day when Django 5.0 works with `django-cte` this can be SQL.
+        """
+        ancestors = []
+        for parent in self.parents.all():
+            ancestors.append(parent)
+            ancestors.extend(parent.get_ancestors())
+        return ancestors
+
+    def invoke_verb(self, name, *args, **kwargs):
+        qs = AccessibleVerb.objects.filter(origin=self, names__name=name)
+        if not qs:
+            for ancestor in self.get_ancestors():
+                qs = AccessibleVerb.objects.filter(origin=ancestor, names__name=name)
+                if qs:
+                    break
+        if qs:
+            qs[0](*args, **kwargs)
+        else:
+            raise RuntimeError(f"No such verb `{name}`.")
 
     def add_verb(self, *names, code=None, owner=None, repo=None, filename=None, ability=False, method=False):
         owner = get_caller() or owner or self
+        if filename:
+            code = bootstrap.get_source(filename)
         verb = AccessibleVerb.objects.create(
             method = method,
             ability = ability,
@@ -41,7 +67,7 @@ class AccessibleObject(Object, AccessibleMixin):
             owner = owner,
             repo = repo,
             filename = filename,
-            code = bootstrap.get_source(filename) if filename else code
+            code = code
         )
         for name in names:
             verb.names.add(VerbName.objects.create(
@@ -70,6 +96,10 @@ class AccessibleObject(Object, AccessibleMixin):
         )
         set_default_permissions(prop)
         self.properties.add(prop)
+
+class AccessibleObject(Object, AccessibleMixin):
+    class Meta:
+        proxy = True
 
     def owns(self, subject):
         return subject.owner == self
