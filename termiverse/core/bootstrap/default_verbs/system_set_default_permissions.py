@@ -1,6 +1,6 @@
-#!antioch
+from termiverse.core import api
 
-obj = args[0]
+obj = api.args[0]
 obj.allow('wizards', 'anything')
 obj.allow('owners', 'anything')
 
