@@ -38,7 +38,7 @@ def test_dir(termiverse_init):
             "__doc__": None
         }
         globals.update(code.get_restricted_environment(writer))
-        result = code.do_eval(caller, "dir()", locals, globals)
+        result = code.do_eval("dir()", locals, globals)
         assert result == []
 
 @pytest.mark.django_db
@@ -57,7 +57,7 @@ def test_print(termiverse_init):
             "__doc__": None
         }
         globals.update(code.get_restricted_environment(writer))
-        result = code.do_eval(caller, "print('test')", locals, globals)
+        result = code.do_eval("print('test')", locals, globals)
         assert result is None
         assert printed == ['test']
 
@@ -78,7 +78,7 @@ def test_caller_print(termiverse_init):
         }
         globals.update(code.get_restricted_environment(writer))
         src = "from termiverse.core import api\nprint(api.caller)"
-        code.r_exec(caller, src, locals, globals)
+        code.r_exec(src, locals, globals)
         assert printed == ['#2 (Wizard)']
 
 @pytest.mark.django_db
@@ -100,5 +100,5 @@ def test_caller_look(termiverse_init):
         }
         globals.update(code.get_restricted_environment(writer))
         src = "from termiverse.core import api\napi.caller.invoke_verb('look')"
-        code.r_exec(caller, src, locals, globals)
+        code.r_exec(src, locals, globals)
         assert printed == [description.value]

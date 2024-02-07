@@ -47,7 +47,7 @@ class AccessibleVerb(Verb, AccessibleMixin):
         # self.check('execute', self)
         env = {}
         args_context.set((args, kwargs))
-        result = r_exec(caller, self.code, env, globals, filename=repr(self), runtype="method")
+        result = r_exec(self.code, env, globals, filename=repr(self), runtype="method")
         return result
 
 
