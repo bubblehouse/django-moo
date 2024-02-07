@@ -1,4 +1,5 @@
 import contextvars
+import warnings
 import logging
 
 from RestrictedPython import compile_restricted
@@ -6,6 +7,7 @@ from RestrictedPython.Guards import safe_builtins
 from RestrictedPython.Guards import guarded_unpack_sequence
 
 allowed_modules = (
+    'termiverse.core',
     'hashlib',
     'string',
 )
@@ -20,9 +22,14 @@ output_context = contextvars.ContextVar("output")
 def get_output():
     return output_context.get(None)
 
+args_context = contextvars.ContextVar("args")
+def get_args():
+    return args_context.get(None)
+
 class context(object):
     def __init__(self, caller, writer):
-        self.caller = caller
+        from .models.object import AccessibleObject
+        self.caller = AccessibleObject.objects.get(pk=caller.pk)
         self.writer = writer
 
     def __enter__(self):
@@ -32,6 +39,8 @@ class context(object):
 
     def __exit__(self, type, value, traceback):
         user_context.set(None)
+        output_context.set(None)
+        args_context.set(None)
 
 def is_frame_access_allowed():
     return False
@@ -69,7 +78,10 @@ def do_eval(caller, src, locals, globals, filename='<string>', runtype='exec', c
     env['caller'] = caller
     locals.update(env)
 
-    code = compile_restricted(src, filename, compileas)
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', category=SyntaxWarning)
+        code = compile_restricted(src, filename, compileas)
+
     value = eval(code, globals, locals)
     if("returnValue" in locals):
         return locals["returnValue"]
@@ -129,7 +141,7 @@ def get_restricted_environment(writer):
 
     env = dict(
         _apply_           = lambda f,*a,**kw: f(*a, **kw),
-        # _print_           = lambda x: _print_(),
+        _print_           = lambda x: _print_(),
         _print            = _print_(),
         _write_           = _write_,
         _getattr_         = get_protected_attribute,
