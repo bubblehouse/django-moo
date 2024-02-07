@@ -2,7 +2,7 @@ import contextvars
 import warnings
 import logging
 
-from RestrictedPython import compile_restricted
+from RestrictedPython import compile_restricted, compile_restricted_function
 from RestrictedPython.Guards import safe_builtins
 from RestrictedPython.Guards import guarded_unpack_sequence
 
@@ -45,41 +45,42 @@ class context(object):
 def is_frame_access_allowed():
     return False
 
-def massage_verb_code(code):
+def compile_verb_code(body, filename):
     """
     Take a given piece of verb code and wrap it in a function.
-
-    This allows support of 'return' within verbs, and for verbs to return values.
-    """
-    code = code.replace('\r\n', '\n')
-    code = code.replace('\n\r', '\n')
-    code = code.replace('\r', '\n')
-    code = '\n'.join(
-        ['def verb():'] +
-        ['\t' + x for x in code.split('\n') if x.strip()] +
-        ['returnValue = verb()']
-    )
-    return code
-
-def r_eval(src, locals, globals, filename='<string>'):
-    src = massage_verb_code(src)
-    return do_eval(src, locals, globals, filename, runtype='eval')
-
-def r_exec(src, locals, globals, filename='<string>'):
-    src = massage_verb_code(src)
-    return do_eval(src, locals, globals, filename, runtype='exec')
-
-def do_eval(src, locals, globals, filename='<string>', runtype='eval'):
-    """
-    Execute an expression in the provided environment.
     """
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', category=SyntaxWarning)
-        code = compile_restricted(src, filename, runtype)
+        result = compile_restricted_function(
+            p = "",
+            body = body,
+            name = "verb",
+            filename = filename
+        )
+    return result
 
-    value = eval(code, globals, locals)
-    if("returnValue" in locals):
-        return locals["returnValue"]
+def r_eval(src, locals, globals, filename='<string>'):
+    code = compile_verb_code(src, filename)
+    return do_eval(code, locals, globals, filename, runtype='eval')
+
+def r_exec(src, locals, globals, filename='<string>'):
+    code = compile_verb_code(src, filename)
+    return do_eval(code, locals, globals, filename, runtype='exec')
+
+def do_eval(code, locals, globals, filename='<string>', runtype='eval'):
+    """
+    Execute an expression in the provided environment.
+    """
+    if isinstance(code, str):
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', category=SyntaxWarning)
+            code = compile_restricted(code, filename, runtype)
+
+        value = eval(code, globals, locals)
+    else:
+        exec(code.code, globals, locals)
+        compiled_function = locals['verb']
+        value = compiled_function(*[], **{})
     return value
 
 def get_restricted_environment(writer):
