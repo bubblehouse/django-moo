@@ -83,6 +83,8 @@ def test_caller_print(termiverse_init):
 def test_caller_look(termiverse_init):
     printed = []
     user = Object.objects.get(name='Wizard')
+    location = user.location
+    description = location.properties.get(name="description")
     def _writer(msg):
         printed.append(msg)
     with code.context(user, _writer):
@@ -97,4 +99,4 @@ def test_caller_look(termiverse_init):
         globals.update(code.get_restricted_environment(writer))
         src = "caller.invoke_verb('look')\n"
         code.do_eval(caller, src, locals, globals)
-        assert printed == ['No description.']
+        assert printed == [description.value]
