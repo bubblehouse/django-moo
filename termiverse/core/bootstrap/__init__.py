@@ -1,9 +1,10 @@
-import pkg_resources as pkg
+import importlib.resources
 
 def get_source(filename, dataset='default'):
-    verb_path = pkg.resource_filename('termiverse.core.bootstrap', '%s_verbs/%s' % (dataset, filename))
-    with open(verb_path) as f:
-        return f.read()
+    ref = importlib.resources.files('termiverse.core.bootstrap') / f'{dataset}_verbs/{filename}'
+    with importlib.resources.as_file(ref) as path:
+        with open(path) as f:
+            return f.read()
 
 def load_python(python_path):
     """
