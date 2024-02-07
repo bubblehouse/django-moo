@@ -30,6 +30,10 @@ class ObjectAdmin(admin.ModelAdmin):
 class VerbAdmin(admin.ModelAdmin):
     raw_id_fields = ('owner', 'origin')
 
+@admin.register(verb.VerbName)
+class VerbNameAdmin(admin.ModelAdmin):
+    raw_id_fields = ('verb',)
+
 @admin.register(property.Property)
 class PropertyAdmin(admin.ModelAdmin):
     raw_id_fields = ('owner', 'origin')

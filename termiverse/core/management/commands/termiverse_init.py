@@ -1,4 +1,4 @@
-import pkg_resources as pkg
+import importlib.resources
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
@@ -18,19 +18,18 @@ class Command(BaseCommand):
 
     def handle(self, bootstrap='default', *args, **config):
         try:
-            repo = Repository.objects.get(slug='default')
+            Repository.objects.get(slug=bootstrap)
             raise RuntimeError("Looks like this database has already been initialized.")
         except Repository.DoesNotExist:
-            repo = Repository(
-                slug='default',
-                prefix='termiverse/core/bootstrap/default_verbs',
+            Repository.objects.create(
+                slug=bootstrap,
+                prefix=f'termiverse/core/bootstrap/{bootstrap}_verbs',
                 url=settings.DEFAULT_GIT_REPO_URL
             )
-            repo.save()
-
         if(bootstrap in builtin_templates):
-            bootstrap_path = pkg.resource_filename('termiverse.core.bootstrap', '%s.py' % bootstrap)
+            ref = importlib.resources.files('termiverse.core.bootstrap') / f'{bootstrap}.py'
+            with importlib.resources.as_file(ref) as path:
+                bootstrap_path = path
         else:
-            bootstrap_path = bootstrap
-
+            raise NotImplementedError(bootstrap)
         load_python(bootstrap_path)
