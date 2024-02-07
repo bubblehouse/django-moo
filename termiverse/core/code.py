@@ -61,15 +61,15 @@ def massage_verb_code(code):
     )
     return code
 
-def r_eval(caller, src, locals, globals, filename='<string>', runtype='eval'):
-    src = massage_verb_code(src)
-    return do_eval(caller, src, locals, globals, filename, runtype, 'eval')
+def r_eval(src, locals, globals, filename='<string>', runtype='eval'):
+    # src = massage_verb_code(src)
+    return do_eval(src, locals, globals, filename, runtype, 'eval')
 
-def r_exec(caller, src, locals, globals, filename='<string>', runtype='exec'):
-    src = massage_verb_code(src)
-    return do_eval(caller, src, locals, globals, filename, runtype, 'exec')
+def r_exec(src, locals, globals, filename='<string>', runtype='exec'):
+    # src = massage_verb_code(src)
+    return do_eval(src, locals, globals, filename, runtype, 'exec')
 
-def do_eval(caller, src, locals, globals, filename='<string>', runtype='exec', compileas='eval'):
+def do_eval(src, locals, globals, filename='<string>', runtype='exec', compileas='eval'):
     """
     Execute an expression in the provided environment.
     """
