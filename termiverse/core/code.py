@@ -73,11 +73,6 @@ def do_eval(caller, src, locals, globals, filename='<string>', runtype='exec', c
     """
     Execute an expression in the provided environment.
     """
-    env = {}
-    env['runtype'] = runtype
-    env['caller'] = caller
-    locals.update(env)
-
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', category=SyntaxWarning)
         code = compile_restricted(src, filename, compileas)
