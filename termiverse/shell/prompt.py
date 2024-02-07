@@ -92,7 +92,7 @@ class CustomRepl(PythonRepl):
         log.error(f"{caller}: {line}")
         try:
             with code.context(caller, self.writer) as ctx:
-                result = code.do_eval(ctx.caller, line, self.get_locals(), self.get_globals())
+                result = code.do_eval(line, self.get_locals(), self.get_globals())
                 self._store_eval_result(result)
             return result
         except SyntaxError:
@@ -101,5 +101,5 @@ class CustomRepl(PythonRepl):
         # but still run with eval to get an awaitable in case of a
         # awaitable expression.
         with code.context(caller, self.writer) as ctx:
-            result = code.do_eval(ctx.caller, line, self.get_locals(), self.get_globals(), compileas='exec')
+            result = code.do_eval(line, self.get_locals(), self.get_globals(), compileas='exec')
         return result
