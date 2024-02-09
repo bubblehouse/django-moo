@@ -1,27 +1,8 @@
-import importlib.resources
-
-from termiverse.core import code
-from termiverse.core.models import Repository, Object, Player
-from termiverse.core.bootstrap import load_python
+from .. import code
+from ..models import Object
+from . import termiverse_init
 
 import pytest
-from django.contrib.auth.models import User
-from django.conf import settings
-
-@pytest.fixture()
-def termiverse_init():
-    Repository.objects.create(
-        slug='default',
-        prefix='termiverse/core/bootstrap/default_verbs',
-        url=settings.DEFAULT_GIT_REPO_URL
-    )
-    ref = importlib.resources.files('termiverse.core.bootstrap') / 'default.py'
-    with importlib.resources.as_file(ref) as path:
-        load_python(path)
-    user = User.objects.create(username='phil')
-    avatar = Object.objects.get(name='Wizard')
-    Player.objects.create(user=user, avatar=avatar)
-    yield "termiverse_init"
 
 @pytest.mark.django_db
 def test_dir(termiverse_init):
@@ -31,11 +12,7 @@ def test_dir(termiverse_init):
     with code.context(user, _writer):
         writer = code.get_output()
         locals = {}
-        globals = {
-            "__name__": "__main__",
-            "__package__": None,
-            "__doc__": None
-        }
+        globals = code.get_default_globals()
         globals.update(code.get_restricted_environment(writer))
         result = code.do_eval("dir()", locals, globals)
         assert result == []
@@ -49,11 +26,7 @@ def test_print(termiverse_init):
     with code.context(user, _writer):
         writer = code.get_output()
         locals = {}
-        globals = {
-            "__name__": "__main__",
-            "__package__": None,
-            "__doc__": None
-        }
+        globals = code.get_default_globals()
         globals.update(code.get_restricted_environment(writer))
         result = code.do_eval("print('test')", locals, globals)
         assert result is None
@@ -68,11 +41,7 @@ def test_caller_print(termiverse_init):
     with code.context(user, _writer):
         writer = code.get_output()
         locals = {}
-        globals = {
-            "__name__": "__main__",
-            "__package__": None,
-            "__doc__": None
-        }
+        globals = code.get_default_globals()
         globals.update(code.get_restricted_environment(writer))
         src = "from termiverse.core import api\nprint(api.caller)"
         code.r_exec(src, locals, globals)
@@ -89,11 +58,7 @@ def test_caller_look(termiverse_init):
     with code.context(user, _writer):
         writer = code.get_output()
         locals = {}
-        globals = {
-            "__name__": "__main__",
-            "__package__": None,
-            "__doc__": None
-        }
+        globals = code.get_default_globals()
         globals.update(code.get_restricted_environment(writer))
         src = "from termiverse.core import api\napi.caller.invoke_verb('look')"
         code.r_exec(src, locals, globals)
