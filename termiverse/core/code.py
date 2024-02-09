@@ -12,6 +12,13 @@ allowed_modules = (
     'string',
 )
 
+allowed_builtins = (
+    'dict',
+    'dir',
+    'getattr',
+    'hasattr'
+)
+
 log = logging.getLogger(__name__)
 
 user_context = contextvars.ContextVar("user")
@@ -139,7 +146,7 @@ def get_restricted_environment(writer):
 
     safe_builtins['__import__'] = restricted_import
 
-    for name in ['dict', 'dir', 'getattr', 'hasattr']:
+    for name in allowed_builtins:
         safe_builtins[name] = __builtins__[name]
 
     env = dict(
