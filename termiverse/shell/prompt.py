@@ -23,11 +23,7 @@ def embed(
     """
     # Default locals
     locals = {}
-    globals = {
-        "__name__": "__main__",
-        "__package__": None,
-        "__doc__": None
-    }
+    globals = code.get_default_globals()
 
     def get_globals():
         return globals

@@ -83,6 +83,13 @@ def do_eval(code, locals, globals, filename='<string>', runtype='eval'):
         value = compiled_function(*[], **{})
     return value
 
+def get_default_globals():
+    return {
+        "__name__": "__main__",
+        "__package__": None,
+        "__doc__": None
+    }
+
 def get_restricted_environment(writer):
     """
     Construct an environment dictionary.
