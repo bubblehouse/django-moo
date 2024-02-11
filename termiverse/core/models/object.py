@@ -37,6 +37,7 @@ class Object(models.Model):
             self.parents.add(parent)
             for property in parent.get_inherited_properties():
                 property.pk = None
+                property._state.adding = True
                 property.origin = self
                 property.save()
 
