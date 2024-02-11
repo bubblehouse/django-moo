@@ -118,7 +118,7 @@ class Object(models.Model):
         if qs:
             return qs[0].value
         else:
-            raise AccessibleProperty.DoesNotExist(f"No such verb `{name}`.")
+            raise AccessibleProperty.DoesNotExist(f"No such property `{name}`.")
 
     def get_inherited_properties(self):
         return AccessibleProperty.objects.filter(origin=self, inherited=True)
