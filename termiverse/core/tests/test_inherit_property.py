@@ -1,5 +1,4 @@
 from termiverse.tests import *
-from .. import code
 from ..models import Object
 from ..models.property import AccessibleProperty
 
