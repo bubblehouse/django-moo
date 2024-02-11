@@ -32,6 +32,14 @@ class Object(models.Model):
     def kind(self):
         return 'object'
 
+    def add_ancestors(self, *parents):
+        for parent in parents:
+            self.parents.add(parent)
+            for property in parent.get_inherited_properties():
+                property.pk = None
+                property.origin = self
+                property.save()
+
     def get_ancestors(self):
         """
         Get the ancestor tree for this object.
@@ -79,7 +87,7 @@ class Object(models.Model):
         if qs:
             qs[0](*args, **kwargs)
         else:
-            raise RuntimeError(f"No such verb `{name}`.")
+            raise AccessibleVerb.DoesNotExist(f"No such verb `{name}`.")
 
     def set_property(self, name, value, inherited=False, owner=None):
         owner = get_caller() or owner or self
@@ -102,7 +110,7 @@ class Object(models.Model):
 
     def get_property(self, name, inherited=True):
         qs = AccessibleProperty.objects.filter(origin=self, name=name)
-        if not qs:
+        if not qs and inherited:
             for ancestor in self.get_ancestors():
                 qs = AccessibleProperty.objects.filter(origin=ancestor, name=name)
                 if qs:
@@ -110,7 +118,10 @@ class Object(models.Model):
         if qs:
             return qs[0].value
         else:
-            raise RuntimeError(f"No such verb `{name}`.")
+            raise AccessibleProperty.DoesNotExist(f"No such verb `{name}`.")
+
+    def get_inherited_properties(self):
+        return AccessibleProperty.objects.filter(origin=self, inherited=True)
 
 class AccessibleObject(Object, AccessibleMixin):
     class Meta:
