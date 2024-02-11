@@ -11,6 +11,7 @@ class Property(models.Model):
     type = models.CharField(max_length=255, choices=[(x,x) for x in ('string', 'python', 'dynamic')])
     owner = models.ForeignKey("Object", related_name='+', null=True, on_delete=models.SET_NULL)
     origin = models.ForeignKey("Object", related_name='properties', on_delete=models.CASCADE)
+    inherited = models.BooleanField(default=False)
 
     @property
     def kind(self):
