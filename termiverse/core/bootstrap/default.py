@@ -57,10 +57,11 @@ with code.context(wizard, log.info):
     wizard.parents.add(wizards)
 
     rooms = create_object('room class', location=book)
+    rooms.set_property("description", "There's not much to see here.", inherited=True)
 
     lab = create_object('The Laboratory')
     lab.parents.add(rooms)
-    lab.add_property("description", """A cavernous laboratory filled with gadgetry of every kind,
+    lab.set_property("description", """A cavernous laboratory filled with gadgetry of every kind,
     this seems like a dumping ground for every piece of dusty forgotten
     equipment a mad scientist might require.""")
 
