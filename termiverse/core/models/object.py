@@ -44,18 +44,6 @@ class Object(models.Model):
             ancestors.extend(parent.get_ancestors())
         return ancestors
 
-    def invoke_verb(self, name, *args, **kwargs):
-        qs = AccessibleVerb.objects.filter(origin=self, names__name=name)
-        if not qs:
-            for ancestor in self.get_ancestors():
-                qs = AccessibleVerb.objects.filter(origin=ancestor, names__name=name)
-                if qs:
-                    break
-        if qs:
-            qs[0](*args, **kwargs)
-        else:
-            raise RuntimeError(f"No such verb `{name}`.")
-
     def add_verb(self, *names, code=None, owner=None, repo=None, filename=None, ability=False, method=False):
         owner = get_caller() or owner or self
         if filename:
@@ -81,21 +69,48 @@ class Object(models.Model):
         set_default_permissions(verb)
         self.verbs.add(verb)
 
-    def add_property(self, name, value, owner=None):
+    def invoke_verb(self, name, *args, **kwargs):
+        qs = AccessibleVerb.objects.filter(origin=self, names__name=name)
+        if not qs:
+            for ancestor in self.get_ancestors():
+                qs = AccessibleVerb.objects.filter(origin=ancestor, names__name=name)
+                if qs:
+                    break
+        if qs:
+            qs[0](*args, **kwargs)
+        else:
+            raise RuntimeError(f"No such verb `{name}`.")
+
+    def set_property(self, name, value, inherited=False, owner=None):
         owner = get_caller() or owner or self
-        prop = AccessibleProperty.objects.create(
+        prop, created = AccessibleProperty.objects.update_or_create(
             name = name,
-            value = value,
             origin = self,
-            owner = owner,
-            type = "string"
+            defaults = dict(
+                value = value,
+                owner = owner,
+                type = "string",
+                inherited = inherited,
+            )
         )
-        set_default_permissions = AccessibleVerb.objects.get(
-            origin = Object.objects.get(pk=1),
-            names__name = 'set_default_permissions'
-        )
-        set_default_permissions(prop)
-        self.properties.add(prop)
+        if created:
+            set_default_permissions = AccessibleVerb.objects.get(
+                origin = Object.objects.get(pk=1),
+                names__name = 'set_default_permissions'
+            )
+            set_default_permissions(prop)
+
+    def get_property(self, name, inherited=True):
+        qs = AccessibleProperty.objects.filter(origin=self, name=name)
+        if not qs:
+            for ancestor in self.get_ancestors():
+                qs = AccessibleProperty.objects.filter(origin=ancestor, name=name)
+                if qs:
+                    break
+        if qs:
+            return qs[0].value
+        else:
+            raise RuntimeError(f"No such verb `{name}`.")
 
 class AccessibleObject(Object, AccessibleMixin):
     class Meta:
