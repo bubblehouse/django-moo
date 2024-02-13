@@ -32,15 +32,6 @@ class Object(models.Model):
     def kind(self):
         return 'object'
 
-    def add_ancestors(self, *parents):
-        for parent in parents:
-            self.parents.add(parent)
-            for property in parent.get_inherited_properties():
-                property.pk = None
-                property._state.adding = True
-                property.origin = self
-                property.save()
-
     def get_ancestors(self):
         """
         Get the ancestor tree for this object.
@@ -71,12 +62,6 @@ class Object(models.Model):
                 verb=verb,
                 name=name
             ))
-        set_default_permissions = AccessibleVerb.objects.get(
-            origin = Object.objects.get(pk=1),
-            names__name = 'set_default_permissions'
-        )
-        set_default_permissions(verb)
-        self.verbs.add(verb)
 
     def invoke_verb(self, name, *args, **kwargs):
         qs = AccessibleVerb.objects.filter(origin=self, names__name=name)
@@ -92,7 +77,7 @@ class Object(models.Model):
 
     def set_property(self, name, value, inherited=False, owner=None):
         owner = get_caller() or owner or self
-        prop, created = AccessibleProperty.objects.update_or_create(
+        AccessibleProperty.objects.update_or_create(
             name = name,
             origin = self,
             defaults = dict(
@@ -102,12 +87,6 @@ class Object(models.Model):
                 inherited = inherited,
             )
         )
-        if created:
-            set_default_permissions = AccessibleVerb.objects.get(
-                origin = Object.objects.get(pk=1),
-                names__name = 'set_default_permissions'
-            )
-            set_default_permissions(prop)
 
     def get_property(self, name, inherited=True):
         qs = AccessibleProperty.objects.filter(origin=self, name=name)
@@ -120,9 +99,6 @@ class Object(models.Model):
             return qs[0].value
         else:
             raise AccessibleProperty.DoesNotExist(f"No such property `{name}`.")
-
-    def get_inherited_properties(self):
-        return AccessibleProperty.objects.filter(origin=self, inherited=True)
 
 class AccessibleObject(Object, AccessibleMixin):
     class Meta:
@@ -185,6 +161,17 @@ class Relationship(models.Model):
     child = models.ForeignKey(Object, related_name='parent', on_delete=models.CASCADE)
     parent = models.ForeignKey(Object, related_name='child', on_delete=models.CASCADE)
     weight = models.IntegerField(default=0)
+
+    def save(self, *args, **kwargs):
+        inherit = self.pk is None
+        super().save(*args, **kwargs)
+        if not inherit:
+            return
+        for property in AccessibleProperty.objects.filter(origin=self.parent, inherited=True):
+            property.pk = None
+            property._state.adding = True
+            property.origin = self.child
+            property.save()
 
 class Alias(models.Model):
     class Meta:
