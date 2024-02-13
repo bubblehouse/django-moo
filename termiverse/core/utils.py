@@ -1,6 +1,4 @@
-import logging
-
-log = logging.getLogger(__name__)
+import warnings
 
 def apply_default_permissions(instance):
     from .models import Object
@@ -12,4 +10,4 @@ def apply_default_permissions(instance):
     if set_default_permissions:
         set_default_permissions[0](instance)
     else:
-        log.warning(f"set_default_permissions failed for {instance}: verb not found")
+        warnings.warn(f"set_default_permissions failed for {instance}: verb not found", category=RuntimeWarning)
