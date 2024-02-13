@@ -46,21 +46,21 @@ with code.context(wizard, log.info):
     players = create_object('player class', location=book)
     players.add_verb("look", "inspect", filename="players_look.py", repo=repo, ability=True, method=True)
     guests = create_object('guest class', location=book)
-    guests.add_ancestors(players)
+    guests.parents.add(players)
     authors = create_object('author class', location=book)
-    authors.add_ancestors(players)
+    authors.parents.add(players)
     programmers = create_object('programmer class', location=book)
-    programmers.add_ancestors(authors)
+    programmers.parents.add(authors)
     wizards = create_object('wizard class', location=book)
-    wizards.add_ancestors(programmers)
+    wizards.parents.add(programmers)
 
-    wizard.add_ancestors(wizards)
+    wizard.parents.add(wizards)
 
     rooms = create_object('room class', location=book)
     rooms.set_property("description", "There's not much to see here.", inherited=True)
 
     lab = create_object('The Laboratory')
-    lab.add_ancestors(rooms)
+    lab.parents.add(rooms)
     lab.set_property("description", """A cavernous laboratory filled with gadgetry of every kind,
     this seems like a dumping ground for every piece of dusty forgotten
     equipment a mad scientist might require.""")

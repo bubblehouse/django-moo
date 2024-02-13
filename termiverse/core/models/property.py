@@ -1,6 +1,7 @@
 from django.db import models
 
 from .acl import AccessibleMixin
+from .. import utils
 
 class Property(models.Model):
     class Meta:
@@ -19,6 +20,13 @@ class Property(models.Model):
 
     def __str__(self):
         return '%s {#%s on %s}' % (self.name, self.id, self.origin)
+
+    def save(self, *args, **kwargs):
+        needs_default_permissions = self.pk is None
+        super().save(*args, **kwargs)
+        if not needs_default_permissions:
+            return
+        utils.apply_default_permissions(self)
 
 class AccessibleProperty(Property, AccessibleMixin):
     class Meta:

@@ -3,6 +3,7 @@ from django.core import validators
 
 from ..code import get_output, get_restricted_environment, r_exec, args_context
 from .acl import AccessibleMixin
+from .. import utils
 
 class Verb(models.Model):
     code = models.TextField(blank=True, null=True)
@@ -34,6 +35,13 @@ class Verb(models.Model):
         if not names:
             return "(untitled)"
         return names[0].name
+
+    def save(self, *args, **kwargs):
+        needs_default_permissions = self.pk is None
+        super().save(*args, **kwargs)
+        if not needs_default_permissions:
+            return
+        utils.apply_default_permissions(self)
 
 class AccessibleVerb(Verb, AccessibleMixin):
     class Meta:
