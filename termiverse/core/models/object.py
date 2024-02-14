@@ -35,9 +35,8 @@ class Object(models.Model):
     def get_ancestors(self):
         """
         Get the ancestor tree for this object.
-
-        One day when Django 5.0 works with `django-cte` this can be SQL.
         """
+        # TODO: One day when Django 5.0 works with `django-cte` this can be SQL.
         ancestors = []
         for parent in self.parents.all():
             ancestors.append(parent)
@@ -158,8 +157,8 @@ class Relationship(models.Model):
     class Meta:
         unique_together = [['child', 'parent']]
 
-    child = models.ForeignKey(Object, related_name='parent', on_delete=models.CASCADE)
-    parent = models.ForeignKey(Object, related_name='child', on_delete=models.CASCADE)
+    child = models.ForeignKey(Object, related_name='+', on_delete=models.CASCADE)
+    parent = models.ForeignKey(Object, related_name='+', on_delete=models.CASCADE)
     weight = models.IntegerField(default=0)
 
     def save(self, *args, **kwargs):
