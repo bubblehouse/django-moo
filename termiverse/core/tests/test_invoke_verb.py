@@ -1,10 +1,11 @@
 from termiverse.tests import *
+from ..models import Object
 from .. import code
 
 import pytest
 
 @pytest.mark.django_db
-def test_caller_look(t_init, t_wizard):
+def test_caller_look(t_init: Object, t_wizard: Object):
     printed = []
     description = t_wizard.location.properties.get(name="description")
     def _writer(msg):
