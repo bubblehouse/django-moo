@@ -5,7 +5,7 @@ from ..models.property import AccessibleProperty
 import pytest
 
 @pytest.mark.django_db
-def test_parent_property(t_init):
+def test_parent_property(t_init: Object):
     room_class = Object.objects.get(name="room class")
     parent_description = room_class.properties.get(name="description")
     room = Object.objects.create(name="new room")
