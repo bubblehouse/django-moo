@@ -1,10 +1,11 @@
+from termiverse.core.models.object import Object
 from termiverse.tests import *
 from .. import code
 
 import pytest
 
 @pytest.mark.django_db
-def test_dir(t_init, t_wizard):
+def test_dir(t_init: Object, t_wizard: Object):
     def _writer(msg):
         raise Exception("print was called unexpectedly")
     with code.context(t_wizard, _writer):
@@ -15,7 +16,7 @@ def test_dir(t_init, t_wizard):
         assert result == []
 
 @pytest.mark.django_db
-def test_print(t_init, t_wizard):
+def test_print(t_init: Object, t_wizard: Object):
     printed = []
     def _writer(msg):
         printed.append(msg)
@@ -28,7 +29,7 @@ def test_print(t_init, t_wizard):
         assert printed == ['test']
 
 @pytest.mark.django_db
-def test_caller_print(t_init, t_wizard):
+def test_caller_print(t_init: Object, t_wizard: Object):
     printed = []
     def _writer(msg):
         printed.append(msg)
