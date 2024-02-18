@@ -9,7 +9,7 @@ from django.conf import settings
 
 @pytest.fixture()
 def t_init():
-    name = "default"
+    name = "test"
     Repository.objects.create(
         slug=name,
         prefix=f'termiverse/core/bootstrap/{name}_verbs',
