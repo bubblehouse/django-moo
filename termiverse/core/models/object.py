@@ -1,6 +1,8 @@
 import logging
 
 from django.db import models
+from django.db.models.signals import m2m_changed
+from django.dispatch import receiver
 
 from .. import bootstrap
 from ..code import get_caller
@@ -17,6 +19,20 @@ def create_object(name, *a, **kw):
     if 'location' not in kw and kw['owner']:
         kw['location'] = kw['owner'].location
     return AccessibleObject.objects.create(*a, **kw)
+
+@receiver(m2m_changed)
+def relationship_changed(sender, instance, action, model, signal, reverse, pk_set, using):
+    if not(sender is Relationship and action == "post_add" and not reverse):
+        return
+    child = instance
+    for pk in pk_set:
+        parent = model.objects.get(pk=pk)
+        for property in AccessibleProperty.objects.filter(origin=parent, inherited=True):
+            property.pk = None
+            property._state.adding = True
+            property.origin = child
+            property.owner = child.owner
+            property.save()
 
 class Object(models.Model):
     name = models.CharField(max_length=255)
@@ -160,18 +176,6 @@ class Relationship(models.Model):
     child = models.ForeignKey(Object, related_name='+', on_delete=models.CASCADE)
     parent = models.ForeignKey(Object, related_name='+', on_delete=models.CASCADE)
     weight = models.IntegerField(default=0)
-
-    def save(self, *args, **kwargs):
-        inherit = self.pk is None
-        super().save(*args, **kwargs)
-        if not inherit:
-            return
-        for property in AccessibleProperty.objects.filter(origin=self.parent, inherited=True):
-            property.pk = None
-            property._state.adding = True
-            property.origin = self.child
-            property.owner = self.child.owner
-            property.save()
 
 class Alias(models.Model):
     class Meta:
