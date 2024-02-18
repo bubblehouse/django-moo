@@ -67,3 +67,6 @@ with code.context(wizard, log.info):
 
     wizard.location = lab
     wizard.save()
+
+    player = create_object(name="Player", unique_name=True, location=lab)
+    player.parents.add(players)

@@ -87,15 +87,15 @@ class Object(models.Model):
             )
         )
 
-    def get_property(self, name, inherited=True):
+    def get_property(self, name, recurse=True, original=False):
         qs = AccessibleProperty.objects.filter(origin=self, name=name)
-        if not qs and inherited:
+        if not qs and recurse:
             for ancestor in self.get_ancestors():
                 qs = AccessibleProperty.objects.filter(origin=ancestor, name=name)
                 if qs:
                     break
         if qs:
-            return qs[0].value
+            return qs[0] if original else qs[0].value
         else:
             raise AccessibleProperty.DoesNotExist(f"No such property `{name}`.")
 
@@ -170,6 +170,7 @@ class Relationship(models.Model):
             property.pk = None
             property._state.adding = True
             property.origin = self.child
+            property.owner = self.child.owner
             property.save()
 
 class Alias(models.Model):
