@@ -82,7 +82,7 @@ class Object(models.Model):
     def add_verb(self, *names, code=None, owner=None, repo=None, filename=None, ability=False, method=False):
         owner = get_caller() or owner or self
         if filename:
-            code = bootstrap.get_source(filename)
+            code = bootstrap.get_source(filename, dataset=repo.slug)
         verb = AccessibleVerb.objects.create(
             method = method,
             ability = ability,
