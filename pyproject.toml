@@ -19,6 +19,7 @@ django-simplesshkey = "^2.1.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest-django = "^4.7.0"
+pytest-spec = "^3.2.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -26,5 +27,6 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "termiverse.settings.test"
-# -- recommended but optional:
 python_files = ["tests/*.py"]
+addopts = "--spec"
+spec_test_format = "{result} {docstring_summary}"

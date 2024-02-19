@@ -482,6 +482,20 @@ docs = ["sphinx", "sphinx-rtd-theme"]
 testing = ["Django", "django-configurations (>=2.0)"]
 
 [[package]]
+name = "pytest-spec"
+version = "3.2.0"
+description = "Library pytest-spec is a pytest plugin to display test execution output like a SPECIFICATION."
+optional = false
+python-versions = "*"
+files = [
+    {file = "pytest-spec-3.2.0.tar.gz", hash = "sha256:4af154588195f4bb6c62d6ca030a20218db7d80b675a08897d9a99239ea3d087"},
+    {file = "pytest_spec-3.2.0-py2.py3-none-any.whl", hash = "sha256:128dd1e133c72d6a18b28ed96d0af0fc43aece8f796ebcfcd81c850f0094b62e"},
+]
+
+[package.dependencies]
+six = "*"
+
+[[package]]
 name = "restrictedpython"
 version = "7.0"
 description = "RestrictedPython is a defined subset of the Python language which allows to provide a program input into a trusted environment."
@@ -513,6 +527,17 @@ pygments = ">=2.13.0,<3.0.0"
 
 [package.extras]
 jupyter = ["ipywidgets (>=7.5.1,<9)"]
+
+[[package]]
+name = "six"
+version = "1.16.0"
+description = "Python 2 and 3 compatibility utilities"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
+files = [
+    {file = "six-1.16.0-py2.py3-none-any.whl", hash = "sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"},
+    {file = "six-1.16.0.tar.gz", hash = "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"},
+]
 
 [[package]]
 name = "sqlparse"
@@ -576,4 +601,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.11"
-content-hash = "4795d8ffd675f22ff3a901287552dc54f7426e47316a3d60e34cb96e9094286c"
+content-hash = "b028b3aa0f82591d38a73d37aa3ffd9755af9d1bbe4da4383d47a2df0ceadf5a"
