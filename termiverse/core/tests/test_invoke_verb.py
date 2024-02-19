@@ -5,7 +5,7 @@ from .. import code
 import pytest
 
 @pytest.mark.django_db
-def test_caller_look(t_init: Object, t_wizard: Object):
+def test_caller_can_invoke_trivial_verb(t_init: Object, t_wizard: Object):
     printed = []
     description = t_wizard.location.properties.get(name="description")
     def _writer(msg):
