@@ -14,6 +14,12 @@ class Property(models.Model):
     origin = models.ForeignKey("Object", related_name='properties', on_delete=models.CASCADE)
     inherited = models.BooleanField(default=False)
 
+    __original_inherited = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_inherited = self.inherited
+
     @property
     def kind(self):
         return 'property'
@@ -24,6 +30,22 @@ class Property(models.Model):
     def save(self, *args, **kwargs):
         needs_default_permissions = self.pk is None
         super().save(*args, **kwargs)
+        if self.inherited and not self.__original_inherited:
+            for child in self.origin.get_descendents():
+                AccessibleProperty.objects.update_or_create(
+                    name = self.name,
+                    origin = child,
+                    defaults = dict(
+                        owner = child.owner,
+                        inherited = self.inherited,
+                    ),
+                    create_defaults = dict(
+                        owner = child.owner,
+                        inherited = self.inherited,
+                        value = self.value,
+                        type = self.type,
+                    )
+                )
         if not needs_default_permissions:
             return
         utils.apply_default_permissions(self)
