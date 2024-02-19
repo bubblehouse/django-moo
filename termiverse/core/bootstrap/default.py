@@ -19,7 +19,7 @@ with warnings.catch_warnings():
         method = True,
         origin = system,
         repo = repo,
-        code = bootstrap.get_source('system_set_default_permissions.py')
+        code = bootstrap.get_source('system_set_default_permissions.py', dataset='default')
     )
     set_default_permissions.names.add(models.VerbName.objects.create(
         verb = set_default_permissions,
