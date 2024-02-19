@@ -62,22 +62,22 @@ class Object(models.Model):
         Get the ancestor tree for this object.
         """
         # TODO: One day when Django 5.0 works with `django-cte` this can be SQL.
-        ancestors = []
         for parent in self.parents.all():
-            ancestors.append(parent)
-            ancestors.extend(parent.get_ancestors())
-        return ancestors
+            yield parent
+            for p in parent.get_ancestors():
+                yield p
+        return
 
     def get_descendents(self):
         """
         Get the descendent tree for this object.
         """
         # TODO: One day when Django 5.0 works with `django-cte` this can be SQL.
-        descendents = []
         for child in self.children.all():
-            descendents.append(child)
-            descendents.extend(child.get_descendents())
-        return descendents
+            yield child
+            for c in child.get_descendents():
+                yield c
+        return
 
     def add_verb(self, *names, code=None, owner=None, repo=None, filename=None, ability=False, method=False):
         owner = get_caller() or owner or self
