@@ -28,11 +28,20 @@ def relationship_changed(sender, instance, action, model, signal, reverse, pk_se
     for pk in pk_set:
         parent = model.objects.get(pk=pk)
         for property in AccessibleProperty.objects.filter(origin=parent, inherited=True):
-            property.pk = None
-            property._state.adding = True
-            property.origin = child
-            property.owner = child.owner
-            property.save()
+            AccessibleProperty.objects.update_or_create(
+                name = property.name,
+                origin = child,
+                defaults = dict(
+                    owner = child.owner,
+                    inherited = property.inherited,
+                ),
+                create_defaults = dict(
+                    owner = child.owner,
+                    inherited = property.inherited,
+                    value = property.value,
+                    type = property.type,
+                )
+            )
 
 class Object(models.Model):
     name = models.CharField(max_length=255)
@@ -58,6 +67,17 @@ class Object(models.Model):
             ancestors.append(parent)
             ancestors.extend(parent.get_ancestors())
         return ancestors
+
+    def get_descendents(self):
+        """
+        Get the descendent tree for this object.
+        """
+        # TODO: One day when Django 5.0 works with `django-cte` this can be SQL.
+        descendents = []
+        for child in self.children.all():
+            descendents.append(child)
+            descendents.extend(child.get_descendents())
+        return descendents
 
     def add_verb(self, *names, code=None, owner=None, repo=None, filename=None, ability=False, method=False):
         owner = get_caller() or owner or self
