@@ -18,5 +18,4 @@ def test_parse_look_my_bag_of_holding(t_init: Object, t_wizard: Object):
     bag = Object.objects.get(name="bag of holding")
     lex = parse.Lexer("look my bag of holding")
     parser = parse.Parser(lex, t_wizard)
-    verb = parser.get_verb()
     assert parser.dobj == bag
