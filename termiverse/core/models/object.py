@@ -58,7 +58,7 @@ class Object(models.Model):
         return 'object'
 
     def find(self, name):
-        return Object.objects.filter(location=self, name=name)
+        return AccessibleObject.objects.filter(location=self, name=name)
 
     def get_ancestors(self):
         """
