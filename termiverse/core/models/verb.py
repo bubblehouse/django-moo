@@ -15,14 +15,14 @@ class Verb(models.Model):
     ability = models.BooleanField(default=False)
     method = models.BooleanField(default=False)
 
-    @property
-    def kind(self):
-        return 'verb'
-
     def __str__(self):
         return "%s {#%s on %s}" % (
             self.annotated(), self.id, self.origin
         )
+
+    @property
+    def kind(self):
+        return 'verb'
 
     def annotated(self):
         ability_decoration = ['', '@'][self.ability]

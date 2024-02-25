@@ -4,7 +4,7 @@ from django.db import models
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
 
-from .. import bootstrap
+from .. import bootstrap, exceptions
 from ..code import get_caller
 from .acl import AccessibleMixin, Access
 from .verb import AccessibleVerb, VerbName
@@ -57,6 +57,9 @@ class Object(models.Model):
     def kind(self):
         return 'object'
 
+    def find(self, name):
+        return Object.objects.filter(location=self, name=name)
+
     def get_ancestors(self):
         """
         Get the ancestor tree for this object.
@@ -99,14 +102,31 @@ class Object(models.Model):
             ))
 
     def invoke_verb(self, name, *args, **kwargs):
+        qs = self._lookup_verb(name, recurse=True)
+        return qs[0](*args, **kwargs)
+
+    def has_verb(self, name, recurse=True):
+        try:
+            self._lookup_verb(name, recurse)
+        except AccessibleVerb.DoesNotExist:
+            return False
+        return True
+
+    def get_verb(self, name, recurse=True):
+        qs = self._lookup_verb(name, recurse)
+        if len(qs) > 1:
+            raise exceptions.AmbiguousVerbError(name, list(qs.all()))
+        return qs[0]
+
+    def _lookup_verb(self, name, recurse=True):
         qs = AccessibleVerb.objects.filter(origin=self, names__name=name)
-        if not qs:
+        if not qs and recurse:
             for ancestor in self.get_ancestors():
                 qs = AccessibleVerb.objects.filter(origin=ancestor, names__name=name)
                 if qs:
                     break
         if qs:
-            qs[0](*args, **kwargs)
+            return qs
         else:
             raise AccessibleVerb.DoesNotExist(f"No such verb `{name}`.")
 
