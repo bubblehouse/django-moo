@@ -41,7 +41,7 @@ def test_parse_look_my_bag_of_holding(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db
 def test_parse_verb_pobj(t_init: Object, t_wizard: Object):
-    lex = parse.Lexer("@eval through peephole")
+    lex = parse.Lexer("look through peephole")
     parser = parse.Parser(lex, t_wizard)
     assert not parser.has_dobj(), "unexpected object found for dobj"
     assert not parser.has_dobj_str(), "unexpected string found for dobj"
@@ -57,7 +57,7 @@ def test_parse_verb_pobj(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db
 def test_parse_verb_pobj_pobj(t_init: Object, t_wizard: Object):
-    lex = parse.Lexer("@eval through peephole with wizard")
+    lex = parse.Lexer("look through peephole with wizard")
     parser = parse.Parser(lex, t_wizard)
     assert not parser.has_dobj(), "unexpected object found for dobj"
     assert not parser.has_dobj_str(), "unexpected string found for dobj"
@@ -128,12 +128,14 @@ def test_bug_9(t_init: Object, t_wizard: Object):
 @pytest.mark.django_db
 def test_inventory(t_init: Object, t_wizard: Object):
     box = Object.objects.create(name='box')
-    box.set_location(t_wizard)
+    box.location = t_wizard
+    box.save()
     lex = parse.Lexer("@eval my box")
     parser = parse.Parser(lex, t_wizard)
     assert parser.has_dobj()
-    user = Object.objects.get(name='user')
-    box.set_location(user)
-    lex = parse.Lexer("@eval user's box")
+    user = Object.objects.get(name__iexact='player')
+    box.location = user
+    box.save()
+    lex = parse.Lexer("@eval player's box")
     parser = parse.Parser(lex, t_wizard)
     assert parser.has_dobj()

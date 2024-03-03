@@ -11,6 +11,8 @@ There are a long list of prepositions supported, some of which are interchangeab
 
 import re, logging
 
+from django.db.models.query import QuerySet
+
 from .models import Object
 from .exceptions import *
 
@@ -268,6 +270,11 @@ class Parser(object):
         else:
             search = self.caller.location
 
+        if isinstance(search, QuerySet):
+            if len(search) > 1:
+                raise AmbiguousObjectError(name, search)
+            else:
+                search = search[0]
         if(name and search):
             result = search.find(name)
 
