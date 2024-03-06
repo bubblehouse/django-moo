@@ -66,6 +66,7 @@ class Permission(models.Model):
 class Access(models.Model):
     class Meta:
         verbose_name_plural = 'access controls'
+        unique_together = ('object', 'verb', 'property', 'rule', 'permission', 'type', 'accessor', 'group', 'weight')
 
     object = models.ForeignKey("Object", related_name='acl', null=True, on_delete=models.CASCADE)
     verb = models.ForeignKey("Verb", related_name='acl', null=True, on_delete=models.CASCADE)
