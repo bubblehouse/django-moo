@@ -4,9 +4,10 @@ from django.db import models
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
 
-from .. import bootstrap, exceptions
+from .. import bootstrap, exceptions, utils
 from ..code import get_caller
-from .acl import AccessibleMixin, Access
+from .acl import AccessibleMixin, Access, Permission
+from .auth import Player
 from .verb import AccessibleVerb, VerbName
 from .property import AccessibleProperty
 
@@ -21,7 +22,7 @@ def create_object(name, *a, **kw):
     return AccessibleObject.objects.create(*a, **kw)
 
 @receiver(m2m_changed)
-def relationship_changed(sender, instance, action, model, signal, reverse, pk_set, using):
+def relationship_changed(sender, instance, action, model, signal, reverse, pk_set, using, **kwargs):
     if not(sender is Relationship and action == "post_add" and not reverse):
         return
     child = instance
@@ -157,6 +158,13 @@ class Object(models.Model):
         else:
             raise AccessibleProperty.DoesNotExist(f"No such property `{name}`.")
 
+    def save(self, *args, **kwargs):
+        needs_default_permissions = self.pk is None
+        super().save(*args, **kwargs)
+        if not needs_default_permissions:
+            return
+        utils.apply_default_permissions(self)
+
 class AccessibleObject(Object, AccessibleMixin):
     class Meta:
         proxy = True
@@ -165,46 +173,49 @@ class AccessibleObject(Object, AccessibleMixin):
         return subject.owner == self
 
     def is_allowed(self, permission, subject, fatal=False):
+        permission = Permission.objects.get(name=permission)
+        anything = Permission.objects.get(name='anything')
         rules = Access.objects.filter(
             object = subject if subject.kind == 'object' else None,
             verb = subject if subject.kind == 'verb' else None,
             property = subject if subject.kind == 'property' else None,
             type = 'accessor',
             accessor = self,
-            permission__in = (permission, "anything")
+            permission__in = (permission, anything)
         )
-        rules.union(Access.objects.filter(
+        rules = rules.union(Access.objects.filter(
             object = subject if subject.kind == 'object' else None,
             verb = subject if subject.kind == 'verb' else None,
             property = subject if subject.kind == 'property' else None,
             type = 'group',
             group = 'everyone',
-            permission__in = (permission, "anything")
+            permission__in = (permission, anything)
         ))
         if self.owns(subject):
-            rules.union(Access.objects.filter(
+            rules = rules.union(Access.objects.filter(
                 object = subject if subject.kind == 'object' else None,
                 verb = subject if subject.kind == 'verb' else None,
                 property = subject if subject.kind == 'property' else None,
                 type = 'group',
                 group = 'owners',
-                permission__in = (permission, "anything")
+                permission__in = (permission, anything)
             ))
-        if self.is_wizard():
-            rules.union(Access.objects.filter(
+        if Player.objects.filter(avatar=self, wizard=True):
+            rules = rules.union(Access.objects.filter(
                 object = subject if subject.kind == 'object' else None,
                 verb = subject if subject.kind == 'verb' else None,
                 property = subject if subject.kind == 'property' else None,
                 type = 'group',
                 group = 'wizards',
-                permission__in = (permission, "anything")
+                permission__in = (permission, anything)
             ))
         if rules:
             for rule in rules.order_by("rule", "type"):
-                if fatal and rule.rule == 'deny':
-                    raise PermissionError(f"{self} is explicitly denied {permission} on {subject}")
-                else:
-                    return False
+                if rule.rule == 'deny':
+                    if fatal:
+                        raise PermissionError(f"{self} is explicitly denied {permission} on {subject}")
+                    else:
+                        return False
             return True
         elif fatal:
             raise PermissionError(f"{self} is not allowed {permission} on {subject}")
