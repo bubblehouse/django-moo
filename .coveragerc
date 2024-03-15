@@ -1,0 +1,14 @@
+[run]
+branch = True
+
+omit =
+    # omit bootstarp verb code
+    */*_verbs/*
+    # omit Django boilerplate
+    termiverse/asgi.py
+    termiverse/wsgi.py
+    termiverse/urls.py
+    termiverse/settings/dev.py
+    termiverse/settings/local.py
+    termiverse/shell/management/commands/termiverse_shell.py
+    termiverse/core/management/commands/termiverse_init.py
