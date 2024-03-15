@@ -16,6 +16,7 @@ asyncssh = {extras = ["bcrypt"], version = "^2.14.0"}
 restrictedpython = "^7.0"
 ptpython = "^3.0.23"
 django-simplesshkey = "^2.1.0"
+watchdog = "^4.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest-django = "^4.7.0"
