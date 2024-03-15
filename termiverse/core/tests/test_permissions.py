@@ -1,4 +1,4 @@
-from termiverse.core.models.object import Object
+from termiverse.core.models import Object, Player
 from termiverse.tests import *
 
 import pytest
@@ -41,6 +41,8 @@ def test_everyone_defaults(t_init, t_wizard):
 
 @pytest.mark.django_db
 def test_wizard_defaults(t_init, t_wizard):
+    # Objects are only Wizards if they have an associated Player with wizard=True
+    Player.objects.create(avatar=t_wizard, wizard=True)
     thing = Object.objects.create(name='thing')
     assert t_wizard.is_allowed('read', thing)
     assert t_wizard.is_allowed('write', thing)
@@ -58,4 +60,4 @@ def test_simple_deny(t_init, t_wizard):
     thing.deny(user, 'write')
 
     assert user.is_allowed('read', thing)
-    assert user.is_allowed('write', thing)
+    assert not user.is_allowed('write', thing)
