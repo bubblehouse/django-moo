@@ -21,12 +21,14 @@ allowed_builtins = (
 
 log = logging.getLogger(__name__)
 
-vars = contextvars.ContextVar("vars")
-def get_context(name):
-    d = vars.get({})
-    return d.get(name)
+class context:
+    vars = contextvars.ContextVar("vars")
 
-class context(object):
+    @classmethod
+    def get(cls, name):
+        d = cls.vars.get({})
+        return d.get(name)
+
     def __init__(self, caller, writer):
         from .models.object import AccessibleObject
         self.caller = AccessibleObject.objects.get(pk=caller.pk)
