@@ -21,17 +21,30 @@ allowed_builtins = (
 
 log = logging.getLogger(__name__)
 
-user_context = contextvars.ContextVar("user")
+vars = contextvars.ContextVar("vars")
+def get_context(name):
+    d = vars.get({})
+    return d.get(name)
+
 def get_caller():
-    return user_context.get(None)
+    d = vars.get({})
+    return d.get('caller')
 
-output_context = contextvars.ContextVar("output")
-def get_output():
-    return output_context.get(None)
+def get_writer():
+    d = vars.get({})
+    return d.get('writer')
 
-args_context = contextvars.ContextVar("args")
 def get_args():
-    return args_context.get(None)
+    d = vars.get({})
+    return d.get('args')
+
+def get_kwargs():
+    d = vars.get({})
+    return d.get('kwargs')
+
+def get_parser():
+    d = vars.get({})
+    return d.get('parser')
 
 class context(object):
     def __init__(self, caller, writer):
@@ -40,14 +53,15 @@ class context(object):
         self.writer = writer
 
     def __enter__(self):
-        user_context.set(self.caller)
-        output_context.set(self.writer)
+        from . import api
+        api.caller = self.caller
+        api.writer = self.writer
         return self
 
     def __exit__(self, type, value, traceback):
-        user_context.set(None)
-        output_context.set(None)
-        args_context.set(None)
+        from . import api
+        api.caller = None
+        api.writer = None
 
 def is_frame_access_allowed():
     return False
