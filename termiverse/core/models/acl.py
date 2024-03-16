@@ -14,7 +14,7 @@ class AccessibleMixin(object):
         """
         Check if the current caller has permission for something.
         """
-        caller = code.get_context('caller')
+        caller = code.context.get('caller')
         if not caller:
             return
         if permission == 'grant' and caller.owns(subject):

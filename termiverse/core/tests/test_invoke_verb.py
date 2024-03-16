@@ -11,7 +11,7 @@ def test_caller_can_invoke_trivial_verb(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
     with code.context(t_wizard, _writer):
-        writer = code.get_context('writer')
+        writer = code.context.get('writer')
         globals = code.get_default_globals()
         globals.update(code.get_restricted_environment(writer))
         src = "from termiverse.core import api\napi.caller.invoke_verb('look')"
