@@ -26,26 +26,6 @@ def get_context(name):
     d = vars.get({})
     return d.get(name)
 
-def get_caller():
-    d = vars.get({})
-    return d.get('caller')
-
-def get_writer():
-    d = vars.get({})
-    return d.get('writer')
-
-def get_args():
-    d = vars.get({})
-    return d.get('args')
-
-def get_kwargs():
-    d = vars.get({})
-    return d.get('kwargs')
-
-def get_parser():
-    d = vars.get({})
-    return d.get('parser')
-
 class context(object):
     def __init__(self, caller, writer):
         from .models.object import AccessibleObject
