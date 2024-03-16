@@ -88,7 +88,7 @@ class CustomRepl(PythonRepl):
             lex = parse.Lexer(line)
             parser = parse.Parser(lex, caller)
             verb = parser.get_verb()
-            globals = code.get_restricted_environment(code.get_context('writer'))
+            globals = code.get_restricted_environment(code.context.get('writer'))
             env = {}
             code.r_exec(verb.code, env, globals, filename=repr(self))
 

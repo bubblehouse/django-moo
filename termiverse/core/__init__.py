@@ -1,6 +1,6 @@
 import logging
 
-from .code import vars
+from .code import context
 
 log = logging.getLogger(__name__)
 
@@ -10,13 +10,13 @@ class API:
             self.name = name
 
         def __get__(self, obj, objtype=None):
-            d = vars.get({})
+            d = context.vars.get({})
             return d[self.name]
 
         def __set__(self, obj, value):
-            d = vars.get({})
+            d = context.vars.get({})
             d[self.name] = value
-            vars.set(d)
+            context.vars.set(d)
 
     caller = descriptor('caller')
     writer = descriptor('writer')

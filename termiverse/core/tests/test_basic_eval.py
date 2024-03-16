@@ -9,7 +9,7 @@ def test_eval_simple_command(t_init: Object, t_wizard: Object):
     def _writer(msg):
         raise Exception("print was called unexpectedly")
     with code.context(t_wizard, _writer):
-        writer = code.get_context('writer')
+        writer = code.context.get('writer')
         globals = code.get_default_globals()
         globals.update(code.get_restricted_environment(writer))
         result = code.do_eval("dir()", {}, globals)
@@ -21,7 +21,7 @@ def test_trivial_printing(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
     with code.context(t_wizard, _writer):
-        writer = code.get_context('writer')
+        writer = code.context.get('writer')
         globals = code.get_default_globals()
         globals.update(code.get_restricted_environment(writer))
         result = code.do_eval("print('test')", {}, globals)
@@ -34,7 +34,7 @@ def test_printing_imported_caller(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
     with code.context(t_wizard, _writer):
-        writer = code.get_context('writer')
+        writer = code.context.get('writer')
         globals = code.get_default_globals()
         globals.update(code.get_restricted_environment(writer))
         src = "from termiverse.core import api\nprint(api.caller)"

@@ -5,7 +5,7 @@ from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
 
 from .. import bootstrap, exceptions, utils
-from ..code import get_context
+from ..code import context
 from .acl import AccessibleMixin, Access, Permission
 from .auth import Player
 from .verb import AccessibleVerb, VerbName
@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 def create_object(name, *a, **kw):
     kw['name'] = name
     if 'owner' not in kw:
-        kw['owner'] =  get_context('caller')
+        kw['owner'] =  context.get('caller')
     if 'location' not in kw and kw['owner']:
         kw['location'] = kw['owner'].location
     return AccessibleObject.objects.create(*a, **kw)
@@ -86,7 +86,7 @@ class Object(models.Model):
         return
 
     def add_verb(self, *names, code=None, owner=None, repo=None, filename=None, ability=False, method=False):
-        owner = get_context('caller') or owner or self
+        owner = context.get('caller') or owner or self
         if filename:
             code = bootstrap.get_source(filename, dataset=repo.slug)
         verb = AccessibleVerb.objects.create(
@@ -134,7 +134,7 @@ class Object(models.Model):
             raise AccessibleVerb.DoesNotExist(f"No such verb `{name}`.")
 
     def set_property(self, name, value, inherited=False, owner=None):
-        owner = get_context('caller') or owner or self
+        owner = context.get('caller') or owner or self
         AccessibleProperty.objects.update_or_create(
             name = name,
             origin = self,
