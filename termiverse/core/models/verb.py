@@ -1,9 +1,9 @@
 from django.db import models
 from django.core import validators
 
-from ..code import get_output, get_restricted_environment, r_exec, args_context
+from ..code import get_context, get_restricted_environment, r_exec
 from .acl import AccessibleMixin
-from .. import utils
+from .. import api, utils
 
 class Verb(models.Model):
     code = models.TextField(blank=True, null=True)
@@ -50,10 +50,11 @@ class AccessibleVerb(Verb, AccessibleMixin):
     def __call__(self, *args, **kwargs):
         if not(self.method):
             raise RuntimeError("%s is not a method." % self)
-        globals = get_restricted_environment(get_output())
+        globals = get_restricted_environment(get_context('writer'))
         # self.check('execute', self)
         env = {}
-        args_context.set((args, kwargs))
+        api.args = args
+        api.kwargs = kwargs
         result = r_exec(self.code, env, globals, filename=repr(self))
         return result
 
