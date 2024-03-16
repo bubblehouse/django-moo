@@ -9,6 +9,7 @@
 .tm_properties
 docker-compose.override.yml
 .reload
+.coverage
 /static
 /.local
 .dccache
