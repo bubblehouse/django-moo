@@ -5,7 +5,7 @@ from termiverse.core import parse, exceptions
 import pytest
 
 @pytest.mark.django_db
-def test_parse_look(t_init: Object, t_wizard: Object):
+def test_parse_imperative_command(t_init: Object, t_wizard: Object):
     lex = parse.Lexer("look")
     parser = parse.Parser(lex, t_wizard)
     verb = parser.get_verb()
@@ -24,7 +24,7 @@ def test_parse_look(t_init: Object, t_wizard: Object):
         parser.get_pobj_str("on")
 
 @pytest.mark.django_db
-def test_parse_look_my_bag_of_holding(t_init: Object, t_wizard: Object):
+def test_parse_direct_object(t_init: Object, t_wizard: Object):
     bag = Object.objects.get(name="bag of holding")
     lex = parse.Lexer("look my bag of holding")
     parser = parse.Parser(lex, t_wizard)
@@ -40,7 +40,7 @@ def test_parse_look_my_bag_of_holding(t_init: Object, t_wizard: Object):
         parser.get_pobj_str("on")
 
 @pytest.mark.django_db
-def test_parse_verb_pobj(t_init: Object, t_wizard: Object):
+def test_parse_object_of_the_preposition(t_init: Object, t_wizard: Object):
     lex = parse.Lexer("look through peephole")
     parser = parse.Parser(lex, t_wizard)
     assert not parser.has_dobj(), "unexpected object found for dobj"
@@ -56,7 +56,7 @@ def test_parse_verb_pobj(t_init: Object, t_wizard: Object):
     assert parser.get_pobj_str("through") == "peephole"
 
 @pytest.mark.django_db
-def test_parse_verb_pobj_pobj(t_init: Object, t_wizard: Object):
+def test_parse_object_of_the_preposition_with_preposition(t_init: Object, t_wizard: Object):
     lex = parse.Lexer("look through peephole with wizard")
     parser = parse.Parser(lex, t_wizard)
     assert not parser.has_dobj(), "unexpected object found for dobj"
@@ -72,7 +72,7 @@ def test_parse_verb_pobj_pobj(t_init: Object, t_wizard: Object):
         parser.get_dobj_str()
 
 @pytest.mark.django_db
-def test_parse_verb_dobj_pobj(t_init: Object, t_wizard: Object):
+def test_parse_direct_object_object_of_the_preposition_with_preposition(t_init: Object, t_wizard: Object):
     lex = parse.Lexer("@eval glasses from wizard with tongs")
     parser = parse.Parser(lex, t_wizard)
     with pytest.raises(exceptions.NoSuchObjectError):
@@ -85,7 +85,7 @@ def test_parse_verb_dobj_pobj(t_init: Object, t_wizard: Object):
     assert parser.get_pobj_str("from") == "wizard"
 
 @pytest.mark.django_db
-def test_complex(t_init: Object, t_wizard: Object):
+def test_parse_direct_object_and_multiple_prepositions_with_specifiers(t_init: Object, t_wizard: Object):
     lex = parse.Lexer("@eval the wizard from 'bag under stairs' with tongs in wizard's bag")
     parser = parse.Parser(lex, t_wizard)
     with pytest.raises(exceptions.NoSuchObjectError):
@@ -97,7 +97,7 @@ def test_complex(t_init: Object, t_wizard: Object):
     assert parser.get_pobj_str("with") == "tongs"
 
 @pytest.mark.django_db
-def test_aliases(t_init: Object, t_wizard: Object):
+def test_parse_command_referring_to_aliases(t_init: Object, t_wizard: Object):
     alias = t_wizard.aliases.create(alias='The Wiz')
     lex = parse.Lexer("@eval the Wiz from 'bag under stairs' with tongs in wizard's bag")
     parser = parse.Parser(lex, t_wizard)
@@ -108,13 +108,13 @@ def test_aliases(t_init: Object, t_wizard: Object):
     assert not parser.has_dobj()
 
 @pytest.mark.django_db
-def test_quoted_strings(t_init: Object, t_wizard: Object):
+def test_parse_with_quoted_strings(t_init: Object, t_wizard: Object):
     lex = parse.Lexer("@eval wizard to 'something here'")
     parser = parse.Parser(lex, t_wizard)
     assert parser.get_pobj_str('to') == 'something here'
 
 @pytest.mark.django_db
-def test_bug_9(t_init: Object, t_wizard: Object):
+def test_parse_with_quoted_strings_and_escapes(t_init: Object, t_wizard: Object):
     lex = parse.Lexer("@eval here as 'Large amounts of chalkdust lay all over the "
                        "objects in this room, and a large chalkboard at one end has "
                        "become coated with a thick layer of Queen Anne\\'s lace. "
@@ -126,7 +126,7 @@ def test_bug_9(t_init: Object, t_wizard: Object):
     assert "\\" not in parser.get_pobj_str('as')
 
 @pytest.mark.django_db
-def test_inventory(t_init: Object, t_wizard: Object):
+def test_parse_with_my_object(t_init: Object, t_wizard: Object):
     box = Object.objects.create(name='box')
     box.location = t_wizard
     box.save()

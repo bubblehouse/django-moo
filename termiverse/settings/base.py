@@ -39,6 +39,19 @@ DEFAULT_PERMISSIONS = (
     'administer',
 )
 
+ALLOWED_MODULES = (
+    'termiverse.core',
+    'hashlib',
+    'string',
+)
+
+ALLOWED_BUILTINS = (
+    'dict',
+    'dir',
+    'getattr',
+    'hasattr'
+)
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",

@@ -2,22 +2,11 @@ import contextvars
 import warnings
 import logging
 
+from django.conf import settings
+
 from RestrictedPython import compile_restricted, compile_restricted_function
 from RestrictedPython.Guards import safe_builtins
 from RestrictedPython.Guards import guarded_unpack_sequence
-
-allowed_modules = (
-    'termiverse.core',
-    'hashlib',
-    'string',
-)
-
-allowed_builtins = (
-    'dict',
-    'dir',
-    'getattr',
-    'hasattr'
-)
 
 log = logging.getLogger(__name__)
 
@@ -121,7 +110,7 @@ def get_restricted_environment(writer):
         """
         Used to drastically limit the importable modules.
         """
-        if(name in allowed_modules):
+        if(name in settings.ALLOWED_MODULES):
             return __builtins__['__import__'](name, gdict, ldict, fromlist, level)
         raise ImportError('Restricted: %s' % name)
 
@@ -142,7 +131,7 @@ def get_restricted_environment(writer):
 
     safe_builtins['__import__'] = restricted_import
 
-    for name in allowed_builtins:
+    for name in settings.ALLOWED_BUILTINS:
         safe_builtins[name] = __builtins__[name]
 
     env = dict(
