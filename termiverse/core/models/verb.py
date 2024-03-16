@@ -1,7 +1,7 @@
 from django.db import models
 from django.core import validators
 
-from ..code import get_context, get_restricted_environment, r_exec
+from ..code import context, get_restricted_environment, r_exec
 from .acl import AccessibleMixin
 from .. import api, utils
 
@@ -50,7 +50,7 @@ class AccessibleVerb(Verb, AccessibleMixin):
     def __call__(self, *args, **kwargs):
         if not(self.method):
             raise RuntimeError("%s is not a method." % self)
-        globals = get_restricted_environment(get_context('writer'))
+        globals = get_restricted_environment(context.get('writer'))
         # self.check('execute', self)
         env = {}
         api.args = args
