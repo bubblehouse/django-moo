@@ -29,6 +29,7 @@ test:
   script:
     - poetry install
     - poetry run pytest --junitxml=junit.xml --cov-report xml
+  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
     when: always
     reports:
