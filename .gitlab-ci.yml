@@ -3,6 +3,7 @@ stages:
   - lint
   - test
   - release
+  - deploy
 
 lint:
   stage: lint
@@ -17,10 +18,10 @@ lint:
     - echo undefined > public/badges/$CI_JOB_NAME.score
   script:
     - poetry install
-    - poetry run pylint --fail-under=8 --output-format=text $(find -type f -name "*.py" ! -path "**/.venv/**") | tee /tmp/pylint.txt
+    - poetry run pylint --fail-under=8 --output-format=text termiverse | tee /tmp/pylint.txt
     - sed -n 's/^Your code has been rated at \([-0-9.]*\)\/.*/\1/p' /tmp/pylint.txt > public/badges/$CI_JOB_NAME.score
-    - poetry run pylint --exit-zero --output-format=pylint_gitlab.GitlabCodeClimateReporter $(find -type f -name "*.py" ! -path "**/.venv/**") > codeclimate.json
-    - poetry run pylint --exit-zero --output-format=pylint_gitlab.GitlabPagesHtmlReporter $(find -type f -name "*.py" ! -path "**/.venv/**") > public/lint/index.html
+    - poetry run pylint --exit-zero --output-format=pylint_gitlab.GitlabCodeClimateReporter termiverse > codeclimate.json
+    - poetry run pylint --exit-zero --output-format=pylint_gitlab.GitlabPagesHtmlReporter termiverse > public/lint/index.html
   after_script:
     - anybadge --overwrite --label $CI_JOB_NAME --value=$(cat public/badges/$CI_JOB_NAME.score) --file=public/badges/$CI_JOB_NAME.svg 4=red 6=orange 8=yellow
       10=green
@@ -83,8 +84,21 @@ release:
     - docker buildx create --bootstrap --append --name=$CI_PROJECT_NAME --driver=kubernetes '--driver-opt="nodeselector=kubernetes.io/arch=arm64","tolerations=key=kubernetes.io/arch,value=arm64,operator=Equal,effect=NoSchedule"'
     - npx semantic-release
   only:
-    - main
+    refs:
+      - main
   cache:
     paths:
       - .cache/pypoetry
       - node_modules/
+
+pages:
+  stage: deploy
+  image: alpine:latest
+  script:
+    - echo
+  artifacts:
+    paths:
+      - public
+  only:
+    refs:
+      - main
