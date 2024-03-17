@@ -14,6 +14,9 @@ lint:
   script:
     - poetry install
     - poetry run pylint --fail-under=8 termiverse
+  cache:
+    paths:
+      - .cache/pypoetry
 
 test:
   stage: test
@@ -30,6 +33,9 @@ test:
       coverage_report:
         coverage_format: cobertura
         path: coverage.xml
+  cache:
+    paths:
+      - .cache/pypoetry
 
 release:
   stage: release
@@ -55,6 +61,5 @@ release:
     - main
   cache:
     paths:
-      - .venv
-      - .cache/pip
+      - .cache/pypoetry
       - node_modules/
