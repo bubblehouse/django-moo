@@ -1,3 +1,10 @@
+## [0.15.1](https://gitlab.com/bubblehouse/termiverse/compare/v0.15.0...v0.15.1) (2024-03-17)
+
+
+### Bug Fixes
+
+* changed location of chart ([083e2f7](https://gitlab.com/bubblehouse/termiverse/commit/083e2f74206bcd844a677c3cd2496f6ca0689c58))
+
 ## [0.15.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.14.8...v0.15.0) (2024-03-17)
 
 
