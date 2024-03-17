@@ -1,3 +1,37 @@
+## [0.15.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.14.8...v0.15.0) (2024-03-17)
+
+
+### Features
+
+* add inherited field to property ([081cf38](https://gitlab.com/bubblehouse/termiverse/commit/081cf383ae88cc3c62c091d17210d4357c6df634))
+* add object.invoke_verb() ([7da3d28](https://gitlab.com/bubblehouse/termiverse/commit/7da3d283ddae62b488269fa26f8167f1182f382a))
+* added add_ancestor with inheritence of properties ([9c6113b](https://gitlab.com/bubblehouse/termiverse/commit/9c6113b55dab28b4f4fe8cc5cdf6b0c95a0f5507))
+* added alternate prompt mode for MUD mode ([c530a1f](https://gitlab.com/bubblehouse/termiverse/commit/c530a1fc4cdf5ac3505c6c6de53dd4d9d62f0051))
+* added parser/lexer, very early successes with each ([747f598](https://gitlab.com/bubblehouse/termiverse/commit/747f5988b100a6e9ae1fa1c3e8b0892dc7b777f8))
+* get_property will now recurse the inheritance tree ([12090ee](https://gitlab.com/bubblehouse/termiverse/commit/12090ee61847bc346ba8235a7b648947b78a223a))
+* ssh prompt now defaults to sentence parser ([15d1251](https://gitlab.com/bubblehouse/termiverse/commit/15d1251b8d3558b3dcf643f2bf65ffa89001e70f))
+
+
+### Bug Fixes
+
+* aliases work inside the parser now ([45fb2d5](https://gitlab.com/bubblehouse/termiverse/commit/45fb2d5d5ffb56b3b1ef44d33e0a2c670c2906bd))
+* always use Accessible- objects if they will be used in a restricted env ([1c3c8dc](https://gitlab.com/bubblehouse/termiverse/commit/1c3c8dcad10e20f9344f2c544ba3c74aa67519e1))
+* be clear about which dataset is being used ([7c70b2d](https://gitlab.com/bubblehouse/termiverse/commit/7c70b2dd01338e8e50f11208e0ed048edaf28f2a))
+* correctly clone instances ([90194d6](https://gitlab.com/bubblehouse/termiverse/commit/90194d63092f447b43c7335bb76dd5f9642e801c))
+* dont massage verb code in prompt ([d6b6429](https://gitlab.com/bubblehouse/termiverse/commit/d6b6429b4b355fd4372458a5da733c8e9f3ed787))
+* fixes for permissions and associated tests ([eed7c9a](https://gitlab.com/bubblehouse/termiverse/commit/eed7c9a563218c999662f22acb779ce752846622))
+* make get ancestors/descendents generators so we can stop once we find something ([3845247](https://gitlab.com/bubblehouse/termiverse/commit/3845247d3ed6a27465611983180bcb8cad064471))
+* prepositions and handle query sets ([a25499e](https://gitlab.com/bubblehouse/termiverse/commit/a25499eb2a5cc17419290ae7c91aeaa16fa23499))
+* remove invalid/unneeded related names ([2af5ba1](https://gitlab.com/bubblehouse/termiverse/commit/2af5ba12929153e7d0622f375703045ddd5cb8c1))
+* remove invalid/unneeded related names ([4e87d55](https://gitlab.com/bubblehouse/termiverse/commit/4e87d550966b57b2d555b0940a03a6a7bddd5853))
+* remove magic variables ([3e2d9e0](https://gitlab.com/bubblehouse/termiverse/commit/3e2d9e0ae354b1f2b0a5973276ad7086a408a68e))
+* typo in exception message ([c8ac77b](https://gitlab.com/bubblehouse/termiverse/commit/c8ac77b6b0375e2213ce347b8594c5469c128641))
+* update to python3.11 ([0f21ed4](https://gitlab.com/bubblehouse/termiverse/commit/0f21ed42d9bd95d3228d22b67096e0730de91630))
+* use a single eval function for both ([06f8b5a](https://gitlab.com/bubblehouse/termiverse/commit/06f8b5a0be2a28882d37abf78c1b78093b02d2fe))
+* use signals instead of overriding through.save() ([7343898](https://gitlab.com/bubblehouse/termiverse/commit/7343898ddd0a97c9bab60884cc0071bef5b26309))
+* use warnings instead of logging them ([4a2a673](https://gitlab.com/bubblehouse/termiverse/commit/4a2a6737ca95e025b006a3d4bf3046ea58a304bb))
+* verb environment globals ([41e5365](https://gitlab.com/bubblehouse/termiverse/commit/41e5365e3020dcdb399f0101650023d5d3b4993a))
+
 ## [0.14.8](https://gitlab.com/bubblehouse/termiverse/compare/v0.14.7...v0.14.8) (2023-12-18)
 
 
