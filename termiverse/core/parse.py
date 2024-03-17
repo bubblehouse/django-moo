@@ -9,12 +9,13 @@ by the (BNF?) form:
 There are a long list of prepositions supported, some of which are interchangeable.
 """
 
-import re, logging
+import re
+import logging
 
 from django.db.models.query import QuerySet
 
 from .models import Object
-from .exceptions import *
+from .exceptions import *  # pylint: disable=wildcard-import
 
 log = logging.getLogger(__name__)
 
@@ -61,7 +62,7 @@ def parse(caller, sentence):
     v = p.get_verb()
     v.execute(p)
 
-class Lexer(object):
+class Lexer:
     """
     An instance of this class will identify the various parts of a imperitive
     sentence. This may be of use to verb code, as well.
@@ -165,7 +166,7 @@ class Lexer(object):
             prepositions    = self.prepositions,
         )
 
-class Parser(object):
+class Parser:
     """
     The parser instance is created by the avatar. A new instance is created
     for each command invocation.
@@ -180,6 +181,9 @@ class Parser(object):
 
         self.this = None
         self.verb = None
+        self.prepositions = {}
+        self.command = None
+        self.words = []
 
         if(self.lexer):
             for key, value in list(self.lexer.get_details().items()):

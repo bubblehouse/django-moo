@@ -29,7 +29,7 @@ class context:
         api.writer = self.writer
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, cls, value, traceback):
         from . import api
         api.caller = None
         api.writer = None
@@ -51,15 +51,15 @@ def compile_verb_code(body, filename):
         )
     return result
 
-def r_eval(src, locals, globals, filename='<string>'):
+def r_eval(src, locals, globals, filename='<string>'):  # pylint: disable=redefined-builtin
     code = compile_verb_code(src, filename)
     return do_eval(code, locals, globals, filename, runtype='eval')
 
-def r_exec(src, locals, globals, filename='<string>'):
+def r_exec(src, locals, globals, filename='<string>'):  # pylint: disable=redefined-builtin
     code = compile_verb_code(src, filename)
     return do_eval(code, locals, globals, filename, runtype='exec')
 
-def do_eval(code, locals, globals, filename='<string>', runtype='eval'):
+def do_eval(code, locals, globals, filename='<string>', runtype='eval'):  # pylint: disable=redefined-builtin
     """
     Execute an expression in the provided environment.
     """
@@ -86,11 +86,11 @@ def get_restricted_environment(writer):
     """
     Construct an environment dictionary.
     """
-    class _print_(object):
+    class _print_:
         def _call_print(self,s):
             writer(str(s))
 
-    class _write_(object):
+    class _write_:
         def __init__(self, obj):
             object.__setattr__(self, 'obj', obj)
 
