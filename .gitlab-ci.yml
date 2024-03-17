@@ -1,12 +1,39 @@
 ---
 stages:
+  - lint
+  - test
   - release
+
+lint:
+  stage: lint
+  tags:
+    - shacklyn
+  image: registry.gitlab.com/bubblehouse/runner-base:1.2.1
+  allow_failure: true
+  script:
+    - pylint termiverse
+
+test:
+  stage: test
+  tags:
+    - shacklyn
+  image: registry.gitlab.com/bubblehouse/runner-base:1.2.1
+  script:
+    - poetry install
+    - poetry run pytest --junitxml=junit.xml --cov-report xml
+  artifacts:
+    when: always
+    reports:
+      junit: junit.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
 
 release:
   stage: release
   tags:
     - shacklyn
-  image: registry.gitlab.com/bubblehouse/runner-base:1.2.0
+  image: registry.gitlab.com/bubblehouse/runner-base:1.2.1
   variables:
     GIT_COMMITTER_EMAIL: phil@bubblehouse.org
     GIT_COMMITTER_NAME: Phil Christensen
