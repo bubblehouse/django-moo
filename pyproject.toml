@@ -8,7 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "~3.11"
 django = "~5"
-psycopg2 = "^2.9.7"
+psycopg2-binary = "^2.9.7"
 uwsgi = "^2.0.22"
 rich = "^13.5.3"
 prompt-toolkit = "^3.0.39"
@@ -21,6 +21,8 @@ watchdog = "^4.0.0"
 [tool.poetry.group.dev.dependencies]
 pytest-django = "^4.7.0"
 pytest-spec = "^3.2.0"
+coverage = "^7.4.4"
+pytest-cov = "^4.1.0"
 
 [build-system]
 requires = ["poetry-core"]
