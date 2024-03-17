@@ -1,6 +1,6 @@
 {
   "name": "termiverse",
-  "version": "0.15.0",
+  "version": "0.15.1",
   "description": "Create your own text-based universe.",
   "devDependencies": {
     "@alexbabel/semantic-release-docker": "",
