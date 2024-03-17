@@ -93,6 +93,8 @@ release:
 
 pages:
   stage: deploy
+  tags:
+    - shacklyn
   image: alpine:latest
   script:
     - echo
