@@ -72,11 +72,6 @@ class AmbiguousVerbError(UserError):
         result = result + "."
         UserError.__init__(self, result, matches)
 
-class PermissionError(UserError):
-    """
-    The user tried to do something he doesn't have permission for. (duh?)
-    """
-
 class AccessError(PermissionError):
     """
     A more specific kind of PermissionError.
@@ -95,13 +90,11 @@ class RecursiveError(UserError):
     to happen because of user error, and may not need to be presented to the
     user, but will be for the time.
     """
-    pass
 
 class QuotaError(UserError):
     """
     Raised if the user tries to create objects he does not have enough quota for.
     """
-    pass
 
 class NoSuchObjectError(UserError):
     """
