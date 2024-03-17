@@ -74,8 +74,8 @@
             "files": [
               "extras/helm/Chart.yaml"
             ],
-            "from": "^appVersion: \".*\"",
-            "to": "appVersion: \"${nextRelease.version}\"",
+            "from": "^appVersion: .*",
+            "to": "appVersion: ${nextRelease.version}",
             "results": [
               {
                 "file": "extras/helm/Chart.yaml",
