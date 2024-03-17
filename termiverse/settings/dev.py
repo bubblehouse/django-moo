@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from .base import *
+from .base import *  # pylint: disable=wildcard-import
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure-06xo%2f39ohlfrgu&)%1lsrlx6jqy)s%#_-$rc5l_z1+p6w(=r"

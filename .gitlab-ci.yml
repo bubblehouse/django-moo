@@ -9,9 +9,11 @@ lint:
   tags:
     - shacklyn
   image: registry.gitlab.com/bubblehouse/runner-base:1.2.1
-  allow_failure: true
+  variables:
+    DJANGO_SETTINGS_MODULE: termiverse.settings.test
   script:
-    - pylint termiverse
+    - poetry install
+    - poetry run pylint --fail-under=8 termiverse
 
 test:
   stage: test

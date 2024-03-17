@@ -1,11 +1,11 @@
 import importlib.resources
 
-from termiverse.core.models import Repository, Object, Player
-from termiverse.core.bootstrap import load_python
-
 import pytest
 from django.contrib.auth.models import User
 from django.conf import settings
+
+from termiverse.core.models import Repository, Object, Player
+from termiverse.core.bootstrap import load_python
 
 @pytest.fixture()
 def t_init():

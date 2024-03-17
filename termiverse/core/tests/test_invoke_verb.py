@@ -1,11 +1,11 @@
-from termiverse.tests import *
+import pytest
+
+from termiverse.tests import *  # pylint: disable=wildcard-import
 from ..models import Object
 from .. import code
 
-import pytest
-
 @pytest.mark.django_db
-def test_caller_can_invoke_trivial_verb(t_init: Object, t_wizard: Object):
+def test_caller_can_invoke_trivial_verb(t_init: Object, t_wizard: Object):  # pylint: disable=redefined-outer-name
     printed = []
     description = t_wizard.location.properties.get(name="description")
     def _writer(msg):
