@@ -4,7 +4,7 @@
 ![release](https://gitlab.com/bubblehouse/termiverse/-/badges/release.svg)
 ![pipeline](https://gitlab.com/bubblehouse/termiverse/badges/main/pipeline.svg?ignore_skipped=true&job=test)
 ![coverage](https://gitlab.com/bubblehouse/termiverse/badges/main/coverage.svg?job=test)
-![quality](https://bubblehouse.gitlab.io/-/termiverse/badges/pylint.svg)
+![quality](https://bubblehouse.gitlab.io/termiverse/badges/lint.svg)
 
 Termiverse is a game server for hosting text-based online MOO-like games.
 
