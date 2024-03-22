@@ -19,7 +19,7 @@ class context:
         return d.get(name)
 
     def __init__(self, caller, writer):
-        from .models.object import AccessibleObject  # pylint: disable: cyclic-import
+        from .models.object import AccessibleObject
         self.caller = AccessibleObject.objects.get(pk=caller.pk)
         self.writer = writer
 

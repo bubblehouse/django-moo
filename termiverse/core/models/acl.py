@@ -2,7 +2,7 @@ import logging
 
 from django.db import models
 
-from .. import code  # pylint: disable=cyclic-import
+from .. import code
 
 log = logging.getLogger(__name__)
 
