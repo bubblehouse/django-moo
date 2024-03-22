@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 def embed(
     user: models.User,
-    locals=None,
+    locals=None,  # pylint: disable=redefined-builtin
     vi_mode: bool = False
 ) -> None:
     """
@@ -23,7 +23,7 @@ def embed(
     """
     # Default locals
     locals = {}
-    globals = code.get_default_globals()
+    globals = code.get_default_globals()  # pylint: disable=redefined-builtin
 
     def get_globals():
         return globals
@@ -69,7 +69,7 @@ class CustomRepl(PythonRepl):
             self.app.output.write(f"{s}\n")
 
     @sync_to_async
-    def eval_async(self, line: str) -> object:
+    def eval_async(self, line: str) -> object:  # pylint: disable=invalid-overridden-method
         """
         Evaluate the line and print the result.
         """
@@ -88,7 +88,7 @@ class CustomRepl(PythonRepl):
             lex = parse.Lexer(line)
             parser = parse.Parser(lex, caller)
             verb = parser.get_verb()
-            globals = code.get_restricted_environment(code.context.get('writer'))
+            globals = code.get_restricted_environment(code.context.get('writer'))  # pylint: disable=redefined-builtin
             env = {}
             code.r_exec(verb.code, env, globals, filename=repr(self))
 
@@ -97,7 +97,7 @@ class CustomRepl(PythonRepl):
         caller = self.user.player.avatar
         log.error(f"{caller}: {line}")
         try:
-            with code.context(caller, self.writer) as ctx:
+            with code.context(caller, self.writer):
                 result = code.do_eval(line, self.get_locals(), self.get_globals())
                 self._store_eval_result(result)
             return result
@@ -106,6 +106,6 @@ class CustomRepl(PythonRepl):
         # If not a valid `eval` expression, compile as `exec` expression
         # but still run with eval to get an awaitable in case of a
         # awaitable expression.
-        with code.context(caller, self.writer) as ctx:
-            result = code.do_eval(line, self.get_locals(), self.get_globals(), compileas='exec')
+        with code.context(caller, self.writer):
+            result = code.do_eval(line, self.get_locals(), self.get_globals(), runtype='exec')
         return result

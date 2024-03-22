@@ -41,11 +41,11 @@ class AmbiguousObjectError(UserError):
             result = message
         else:
             result = "When you say, \"" + self.name + "\", do you mean "
-            for index in range(len(matches)):
+            for index in range(len(matches)):  # pylint: disable=consider-using-enumerate
                 match = matches[index]
-                if(index > 0 and index <= len(matches) - 1):
+                if(index < len(matches) - 1):
                     result += ", "
-                if(index == len(matches) - 1):
+                elif(index == len(matches) - 1):
                     result += " or "
                 result += str(match)
             result += "?"
@@ -64,10 +64,10 @@ class AmbiguousVerbError(UserError):
         result = "More than one object defines \"" + self.name + "\": "
         for match in matches:
             index = matches.index(match)
-            if(index > 0 and index <= len(matches) - 1):
-                result = result + ", "
-            if(index == len(matches) - 1):
-                result = result + " and "
+            if(index < len(matches) - 1):
+                result += ", "
+            elif(index == len(matches) - 1):
+                result += " and "
             result = result + str(match)
         result = result + "."
         UserError.__init__(self, result, matches)
