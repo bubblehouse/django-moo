@@ -4,7 +4,7 @@ from termiverse.tests import *  # pylint: disable=wildcard-import
 from ..models import Object, Property
 
 @pytest.mark.django_db
-def test_child_inherits_parent_property(t_init: Object):  # pylint: disable=redefined-outer-name
+def test_child_inherits_parent_property(t_init: Object):
     room_class = Object.objects.get(name="room class")
     parent_description = room_class.properties.get(name="description")
     room = Object.objects.create(name="new room")
@@ -13,7 +13,7 @@ def test_child_inherits_parent_property(t_init: Object):  # pylint: disable=rede
     assert description == parent_description.value
 
 @pytest.mark.django_db
-def test_child_owns_inherited_property(t_init: Object):  # pylint: disable=redefined-outer-name
+def test_child_owns_inherited_property(t_init: Object):
     player = Object.objects.get(name="Player")
     room_class = Object.objects.get(name="room class")
     room = Object.objects.create(name="new room", owner=player)
@@ -22,7 +22,7 @@ def test_child_owns_inherited_property(t_init: Object):  # pylint: disable=redef
     assert description.origin == room
 
 @pytest.mark.django_db
-def test_returned_property_is_from_correct_object(t_init: Object):  # pylint: disable=redefined-outer-name
+def test_returned_property_is_from_correct_object(t_init: Object):
     player = Object.objects.get(name="Player")
     room_class = Object.objects.get(name="room class")
     room = Object.objects.create(name="new room", owner=player)
@@ -31,7 +31,7 @@ def test_returned_property_is_from_correct_object(t_init: Object):  # pylint: di
     assert description.owner == player
 
 @pytest.mark.django_db
-def test_property_inheritance_can_change_after_save(t_init: Object, t_wizard: Object):  # pylint: disable=redefined-outer-name
+def test_property_inheritance_can_change_after_save(t_init: Object, t_wizard: Object):
     player = Object.objects.get(name="Player")
     o = Object.objects.create(name="new object", owner=player)
     p = Object.objects.create(name="new parent", owner=t_wizard)
