@@ -50,7 +50,7 @@ class AccessibleVerb(Verb, AccessibleMixin):
     def __call__(self, *args, **kwargs):
         if not(self.method):
             raise RuntimeError("%s is not a method." % self)
-        globals = get_restricted_environment(context.get('writer'))
+        globals = get_restricted_environment(context.get('writer'))  # pylint: disable=redefined-builtin
         # self.check('execute', self)
         env = {}
         api.args = args

@@ -19,7 +19,7 @@ class context:
         return d.get(name)
 
     def __init__(self, caller, writer):
-        from .models.object import AccessibleObject
+        from .models.object import AccessibleObject  # pylint: disable: cyclic-import
         self.caller = AccessibleObject.objects.get(pk=caller.pk)
         self.writer = writer
 
@@ -68,9 +68,9 @@ def do_eval(code, locals, globals, filename='<string>', runtype='eval'):  # pyli
             warnings.simplefilter('ignore', category=SyntaxWarning)
             code = compile_restricted(code, filename, runtype)
 
-        value = eval(code, globals, locals)
+        value = eval(code, globals, locals)  # pylint: disable=eval-used
     else:
-        exec(code.code, globals, locals)
+        exec(code.code, globals, locals)  # pylint: disable=exec-used
         compiled_function = locals['verb']
         value = compiled_function(*[], **{})
     return value
@@ -98,13 +98,13 @@ def get_restricted_environment(writer):
             """
             Private attribute protection using is_frame_access_allowed()
             """
-            set_protected_attribute(self.obj, name, value)
+            set_protected_attribute(self.obj, name, value)  # pylint: disable=no-member
 
         def __setitem__(self, key, value):
             """
             Passthrough property access.
             """
-            self.obj[key] = value
+            self.obj[key] = value  # pylint: disable=no-member
 
     def restricted_import(name, gdict, ldict, fromlist, level=-1):
         """
@@ -141,7 +141,7 @@ def get_restricted_environment(writer):
         _write_           = _write_,
         _getattr_         = get_protected_attribute,
         _getitem_         = lambda obj, key: obj[key],
-        _getiter_         = lambda obj: iter(obj),
+        _getiter_         = iter,
         _inplacevar_      = inplace_var_modification,
         _unpack_sequence_ = guarded_unpack_sequence,
         __import__        = restricted_import,

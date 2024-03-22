@@ -1,9 +1,18 @@
 ---
 repos:
   - repo: https://github.com/PyCQA/pylint
-    rev: v3.0.3
+    rev: v3.1.0
     hooks:
       - id: pylint
+        additional_dependencies:
+          - pylint-django
+          - django
+          - pylint-gitlab
+          - pylint-pytest
+          - pytest-django
+          - pytest-spec
+          - pytest-cov
+          - coverage
   - repo: https://github.com/pryorda/dockerfilelint-precommit-hooks
     rev: v0.1.0
     hooks:
@@ -22,11 +31,7 @@ repos:
     hooks:
       - id: yamlfmt
         args: [--mapping, '2', --sequence, '4', --offset, '2']
-        exclude: ^chart/termiverse/templates/
-  - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.30.0
-    hooks:
-      - id: yamllint
+        exclude: ^extras/helm/
   - repo: https://github.com/norwoodj/helm-docs
     rev: v1.11.0
     hooks:

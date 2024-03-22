@@ -28,7 +28,7 @@ def relationship_changed(sender, instance, action, model, signal, reverse, pk_se
     child = instance
     for pk in pk_set:
         parent = model.objects.get(pk=pk)
-        for property in AccessibleProperty.objects.filter(origin=parent, inherited=True):
+        for property in AccessibleProperty.objects.filter(origin=parent, inherited=True):  # pylint: disable=redefined-builtin
             AccessibleProperty.objects.update_or_create(
                 name = property.name,
                 origin = child,
@@ -70,9 +70,7 @@ class Object(models.Model):
         # TODO: One day when Django 5.0 works with `django-cte` this can be SQL.
         for parent in self.parents.all():
             yield parent
-            for p in parent.get_ancestors():
-                yield p
-        return
+            yield from parent.get_ancestors()
 
     def get_descendents(self):
         """
@@ -81,9 +79,7 @@ class Object(models.Model):
         # TODO: One day when Django 5.0 works with `django-cte` this can be SQL.
         for child in self.children.all():
             yield child
-            for c in child.get_descendents():
-                yield c
-        return
+            yield from child.get_descendents()
 
     def add_verb(self, *names, code=None, owner=None, repo=None, filename=None, ability=False, method=False):
         owner = context.get('caller') or owner or self
@@ -214,8 +210,7 @@ class AccessibleObject(Object, AccessibleMixin):
                 if rule.rule == 'deny':
                     if fatal:
                         raise PermissionError(f"{self} is explicitly denied {permission} on {subject}")
-                    else:
-                        return False
+                    return False
             return True
         elif fatal:
             raise PermissionError(f"{self} is not allowed {permission} on {subject}")
