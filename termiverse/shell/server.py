@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User  # pylint: disable=imported-auth-user
 
 from simplesshkey.models import UserKey
 import asyncssh
@@ -34,13 +34,9 @@ class SSHServer(PromptToolkitSSHServer):
 
     @sync_to_async
     def validate_password(self, username: str, password: str) -> bool:
-        try:
-            user = User.objects.get(username=username)
-        except Exception as e:
-            log.error(e)
-            return False
+        user = User.objects.get(username=username)
         if user.check_password(password):
-            self.user = user
+            self.user = user  # pylint: disable=attribute-defined-outside-init
             return True
         return False
 
@@ -49,16 +45,12 @@ class SSHServer(PromptToolkitSSHServer):
 
     @sync_to_async
     def validate_public_key(self, username: str, key: asyncssh.SSHKey):
-        try:
-            for user_key in UserKey.objects.filter(user__username=username):
-                user_pem = ' '.join(user_key.key.split()[:2]) + "\n"
-                server_pem = key.export_public_key().decode('utf8')
-                if user_pem == server_pem:
-                    self.user = user_key.user
-                    return True
-        except Exception as e:
-            log.error(e)
-            return False
+        for user_key in UserKey.objects.filter(user__username=username):
+            user_pem = ' '.join(user_key.key.split()[:2]) + "\n"
+            server_pem = key.export_public_key().decode('utf8')
+            if user_pem == server_pem:
+                self.user = user_key.user  # pylint: disable=attribute-defined-outside-init
+                return True
         return False
 
     def session_requested(self) -> PromptToolkitSSHSession:

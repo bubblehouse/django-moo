@@ -1,8 +1,8 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User  # pylint: disable=imported-auth-user
 
-from .models import verb, object, property, auth, task, acl
+from .models import verb, object, property, auth, task, acl  # pylint: disable=redefined-builtin
 
 class VerbInline(admin.TabularInline):
     model = verb.Verb

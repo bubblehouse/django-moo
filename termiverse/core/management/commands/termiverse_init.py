@@ -16,7 +16,7 @@ class Command(BaseCommand):
             help="Optionally pass a built-in template name or a Python source file"
                  " to bootstrap the database.")
 
-    def handle(self, bootstrap='default', *args, **config):
+    def handle(self, *args, bootstrap='default', **config):
         try:
             Repository.objects.get(slug=bootstrap)
             raise RuntimeError("Looks like this database has already been initialized.")
