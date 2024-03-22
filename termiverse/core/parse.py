@@ -38,11 +38,7 @@ preps = [['with', 'using'],
         ['as'],
         ['off', 'off of']]
 
-prepstring = ""
-for item in preps:
-    prepstring += "|".join(item)
-    if(item != preps[len(preps) - 1]):
-        prepstring += "|"
+prepstring = "|".join(sum(preps, []))
 
 PREP_SRC = r'(?:\b)(?P<prep>' + prepstring + r')(?:\b)'
 SPEC = r"(?P<spec_str>my|the|a|an|\S+(?:\'s|s\'))"
@@ -77,26 +73,26 @@ class Lexer:
         iterator = re.finditer(MULTI_WORD, command)
         self.words = []
         qotd_matches = []
-        for item in iterator:
-            if(item.group(1)):
-                qotd_matches.append(item)
-            word = item.group().strip('\'"').replace("\\'", "'").replace("\\\"", "\"")
+        for wordmatch in iterator:
+            if(wordmatch.group(1)):
+                qotd_matches.append(wordmatch)
+            word = wordmatch.group().strip('\'"').replace("\\'", "'").replace("\\\"", "\"")
             self.words.append(word)
 
         # Now, find all prepositions
         iterator = re.finditer(PREP, command)
         prep_matches = []
-        for item in iterator:
-            prep_matches.append(item)
+        for prepmatch in iterator:
+            prep_matches.append(prepmatch)
 
         #this method will be used to filter out prepositions inside quotes
-        def nonoverlap(item):
-            (start, end) = item.span()
+        def nonoverlap(match):
+            (start, end) = match.span()
             for word in qotd_matches:
                 (word_start, word_end) = word.span()
-                if(start > word_start and start < word_end):
+                if(word_start <= start < word_end):
                     return False
-                elif(end > word_start and end < word_end):
+                elif(word_start < end < word_end):
                     return False
             return True
 
@@ -124,7 +120,7 @@ class Lexer:
 
         self.prepositions = {}
         #iterate through all the prepositional phrase matches
-        for index in range(len(prep_matches)):
+        for index in range(len(prep_matches)):  # pylint: disable=consider-using-enumerate
             start = prep_matches[index].start()
             #if this is the last preposition, then look from here until the end
             if(index == len(prep_matches) - 1):
@@ -148,9 +144,9 @@ class Lexer:
             #if there is already a entry for this preposition, we turn it into
             #a list, and if it already is one, we append to it
             if(result['prep'] in self.prepositions):
-                item = self.prepositions[result['prep']]
-                if not(isinstance(item[0], list)):
-                    self.prepositions[result['prep']] = [[result['spec_str'], result['obj_str'], None], item]
+                prep = self.prepositions[result['prep']]
+                if not(isinstance(prep[0], list)):
+                    self.prepositions[result['prep']] = [[result['spec_str'], result['obj_str'], None], prep]
                 else:
                     self.prepositions[result['prep']].append([result['spec_str'], result['obj_str'], None])
             #if it's a new preposition, we just save it here.
@@ -166,7 +162,7 @@ class Lexer:
             prepositions    = self.prepositions,
         )
 
-class Parser:
+class Parser:  # pylint: disable=too-many-instance-attributes
     """
     The parser instance is created by the avatar. A new instance is created
     for each command invocation.
@@ -184,13 +180,14 @@ class Parser:
         self.prepositions = {}
         self.command = None
         self.words = []
+        self.dobj_str = ''
+        self.dobj_spec_str = ''
 
         if(self.lexer):
             for key, value in list(self.lexer.get_details().items()):
                 self.__dict__[key] = value
 
-            for prep in self.prepositions:
-                prep_record_list = self.prepositions[prep]
+            for prep_record_list in self.prepositions.values():
                 if not(isinstance(prep_record_list[0], list)):
                     prep_record_list = [prep_record_list]
                 for record in prep_record_list:
@@ -277,8 +274,7 @@ class Parser:
         if isinstance(search, QuerySet):
             if len(search) > 1:
                 raise AmbiguousObjectError(name, search)
-            else:
-                search = search[0]
+            search = search[0]
         if(name and search):
             result = search.find(name)
 
@@ -288,8 +284,7 @@ class Parser:
             return result
         elif(not result):
             return None
-        else:
-            raise AmbiguousObjectError(name, result)
+        raise AmbiguousObjectError(name, result)
 
     def get_verb(self):
         """
@@ -318,20 +313,20 @@ class Parser:
 
         checks.append(self.dobj)
 
-        for key in self.prepositions:
+        for prep in self.prepositions.values():
             # if there were multiple uses of a preposition
-            if(isinstance(self.prepositions[key][0], list)):
+            if(isinstance(prep[0], list)):
                 # then check each one for a verb
-                checks.extend([pobj[2] for pobj in self.prepositions[key] if pobj[2]])
+                checks.extend([pobj[2] for pobj in prep if pobj[2]])
             else:
-                checks.append(self.prepositions[key][2])
+                checks.append(prep[2])
 
         matches = [x for x in checks if x and x.has_verb(verb_str)]
         self.this = self.filter_matches(matches)
         if(isinstance(self.this, list)):
             if(len(self.this) > 1):
                 raise AmbiguousVerbError(verb_str, self.this)
-            elif(len(self.this) == 0):
+            if(len(self.this) == 0):
                 self.this = None
             else:
                 self.this = self.this[0]
@@ -343,19 +338,19 @@ class Parser:
         self.verb = self.this.get_verb(self.words[0], recurse=True)
         return self.verb
 
-    def filter_matches(self, possible):
+    def filter_matches(self, selection):
         result = []
-        # print "possble is " + str(possible)
+        # print "selection is " + str(selection)
         verb_str = self.words[0]
-        for item in possible:
-            if(item in result):
+        for possible in selection:
+            if(possible in result):
                 continue
-            verb = item.get_verb(verb_str)
-            if verb.ability and item != self.caller:
+            verb = possible.get_verb(verb_str)
+            if verb.ability and possible != self.caller:
                 continue
             # if not self.caller.is_allowed('execute', verb):
             #     continue
-            result.append(item)
+            result.append(possible)
         # print "result is " + str(result)
         return result
 
@@ -369,10 +364,7 @@ class Parser:
         elif(pronoun == "here"):
             return self.caller.location
         elif(pronoun[0] == "#"):
-            try:
-                return Object.objects.get(int(pronoun[1:]))
-            except:
-                return None
+            return Object.objects.get(int(pronoun[1:]))
         else:
             return None
 
@@ -400,7 +392,7 @@ class Parser:
                     matches.append(item[2])
             if(len(matches) > 1):
                 raise AmbiguousObjectError(matches[0][1], matches)
-            elif not(matches):
+            if not(matches):
                 raise NoSuchObjectError(self.prepositions[prep][0][1])
         if not(self.prepositions[prep][2]):
             raise NoSuchObjectError(self.prepositions[prep][1])
@@ -484,7 +476,7 @@ class Parser:
         """
         Was a direct object string found?
         """
-        return self.dobj_str != None
+        return self.dobj_str is not None
 
     def has_pobj_str(self, prep):
         """

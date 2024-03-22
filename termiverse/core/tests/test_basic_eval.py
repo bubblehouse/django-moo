@@ -7,7 +7,7 @@ from .. import code
 @pytest.mark.django_db
 def test_eval_simple_command(t_init: Object, t_wizard: Object):  # pylint: disable=redefined-outer-name
     def _writer(msg):
-        raise Exception("print was called unexpectedly")
+        raise RuntimeError("print was called unexpectedly")
     with code.context(t_wizard, _writer):
         writer = code.context.get('writer')
         globals = code.get_default_globals()  # pylint: disable=redefined-builtin

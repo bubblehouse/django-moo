@@ -31,7 +31,7 @@ class Property(models.Model):
         needs_default_permissions = self.pk is None
         super().save(*args, **kwargs)
         if self.inherited and not self.__original_inherited:
-            for child in self.origin.get_descendents():
+            for child in self.origin.get_descendents():  # pylint: disable=no-member
                 AccessibleProperty.objects.update_or_create(
                     name = self.name,
                     origin = child,
