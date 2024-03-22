@@ -5,7 +5,7 @@ from termiverse.tests import *  # pylint: disable=wildcard-import
 from .. import code
 
 @pytest.mark.django_db
-def test_eval_simple_command(t_init: Object, t_wizard: Object):  # pylint: disable=redefined-outer-name
+def test_eval_simple_command(t_init: Object, t_wizard: Object):
     def _writer(msg):
         raise RuntimeError("print was called unexpectedly")
     with code.context(t_wizard, _writer):
@@ -16,7 +16,7 @@ def test_eval_simple_command(t_init: Object, t_wizard: Object):  # pylint: disab
         assert result == []
 
 @pytest.mark.django_db
-def test_trivial_printing(t_init: Object, t_wizard: Object):  # pylint: disable=redefined-outer-name
+def test_trivial_printing(t_init: Object, t_wizard: Object):
     printed = []
     def _writer(msg):
         printed.append(msg)
@@ -29,7 +29,7 @@ def test_trivial_printing(t_init: Object, t_wizard: Object):  # pylint: disable=
         assert printed == ['test']
 
 @pytest.mark.django_db
-def test_printing_imported_caller(t_init: Object, t_wizard: Object):  # pylint: disable=redefined-outer-name
+def test_printing_imported_caller(t_init: Object, t_wizard: Object):
     printed = []
     def _writer(msg):
         printed.append(msg)
