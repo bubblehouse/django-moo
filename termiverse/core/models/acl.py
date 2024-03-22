@@ -2,11 +2,11 @@ import logging
 
 from django.db import models
 
-from .. import code
+from .. import code  # pylint: disable=cyclic-import
 
 log = logging.getLogger(__name__)
 
-class AccessibleMixin(object):
+class AccessibleMixin:
     """
     The base class for all Objects, Verbs, and Properties.
     """
@@ -86,9 +86,9 @@ class Access(models.Model):
             return 'self'
         elif self.verb:
             return ''.join([
-                ['', '@'][self.verb.ability],
+                ['', '@'][self.verb.ability],  # pylint: disable=no-member
                 self.verb.names.all()[:1][0].name,
-                ['', '()'][self.verb.method],
+                ['', '()'][self.verb.method],  # pylint: disable=no-member
             ])
         else:
             return self.property.name
@@ -97,20 +97,15 @@ class Access(models.Model):
         if self.object:
             return self.object
         elif self.verb:
-            return self.verb.origin
+            return self.verb.origin  # pylint: disable=no-member
         else:
-            return self.property.origin
+            return self.property.origin  # pylint: disable=no-member
 
     def __str__(self):
-        try:
-            return '%(rule)s %(actor)s %(permission)s on %(entity)s (%(weight)s)' % dict(
-                rule        = self.rule,
-                actor        = self.actor(),
-                permission    = self.permission.name,
-                entity        = self.entity(),
-                weight        = self.weight,
-            )
-        except Exception as e:
-            import traceback
-            traceback.print_exc();
-            return str(e)
+        return '%(rule)s %(actor)s %(permission)s on %(entity)s (%(weight)s)' % dict(
+            rule        = self.rule,
+            actor        = self.actor(),
+            permission    = self.permission.name,
+            entity        = self.entity(),
+            weight        = self.weight,
+        )
