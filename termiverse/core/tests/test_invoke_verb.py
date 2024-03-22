@@ -5,7 +5,7 @@ from ..models import Object
 from .. import code
 
 @pytest.mark.django_db
-def test_caller_can_invoke_trivial_verb(t_init: Object, t_wizard: Object):  # pylint: disable=redefined-outer-name
+def test_caller_can_invoke_trivial_verb(t_init: Object, t_wizard: Object):
     printed = []
     description = t_wizard.location.properties.get(name="description")
     def _writer(msg):

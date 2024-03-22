@@ -4,7 +4,7 @@ from termiverse.core.models import Object, Player
 from termiverse.tests import *  # pylint: disable=wildcard-import
 
 @pytest.mark.django_db
-def test_regular_user_can_read_a_thing(t_init, t_wizard):  # pylint: disable=redefined-outer-name
+def test_regular_user_can_read_a_thing(t_init, t_wizard):
     thing = Object.objects.create(name='thing', owner=t_wizard)
     user = Object.objects.get(name__iexact='player')
     assert user.is_allowed('read', thing)
@@ -16,7 +16,7 @@ def test_regular_user_can_read_a_thing(t_init, t_wizard):  # pylint: disable=red
     assert not user.is_allowed('develop', thing)
 
 @pytest.mark.django_db
-def test_regular_user_who_owns_a_thing(t_init, t_wizard):  # pylint: disable=redefined-outer-name
+def test_regular_user_who_owns_a_thing(t_init, t_wizard):
     user = Object.objects.get(name__iexact='player')
     thing = Object.objects.create(name='thing', owner=user)
     assert user.is_allowed('read', thing)
@@ -28,7 +28,7 @@ def test_regular_user_who_owns_a_thing(t_init, t_wizard):  # pylint: disable=red
     assert user.is_allowed('develop', thing)
 
 @pytest.mark.django_db
-def test_everyone_can_read_a_thing(t_init, t_wizard):  # pylint: disable=redefined-outer-name
+def test_everyone_can_read_a_thing(t_init, t_wizard):
     thing = Object.objects.create(name='thing')
     jim = Object.objects.create(name='Jim', unique_name=True)
     assert jim.is_allowed('read', thing)
@@ -40,7 +40,7 @@ def test_everyone_can_read_a_thing(t_init, t_wizard):  # pylint: disable=redefin
     assert not jim.is_allowed('develop', thing)
 
 @pytest.mark.django_db
-def test_wizard_can_do_most_things(t_init, t_wizard):  # pylint: disable=redefined-outer-name
+def test_wizard_can_do_most_things(t_init, t_wizard):
     # Objects are only Wizards if they have an associated Player with wizard=True
     Player.objects.create(avatar=t_wizard, wizard=True)
     thing = Object.objects.create(name='thing')
@@ -53,7 +53,7 @@ def test_wizard_can_do_most_things(t_init, t_wizard):  # pylint: disable=redefin
     assert t_wizard.is_allowed('develop', thing)
 
 @pytest.mark.django_db
-def test_add_a_simple_deny_clase(t_init, t_wizard):  # pylint: disable=redefined-outer-name
+def test_add_a_simple_deny_clase(t_init, t_wizard):
     user = Object.objects.get(name__iexact='player')
     thing = Object.objects.create(name='thing', owner=user)
     thing.allow('everyone', 'anything')

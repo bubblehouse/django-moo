@@ -1,6 +1,6 @@
 import logging
 
-from .code import context  # pylint: disable: cyclic-import
+from .code import context
 
 log = logging.getLogger(__name__)
 
