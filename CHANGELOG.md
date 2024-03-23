@@ -1,3 +1,10 @@
+## [0.16.0](https://gitlab.com/bubblehouse/termiverse/compare/v0.15.1...v0.16.0) (2024-03-23)
+
+
+### Features
+
+* begin integrating ACLs ([7edb982](https://gitlab.com/bubblehouse/termiverse/commit/7edb982b1bb0193398301d8fd09f85d8e2f3a64c))
+
 ## [0.15.1](https://gitlab.com/bubblehouse/termiverse/compare/v0.15.0...v0.15.1) (2024-03-17)
 
 
