@@ -10,7 +10,7 @@ class AccessibleMixin:
     """
     The base class for all Objects, Verbs, and Properties.
     """
-    def check_permission(self, permission, subject):
+    def can_caller(self, permission, subject):
         """
         Check if the current caller has permission for something.
         """
@@ -27,7 +27,7 @@ class AccessibleMixin:
 
         [ACL] allowed to grant on this (or owner of this)
         """
-        self.check_permission('grant', self)
+        self.can_caller('grant', self)
         Access.objects.create(
             object = self if self.kind == 'object' else None,
             verb = self if self.kind == 'verb' else None,
@@ -45,7 +45,7 @@ class AccessibleMixin:
 
         [ACL] allowed to grant on this (or owner of this)
         """
-        self.check_permission('grant', self)
+        self.can_caller('grant', self)
         Access.objects.create(
             object = self if self.kind == 'object' else None,
             verb = self if self.kind == 'verb' else None,

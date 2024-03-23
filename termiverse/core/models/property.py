@@ -3,7 +3,7 @@ from django.db import models
 from .acl import AccessibleMixin
 from .. import utils
 
-class Property(models.Model):
+class Property(models.Model, AccessibleMixin):
     class Meta:
         verbose_name_plural = 'properties'
 
@@ -50,6 +50,6 @@ class Property(models.Model):
             return
         utils.apply_default_permissions(self)
 
-class AccessibleProperty(Property, AccessibleMixin):
+class AccessibleProperty(Property):
     class Meta:
         proxy = True
