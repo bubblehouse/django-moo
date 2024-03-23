@@ -44,7 +44,7 @@ def relationship_changed(sender, instance, action, model, signal, reverse, pk_se
                 )
             )
 
-class Object(models.Model):
+class Object(models.Model, AccessibleMixin):
     name = models.CharField(max_length=255)
     unique_name = models.BooleanField(default=False)
     owner = models.ForeignKey('self', related_name='+', blank=True, null=True, on_delete=models.SET_NULL,)
@@ -59,6 +59,7 @@ class Object(models.Model):
         return 'object'
 
     def find(self, name):
+        self.can_caller('read', self)
         qs = AccessibleObject.objects.filter(location=self, name__iexact=name)
         aliases = AccessibleObject.objects.filter(location=self, aliases__alias__iexact=name)
         return qs.union(aliases)
@@ -67,6 +68,7 @@ class Object(models.Model):
         """
         Get the ancestor tree for this object.
         """
+        self.can_caller('read', self)
         # TODO: One day when Django 5.0 works with `django-cte` this can be SQL.
         for parent in self.parents.all():
             yield parent
@@ -76,12 +78,14 @@ class Object(models.Model):
         """
         Get the descendent tree for this object.
         """
+        self.can_caller('read', self)
         # TODO: One day when Django 5.0 works with `django-cte` this can be SQL.
         for child in self.children.all():
             yield child
             yield from child.get_descendents()
 
     def add_verb(self, *names, code=None, owner=None, repo=None, filename=None, ability=False, method=False):
+        self.can_caller('write', self)
         owner = context.get('caller') or owner or self
         if filename:
             code = bootstrap.get_source(filename, dataset=repo.slug)
@@ -102,9 +106,11 @@ class Object(models.Model):
 
     def invoke_verb(self, name, *args, **kwargs):
         qs = self._lookup_verb(name, recurse=True)
+        self.can_caller('execute', qs[0])
         return qs[0](*args, **kwargs)
 
     def has_verb(self, name, recurse=True):
+        self.can_caller('read', self)
         try:
             self._lookup_verb(name, recurse)
         except AccessibleVerb.DoesNotExist:
@@ -112,6 +118,7 @@ class Object(models.Model):
         return True
 
     def get_verb(self, name, recurse=True):
+        self.can_caller('read', self)
         qs = self._lookup_verb(name, recurse)
         if len(qs) > 1:
             raise exceptions.AmbiguousVerbError(name, list(qs.all()))
@@ -130,6 +137,7 @@ class Object(models.Model):
             raise AccessibleVerb.DoesNotExist(f"No such verb `{name}`.")
 
     def set_property(self, name, value, inherited=False, owner=None):
+        self.can_caller('write', self)
         owner = context.get('caller') or owner or self
         AccessibleProperty.objects.update_or_create(
             name = name,
@@ -143,6 +151,7 @@ class Object(models.Model):
         )
 
     def get_property(self, name, recurse=True, original=False):
+        self.can_caller('read', self)
         qs = AccessibleProperty.objects.filter(origin=self, name=name)
         if not qs and recurse:
             for ancestor in self.get_ancestors():
@@ -161,7 +170,7 @@ class Object(models.Model):
             return
         utils.apply_default_permissions(self)
 
-class AccessibleObject(Object, AccessibleMixin):
+class AccessibleObject(Object):
     class Meta:
         proxy = True
 
@@ -225,9 +234,18 @@ class Relationship(models.Model):
     parent = models.ForeignKey(Object, related_name='+', on_delete=models.CASCADE)
     weight = models.IntegerField(default=0)
 
+    def save(self, *args, **kwargs):
+        self.child.can_caller('transmute', self.child)
+        self.parent.can_caller('derive', self.parent)
+        super().save(*args, **kwargs)
+
 class Alias(models.Model):
     class Meta:
         verbose_name_plural = 'aliases'
 
     object = models.ForeignKey(Object, related_name='aliases', on_delete=models.CASCADE)
     alias = models.CharField(max_length=255)
+
+    def save(self, *args, **kwargs):
+        self.object.can_caller('write', self.object)
+        super().save(*args, **kwargs)
