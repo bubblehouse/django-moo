@@ -23,9 +23,17 @@ def create_object(name, *a, **kw):
 
 @receiver(m2m_changed)
 def relationship_changed(sender, instance, action, model, signal, reverse, pk_set, using, **kwargs):
-    if not(sender is Relationship and action == "post_add" and not reverse):
-        return
     child = instance
+    if not(sender is Relationship and not reverse):
+        return
+    elif action in ("pre_add", "pre_remove"):
+        child.can_caller('transmute', instance)
+        for pk in pk_set:
+            parent = model.objects.get(pk=pk)
+            parent.can_caller('derive', parent)
+        return
+    elif action != "post_add":
+        return
     for pk in pk_set:
         parent = model.objects.get(pk=pk)
         for property in AccessibleProperty.objects.filter(origin=parent, inherited=True):  # pylint: disable=redefined-builtin
@@ -233,11 +241,6 @@ class Relationship(models.Model):
     child = models.ForeignKey(Object, related_name='+', on_delete=models.CASCADE)
     parent = models.ForeignKey(Object, related_name='+', on_delete=models.CASCADE)
     weight = models.IntegerField(default=0)
-
-    def save(self, *args, **kwargs):
-        self.child.can_caller('transmute', self.child)
-        self.parent.can_caller('derive', self.parent)
-        super().save(*args, **kwargs)
 
 class Alias(models.Model):
     class Meta:
