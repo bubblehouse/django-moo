@@ -5,7 +5,7 @@ from ..code import context, get_restricted_environment, r_exec
 from .acl import AccessibleMixin
 from .. import api, utils
 
-class Verb(models.Model):
+class Verb(models.Model, AccessibleMixin):
     code = models.TextField(blank=True, null=True)
     repo = models.ForeignKey("Repository", related_name='+', blank=True, null=True, on_delete=models.SET_NULL)
     filename = models.CharField(max_length=255, blank=True, null=True)
@@ -43,7 +43,7 @@ class Verb(models.Model):
             return
         utils.apply_default_permissions(self)
 
-class AccessibleVerb(Verb, AccessibleMixin):
+class AccessibleVerb(Verb):
     class Meta:
         proxy = True
 
