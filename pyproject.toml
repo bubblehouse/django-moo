@@ -1,9 +1,12 @@
 [tool.poetry]
-name = "termiverse"
+name = "django-moo"
 version = "0.16.0"
 description = ""
 authors = ["Phil Christensen <phil@bubblehouse.org>"]
 readme = "README.md"
+packages = [
+    { include = "moo" },
+]
 
 [tool.poetry.dependencies]
 python = "~3.11"
@@ -34,7 +37,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "termiverse.settings.test"
+DJANGO_SETTINGS_MODULE = "moo.settings.test"
 python_files = ["tests/*.py"]
-addopts = "--spec --cov=termiverse --no-cov-on-fail"
+addopts = "--spec --cov=moo --no-cov-on-fail"
 spec_test_format = "{result} {docstring_summary}"

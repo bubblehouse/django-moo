@@ -1,7 +1,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "termiverse.name" -}}
+{{- define "moo.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -10,7 +10,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "termiverse.fullname" -}}
+{{- define "moo.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -26,25 +26,25 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "termiverse.chart" -}}
+{{- define "moo.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "termiverse.labels" -}}
-helm.sh/chart: {{ include "termiverse.chart" . }}
-{{ include "termiverse.selectorLabels" . }}
+{{- define "moo.labels" -}}
+helm.sh/chart: {{ include "moo.chart" . }}
+{{ include "moo.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
-{{- define "termiverse.shellLabels" -}}
-helm.sh/chart: {{ include "termiverse.chart" . }}
-{{ include "termiverse.shellSelectorLabels" . }}
+{{- define "moo.shellLabels" -}}
+helm.sh/chart: {{ include "moo.chart" . }}
+{{ include "moo.shellSelectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -54,22 +54,22 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "termiverse.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "termiverse.name" . }}
+{{- define "moo.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "moo.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
-{{- define "termiverse.shellSelectorLabels" -}}
-app.kubernetes.io/name: {{ include "termiverse.name" . }}-shell
+{{- define "moo.shellSelectorLabels" -}}
+app.kubernetes.io/name: {{ include "moo.name" . }}-shell
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "termiverse.serviceAccountName" -}}
+{{- define "moo.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "termiverse.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "moo.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}

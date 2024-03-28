@@ -16,35 +16,35 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: philchristensen/termiverse:latest
+    image: philchristensen/moo:latest
     ports:
       - 8443:8443
     links:
       - postgres
       - redis
     environment:
-      DJANGO_SETTINGS_MODULE: termiverse.settings.local
+      DJANGO_SETTINGS_MODULE: moo.settings.local
   shell:
     build:
       context: .
       dockerfile: Dockerfile
-    image: philchristensen/termiverse:latest
-    command: [manage.py, termiverse_shell]
+    image: philchristensen/moo:latest
+    command: [manage.py, moo_shell]
     ports:
       - 8022:8022
     links:
       - postgres
       - redis
     environment:
-      DJANGO_SETTINGS_MODULE: termiverse.settings.local
+      DJANGO_SETTINGS_MODULE: moo.settings.local
   postgres:
     image: postgres
     ports:
       - 5432:5432
     environment:
-      POSTGRES_PASSWORD: termiverse
-      POSTGRES_USER: termiverse
-      POSTGRES_DB: termiverse
+      POSTGRES_PASSWORD: moo
+      POSTGRES_USER: moo
+      POSTGRES_DB: moo
   redis:
     image: redis
     ports:
