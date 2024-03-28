@@ -1,18 +1,18 @@
 ---
-# Default values for termiverse.
+# Default values for moo.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-termiverse:
+moo:
   aws:
     region: us-east-2
   django:
-    settings: termiverse.settings.dev
+    settings: moo.settings.dev
 
 replicaCount: 1
 
 image:
-  repository: registry.gitlab.com/bubblehouse/termiverse
+  repository: registry.gitlab.com/bubblehouse/django-moo
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ''

@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "termiverse.fullname" . }}
+  name: {{ include "moo.fullname" . }}
   labels:
-    {{- include "termiverse.labels" . | nindent 4 }}
+    {{- include "moo.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -12,4 +12,4 @@ spec:
       protocol: TCP
       name: https
   selector:
-    {{- include "termiverse.selectorLabels" . | nindent 4 }}
+    {{- include "moo.selectorLabels" . | nindent 4 }}

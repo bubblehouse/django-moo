@@ -1,5 +1,5 @@
 {
-  "name": "termiverse",
+  "name": "django-moo",
   "version": "0.16.0",
   "description": "Create your own text-based universe.",
   "devDependencies": {
@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://gitlab.com/bubblehouse/termiverse"
+    "url": "https://gitlab.com/bubblehouse/django-moo"
   },
   "author": "Phil Christensen",
   "license": "Proprietary"

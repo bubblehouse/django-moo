@@ -24,13 +24,13 @@
         "replacements": [
           {
             "files": [
-              "termiverse/__init__.py"
+              "moo/__init__.py"
             ],
             "from": "__version__ = \".*\"",
             "to": "__version__ = \"${nextRelease.version}\"",
             "results": [
               {
-                "file": "termiverse/__init__.py",
+                "file": "moo/__init__.py",
                 "hasChanged": true,
                 "numMatches": 1,
                 "numReplacements": 1
@@ -128,7 +128,7 @@
       {
         "assets": [
           "Dockerfile",
-          "termiverse/__init__.py",
+          "moo/__init__.py",
           "extras/helm/Chart.yaml",
           "pyproject.toml",
           "package.json",
@@ -142,8 +142,8 @@
       {
         "gitlabUrl": "https://gitlab.com",
         "assets": [
-          "dist/termiverse-*.gz",
-          "dist/termiverse-*.whl"
+          "dist/django-moo-*.gz",
+          "dist/django-moo-*.whl"
         ]
       }
     ]

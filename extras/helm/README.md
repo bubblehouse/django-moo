@@ -1,4 +1,4 @@
-# termiverse
+# moo
 
 ![Version: 0.15.0](https://img.shields.io/badge/Version-0.15.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.15.0](https://img.shields.io/badge/AppVersion-0.15.0-informational?style=flat-square)
 
@@ -15,7 +15,7 @@ A Helm chart for Kubernetes
 | autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
 | fullnameOverride | string | `""` |  |
 | image.pullPolicy | string | `"IfNotPresent"` |  |
-| image.repository | string | `"registry.gitlab.com/bubblehouse/termiverse"` |  |
+| image.repository | string | `"registry.gitlab.com/bubblehouse/django-moo"` |  |
 | image.tag | string | `""` |  |
 | imagePullSecrets | list | `[]` |  |
 | ingress.annotations."nginx.ingress.kubernetes.io/backend-protocol" | string | `"HTTPS"` |  |
@@ -41,8 +41,8 @@ A Helm chart for Kubernetes
 | serviceAccount.name | string | `""` |  |
 | sshService.port | int | `8022` |  |
 | sshService.type | string | `"ClusterIP"` |  |
-| termiverse.aws.region | string | `"us-east-2"` |  |
-| termiverse.django.settings | string | `"termiverse.settings.dev"` |  |
+| moo.aws.region | string | `"us-east-2"` |  |
+| moo.django.settings | string | `"moo.settings.dev"` |  |
 | tolerations | list | `[]` |  |
 
 ----------------------------------------------

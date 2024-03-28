@@ -4,7 +4,7 @@ repos:
     rev: v3.1.0
     hooks:
       - id: pylint
-        entry: env DJANGO_SETTINGS_MODULE=termiverse.settings.test pylint
+        entry: env DJANGO_SETTINGS_MODULE=moo.settings.test pylint
         additional_dependencies:
           - pylint-django
           - django
