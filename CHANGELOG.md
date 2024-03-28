@@ -1,3 +1,10 @@
+## [0.17.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.16.0...v0.17.0) (2024-03-28)
+
+
+### Features
+
+* formally released as django-moo ([e519798](https://gitlab.com/bubblehouse/django-moo/commit/e519798b7d243416581dee545b99882e65ccc36d))
+
 ## [0.16.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.15.1...v0.16.0) (2024-03-23)
 
 
