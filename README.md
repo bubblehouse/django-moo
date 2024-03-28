@@ -1,25 +1,25 @@
-# termiverse
+# moo
 > LambdaMOO on Django
 
-![release](https://gitlab.com/bubblehouse/termiverse/-/badges/release.svg)
-![pipeline](https://gitlab.com/bubblehouse/termiverse/badges/main/pipeline.svg?ignore_skipped=true&job=test)
-![coverage](https://gitlab.com/bubblehouse/termiverse/badges/main/coverage.svg?job=test)
-![quality](https://bubblehouse.gitlab.io/termiverse/badges/lint.svg)
+![release](https://gitlab.com/bubblehouse/django-moo/-/badges/release.svg)
+![pipeline](https://gitlab.com/bubblehouse/django-moo/badges/main/pipeline.svg?ignore_skipped=true&job=test)
+![coverage](https://gitlab.com/bubblehouse/django-moo/badges/main/coverage.svg?job=test)
+![quality](https://bubblehouse.gitlab.io/moo/badges/lint.svg)
 
-Termiverse is a game server for hosting text-based online MOO-like games.
+moo is a game server for hosting text-based online MOO-like games.
 
 ## Quick Start
 Checkout the project and use Docker Compose to run the necessary components:
 
-    git clone https://gitlab.com/bubblehouse/termiverse
-    cd termiverse
+    git clone https://gitlab.com/bubblehouse/django-moo
+    cd moo
     docker compose up
 
 Run `migrate`, `collectstatic`, and bootstrap the initial database with some sample objects and users:
 
     docker compose run webapp manage.py migrate
     docker compose run webapp manage.py collectstatic
-    docker compose run webapp manage.py termiverse_init
+    docker compose run webapp manage.py moo_init
     docker compose run webapp manage.py createsuperuser
 
 Now you should be able to connect to https://localhost/admin and login with the superuser you just created.

@@ -8,11 +8,11 @@ services:
       - .:/usr/src/app
   webapp:
     environment:
-      DJANGO_SETTINGS_MODULE: termiverse.settings.local
+      DJANGO_SETTINGS_MODULE: moo.settings.local
     volumes:
       - .:/usr/src/app
   shell:
     environment:
-      DJANGO_SETTINGS_MODULE: termiverse.settings.local
+      DJANGO_SETTINGS_MODULE: moo.settings.local
     volumes:
       - .:/usr/src/app
