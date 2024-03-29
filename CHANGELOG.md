@@ -1,3 +1,12 @@
+## [0.17.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.17.0...v0.17.1) (2024-03-29)
+
+
+### Bug Fixes
+
+* packaging naming ([19c5562](https://gitlab.com/bubblehouse/django-moo/commit/19c5562dfdc612de63e7853be955153467eea28f))
+* quiet build warnings about this plugin ([34f7a18](https://gitlab.com/bubblehouse/django-moo/commit/34f7a18f420a305635fbb51fa7648be45cfbeb55))
+* updated lockfile ([135be75](https://gitlab.com/bubblehouse/django-moo/commit/135be754da532ea0bef178aec677f0fbe0aedeac))
+
 ## [0.17.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.16.0...v0.17.0) (2024-03-28)
 
 
