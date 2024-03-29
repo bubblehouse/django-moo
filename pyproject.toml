@@ -1,13 +1,15 @@
 [tool.poetry]
 name = "django-moo"
 version = "0.17.1"
-description = ""
+description = "A game server for hosting text-based online MOO-like games."
+license = "AGPL"
 authors = ["Phil Christensen <phil@bubblehouse.org>"]
+repository = "https://gitlab.com/bubblehouse/django-moo"
 readme = "README.md"
 packages = [
     { include = "moo" },
 ]
-include = ["manage.py", "CHANGELOG.md", "poetry.lock", "docker-compose.*"]
+include = ["manage.py", "CHANGELOG.md", "poetry.lock", "docker-compose.*", "extras"]
 
 [tool.poetry.dependencies]
 python = "~3.11"
