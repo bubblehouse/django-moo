@@ -142,8 +142,8 @@
       {
         "gitlabUrl": "https://gitlab.com",
         "assets": [
-          "dist/django-moo-*.gz",
-          "dist/django-moo-*.whl"
+          "dist/django_moo-*.gz",
+          "dist/django_moo-*.whl"
         ]
       }
     ]
