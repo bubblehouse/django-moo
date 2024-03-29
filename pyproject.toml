@@ -7,6 +7,7 @@ readme = "README.md"
 packages = [
     { include = "moo" },
 ]
+include = ["manage.py", "CHANGELOG.md", "poetry.lock", "docker-compose.*"]
 
 [tool.poetry.dependencies]
 python = "~3.11"
