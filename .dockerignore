@@ -12,3 +12,15 @@ static/*
 .git/*
 .venv/*
 node_modules/*
+package-lock.json
+package.json
+node_modules
+commitlint.config.js
+chart/*
+.vscode
+.pytest_cache/*
+.pre-commit-config.yaml
+.gitlab-ci.yml
+.gitignore
+.coverage
+.coveragerc
