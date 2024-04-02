@@ -23,6 +23,7 @@ WORKDIR /usr/src/app
 RUN pip install --no-cache-dir -q -U poetry
 RUN poetry export -o requirements.txt
 RUN pip install -q -r requirements.txt
+RUN python -m spacy download en_core_web_sm
 
 ADD . /usr/src/app
 RUN chgrp www-data /usr/src/app

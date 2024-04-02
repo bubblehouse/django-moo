@@ -8,46 +8,17 @@ by the (BNF?) form:
 
 There are a long list of prepositions supported, some of which are interchangeable.
 """
-
-import re
 import logging
 
 from django.db.models.query import QuerySet
+
+import spacy
+from spacy.matcher import Matcher
 
 from .models import Object
 from .exceptions import *  # pylint: disable=wildcard-import
 
 log = logging.getLogger(__name__)
-
-# Here are all our supported prepositions
-preps = [['with', 'using'],
-        ['at', 'to'],
-        ['in front of'],
-        ['in', 'inside', 'into', 'within'],
-        ['on top of', 'on', 'onto', 'upon', 'above'],
-        ['out of', 'from inside', 'from'],
-        ['over'],
-        ['through'],
-        ['under', 'underneath', 'beneath', 'below'],
-        ['around', 'round'],
-        ['between', 'among'],
-        ['behind', 'past'],
-        ['beside', 'by', 'near', 'next to', 'along'],
-        ['for', 'about'],
-        #['is'],
-        ['as'],
-        ['off', 'off of']]
-
-prepstring = "|".join(sum(preps, []))
-
-PREP_SRC = r'(?:\b)(?P<prep>' + prepstring + r')(?:\b)'
-SPEC = r"(?P<spec_str>my|the|a|an|\S+(?:\'s|s\'))"
-PHRASE_SRC = r'(?:' + SPEC + r'\s)?(?P<obj_str>.+)'
-
-PREP = re.compile(PREP_SRC)
-PHRASE = re.compile(PHRASE_SRC)
-POBJ_TEST = re.compile(PREP_SRC + r"\s" + PHRASE_SRC)
-MULTI_WORD = re.compile(r'((\"|\').+?(?!\\).\2)|(\S+)')
 
 def parse(caller, sentence):
     """
@@ -68,90 +39,70 @@ class Lexer:
 
         self.dobj_str = None
         self.dobj_spec_str = None
-
-        # First, find all words or double-quoted-strings in the text
-        iterator = re.finditer(MULTI_WORD, command)
-        self.words = []
-        qotd_matches = []
-        for wordmatch in iterator:
-            if(wordmatch.group(1)):
-                qotd_matches.append(wordmatch)
-            word = wordmatch.group().strip('\'"').replace("\\'", "'").replace("\\\"", "\"")
-            self.words.append(word)
-
-        # Now, find all prepositions
-        iterator = re.finditer(PREP, command)
-        prep_matches = []
-        for prepmatch in iterator:
-            prep_matches.append(prepmatch)
-
-        #this method will be used to filter out prepositions inside quotes
-        def nonoverlap(match):
-            (start, end) = match.span()
-            for word in qotd_matches:
-                (word_start, word_end) = word.span()
-                if(word_start <= start < word_end):
-                    return False
-                elif(word_start < end < word_end):
-                    return False
-            return True
-
-        #nonoverlap() will leave only true non-quoted prepositions
-        prep_matches = list(filter(nonoverlap, prep_matches))
-
-        #determine if there is anything after the verb
-        if(len(self.words) > 1):
-            #if there are prepositions, we only look for direct objects
-            #until the first preposition
-            if(prep_matches):
-                end = prep_matches[0].start()-1
-            else:
-                end = len(command)
-            #this is the phrase, which could be [[specifier ]object]
-            dobj_phrase = command[len(self.words[0]) + 1:end]
-            match = re.match(PHRASE, dobj_phrase)
-            if(match):
-                result = match.groupdict()
-                self.dobj_str = result['obj_str'].strip('\'"').replace("\\'", "'").replace("\\\"", "\"")
-                if(result['spec_str']):
-                    self.dobj_spec_str = result['spec_str'].strip('\'"').replace("\\'", "'").replace("\\\"", "\"")
-                else:
-                    self.dobj_spec_str = ''
-
         self.prepositions = {}
-        #iterate through all the prepositional phrase matches
-        for index in range(len(prep_matches)):  # pylint: disable=consider-using-enumerate
-            start = prep_matches[index].start()
-            #if this is the last preposition, then look from here until the end
-            if(index == len(prep_matches) - 1):
-                end = len(command)
-            #otherwise, search until the next preposition starts
-            else:
-                end = prep_matches[index + 1].start() - 1
-            prep_phrase = command[start:end]
-            phrase_match = re.match(POBJ_TEST, prep_phrase)
-            if not(phrase_match):
-                continue
+        self.words = nlp(command)
+        if self.words[0].pos != 'verb':
+            raise NotACommandError(self.command)
 
-            result = phrase_match.groupdict()
+        # # Now, find all prepositions
+        prep_matches = []
+        for token in self.words:
+            if token.dep_ == 'prep':
+                prep_matches.append(token)
 
-            #if we get a quoted string here, strip the quotes
-            result['obj_str'] = result['obj_str'].strip('\'"').replace("\\'", "'").replace("\\\"", "\"")
+        # #determine if there is anything after the verb
+        # if(len(self.words) > 1):
+        #     #if there are prepositions, we only look for direct objects
+        #     #until the first preposition
+        #     if(prep_matches):
+        #         end = prep_matches[0].start()-1
+        #     else:
+        #         end = len(command)
+        #     #this is the phrase, which could be [[specifier ]object]
+        #     dobj_phrase = command[len(self.words[0]) + 1:end]
+        #     match = re.match(PHRASE, dobj_phrase)
+        #     if(match):
+        #         result = match.groupdict()
+        #         self.dobj_str = result['obj_str'].strip('\'"').replace("\\'", "'").replace("\\\"", "\"")
+        #         if(result['spec_str']):
+        #             self.dobj_spec_str = result['spec_str'].strip('\'"').replace("\\'", "'").replace("\\\"", "\"")
+        #         else:
+        #             self.dobj_spec_str = ''
 
-            if(result['spec_str'] is None):
-                result['spec_str'] = ''
+        # self.prepositions = {}
+        # #iterate through all the prepositional phrase matches
+        # for index in range(len(prep_matches)):  # pylint: disable=consider-using-enumerate
+        #     start = prep_matches[index].start()
+        #     #if this is the last preposition, then look from here until the end
+        #     if(index == len(prep_matches) - 1):
+        #         end = len(command)
+        #     #otherwise, search until the next preposition starts
+        #     else:
+        #         end = prep_matches[index + 1].start() - 1
+        #     prep_phrase = command[start:end]
+        #     phrase_match = re.match(POBJ_TEST, prep_phrase)
+        #     if not(phrase_match):
+        #         continue
 
-            #if there is already a entry for this preposition, we turn it into
-            #a list, and if it already is one, we append to it
-            if(result['prep'] in self.prepositions):
-                prep = self.prepositions[result['prep']]
-                if not(isinstance(prep[0], list)):
-                    self.prepositions[result['prep']] = [[result['spec_str'], result['obj_str'], None], prep]
-                else:
-                    self.prepositions[result['prep']].append([result['spec_str'], result['obj_str'], None])
-            #if it's a new preposition, we just save it here.
-            else:
-                self.prepositions[result['prep']] = [result['spec_str'], result['obj_str'], None]
+        #     result = phrase_match.groupdict()
+
+        #     #if we get a quoted string here, strip the quotes
+        #     result['obj_str'] = result['obj_str'].strip('\'"').replace("\\'", "'").replace("\\\"", "\"")
+
+        #     if(result['spec_str'] is None):
+        #         result['spec_str'] = ''
+
+        #     #if there is already a entry for this preposition, we turn it into
+        #     #a list, and if it already is one, we append to it
+        #     if(result['prep'] in self.prepositions):
+        #         prep = self.prepositions[result['prep']]
+        #         if not(isinstance(prep[0], list)):
+        #             self.prepositions[result['prep']] = [[result['spec_str'], result['obj_str'], None], prep]
+        #         else:
+        #             self.prepositions[result['prep']].append([result['spec_str'], result['obj_str'], None])
+        #     #if it's a new preposition, we just save it here.
+        #     else:
+        #         self.prepositions[result['prep']] = [result['spec_str'], result['obj_str'], None]
 
     def get_details(self):
         return dict(
@@ -495,3 +446,24 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         else:
             found_prep = bool(self.prepositions[prep][1])
         return found_prep
+
+def init_language(Language):
+    matcher = Matcher(Language.vocab)
+    matcher.add('QUOTED', [[{'ORTH': "'"}, {'IS_ALPHA': True, 'OP': '+'}, {'ORTH': "'"}]])
+    @Language.component('quoted')
+    def quote_merger(doc):
+        # this will be called on the Doc object in the pipeline
+        matched_spans = []
+        matches = matcher(doc)
+        for _, start, end in matches:
+            span = doc[start:end]
+            matched_spans.append(span)
+        # merge into one token after collecting all matches
+        with doc.retokenize() as retokenizer:
+            for span in matched_spans:
+                retokenizer.merge(span)
+        return doc
+    Language.add_pipe('quoted', first=True)
+
+nlp = spacy.load('en_core_web_sm')
+init_language(nlp)

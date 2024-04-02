@@ -120,6 +120,13 @@ class NoSuchVerbError(UserError):
     def __init__(self, name):
         UserError.__init__(self, "I don't know how to do that.", name)
 
+class NotACommandError(UserError):
+    """
+    Raised by the parser when you don't tell it what to do.
+    """
+    def __init__(self, name):
+        UserError.__init__(self, "I don't know what you want me to do.", name)
+
 class NoSuchPropertyError(UserError):
     """
     Raised by the system when it cannot find a needed property.
