@@ -13,6 +13,8 @@ import logging
 from django.db.models.query import QuerySet
 
 import spacy
+from spacy.tokens import Doc, Span
+from spacy.language import Language
 from spacy.matcher import Matcher
 
 from .models import Object
@@ -40,7 +42,7 @@ class Lexer:
         self.dobj_str = None
         self.dobj_spec_str = None
         self.prepositions = {}
-        self.words = nlp(command)
+        self.words = []
         if self.words[0].pos != 'verb':
             raise NotACommandError(self.command)
 
@@ -447,15 +449,49 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             found_prep = bool(self.prepositions[prep][1])
         return found_prep
 
-def init_language(Language):
-    matcher = Matcher(Language.vocab)
-    matcher.add('QUOTED', [[{'ORTH': "'"}, {'IS_ALPHA': True, 'OP': '+'}, {'ORTH': "'"}]])
-    @Language.component('quoted')
-    def quote_merger(doc):
+class SpacyParser:
+    def __init__(self, caller, command):
+        self.caller = caller
+        self.nlp = nlp = spacy.load('en_core_web_sm')
+        nlp.component('mergeTokens', func=self.merge_tokens)
+        nlp.factory('objectLinker', func=self.object_linker)
+        nlp.remove_pipe("ner")
+        nlp.add_pipe("ner", source=spacy.load("en_core_web_sm"))
+        nlp.add_pipe('mergeTokens', before="ner")
+        nlp.add_pipe('objectLinker', last=True)
+        self.words = nlp(command)
+
+    def object_linker(self, nlp, name):
+        Doc.set_extension("objects", default=[], force=True)
+        Span.set_extension("objects", default=[], force=True)
+        def _link(doc):
+            for sent in doc.sents:
+                sent._.objects = []
+                for token in sent:
+                    # print(token, token.pos_)
+                    if token.pos_ not in ('NOUN', 'PROPN'):
+                        continue
+                    found = list(self.caller.location.find(str(token)))
+                    sent._.objects.extend(found)
+                    doc._.objects.extend(found)
+            return doc
+        return _link
+
+    def merge_tokens(self, doc):
         # this will be called on the Doc object in the pipeline
         matched_spans = []
+        matcher = Matcher(self.nlp.vocab)
+        matcher.add('QUOTED', [
+            [{'ORTH': "'"}, {'IS_ALPHA': True, 'OP': '+'}, {'ORTH': "'"}],
+            [{'ORTH': '"'}, {'IS_ALPHA': True, 'OP': '+'}, {'ORTH': '"'}],
+        ])
+        # matcher.add('SPECIFIERS', [
+        #     [{'ORTH': "the"}, {'POS': "NOUN"}],
+        #     [{'ORTH': "the"}, {'POS': "PROPN"}],
+        # ])
         matches = matcher(doc)
-        for _, start, end in matches:
+        for match_id, start, end in matches:
+            print(match_id)
             span = doc[start:end]
             matched_spans.append(span)
         # merge into one token after collecting all matches
@@ -463,7 +499,3 @@ def init_language(Language):
             for span in matched_spans:
                 retokenizer.merge(span)
         return doc
-    Language.add_pipe('quoted', first=True)
-
-nlp = spacy.load('en_core_web_sm')
-init_language(nlp)
