@@ -14,7 +14,6 @@ from django.db.models.query import QuerySet
 
 import spacy
 from spacy.tokens import Doc, Span
-from spacy.language import Language
 from spacy.matcher import Matcher
 
 from .models import Object
@@ -471,11 +470,33 @@ class SpacyParser:
                     # print(token, token.pos_)
                     if token.pos_ not in ('NOUN', 'PROPN'):
                         continue
-                    found = list(self.caller.location.find(str(token)))
+                    cleaned, context = self.filter_reference(token)
+                    found = list(context.find(cleaned))
                     sent._.objects.extend(found)
                     doc._.objects.extend(found)
             return doc
         return _link
+
+    def filter_reference(self, token):
+        s = str(token)
+        parts = s.split()
+        context = self.caller.location
+        if s.startswith('"') and s.endswith('"'):
+            s = s.strip('"')
+        elif s.startswith("'") and s.endswith("'"):
+            s = s.strip("'")
+        elif s.startswith('my '):
+            s = ' '.join(parts[1:])
+            context = self.caller
+        elif parts[0].endswith("'s"):
+            search = parts[0][:-2]
+            qs = self.caller.location.find(search)
+            if len(qs) == 1:
+                s = ' '.join(parts[1:])
+                context = qs[0]
+            elif len(qs) > 1:
+                raise AmbiguousObjectError(search, qs)
+        return s, context
 
     def merge_tokens(self, doc):
         # this will be called on the Doc object in the pipeline
@@ -485,13 +506,17 @@ class SpacyParser:
             [{'ORTH': "'"}, {'IS_ALPHA': True, 'OP': '+'}, {'ORTH': "'"}],
             [{'ORTH': '"'}, {'IS_ALPHA': True, 'OP': '+'}, {'ORTH': '"'}],
         ])
-        # matcher.add('SPECIFIERS', [
-        #     [{'ORTH': "the"}, {'POS': "NOUN"}],
-        #     [{'ORTH': "the"}, {'POS': "PROPN"}],
-        # ])
+        matcher.add('SPECIFIERS', [
+            [{'ORTH': "the"}, {'POS': "NOUN"}],
+            [{'ORTH': "the"}, {'POS': "PROPN"}],
+            [{'ORTH': "my"}, {'POS': "NOUN"}],
+            [{'ORTH': "my"}, {'POS': "PROPN"}],
+        ])
+        matcher.add('POSESSIVES', [
+            [{'POS': "PROPN"}, {'ORTH': "'s"}, {'POS': "NOUN"}],
+        ])
         matches = matcher(doc)
-        for match_id, start, end in matches:
-            print(match_id)
+        for _, start, end in matches:
             span = doc[start:end]
             matched_spans.append(span)
         # merge into one token after collecting all matches
