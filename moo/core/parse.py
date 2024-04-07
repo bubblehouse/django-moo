@@ -28,7 +28,7 @@ def parse(caller, command):
     v = p.get_verb()
     v.execute(p)
 
-class Parser:
+class Parser:  # pylint: disable=too-many-instance-attributes
     """
     An instance of this class will identify the various parts of a imperitive
     sentence. This may be of use to verb code, as well.
@@ -44,7 +44,10 @@ class Parser:
         self.caller = caller
         self.command = command
         self.words = nlp(command)
+        self.dobj_str = None
         self.prepositions = {}
+        self.this = None
+        self.verb = None
         length = len(self.words)
         if length > 1:
             self.dobj_str = self.words[1]
@@ -123,7 +126,7 @@ class Parser:
             Direct Object->Objects of the Preposition
         """
         if not(self.words):
-            raise Verb.DoesNotExist('parser: ' + self.command)
+            raise Verb.DoesNotExist(self.command)
         if(getattr(self, 'verb', None) is not None):
             return self.verb
         verb_str = self.words[0]
@@ -187,7 +190,7 @@ class Parser:
         direct object found, raise a NoSuchObjectError
         """
         if not(self.dobj_str):
-            raise Verb.DoesNotExist(self.dobj_str)
+            raise Object.DoesNotExist(self.dobj_str)
         matches = self.dobj_str.sent._.objects
         if len(matches) > 1:
             raise AmbiguousObjectError(self.dobj_str, matches)
