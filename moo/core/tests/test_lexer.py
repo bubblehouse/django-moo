@@ -1,23 +1,34 @@
+import pytest
+
+from moo.core.models.object import Object
+from moo.tests import *  # pylint: disable=wildcard-import
 from moo.core import parse
 
-def test_lex_imperative_command():
-    lex = parse.Lexer("look")
+@pytest.mark.django_db
+
+@pytest.mark.django_db
+def test_lex_imperative_command(t_init: Object, t_wizard: Object):
+    lex = parse.Parser(t_wizard, "look")
     assert lex.command == "look"
 
-def test_lex_direct_object():
-    lex = parse.Lexer("look here")
+@pytest.mark.django_db
+def test_lex_direct_object(t_init: Object, t_wizard: Object):
+    lex = parse.Parser(t_wizard, "look here")
     assert lex.dobj_str == "here"
 
-def test_lex_object_of_the_preposition():
-    lex = parse.Lexer("look at this")
-    assert lex.prepositions["at"][1] == "this"
+@pytest.mark.django_db
+def test_lex_object_of_the_preposition(t_init: Object, t_wizard: Object):
+    lex = parse.Parser(t_wizard, "look at this")
+    assert lex.prepositions["at"] == "this"
 
-def test_lex_direct_object_with_preposition():
-    lex = parse.Lexer("look at painting with the glasses")
-    assert lex.prepositions["at"][1] == "painting"
-    assert lex.prepositions["with"][0] == "the"
-    assert lex.prepositions["with"][1] == "glasses"
+@pytest.mark.django_db
+def test_lex_direct_object_with_preposition(t_init: Object, t_wizard: Object):
+    lex = parse.Parser(t_wizard, "look at painting with the glasses")
+    assert lex.prepositions["at"] == "painting"
+    assert lex.prepositions["with"] == "the"
+    assert lex.prepositions["with"] == "glasses"
 
-def test_lex_look_at_QUOTED_painting_with_the_glasses():
-    lex = parse.Lexer("look at 'painting with the glasses'")
-    assert lex.prepositions["at"][1] == "painting with the glasses"
+@pytest.mark.django_db
+def test_lex_look_at_QUOTED_painting_with_the_glasses(t_init: Object, t_wizard: Object):
+    lex = parse.Parser(t_wizard, "look at 'painting with the glasses'")
+    assert lex.prepositions["at"] == "painting with the glasses"
