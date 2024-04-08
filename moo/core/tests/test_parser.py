@@ -39,7 +39,7 @@ def test_parse_imperative_command(t_init: Object, t_wizard: Object):
 @pytest.mark.django_db
 def test_parse_direct_object(t_init: Object, t_wizard: Object):
     bag = Object.objects.get(name="bag of holding")
-    parser = parse.Parser(t_wizard, "look my 'bag of holding'")
+    parser = parse.Parser(t_wizard, "look my bag of holding")
     assert parser.get_dobj() == bag
     assert parser.has_dobj(), "dobj 'my bag of holding' not found"
     assert parser.has_dobj_str(), "dobj string 'my bag of holding' not found"

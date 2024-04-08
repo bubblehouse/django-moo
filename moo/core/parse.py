@@ -62,7 +62,6 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         Span.set_extension("objects", default=[], force=True)
         def _link(doc):
             for sent in doc.sents:
-                sent._.objects = []
                 for token in sent:
                     if token.pos_ not in ('NOUN', 'PROPN'):
                         continue
