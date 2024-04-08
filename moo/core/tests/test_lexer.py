@@ -14,21 +14,20 @@ def test_lex_imperative_command(t_init: Object, t_wizard: Object):
 @pytest.mark.django_db
 def test_lex_direct_object(t_init: Object, t_wizard: Object):
     lex = parse.Parser(t_wizard, "look here")
-    assert lex.dobj_str == "here"
+    assert lex.get_dobj_str() == "here"
 
 @pytest.mark.django_db
 def test_lex_object_of_the_preposition(t_init: Object, t_wizard: Object):
     lex = parse.Parser(t_wizard, "look at this")
-    assert lex.prepositions["at"] == "this"
+    assert lex.get_pobj_str("at") == "this"
 
 @pytest.mark.django_db
 def test_lex_direct_object_with_preposition(t_init: Object, t_wizard: Object):
     lex = parse.Parser(t_wizard, "look at painting with the glasses")
-    assert lex.prepositions["at"] == "painting"
-    assert lex.prepositions["with"] == "the"
-    assert lex.prepositions["with"] == "glasses"
+    assert lex.get_pobj_str("at") == "painting"
+    assert lex.get_pobj_str("with") == "glasses"
 
 @pytest.mark.django_db
 def test_lex_look_at_QUOTED_painting_with_the_glasses(t_init: Object, t_wizard: Object):
     lex = parse.Parser(t_wizard, "look at 'painting with the glasses'")
-    assert lex.prepositions["at"] == "painting with the glasses"
+    assert lex.get_pobj_str("at") == "painting with the glasses"

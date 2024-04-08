@@ -35,10 +35,12 @@ class Parser:  # pylint: disable=too-many-instance-attributes
     """
     def __init__(self, caller, command):
         self.nlp = nlp = spacy.load('en_core_web_sm')
+        nlp.component('mergeQuotedTokens', func=self.merge_quoted_tokens)
         nlp.component('mergeTokens', func=self.merge_tokens)
         nlp.factory('objectLinker', func=self.object_linker)
         nlp.remove_pipe("ner")
         nlp.add_pipe("ner", source=spacy.load("en_core_web_sm"))
+        nlp.add_pipe('mergeQuotedTokens', first=True)
         nlp.add_pipe('mergeTokens', before="ner")
         nlp.add_pipe('objectLinker', last=True)
         self.caller = caller
@@ -49,7 +51,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         self.this = None
         self.verb = None
         length = len(self.words)
-        if length > 1:
+        if length > 1 and self.words[1].dep_ != 'prep':
             self.dobj_str = self.words[1]
         for token in self.words:
             if token.dep_ == 'prep':
@@ -66,7 +68,9 @@ class Parser:  # pylint: disable=too-many-instance-attributes
                         continue
                     cleaned, context = self.filter_reference(token)
                     found = self.get_pronoun_object(cleaned) or list(context.find(cleaned))
-                    sent._.objects.extend(found)
+                    if not found:
+                        found = list(context.find(token.text))
+                    token.sent._.objects.extend(found)
                     doc._.objects.extend(found)
             return doc
         return _link
@@ -79,6 +83,8 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             s = s.strip('"')
         elif s.startswith("'") and s.endswith("'"):
             s = s.strip("'")
+        elif s.startswith('the '):
+            s = ' '.join(parts[1:])
         elif s.startswith('my '):
             s = ' '.join(parts[1:])
             context = self.caller
@@ -92,13 +98,25 @@ class Parser:  # pylint: disable=too-many-instance-attributes
                 raise AmbiguousObjectError(search, qs)
         return s, context
 
-    def merge_tokens(self, doc):
+    def merge_quoted_tokens(self, doc):
         matched_spans = []
         matcher = Matcher(self.nlp.vocab)
         matcher.add('QUOTED', [
             [{'ORTH': "'"}, {'IS_ALPHA': True, 'OP': '+'}, {'ORTH': "'"}],
             [{'ORTH': '"'}, {'IS_ALPHA': True, 'OP': '+'}, {'ORTH': '"'}],
         ])
+        matches = matcher(doc)
+        for _, start, end in matches:
+            span = doc[start:end]
+            matched_spans.append(span)
+        with doc.retokenize() as retokenizer:
+            for span in util.filter_spans(matched_spans):
+                retokenizer.merge(span)
+        return doc
+
+    def merge_tokens(self, doc):
+        matched_spans = []
+        matcher = Matcher(self.nlp.vocab)
         matcher.add('SPECIFIERS', [
             [{'ORTH': "the"}, {'POS': "NOUN"}],
             [{'ORTH': "the"}, {'POS': "PROPN"}],
@@ -252,7 +270,10 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         """
         if(prep not in self.prepositions):
             return False
-        return bool(len(self.prepositions[prep].sent._.objects))
+        results = []
+        for token in self.prepositions[prep]:
+            results.extend(token.sent._.objects)
+        return bool(results)
 
     def has_dobj_str(self):
         """
