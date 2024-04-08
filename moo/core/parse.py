@@ -12,7 +12,7 @@ import logging
 
 import spacy
 from spacy import util
-from spacy.tokens import Doc, Span
+from spacy.tokens import Doc, Span, Token
 from spacy.matcher import Matcher
 
 from .models import Object, Verb
@@ -60,6 +60,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
     def object_linker(self, nlp, name):
         Doc.set_extension("objects", default=[], force=True)
         Span.set_extension("objects", default=[], force=True)
+        Token.set_extension("objects", default=[], force=True)
         def _link(doc):
             for sent in doc.sents:
                 for token in sent:
@@ -70,6 +71,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
                     if not found:
                         found = list(context.find(token.text))
                     token.sent._.objects.extend(found)
+                    token._.objects.extend(found)
                     doc._.objects.extend(found)
             return doc
         return _link
@@ -154,7 +156,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         if(location):
             checks.append(location)
             checks.extend(location.contents.all())
-        if self.has_dobj_str():
+        if self.has_dobj():
             checks.extend(self.dobj_str._.objects)
         for tokens in self.prepositions.values():
             for token in tokens:
@@ -208,7 +210,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         """
         if not(self.dobj_str):
             raise Object.DoesNotExist(self.dobj_str)
-        matches = self.dobj_str.sent._.objects
+        matches = self.dobj_str._.objects
         if len(matches) > 1:
             raise AmbiguousObjectError(self.dobj_str, matches)
         if not(matches):
@@ -225,7 +227,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             raise NoSuchPrepositionError(prep)
         matches = []
         for token in self.prepositions[prep]:
-            matches.extend(token.sent._.objects)
+            matches.extend(token._.objects)
         if(len(matches) > 1):
             raise AmbiguousObjectError(matches[0].text, matches)
         if not(matches):
@@ -261,7 +263,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         """
         if not self.dobj_str:
             return False
-        return bool(self.dobj_str.sent._.objects)
+        return bool(self.dobj_str._.objects)
 
     def has_pobj(self, prep):
         """
