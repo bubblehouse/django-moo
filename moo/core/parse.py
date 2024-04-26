@@ -130,6 +130,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         matcher.add('POSESSIVES', [
             [{'POS': "PROPN"}, {'ORTH': "'s"}, {'POS': "NOUN"}],
         ])
+        # TODO: can this match all words until the next prep?
         matches = matcher(doc)
         for _, start, end in matches:
             span = doc[start:end]

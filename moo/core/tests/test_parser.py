@@ -145,3 +145,12 @@ def test_parse_with_my_object(t_init: Object, t_wizard: Object):
     box.save()
     parser = parse.Parser(t_wizard, "@eval player's box")
     assert parser.has_dobj()
+
+@pytest.mark.django_db
+def test_parse_with_complex_name(t_init: Object, t_wizard: Object):
+    box = Object.objects.create(name='box containing spaces')
+    box.location = t_wizard
+    box.save()
+    parser = parse.Parser(t_wizard, "@eval box containing spaces")
+    assert parser.get_dobj_str() == ''
+    assert parser.has_dobj()
