@@ -77,19 +77,22 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         return _link
 
     def filter_reference(self, token):
+        # TODO: this needs to handle my 'quoted object'
         s = token.text
         parts = s.split()
         context = self.caller.location
-        if s.startswith('"') and s.endswith('"'):
-            s = s.strip('"')
-        elif s.startswith("'") and s.endswith("'"):
-            s = s.strip("'")
-        elif s.startswith('the '):
+        if s.startswith('the '):
             s = ' '.join(parts[1:])
         elif s.startswith('my '):
             s = ' '.join(parts[1:])
             context = self.caller
-        elif parts[0].endswith("'s"):
+
+        if s.startswith('"') and s.endswith('"'):
+            s = s.strip('"')
+        elif s.startswith("'") and s.endswith("'"):
+            s = s.strip("'")
+
+        if parts[0].endswith("'s"):
             search = parts[0][:-2]
             qs = self.caller.location.find(search)
             if len(qs) == 1:
@@ -97,14 +100,14 @@ class Parser:  # pylint: disable=too-many-instance-attributes
                 context = qs[0]
             elif len(qs) > 1:
                 raise AmbiguousObjectError(search, qs)
-        return s, context
+        return s.replace('\\', ''), context
 
     def merge_quoted_tokens(self, doc):
         matched_spans = []
         matcher = Matcher(self.nlp.vocab)
         matcher.add('QUOTED', [
-            [{'ORTH': "'"}, {'IS_ALPHA': True, 'OP': '+'}, {'ORTH': "'"}],
-            [{'ORTH': '"'}, {'IS_ALPHA': True, 'OP': '+'}, {'ORTH': '"'}],
+            [{'ORTH': "'"}, {'IS_ASCII': True, 'OP': '+'}, {'ORTH': "'"}],
+            [{'ORTH': '"'}, {'IS_ASCII': True, 'OP': '+'}, {'ORTH': '"'}],
         ])
         matches = matcher(doc)
         for _, start, end in matches:

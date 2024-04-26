@@ -1,8 +1,12 @@
+import logging
+
 import pytest
 
 from moo.core.models.object import Object
 from moo.tests import *  # pylint: disable=wildcard-import
 from moo.core import parse, exceptions
+
+log = logging.getLogger(__name__)
 
 @pytest.mark.django_db
 def test_parse(t_init: Object, t_wizard: Object):
@@ -46,7 +50,7 @@ def test_parse_direct_object(t_init: Object, t_wizard: Object):
     assert not parser.prepositions, "unexpected prepositional objects/strings found"
     assert parser.get_dobj() == bag
     assert parser.get_dobj_str().lower() == bag.name.lower()
-    with pytest.raises(Object.DoesNotExist):
+    with pytest.raises(exceptions.NoSuchPrepositionError):
         parser.get_pobj("on")
     with pytest.raises(exceptions.NoSuchPrepositionError):
         parser.get_pobj_str("on")

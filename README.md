@@ -12,7 +12,7 @@ moo is a game server for hosting text-based online MOO-like games.
 Checkout the project and use Docker Compose to run the necessary components:
 
     git clone https://gitlab.com/bubblehouse/django-moo
-    cd moo
+    cd django-moo
     docker compose up
 
 Run `migrate`, `collectstatic`, and bootstrap the initial database with some sample objects and users:
