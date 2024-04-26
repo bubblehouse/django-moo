@@ -1,3 +1,10 @@
+## [0.17.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.17.1...v0.17.2) (2024-04-26)
+
+
+### Bug Fixes
+
+* add some missing fields, include extras in the package so it can build a Docker container ([cc86019](https://gitlab.com/bubblehouse/django-moo/commit/cc8601987a93397e31bd95762811f249021ff463))
+
 ## [0.17.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.17.0...v0.17.1) (2024-03-29)
 
 
