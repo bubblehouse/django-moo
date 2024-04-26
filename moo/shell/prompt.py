@@ -85,8 +85,7 @@ class CustomRepl(PythonRepl):
         caller = self.user.player.avatar
         log.error(f"{caller}: {line}")
         with code.context(caller, self.writer):
-            lex = parse.Lexer(line)
-            parser = parse.Parser(lex, caller)
+            parser = parse.Parser(caller, line)
             verb = parser.get_verb()
             globals = code.get_restricted_environment(code.context.get('writer'))  # pylint: disable=redefined-builtin
             env = {}
