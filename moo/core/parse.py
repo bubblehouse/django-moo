@@ -19,36 +19,6 @@ from .exceptions import *  # pylint: disable=wildcard-import
 
 log = logging.getLogger(__name__)
 
-# Here are all our supported prepositions
-preps = [['with', 'using'],
-        ['at', 'to'],
-        ['in front of'],
-        ['in', 'inside', 'into', 'within'],
-        ['on top of', 'on', 'onto', 'upon', 'above'],
-        ['out of', 'from inside', 'from'],
-        ['over'],
-        ['through'],
-        ['under', 'underneath', 'beneath', 'below'],
-        ['around', 'round'],
-        ['between', 'among'],
-        ['behind', 'past'],
-        ['beside', 'by', 'near', 'next to', 'along'],
-        ['for', 'about'],
-        #['is'],
-        ['as'],
-        ['off', 'off of']]
-
-prepstring = "|".join(sum(preps, []))
-
-PREP_SRC = r'(?:\b)(?P<prep>' + prepstring + r')(?:\b)'
-SPEC = r"(?P<spec_str>my|the|a|an|\S+(?:\'s|s\'))"
-PHRASE_SRC = r'(?:' + SPEC + r'\s)?(?P<obj_str>.+)'
-
-PREP = re.compile(PREP_SRC)
-PHRASE = re.compile(PHRASE_SRC)
-POBJ_TEST = re.compile(PREP_SRC + r"\s" + PHRASE_SRC)
-MULTI_WORD = re.compile(r'((\"|\').+?(?!\\).\2)|(\S+)')
-
 def parse(caller, sentence):
     """
     For a given user, execute a command.
@@ -58,19 +28,48 @@ def parse(caller, sentence):
     v = p.get_verb()
     v.execute(p)
 
+class Pattern:
+    # Here are all our supported prepositions
+    preps = [['with', 'using'],
+            ['at', 'to'],
+            ['in front of'],
+            ['in', 'inside', 'into', 'within'],
+            ['on top of', 'on', 'onto', 'upon', 'above'],
+            ['out of', 'from inside', 'from'],
+            ['over'],
+            ['through'],
+            ['under', 'underneath', 'beneath', 'below'],
+            ['around', 'round'],
+            ['between', 'among'],
+            ['behind', 'past'],
+            ['beside', 'by', 'near', 'next to', 'along'],
+            ['for', 'about'],
+            #['is'],
+            ['as'],
+            ['off', 'off of']]
+    prepstring = "|".join(sum(preps, []))
+    PREP_SRC = r'(?:\b)(?P<prep>' + prepstring + r')(?:\b)'
+    SPEC = r"(?P<spec_str>my|the|a|an|\S+(?:\'s|s\'))"
+    PHRASE_SRC = r'(?:' + SPEC + r'\s)?(?P<obj_str>.+)'
+    PREP = re.compile(PREP_SRC)
+    PHRASE = re.compile(PHRASE_SRC)
+    POBJ_TEST = re.compile(PREP_SRC + r"\s" + PHRASE_SRC)
+    MULTI_WORD = re.compile(r'((\"|\').+?(?!\\).\2)|(\S+)')
+
 class Lexer:
     """
     An instance of this class will identify the various parts of a imperative
     sentence. This may be of use to verb code, as well.
     """
     def __init__(self, command):
+        self.pattern = Pattern()
         self.command = command
 
         self.dobj_str = None
         self.dobj_spec_str = None
 
         # First, find all words or double-quoted-strings in the text
-        iterator = re.finditer(MULTI_WORD, command)
+        iterator = re.finditer(self.pattern.MULTI_WORD, command)
         self.words = []
         qotd_matches = []
         for wordmatch in iterator:
@@ -80,7 +79,7 @@ class Lexer:
             self.words.append(word)
 
         # Now, find all prepositions
-        iterator = re.finditer(PREP, command)
+        iterator = re.finditer(self.pattern.PREP, command)
         prep_matches = []
         for prepmatch in iterator:
             prep_matches.append(prepmatch)
@@ -109,7 +108,7 @@ class Lexer:
                 end = len(command)
             #this is the phrase, which could be [[specifier ]object]
             dobj_phrase = command[len(self.words[0]) + 1:end]
-            match = re.match(PHRASE, dobj_phrase)
+            match = re.match(self.pattern.PHRASE, dobj_phrase)
             if(match):
                 result = match.groupdict()
                 self.dobj_str = result['obj_str'].strip('\'"').replace("\\'", "'").replace("\\\"", "\"")
@@ -129,7 +128,7 @@ class Lexer:
             else:
                 end = prep_matches[index + 1].start() - 1
             prep_phrase = command[start:end]
-            phrase_match = re.match(POBJ_TEST, prep_phrase)
+            phrase_match = re.match(self.pattern.POBJ_TEST, prep_phrase)
             if not(phrase_match):
                 continue
 
