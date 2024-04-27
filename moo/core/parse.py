@@ -94,12 +94,12 @@ class Lexer:
 
         #this method will be used to filter out prepositions inside quotes
         def nonoverlap(match):
-            (start, end) = match.span()
+            start, end = match.span()
             for word in qotd_matches:
-                (word_start, word_end) = word.span()
-                if(word_start <= start < word_end):
+                word_start, word_end = word.span()
+                if word_start <= start < word_end:
                     return False
-                elif(word_start < end < word_end):
+                elif word_start < end < word_end:
                     return False
             return True
 
@@ -186,20 +186,19 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             for key, value in list(self.lexer.get_details().items()):
                 self.__dict__[key] = value
 
-            for prep_record_list in self.prepositions.values():
-                if not(isinstance(prep_record_list[0], list)):
-                    prep_record_list = [prep_record_list]
-                for record in prep_record_list:
+            for matches in self.prepositions.values():
+                for record in matches:
+                    spec, name, _ = record
                     #look for an object with this name/specifier
-                    obj = self.find_object(record[0], record[1])
+                    obj = self.find_object(spec, name)
                     #try again (maybe it just looked like a specifier)
-                    if(not obj and record[0]):
-                        record[1] = record[0] + ' ' + record[1]
-                        record[0] = ''
-                        obj = self.find_object(record[0], record[1])
+                    if(not obj and spec):
+                        name = f'{spec} {name}'
+                        spec = ''
+                        obj = self.find_object(spec, name)
                     #one last shot for pronouns
                     if not(obj):
-                        obj = self.get_pronoun_object(record[1])
+                        obj = self.get_pronoun_object(name)
                     record[2] = obj
 
         if(hasattr(self, 'dobj_str') and self.dobj_str):
