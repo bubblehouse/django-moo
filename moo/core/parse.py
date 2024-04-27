@@ -148,17 +148,9 @@ class Lexer:
             if(result['spec_str'] is None):
                 result['spec_str'] = ''
 
-            #if there is already a entry for this preposition, we turn it into
-            #a list, and if it already is one, we append to it
-            if(result['prep'] in self.prepositions):
-                prep = self.prepositions[result['prep']]
-                if not(isinstance(prep[0], list)):
-                    self.prepositions[result['prep']] = [[result['spec_str'], result['obj_str'], None], prep]
-                else:
-                    self.prepositions[result['prep']].append([result['spec_str'], result['obj_str'], None])
-            #if it's a new preposition, we just save it here.
-            else:
-                self.prepositions[result['prep']] = [result['spec_str'], result['obj_str'], None]
+            self.prepositions.setdefault(result['prep'], []).append(
+                [result['spec_str'], result['obj_str'], None]
+            )
 
     def get_details(self):
         return dict(
@@ -321,12 +313,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         checks.append(self.dobj)
 
         for prep in self.prepositions.values():
-            # if there were multiple uses of a preposition
-            if(isinstance(prep[0], list)):
-                # then check each one for a verb
-                checks.extend([pobj[2] for pobj in prep if pobj[2]])
-            else:
-                checks.append(prep[2])
+            checks.extend([pobj[2] for pobj in prep if pobj[2]])
 
         matches = [x for x in checks if x and x.has_verb(verb_str)]
         self.this = self.filter_matches(matches)
@@ -392,18 +379,15 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         """
         if not(prep in self.prepositions):
             raise NoSuchPrepositionError(prep)
-        if(isinstance(self.prepositions[prep][0], list)):
-            matches = []
-            for item in self.prepositions[prep]:
-                if(item[2]):
-                    matches.append(item[2])
-            if(len(matches) > 1):
-                raise AmbiguousObjectError(matches[0][1], matches)
-            if not(matches):
-                raise NoSuchObjectError(self.prepositions[prep][0][1])
-        if not(self.prepositions[prep][2]):
-            raise NoSuchObjectError(self.prepositions[prep][1])
-        return self.prepositions[prep][2]
+        matches = []
+        for item in self.prepositions[prep]:
+            if(item[2]):
+                matches.append(item[2])
+        if(len(matches) > 1):
+            raise AmbiguousObjectError(matches[0][1], matches)
+        if not(matches):
+            raise NoSuchObjectError(self.prepositions[prep][0][1])
+        return self.prepositions[prep][0][2]
 
     def get_dobj_str(self):
         """
@@ -422,19 +406,18 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         """
         if not(prep in self.prepositions):
             raise NoSuchPrepositionError(prep)
-        if(isinstance(self.prepositions[prep][0], list)):
-            matches = []
-            for item in self.prepositions[prep]:
-                if(item[1]):
-                    matches.append(item[1])
-            if(len(matches) > 1):
-                if(return_list):
-                    return matches
-                else:
-                    raise matches[0]
-            elif not(matches):
-                raise NoSuchObjectError(self.prepositions[prep][0][1])
-        return self.prepositions[prep][1]
+        matches = []
+        for item in self.prepositions[prep]:
+            if(item[1]):
+                matches.append(item[1])
+        if(len(matches) > 1):
+            if(return_list):
+                return matches
+            else:
+                raise matches[0]
+        elif not(matches):
+            raise NoSuchObjectError(self.prepositions[prep][0][1])
+        return self.prepositions[prep][0][1]
 
     def get_pobj_spec_str(self, prep, return_list=False):
         """
@@ -444,16 +427,15 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         """
         if not(prep in self.prepositions):
             raise NoSuchPrepositionError(prep)
-        if(isinstance(self.prepositions[prep][0], list)):
-            matches = []
-            for item in self.prepositions[prep]:
-                matches.append(item[0])
-            if(len(matches) > 1):
-                if(return_list):
-                    return matches
-                else:
-                    return matches[0]
-        return self.prepositions[prep][0]
+        matches = []
+        for item in self.prepositions[prep]:
+            matches.append(item[0])
+        if(len(matches) > 1):
+            if(return_list):
+                return matches
+            else:
+                return matches[0]
+        return self.prepositions[prep][0][0]
 
     def has_dobj(self):
         """
@@ -470,13 +452,10 @@ class Parser:  # pylint: disable=too-many-instance-attributes
 
         found_prep = False
 
-        if(isinstance(self.prepositions[prep][0], list)):
-            for item in self.prepositions[prep]:
-                if(item[2]):
-                    found_prep = True
-                    break
-        else:
-            found_prep = bool(self.prepositions[prep][2])
+        for item in self.prepositions[prep]:
+            if(item[2]):
+                found_prep = True
+                break
         return found_prep
 
     def has_dobj_str(self):
@@ -494,11 +473,8 @@ class Parser:  # pylint: disable=too-many-instance-attributes
 
         found_prep = False
 
-        if(isinstance(self.prepositions[prep][0], list)):
-            for item in self.prepositions[prep]:
-                if(item[1]):
-                    found_prep = True
-                    break
-        else:
-            found_prep = bool(self.prepositions[prep][1])
+        for item in self.prepositions[prep]:
+            if(item[1]):
+                found_prep = True
+                break
         return found_prep
