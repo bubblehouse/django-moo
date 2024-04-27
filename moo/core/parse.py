@@ -28,9 +28,12 @@ def parse(caller, sentence):
     v = p.get_verb()
     v.execute(p)
 
+def unquote(s):
+    return s.strip('\'"').replace("\\'", "'").replace("\\\"", "\"")
+
 class Pattern:
     # Here are all our supported prepositions
-    preps = [['with', 'using'],
+    PREPS = [['with', 'using'],
             ['at', 'to'],
             ['in front of'],
             ['in', 'inside', 'into', 'within'],
@@ -47,8 +50,7 @@ class Pattern:
             #['is'],
             ['as'],
             ['off', 'off of']]
-    prepstring = "|".join(sum(preps, []))
-    PREP_SRC = r'(?:\b)(?P<prep>' + prepstring + r')(?:\b)'
+    PREP_SRC = r'(?:\b)(?P<prep>' + "|".join(sum(PREPS, [])) + r')(?:\b)'
     SPEC = r"(?P<spec_str>my|the|a|an|\S+(?:\'s|s\'))"
     PHRASE_SRC = r'(?:' + SPEC + r'\s)?(?P<obj_str>.+)'
     PREP = re.compile(PREP_SRC)
@@ -56,30 +58,36 @@ class Pattern:
     POBJ_TEST = re.compile(PREP_SRC + r"\s" + PHRASE_SRC)
     MULTI_WORD = re.compile(r'((\"|\').+?(?!\\).\2)|(\S+)')
 
+    def tokenize(self, s):
+        """
+        Find all words or double-quoted-strings in the text
+        """
+        iterator = re.finditer(self.MULTI_WORD, s)
+        words = []
+        qotd_matches = []
+        for wordmatch in iterator:
+            if(wordmatch.group(1)):
+                qotd_matches.append(wordmatch)
+            word = unquote(wordmatch.group())
+            words.append(word)
+        return words, qotd_matches
+
 class Lexer:
     """
     An instance of this class will identify the various parts of a imperative
     sentence. This may be of use to verb code, as well.
     """
     def __init__(self, command):
-        self.pattern = Pattern()
         self.command = command
 
         self.dobj_str = None
         self.dobj_spec_str = None
 
-        # First, find all words or double-quoted-strings in the text
-        iterator = re.finditer(self.pattern.MULTI_WORD, command)
-        self.words = []
-        qotd_matches = []
-        for wordmatch in iterator:
-            if(wordmatch.group(1)):
-                qotd_matches.append(wordmatch)
-            word = wordmatch.group().strip('\'"').replace("\\'", "'").replace("\\\"", "\"")
-            self.words.append(word)
+        pattern = Pattern()
+        self.words, qotd_matches = pattern.tokenize(command)
 
         # Now, find all prepositions
-        iterator = re.finditer(self.pattern.PREP, command)
+        iterator = re.finditer(pattern.PREP, command)
         prep_matches = []
         for prepmatch in iterator:
             prep_matches.append(prepmatch)
@@ -108,12 +116,12 @@ class Lexer:
                 end = len(command)
             #this is the phrase, which could be [[specifier ]object]
             dobj_phrase = command[len(self.words[0]) + 1:end]
-            match = re.match(self.pattern.PHRASE, dobj_phrase)
+            match = re.match(pattern.PHRASE, dobj_phrase)
             if(match):
                 result = match.groupdict()
-                self.dobj_str = result['obj_str'].strip('\'"').replace("\\'", "'").replace("\\\"", "\"")
+                self.dobj_str = unquote(result['obj_str'])
                 if(result['spec_str']):
-                    self.dobj_spec_str = result['spec_str'].strip('\'"').replace("\\'", "'").replace("\\\"", "\"")
+                    self.dobj_spec_str = unquote(result['spec_str'])
                 else:
                     self.dobj_spec_str = ''
 
@@ -128,14 +136,14 @@ class Lexer:
             else:
                 end = prep_matches[index + 1].start() - 1
             prep_phrase = command[start:end]
-            phrase_match = re.match(self.pattern.POBJ_TEST, prep_phrase)
+            phrase_match = re.match(pattern.POBJ_TEST, prep_phrase)
             if not(phrase_match):
                 continue
 
             result = phrase_match.groupdict()
 
             #if we get a quoted string here, strip the quotes
-            result['obj_str'] = result['obj_str'].strip('\'"').replace("\\'", "'").replace("\\\"", "\"")
+            result['obj_str'] = unquote(result['obj_str'])
 
             if(result['spec_str'] is None):
                 result['spec_str'] = ''
