@@ -60,7 +60,7 @@ def parse(caller, sentence):
 
 class Lexer:
     """
-    An instance of this class will identify the various parts of a imperitive
+    An instance of this class will identify the various parts of a imperative
     sentence. This may be of use to verb code, as well.
     """
     def __init__(self, command):
