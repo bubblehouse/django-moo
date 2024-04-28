@@ -32,6 +32,8 @@ ADD extras/uwsgi/uwsgi.ini /etc/uwsgi.ini
 RUN mkdir -p /usr/src/app/static
 RUN chgrp www-data /usr/src/app/static/
 RUN chmod ug+rwx /usr/src/app/static/
+RUN chgrp www-data /etc/ssh/ssh_host_ecdsa_key
+RUN chmod ug+rw /etc/ssh/ssh_host_ecdsa_key
 
 # Custom entrypoint for improved ad-hoc command support
 ENTRYPOINT ["/entrypoint.sh"]
