@@ -1,3 +1,10 @@
+## [0.17.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.17.2...v0.17.3) (2024-04-28)
+
+
+### Bug Fixes
+
+* set permissions so www-data can use the host key ([50aeb5a](https://gitlab.com/bubblehouse/django-moo/commit/50aeb5afb746d57d16d53cc6d281bf63676d7ac7))
+
 ## [0.17.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.17.1...v0.17.2) (2024-04-26)
 
 
