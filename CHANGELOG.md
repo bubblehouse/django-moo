@@ -1,3 +1,11 @@
+## [0.17.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.17.3...v0.17.4) (2024-04-28)
+
+
+### Bug Fixes
+
+* prompt improvements ([1e49817](https://gitlab.com/bubblehouse/django-moo/commit/1e49817d9d7db4de902f5778b06bfdc7f4cb4d69))
+* use existing hosts ([1c8b09c](https://gitlab.com/bubblehouse/django-moo/commit/1c8b09cad5f32f9c1432cd091edeac428a1a8a4a))
+
 ## [0.17.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.17.2...v0.17.3) (2024-04-28)
 
 
