@@ -6,7 +6,7 @@ from prompt_toolkit.formatted_text import AnyFormattedText
 from ptpython.repl import PythonRepl
 from ptpython.prompt_style import PromptStyle
 
-from ..core import code, models, parse
+from ..core import code, models, parse, exceptions
 
 log = logging.getLogger(__name__)
 
@@ -63,6 +63,9 @@ class CustomRepl(PythonRepl):
         super().__init__(*a, **kw)
         self.all_prompt_styles["mud"] = MudPrompt()
         self.prompt_style = "mud"
+        self.enable_syntax_highlighting = False
+        self.enable_input_validation = False
+        self.complete_while_typing = False
 
     def writer(self, s, is_error=False):
         if(s.strip()):
@@ -74,8 +77,14 @@ class CustomRepl(PythonRepl):
         Evaluate the line and print the result.
         """
         if self.prompt_style == "mud":
+            self.enable_syntax_highlighting = False
+            self.enable_input_validation = False
+            self.complete_while_typing = False
             return self.prompt_mud(line)
         else:
+            self.enable_syntax_highlighting = True
+            self.enable_input_validation = True
+            self.complete_while_typing = True
             return self.prompt_eval(line)
 
     def prompt_mud(self, line: str) -> object:
@@ -83,19 +92,23 @@ class CustomRepl(PythonRepl):
         Parse the command and execute it.
         """
         caller = self.user.player.avatar
-        log.error(f"{caller}: {line}")
+        log.info(f"{caller}: {line}")
         with code.context(caller, self.writer):
-            lex = parse.Lexer(line)
-            parser = parse.Parser(lex, caller)
-            verb = parser.get_verb()
-            globals = code.get_restricted_environment(code.context.get('writer'))  # pylint: disable=redefined-builtin
-            env = {}
-            code.r_exec(verb.code, env, globals, filename=repr(self))
+            try:
+                lex = parse.Lexer(line)
+                parser = parse.Parser(lex, caller)
+                verb = parser.get_verb()
+                globals = code.get_restricted_environment(code.context.get('writer'))  # pylint: disable=redefined-builtin
+                env = {}
+                code.r_exec(verb.code, env, globals, filename=repr(self))
+            except exceptions.UserError as e:
+                log.error(f"{caller}: {e}")
+                self.writer(str(e), is_error=True)
 
     def prompt_eval(self, line: str) -> object:
         # Try eval first
         caller = self.user.player.avatar
-        log.error(f"{caller}: {line}")
+        log.info(f"{caller}: {line}")
         try:
             with code.context(caller, self.writer):
                 result = code.do_eval(line, self.get_locals(), self.get_globals())
