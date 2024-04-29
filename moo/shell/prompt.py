@@ -1,10 +1,15 @@
 import logging
 from asgiref.sync import sync_to_async
 
+from prompt_toolkit import ANSI
 from prompt_toolkit.utils import DummyContext
 from prompt_toolkit.formatted_text import AnyFormattedText
+from prompt_toolkit.shortcuts import print_formatted_text
+from prompt_toolkit.output import ColorDepth
 from ptpython.repl import PythonRepl
 from ptpython.prompt_style import PromptStyle
+
+from rich.console import Console
 
 from ..core import code, models, parse, exceptions
 
@@ -36,6 +41,7 @@ def embed(
         get_globals=get_globals,
         get_locals=get_locals,
         vi_mode=vi_mode,
+        color_depth=ColorDepth.DEPTH_24_BIT
     )
 
     globals.update(code.get_restricted_environment(repl.writer))
@@ -69,7 +75,11 @@ class CustomRepl(PythonRepl):
 
     def writer(self, s, is_error=False):
         if(s.strip()):
-            self.app.output.write(f"{s}\n")
+            console = Console(color_system="truecolor")
+            with console.capture() as capture:
+                console.print(s)
+            content = capture.get()
+            print_formatted_text(ANSI(content), output=self.app.output)
 
     @sync_to_async
     def eval_async(self, line: str) -> object:  # pylint: disable=invalid-overridden-method
