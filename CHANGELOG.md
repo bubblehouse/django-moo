@@ -1,3 +1,10 @@
+## [0.18.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.17.4...v0.18.0) (2024-04-29)
+
+
+### Features
+
+* enable Rich-based markup processing on output ([b3a3e27](https://gitlab.com/bubblehouse/django-moo/commit/b3a3e27bff5ed2f2b1724d56a9f9d42811e66269))
+
 ## [0.17.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.17.3...v0.17.4) (2024-04-28)
 
 
