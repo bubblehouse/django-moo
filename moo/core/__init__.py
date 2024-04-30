@@ -25,5 +25,3 @@ class API:
     parser = descriptor('parser')
 
 api = API()
-
-# TODO: make more generic, provide parser/lexer access

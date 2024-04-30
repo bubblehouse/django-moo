@@ -39,4 +39,4 @@ def test_printing_imported_caller(t_init: Object, t_wizard: Object):
         globals.update(code.get_restricted_environment(writer))
         src = "from moo.core import api\nprint(api.caller)"
         code.r_exec(src, {}, globals)
-        assert printed == ['#2 (Wizard)']
+        assert printed == [t_wizard]
