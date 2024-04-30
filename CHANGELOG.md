@@ -1,3 +1,10 @@
+## [0.18.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.18.0...v0.18.1) (2024-04-30)
+
+
+### Bug Fixes
+
+* dont stringify things being printed ([5694467](https://gitlab.com/bubblehouse/django-moo/commit/56944672b121e3ff6a511ff6f65ae74c46f82b63))
+
 ## [0.18.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.17.4...v0.18.0) (2024-04-29)
 
 
