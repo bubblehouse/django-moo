@@ -88,7 +88,7 @@ def get_restricted_environment(writer):
     """
     class _print_:
         def _call_print(self,s):
-            writer(str(s))
+            writer(s)
 
     class _write_:
         def __init__(self, obj):

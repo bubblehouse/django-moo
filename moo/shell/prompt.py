@@ -74,12 +74,11 @@ class CustomRepl(PythonRepl):
         self.complete_while_typing = False
 
     def writer(self, s, is_error=False):
-        if(s.strip()):
-            console = Console(color_system="truecolor")
-            with console.capture() as capture:
-                console.print(s)
-            content = capture.get()
-            print_formatted_text(ANSI(content), output=self.app.output)
+        console = Console(color_system="truecolor")
+        with console.capture() as capture:
+            console.print(s)
+        content = capture.get()
+        print_formatted_text(ANSI(content), output=self.app.output)
 
     @sync_to_async
     def eval_async(self, line: str) -> object:  # pylint: disable=invalid-overridden-method
