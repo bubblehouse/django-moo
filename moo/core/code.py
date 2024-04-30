@@ -33,6 +33,8 @@ class context:
         from . import api
         api.caller = None
         api.writer = None
+        api.args = None
+        api.kwargs = None
 
 def is_frame_access_allowed():
     return False

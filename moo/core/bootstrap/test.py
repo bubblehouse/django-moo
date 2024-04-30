@@ -45,6 +45,7 @@ with code.context(wizard, log.info):
     book = create_object('class book', location=bag)
     players = create_object('player class', location=book)
     players.add_verb("look", "inspect", filename="players_look.py", repo=repo, ability=True, method=True)
+    players.add_verb("test-args", filename="players_test_args.py", repo=repo, ability=True, method=True)
     guests = create_object('guest class', location=book)
     guests.parents.add(players)
     authors = create_object('author class', location=book)
