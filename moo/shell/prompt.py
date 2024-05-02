@@ -12,6 +12,7 @@ from ptpython.prompt_style import PromptStyle
 from rich.console import Console
 
 from ..core import code, models, parse, exceptions
+from ..core import api
 
 log = logging.getLogger(__name__)
 
@@ -109,6 +110,7 @@ class CustomRepl(PythonRepl):
                 verb = parser.get_verb()
                 globals = code.get_restricted_environment(code.context.get('writer'))  # pylint: disable=redefined-builtin
                 env = {}
+                api.parser = parser
                 code.r_exec(verb.code, env, globals, filename=repr(self))
             except exceptions.UserError as e:
                 log.error(f"{caller}: {e}")
