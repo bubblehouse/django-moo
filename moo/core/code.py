@@ -33,6 +33,7 @@ class context:
         from . import api
         api.caller = None
         api.writer = None
+        api.parser = None
         api.args = None
         api.kwargs = None
 
