@@ -10,6 +10,14 @@ from RestrictedPython.Guards import guarded_unpack_sequence
 
 log = logging.getLogger(__name__)
 
+def interpret(caller, writer, source, *args, **kwargs):
+    from . import api
+    api.args = args
+    api.kwargs = kwargs
+    globals = get_default_globals()  # pylint: disable=redefined-builtin
+    globals.update(get_restricted_environment(writer))
+    return r_exec(source, {}, globals)
+
 def compile_verb_code(body, filename):
     """
     Take a given piece of verb code and wrap it in a function.
@@ -133,7 +141,7 @@ class context:
 
     def __init__(self, caller, writer):
         from .models.object import AccessibleObject
-        self.caller = AccessibleObject.objects.get(pk=caller.pk)
+        self.caller = AccessibleObject.objects.get(pk=caller.pk) if caller else None
         self.writer = writer
 
     def __enter__(self):
