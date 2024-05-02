@@ -19,14 +19,19 @@ from .exceptions import *  # pylint: disable=wildcard-import
 
 log = logging.getLogger(__name__)
 
-def parse(caller, sentence):
+def interpret(caller, writer, line):
     """
     For a given user, execute a command.
     """
-    l = Lexer(sentence)
-    p = Parser(l, caller)
-    v = p.get_verb()
-    v.execute(p)
+    from . import code, api
+    with code.context(caller, writer):
+        lex = Lexer(line)
+        parser = Parser(lex, caller)
+        api.parser = parser
+        verb = parser.get_verb()
+        globals = code.get_default_globals()  # pylint: disable=redefined-builtin
+        globals.update(code.get_restricted_environment(writer))
+        code.r_exec(verb.code, {}, globals, filename=repr(verb))
 
 def unquote(s):
     return s.strip('\'"').replace("\\'", "'").replace("\\\"", "\"")

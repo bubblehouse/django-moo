@@ -103,18 +103,11 @@ class CustomRepl(PythonRepl):
         """
         caller = self.user.player.avatar
         log.info(f"{caller}: {line}")
-        with code.context(caller, self.writer):
-            try:
-                lex = parse.Lexer(line)
-                parser = parse.Parser(lex, caller)
-                verb = parser.get_verb()
-                globals = code.get_restricted_environment(code.context.get('writer'))  # pylint: disable=redefined-builtin
-                env = {}
-                api.parser = parser
-                code.r_exec(verb.code, env, globals, filename=repr(self))
-            except exceptions.UserError as e:
-                log.error(f"{caller}: {e}")
-                self.writer(str(e), is_error=True)
+        try:
+            parse.interpret(caller, self.writer, line)
+        except exceptions.UserError as e:
+            log.error(f"{caller}: {e}")
+            self.writer(str(e), is_error=True)
 
     def prompt_eval(self, line: str) -> object:
         # Try eval first
