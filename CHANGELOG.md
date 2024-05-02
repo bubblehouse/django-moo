@@ -1,3 +1,10 @@
+## [0.18.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.18.1...v0.18.2) (2024-05-02)
+
+
+### Bug Fixes
+
+* improve var handling ([acd163c](https://gitlab.com/bubblehouse/django-moo/commit/acd163c8ae9a6dea81c9a1f2e916dbd531b087fe))
+
 ## [0.18.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.18.0...v0.18.1) (2024-04-30)
 
 
