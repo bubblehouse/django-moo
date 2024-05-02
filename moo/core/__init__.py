@@ -11,7 +11,7 @@ class API:
 
         def __get__(self, obj, objtype=None):
             d = context.vars.get({})
-            return d[self.name]
+            return d.get(self.name)
 
         def __set__(self, obj, value):
             d = context.vars.get({})
