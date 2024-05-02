@@ -10,36 +10,6 @@ from RestrictedPython.Guards import guarded_unpack_sequence
 
 log = logging.getLogger(__name__)
 
-class context:
-    vars = contextvars.ContextVar("vars")
-
-    @classmethod
-    def get(cls, name):
-        d = cls.vars.get({})
-        return d.get(name)
-
-    def __init__(self, caller, writer):
-        from .models.object import AccessibleObject
-        self.caller = AccessibleObject.objects.get(pk=caller.pk)
-        self.writer = writer
-
-    def __enter__(self):
-        from . import api
-        api.caller = self.caller
-        api.writer = self.writer
-        return self
-
-    def __exit__(self, cls, value, traceback):
-        from . import api
-        api.caller = None
-        api.writer = None
-        api.parser = None
-        api.args = None
-        api.kwargs = None
-
-def is_frame_access_allowed():
-    return False
-
 def compile_verb_code(body, filename):
     """
     Take a given piece of verb code and wrap it in a function.
@@ -118,12 +88,12 @@ def get_restricted_environment(writer):
         raise ImportError('Restricted: %s' % name)
 
     def get_protected_attribute(obj, name, g=getattr):
-        if(name.startswith('_') and not is_frame_access_allowed()):
+        if name.startswith('_'):
             raise AttributeError(name)
         return g(obj, name)
 
     def set_protected_attribute(obj, name, value, s=setattr):
-        if(name.startswith('_') and not is_frame_access_allowed()):
+        if name.startswith('_'):
             raise AttributeError(name)
         return s(obj, name, value)
 
@@ -152,3 +122,30 @@ def get_restricted_environment(writer):
     )
 
     return env
+
+class context:
+    vars = contextvars.ContextVar("vars")
+
+    @classmethod
+    def get(cls, name):
+        d = cls.vars.get({})
+        return d.get(name)
+
+    def __init__(self, caller, writer):
+        from .models.object import AccessibleObject
+        self.caller = AccessibleObject.objects.get(pk=caller.pk)
+        self.writer = writer
+
+    def __enter__(self):
+        from . import api
+        api.caller = self.caller
+        api.writer = self.writer
+        return self
+
+    def __exit__(self, cls, value, traceback):
+        from . import api
+        api.caller = None
+        api.writer = None
+        api.parser = None
+        api.args = None
+        api.kwargs = None
