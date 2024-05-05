@@ -2,7 +2,7 @@ import pytest
 
 from moo.tests import *  # pylint: disable=wildcard-import
 from ..models import Object, Verb
-from .. import code, parse, api
+from .. import code, parse
 
 @pytest.mark.django_db
 def test_caller_can_invoke_trivial_verb(t_init: Object, t_wizard: Object):

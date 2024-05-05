@@ -4,7 +4,6 @@ from moo.core.models import Object, Player
 from moo.core.models.object import AccessibleObject
 from moo.tests import *  # pylint: disable=wildcard-import
 from .. import code
-from .. import exceptions
 
 @pytest.mark.django_db
 def test_regular_user_can_read_a_thing(t_init, t_wizard):
