@@ -55,6 +55,7 @@ def relationship_changed(sender, instance, action, model, signal, reverse, pk_se
 class Object(models.Model, AccessibleMixin):
     name = models.CharField(max_length=255)
     unique_name = models.BooleanField(default=False)
+    obvious = models.BooleanField(default=True)
     owner = models.ForeignKey('self', related_name='+', blank=True, null=True, on_delete=models.SET_NULL,)
     location = models.ForeignKey('self', related_name='contents', blank=True, null=True, on_delete=models.SET_NULL)
     parents = models.ManyToManyField('self', related_name='children', blank=True, symmetrical=False, through='Relationship')
