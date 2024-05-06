@@ -1,3 +1,17 @@
+## [0.19.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.18.2...v0.19.0) (2024-05-06)
+
+
+### Features
+
+* add intrinsic `obvious` property to improve object searching ([97a7d62](https://gitlab.com/bubblehouse/django-moo/commit/97a7d62588b0ebc611d21d8c80486c642edeb741))
+* added contents to look output ([92b41ea](https://gitlab.com/bubblehouse/django-moo/commit/92b41ea3f717fefbf5e3f3d8a8e10f2add6ea438))
+
+
+### Bug Fixes
+
+* added more safe builtins ([476cf3c](https://gitlab.com/bubblehouse/django-moo/commit/476cf3c21b8c7766a5899bc99ccc80e92c7c9c1e))
+* improved `look` command with better functionality and ANSI colors ([e872eec](https://gitlab.com/bubblehouse/django-moo/commit/e872eecb9465e409976b0161516075a4660abbc2))
+
 ## [0.18.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.18.1...v0.18.2) (2024-05-02)
 
 
