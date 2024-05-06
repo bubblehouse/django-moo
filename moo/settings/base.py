@@ -46,10 +46,9 @@ ALLOWED_MODULES = (
 )
 
 ALLOWED_BUILTINS = (
-    'dict',
     'dir',
-    'getattr',
-    'hasattr'
+    'getattr', 'hasattr',
+    'dict', 'list', 'set'
 )
 
 INSTALLED_APPS = [
