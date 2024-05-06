@@ -12,16 +12,14 @@ elif(api.parser.has_dobj_str()):
 else:
     obj = api.caller.location
 
-qs = obj.properties.filter(name="description")
-if qs:
-    print(f"""
-[yellow]{obj.name}[/yellow]
-
-[deep_sky_blue1]{qs[0].value}[/deep_sky_blue1]
-""")
+print(f"[bright_yellow]{obj.name}[/bright_yellow]")
+has_description = obj.properties.filter(name="description")
+if has_description:
+    print(f"[deep_sky_blue1]{has_description[0].value}[/deep_sky_blue1]")
 else:
-    print(f"""
-[yellow]{obj.name}[/yellow]
+    print("[deep_pink4 bold]Not much to see here.[/deep_pink4 bold]")
 
-[deep_pink4 bold]Not much to see here.[/deep_pink4 bold]
-""")
+has_contents = obj.contents.filter(obvious=True)
+if has_contents:
+    print('[yellow]Obvious contents:[/yellow]')
+    print(list(has_contents))
