@@ -1,3 +1,15 @@
+## [0.20.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.19.0...v0.20.0) (2024-05-07)
+
+
+### Features
+
+* use ACE editor inside the Django admin for editing Verbs ([2c0a1d6](https://gitlab.com/bubblehouse/django-moo/commit/2c0a1d6e54522ffc5645fe10d723011cca38d856))
+
+
+### Bug Fixes
+
+* handle direct object ID lookups ([aec1cf5](https://gitlab.com/bubblehouse/django-moo/commit/aec1cf50589c7efe30a96f234f55f5d4079f78f1))
+
 ## [0.19.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.18.2...v0.19.0) (2024-05-06)
 
 
