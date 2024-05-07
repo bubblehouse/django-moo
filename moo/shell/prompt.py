@@ -104,7 +104,8 @@ class CustomRepl(PythonRepl):
         caller = self.user.player.avatar
         log.info(f"{caller}: {line}")
         try:
-            parse.interpret(caller, self.writer, line)
+            with code.context(caller, self.writer):
+                parse.interpret(caller, self.writer, line)
         except exceptions.UserError as e:
             log.error(f"{caller}: {e}")
             self.writer(str(e), is_error=True)
