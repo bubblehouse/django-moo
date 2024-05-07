@@ -362,7 +362,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         elif(pronoun == "here"):
             return self.caller.location
         elif(pronoun[0] == "#"):
-            return Object.objects.get(int(pronoun[1:]))
+            return Object.objects.get(pk=int(pronoun[1:]))
         else:
             return None
 
