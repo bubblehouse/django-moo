@@ -20,15 +20,14 @@ Run `migrate`, `collectstatic`, and bootstrap the initial database with some sam
     docker compose run webapp manage.py migrate
     docker compose run webapp manage.py collectstatic
     docker compose run webapp manage.py moo_init
-    docker compose run webapp manage.py createsuperuser
+    docker compose run webapp manage.py createsuperuser --username phil
+    docker compose run webapp manage.py moo_enableuser --wizard phil Wizard
 
-Now you should be able to connect to https://localhost/admin and login with the superuser you just created.
-
-Naviagte through the Django Admin interface to your user record, and associate it with an avatar (usually `#2 (Wizard)`) and check the box to make it a "wizard", i.e., a superuser inside the new universe.
+Now you should be able to connect to https://localhost/admin and login with the superuser you just created, or login via SSH, described below.
 
 ## Login via SSH
 
-In this example, my super user is called `phil`, and I'm automatically prompted for my password.
+In this example, my superuser is called `phil`, and I'm automatically prompted for my password.
 
     $ ssh localhost -p 8022 -l phil
     (phil@localhost) Password:
