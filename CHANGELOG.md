@@ -1,3 +1,10 @@
+## [0.21.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.20.0...v0.21.0) (2024-05-07)
+
+
+### Features
+
+* added moo_enableuser command ([1be7daf](https://gitlab.com/bubblehouse/django-moo/commit/1be7dafa7a456c17755ce0268a3465040081471f))
+
 ## [0.20.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.19.0...v0.20.0) (2024-05-07)
 
 
