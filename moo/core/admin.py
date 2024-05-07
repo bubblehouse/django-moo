@@ -3,6 +3,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User  # pylint: disable=imported-auth-user
 
 from .models import verb, object, property, auth, task, acl  # pylint: disable=redefined-builtin
+from .forms import VerbAdminForm
 
 class VerbInline(admin.TabularInline):
     model = verb.Verb
@@ -28,6 +29,7 @@ class ObjectAdmin(admin.ModelAdmin):
 
 @admin.register(verb.Verb)
 class VerbAdmin(admin.ModelAdmin):
+    form = VerbAdminForm
     raw_id_fields = ('owner', 'origin')
 
 @admin.register(verb.VerbName)

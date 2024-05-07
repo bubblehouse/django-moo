@@ -17,6 +17,7 @@ repos:
           - django-simplesshkey
           - RestrictedPython
           - psycopg2-binary
+          - django_ace
   - repo: https://github.com/pryorda/dockerfilelint-precommit-hooks
     rev: v0.1.0
     hooks:

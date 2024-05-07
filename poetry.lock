@@ -535,6 +535,20 @@ argon2 = ["argon2-cffi (>=19.1.0)"]
 bcrypt = ["bcrypt"]
 
 [[package]]
+name = "django-ace"
+version = "1.32.4"
+description = "django-ace provides integration for ajax.org ACE with Django"
+optional = false
+python-versions = "*"
+files = [
+    {file = "django-ace-1.32.4.tar.gz", hash = "sha256:d1bd881ed85acd261d4e996c41b44ea02168ca59991cb2229669688f91ba5fd1"},
+    {file = "django_ace-1.32.4-py3-none-any.whl", hash = "sha256:65c709dfdd2766b4080676541d3889762500a8c8a9150d4356285903b89b4d3a"},
+]
+
+[package.dependencies]
+Django = ">1.11"
+
+[[package]]
 name = "django-simplesshkey"
 version = "2.1.0"
 description = "Associates multiple SSH public keys with Django user accounts (fork of django-sshkey without SSHD integration)"
@@ -2076,4 +2090,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.11"
-content-hash = "c4271f53536331541c8bc37a1bbabb5a98824bae37e621fef6640e37019e70fb"
+content-hash = "233b915876d4084ac9ecdc9485bce43dc6e9b269a756a1fa3149f8f6dfa4df18"
