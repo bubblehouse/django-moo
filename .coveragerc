@@ -2,13 +2,16 @@
 branch = True
 
 omit =
-    # omit bootstarp verb code
+    # omit bootstrap verb code
     */*_verbs/*
     # omit Django boilerplate
     moo/asgi.py
     moo/wsgi.py
     moo/urls.py
+    # omit Django settings
     moo/settings/dev.py
     moo/settings/local.py
+    # omit Django commands
     moo/shell/management/commands/moo_shell.py
     moo/core/management/commands/moo_init.py
+    moo/core/management/commands/moo_enableuser.py
