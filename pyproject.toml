@@ -25,6 +25,9 @@ django-simplesshkey = "^2.1.0"
 watchdog = "^4.0.0"
 poetry-plugin-export = "^1.7.1"
 django-ace = "^1.32.4"
+celery = {extras = ["redis"], version = "^5.4.0"}
+django-celery-results = "^2.5.1"
+django-celery-beat = "^2.6.0"
 
 [tool.poetry.group.dev.dependencies]
 pylint = "^3.1.0"
