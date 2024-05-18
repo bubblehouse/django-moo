@@ -9,6 +9,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['localhost']
 CSRF_TRUSTED_ORIGINS = ['https://localhost']
+STATIC_ROOT = "static"
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
@@ -23,11 +24,18 @@ DATABASES = {
     }
 }
 
-STATIC_ROOT = "static"
+# Cache
+# https://docs.djangoproject.com/en/4.2/ref/settings/#caches
 
-# CACHES = {
-#     'default': {
-#         'BACKEND': 'redis_cache.RedisCache',
-#         'LOCATION': 'redis:6379',
-#     }
-# }
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': 'rediss://redis:6379',
+    }
+}
+
+# Celery configuration
+# https://docs.celeryq.dev/en/stable/userguide/configuration.html
+
+CELERY_BROKER_URL = 'rediss://redis:6379/0'
+CELERY_TASK_ALWAYS_EAGER = False
