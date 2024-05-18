@@ -16,3 +16,8 @@ services:
       DJANGO_SETTINGS_MODULE: moo.settings.local
     volumes:
       - .:/usr/src/app
+  celery:
+    environment:
+      DJANGO_SETTINGS_MODULE: moo.settings.local
+    volumes:
+      - .:/usr/src/app
