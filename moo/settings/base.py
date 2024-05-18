@@ -60,6 +60,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_ace",
     "simplesshkey",
+    "django_celery_results",
+    "django_celery_beat",
     "moo.core",
     "moo.shell"
 ]
@@ -105,6 +107,16 @@ DATABASES = {
     }
 }
 
+
+# Cache
+# https://docs.djangoproject.com/en/4.2/ref/settings/#caches
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': 'redis://localhost:6379',
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -220,3 +232,16 @@ LOGGING = {
         }
     }
 }
+
+# Celery configuration
+# https://docs.celeryq.dev/en/stable/userguide/configuration.html
+
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+#: Only add pickle to this list if your broker is secured
+#: from unwanted access (see userguide/security.html)
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_CACHE_BACKEND = 'default'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_TASK_TIME_LIMIT = 3
