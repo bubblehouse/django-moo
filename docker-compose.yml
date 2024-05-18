@@ -24,6 +24,17 @@ services:
       - redis
     environment:
       DJANGO_SETTINGS_MODULE: moo.settings.local
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: philchristensen/moo:latest
+    links:
+      - postgres
+      - redis
+    environment:
+      DJANGO_SETTINGS_MODULE: moo.settings.local
+    command: [celery]
   shell:
     build:
       context: .
