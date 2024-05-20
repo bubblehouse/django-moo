@@ -23,7 +23,8 @@ def test_args_is_null_when_using_parser(t_init: Object, t_wizard: Object):
     printed = []
     def _writer(msg):
         printed.append(msg)
-    parse.interpret(t_wizard, _writer, "test-args")
+    with code.context(t_wizard, _writer):
+        parse.interpret("test-args")
     assert printed == ["PARSER"]
 
 @pytest.mark.django_db
@@ -32,5 +33,6 @@ def test_args_is_not_null_when_using_eval(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
     verb = Verb.objects.filter(names__name="test-args")
-    code.interpret(t_wizard, _writer, verb[0].code)
+    with code.context(t_wizard, _writer):
+        code.interpret(verb[0].code)
     assert printed == ["METHOD"]

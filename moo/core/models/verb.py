@@ -1,9 +1,13 @@
+import logging
+
 from django.db import models
 from django.core import validators
 
-from ..code import context, interpret
+from ..code import interpret
 from .acl import AccessibleMixin
-from .. import api, utils
+from .. import utils
+
+log = logging.getLogger(__name__)
 
 class Verb(models.Model, AccessibleMixin):
     code = models.TextField(blank=True, null=True)
@@ -50,8 +54,7 @@ class AccessibleVerb(Verb):
     def __call__(self, *args, **kwargs):
         if not(self.method):
             raise RuntimeError("%s is not a method." % self)
-        result = interpret(context.get('caller'), context.get('writer'),
-                           self.code, *args, **kwargs)
+        result = interpret(self.code, *args, **kwargs)
         return result
 
 

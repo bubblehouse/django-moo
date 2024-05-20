@@ -11,8 +11,7 @@ from ptpython.prompt_style import PromptStyle
 
 from rich.console import Console
 
-from ..core import code, models, parse, exceptions
-from ..core import api
+from ..core import code, models, tasks
 
 log = logging.getLogger(__name__)
 
@@ -103,27 +102,26 @@ class CustomRepl(PythonRepl):
         """
         caller = self.user.player.avatar
         log.info(f"{caller}: {line}")
-        try:
-            with code.context(caller, self.writer):
-                parse.interpret(caller, self.writer, line)
-        except exceptions.UserError as e:
-            log.error(f"{caller}: {e}")
-            self.writer(str(e), is_error=True)
+        ct = tasks.parse_command.delay(caller.pk, line)
+        output = ct.get()
+        for item in output:
+            self.writer(item)
 
     def prompt_eval(self, line: str) -> object:
         # Try eval first
         caller = self.user.player.avatar
         log.info(f"{caller}: {line}")
         try:
-            with code.context(caller, self.writer):
-                result = code.do_eval(line, self.get_locals(), self.get_globals())
-                self._store_eval_result(result)
+            ct = tasks.parse_code.delay(caller.pk, line)
+            output, result = ct.get()
+            for item in output:
+                self.writer(item)
+            self._store_eval_result(result)
             return result
         except SyntaxError:
             pass
-        # If not a valid `eval` expression, compile as `exec` expression
-        # but still run with eval to get an awaitable in case of a
-        # awaitable expression.
-        with code.context(caller, self.writer):
-            result = code.do_eval(line, self.get_locals(), self.get_globals(), runtype='exec')
+        ct = tasks.parse_code.delay(caller.pk, line, runtype="exec")
+        output, result = ct.get()
+        for item in output:
+            self.writer(item)
         return result
