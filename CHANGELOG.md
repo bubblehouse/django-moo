@@ -1,3 +1,18 @@
+## [0.22.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.21.0...v0.22.0) (2024-05-20)
+
+
+### Features
+
+* add a celery runner to docker-compose ([a218f3e](https://gitlab.com/bubblehouse/django-moo/commit/a218f3e9c686c1cdbdffbf86dddc69b27c6ba06a))
+* add celery with django and redis integration ([6eadf15](https://gitlab.com/bubblehouse/django-moo/commit/6eadf15dadf9f677efee86609201a2a9a1aceb2e))
+* configure django/celery intergration ([88654f7](https://gitlab.com/bubblehouse/django-moo/commit/88654f7d82a40bad7ffa9fee1e57dcbcaace4164))
+* run verb code in Celery workers instead of the web application ([bab48ee](https://gitlab.com/bubblehouse/django-moo/commit/bab48ee87809a9c55fa5741c9c173522f39f63b3))
+
+
+### Bug Fixes
+
+* only run watchedo on moo_shell invocations ([ffcf3f4](https://gitlab.com/bubblehouse/django-moo/commit/ffcf3f4e6c81ea018c9a1f3cf8a166eac3fddacb))
+
 ## [0.21.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.20.0...v0.21.0) (2024-05-07)
 
 
