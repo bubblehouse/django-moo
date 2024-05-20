@@ -16,9 +16,9 @@ elif [ "$1" = 'celery' ]; then
     if [ "$2" = 'beat' ]; then
         exec celery -A moo beat --uid 33 -l INFO
     elif [ "$2" = 'worker' ]; then
-        exec celery -A moo worker --uid 33 -l INFO
+        exec celery -A moo worker -E --uid 33 -l INFO
     else
-        exec watchmedo auto-restart -p '.reload' -- celery -A moo worker --uid 33 -B -l INFO
+        exec watchmedo auto-restart -p '.reload' -- celery -A moo worker -E --uid 33 -B -l INFO
     fi
 else
     exec "$@"

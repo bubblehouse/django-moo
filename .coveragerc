@@ -6,6 +6,7 @@ omit =
     */*_verbs/*
     # omit Django boilerplate
     moo/asgi.py
+    moo/celery.py
     moo/wsgi.py
     moo/urls.py
     # omit Django settings
