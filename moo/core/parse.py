@@ -19,17 +19,17 @@ from .exceptions import *  # pylint: disable=wildcard-import
 
 log = logging.getLogger(__name__)
 
-def interpret(caller, writer, line):
+def interpret(line):
     """
     For a given user, execute a command.
     """
     from . import code, api
     lex = Lexer(line)
-    parser = Parser(lex, caller)
+    parser = Parser(lex, api.caller)
     api.parser = parser
     verb = parser.get_verb()
     globals = code.get_default_globals()  # pylint: disable=redefined-builtin
-    globals.update(code.get_restricted_environment(writer))
+    globals.update(code.get_restricted_environment(api.writer))
     code.r_exec(verb.code, {}, globals, filename=repr(verb))
 
 def unquote(s):
