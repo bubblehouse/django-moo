@@ -37,5 +37,4 @@ CACHES = {
 # Celery configuration
 # https://docs.celeryq.dev/en/stable/userguide/configuration.html
 
-CELERY_BROKER_URL = 'rediss://redis:6379/0'
-CELERY_TASK_ALWAYS_EAGER = False
+CELERY_BROKER_URL = 'redis://redis:6379/0'

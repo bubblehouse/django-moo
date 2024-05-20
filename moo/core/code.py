@@ -10,13 +10,16 @@ from RestrictedPython.Guards import guarded_unpack_sequence
 
 log = logging.getLogger(__name__)
 
-def interpret(caller, writer, source, *args, **kwargs):
+def interpret(source, *args, runtype="exec", **kwargs):
     from . import api
     api.args = args
     api.kwargs = kwargs
     globals = get_default_globals()  # pylint: disable=redefined-builtin
-    globals.update(get_restricted_environment(writer))
-    return r_exec(source, {}, globals)
+    globals.update(get_restricted_environment(api.writer))
+    if runtype == 'exec':
+        return r_exec(source, {}, globals)
+    else:
+        return r_eval(source, {}, globals)
 
 def compile_verb_code(body, filename):
     """
@@ -114,7 +117,7 @@ def get_restricted_environment(writer):
 
     for name in settings.ALLOWED_BUILTINS:
         safe_builtins[name] = __builtins__[name]
-
+    from .models.object import create_object
     env = dict(
         _apply_           = lambda f,*a,**kw: f(*a, **kw),
         _print_           = lambda x: _print_(),
@@ -127,6 +130,7 @@ def get_restricted_environment(writer):
         _unpack_sequence_ = guarded_unpack_sequence,
         __import__        = restricted_import,
         __builtins__      = safe_builtins,
+        create_object     = create_object,
     )
 
     return env
