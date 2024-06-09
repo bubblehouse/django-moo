@@ -1,4 +1,6 @@
+import asyncio
 import logging
+import pickle
 from asgiref.sync import sync_to_async
 
 from prompt_toolkit import ANSI
@@ -6,12 +8,14 @@ from prompt_toolkit.utils import DummyContext
 from prompt_toolkit.formatted_text import AnyFormattedText
 from prompt_toolkit.shortcuts import print_formatted_text
 from prompt_toolkit.output import ColorDepth
+from prompt_toolkit.application import run_in_terminal
 from ptpython.repl import PythonRepl
 from ptpython.prompt_style import PromptStyle
-
 from rich.console import Console
+from kombu import simple, Exchange, Queue
 
 from ..core import code, models, tasks
+from ..celery import app
 
 log = logging.getLogger(__name__)
 
@@ -48,8 +52,10 @@ def embed(
 
     # Start repl.
     async def coroutine() -> None:
-        with DummyContext():
-            await repl.run_async()
+        await asyncio.wait([asyncio.ensure_future(f()) for f in (
+            repl.run_async,
+            repl.process_messages
+        )])
 
     return coroutine()  # type: ignore
 
@@ -72,13 +78,42 @@ class CustomRepl(PythonRepl):
         self.enable_syntax_highlighting = False
         self.enable_input_validation = False
         self.complete_while_typing = False
+        self.repl_exit = False
+
+    async def run_async(self):
+        await super().run_async()
+        self.repl_exit = True
 
     def writer(self, s, is_error=False):
         console = Console(color_system="truecolor")
         with console.capture() as capture:
             console.print(s)
         content = capture.get()
-        print_formatted_text(ANSI(content), output=self.app.output)
+        print_formatted_text(ANSI(content))
+
+    async def process_messages(self) -> None:
+        await asyncio.sleep(1)
+        try:
+            log.debug(f"Scanning for messages for {self.user}")
+            with app.default_connection() as conn:
+                channel = conn.channel()
+                queue = Queue('messages', Exchange('moo', type='direct', channel=channel), f'user-{self.user.pk}', channel=channel)
+                while(True):
+                    if self.repl_exit:
+                        log.debug("REPL is exiting, stopping messages thread...")
+                        break
+                    sb = simple.SimpleBuffer(channel, queue, no_ack=True)
+                    try:
+                        msg = sb.get_nowait()
+                    except sb.Empty:
+                        await asyncio.sleep(1)
+                        continue
+                    if msg:
+                        content = pickle.loads(msg.body)
+                        await run_in_terminal(lambda: self.writer(content['message']))
+                    sb.close()
+        finally:
+            pass # cleanup
 
     @sync_to_async
     def eval_async(self, line: str) -> object:  # pylint: disable=invalid-overridden-method
