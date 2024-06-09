@@ -1,3 +1,10 @@
+## [0.23.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.22.0...v0.23.0) (2024-06-09)
+
+
+### Features
+
+* allow sending messages directly to a user ([444ce9a](https://gitlab.com/bubblehouse/django-moo/commit/444ce9a081b9fdbfc3fae3d27ab5388011cf878a))
+
 ## [0.22.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.21.0...v0.22.0) (2024-05-20)
 
 
