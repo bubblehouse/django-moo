@@ -1,3 +1,10 @@
+## [0.24.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.23.0...v0.24.0) (2024-06-10)
+
+
+### Features
+
+* simplified client code and removed Python REPL ([b035087](https://gitlab.com/bubblehouse/django-moo/commit/b0350870c9c4108025344ad32137fdbc9d921eb1))
+
 ## [0.23.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.22.0...v0.23.0) (2024-06-09)
 
 
