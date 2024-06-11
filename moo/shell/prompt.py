@@ -5,6 +5,7 @@ from asgiref.sync import sync_to_async
 
 from prompt_toolkit import ANSI
 from prompt_toolkit.shortcuts import print_formatted_text
+from prompt_toolkit.styles import Style
 from prompt_toolkit.application import run_in_terminal
 from prompt_toolkit.shortcuts.prompt import PromptSession
 from rich.console import Console
@@ -20,31 +21,55 @@ async def embed(
 ) -> None:
     repl = MooPrompt(user)
     await asyncio.wait([asyncio.ensure_future(f()) for f in (
-        repl.run_async,
+        repl.process_commands,
         repl.process_messages
     )])
 
 class MooPrompt:
+    style = Style.from_dict({
+        # User input (default text).
+        '':          '#ffffff',
+
+        # Prompt.
+        'name':     '#884444',
+        'at':       '#00aa00',
+        'colon':    '#0000aa',
+        'pound':    '#00aa00',
+        'location': '#00aa55',
+    })
+
     def __init__(self, user, *a, **kw):
         self.user = user
         self.is_exiting = False
 
-    async def run_async(self):
+    async def process_commands(self):
         prompt_session = PromptSession()
         try:
             while not self.is_exiting:
                 if self.is_exiting:
                     log.debug("REPL is exiting, stopping messages thread...")
                     break
-                line = await prompt_session.prompt_async("==> ")
-                await self.prompt_mud(line)
+                message = await self.generate_prompt()
+                line = await prompt_session.prompt_async(message, style=self.style)
+                await self.handle_command(line)
         except KeyboardInterrupt:
             self.is_exiting = True
         finally:
             pass
 
     @sync_to_async
-    def prompt_mud(self, line: str) -> object:
+    def generate_prompt(self):
+        caller = self.user.player.avatar
+        return [
+            ('class:name',     str(caller.name)),
+            ('class:at',       '@'),
+            ('class:location', str(caller.location.name)),
+            ('class:colon',    ':'),
+            ('class:pound',    '$ '),
+        ]
+
+    @sync_to_async
+    def handle_command(self, line: str) -> object:
         """
         Parse the command and execute it.
         """
