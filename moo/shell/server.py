@@ -17,6 +17,7 @@ async def interact(ssh_session: PromptToolkitSSHSession) -> None:
     log.info(f"{ssh_session.user} disconnected.")
 
 async def server(port=8022):
+    await asyncio.sleep(1)
     await asyncssh.create_server(
         lambda: SSHServer(interact),
         "",
