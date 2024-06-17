@@ -1,3 +1,16 @@
+## [0.25.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.24.0...v0.25.0) (2024-06-17)
+
+
+### Features
+
+* improved prompt, some refactoring ([3ec3b2d](https://gitlab.com/bubblehouse/django-moo/commit/3ec3b2d2fe07eabf9f07750c28443e47f2228d3f))
+
+
+### Bug Fixes
+
+* correctly handle ctrl-D ([b0558c7](https://gitlab.com/bubblehouse/django-moo/commit/b0558c7e38e4f0ad348e8455a613fb735de9fadc))
+* sleep before starting server to give time for the previous server port to be closed ([86b247b](https://gitlab.com/bubblehouse/django-moo/commit/86b247bed4c1cb75f7299c7d8fccc73708b1b820))
+
 ## [0.24.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.23.0...v0.24.0) (2024-06-10)
 
 
