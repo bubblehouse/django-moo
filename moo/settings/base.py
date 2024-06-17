@@ -224,7 +224,7 @@ LOGGING = {
         },
         'moo': {
             'handlers': ['console'],
-            'level': 'DEBUG',
+            'level': 'INFO',
         },
         'asyncssh': {
             'handlers': ['console'],
