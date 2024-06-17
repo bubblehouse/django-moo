@@ -46,16 +46,16 @@ class MooPrompt:
         prompt_session = PromptSession()
         try:
             while not self.is_exiting:
-                if self.is_exiting:
-                    log.debug("REPL is exiting, stopping messages thread...")
-                    break
                 message = await self.generate_prompt()
                 line = await prompt_session.prompt_async(message, style=self.style)
                 await self.handle_command(line)
+        except EOFError:
+            self.is_exiting = True
         except KeyboardInterrupt:
             self.is_exiting = True
-        finally:
-            pass
+        except:  # pylint: disable=bare-except
+            log.exception("Error in command processing")
+        log.debug("REPL is exiting, stopping main thread...")
 
     @sync_to_async
     def generate_prompt(self):
@@ -89,21 +89,21 @@ class MooPrompt:
 
     async def process_messages(self) -> None:
         await asyncio.sleep(1)
-        log.debug(f"Scanning for messages for {self.user}")
-        with app.default_connection() as conn:
-            channel = conn.channel()
-            queue = Queue('messages', Exchange('moo', type='direct', channel=channel), f'user-{self.user.pk}', channel=channel)
-            while not self.is_exiting:
-                if self.is_exiting:
-                    log.debug("REPL is exiting, stopping messages thread...")
-                    break
-                sb = simple.SimpleBuffer(channel, queue, no_ack=True)
-                try:
-                    msg = sb.get_nowait()
-                except sb.Empty:
-                    await asyncio.sleep(1)
-                    continue
-                if msg:
-                    content = pickle.loads(msg.body)
-                    await run_in_terminal(lambda: self.writer(content['message']))
-                sb.close()
+        try:
+            with app.default_connection() as conn:
+                channel = conn.channel()
+                queue = Queue('messages', Exchange('moo', type='direct', channel=channel), f'user-{self.user.pk}', channel=channel)
+                while not self.is_exiting:
+                    sb = simple.SimpleBuffer(channel, queue, no_ack=True)
+                    try:
+                        msg = sb.get_nowait()
+                    except sb.Empty:
+                        await asyncio.sleep(1)
+                        continue
+                    if msg:
+                        content = pickle.loads(msg.body)
+                        await run_in_terminal(lambda: self.writer(content['message']))
+                    sb.close()
+        except:  # pylint: disable=bare-except
+            log.exception("Stopping message processing")
+        log.debug("REPL is exiting, stopping messages thread...")
