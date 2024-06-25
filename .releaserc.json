@@ -133,7 +133,8 @@
           "pyproject.toml",
           "package.json",
           "package-lock.json",
-          "CHANGELOG.md"
+          "CHANGELOG.md",
+          "requirements.txt"
         ]
       }
     ],
