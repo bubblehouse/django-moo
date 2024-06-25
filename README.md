@@ -5,7 +5,8 @@
 ![pipeline](https://gitlab.com/bubblehouse/django-moo/badges/main/pipeline.svg?ignore_skipped=true&job=test)
 ![coverage](https://gitlab.com/bubblehouse/django-moo/badges/main/coverage.svg?job=test)
 ![quality](https://bubblehouse.gitlab.io/django-moo/badges/lint.svg)
-https://django-moo.readthedocs.io/en/latest/
+![docs](https://readthedocs.org/projects/django-moo/badge/?version=latest)
+
 moo is a game server for hosting text-based online MOO-like games.
 
 ## Quick Start
