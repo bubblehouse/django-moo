@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+Authentication support.
+"""
+
 from django.db import models
 from django.contrib.auth.models import User  # pylint: disable=imported-auth-user
 

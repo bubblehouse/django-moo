@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+Property model
+"""
+
 from django.db import models
 
 from .acl import AccessibleMixin

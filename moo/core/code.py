@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+Development support resources for MOO programs
+"""
+
 import contextvars
 import warnings
 import logging

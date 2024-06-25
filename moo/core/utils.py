@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+Useful global utilities.
+"""
+
 import warnings
 
 def apply_default_permissions(instance):

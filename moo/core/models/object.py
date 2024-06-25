@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+The primary Object class
+"""
+
 import logging
 
 from django.db import models

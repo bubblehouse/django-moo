@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+Custom Django forms used in Admin interface.
+"""
+
 from django import forms
 
 from django_ace import AceWidget
