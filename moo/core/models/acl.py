@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+Access control list functionality for Object, Verbs and Properties.
+"""
+
 import logging
 
 from django.db import models

@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+Celery Tasks for executing commands or raw Python code.
+"""
+
 import logging
 
 from django.db import transaction
