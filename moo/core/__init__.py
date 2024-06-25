@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+Core MOO functionality, object model, verbs.
+"""
+
 import logging
 
 from .code import context
