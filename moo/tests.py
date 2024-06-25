@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+Support resources for PyTest framework.
+"""
+
 import importlib.resources
 
 import pytest
