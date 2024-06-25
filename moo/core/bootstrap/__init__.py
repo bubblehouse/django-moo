@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+Support utilities for database boostrapping.
+"""
+
 import importlib.resources
 
 def get_source(filename, dataset='default'):

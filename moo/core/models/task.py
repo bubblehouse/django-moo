@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+Task model.
+"""
+
 from django.db import models
 
 class Task(models.Model):

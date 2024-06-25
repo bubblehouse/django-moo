@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+Verb model
+"""
+
 import logging
 
 from django.db import models
