@@ -16,7 +16,8 @@
 *.pyc
 *.sql
 *.sqlite
-chart/*
+docs/*
+extras/helm/*
 commitlint.config.js
 docker-compose.*
 node_modules/

@@ -17,3 +17,5 @@ node_modules
 .pytest_cache
 __pycache__
 .vscode
+docs/build/*
+docs/source/generated/*
