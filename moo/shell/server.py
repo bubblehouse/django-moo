@@ -27,6 +27,10 @@ async def server(port=8022):
     await asyncio.Future()
 
 class SSHServer(PromptToolkitSSHServer):
+    """
+    Create an SSH server for client access.
+    """
+
     def begin_auth(self, _: str) -> bool:
         return True
 

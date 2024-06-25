@@ -1,0 +1,6 @@
+blockquote div p {
+    color: #999;
+    font-style: italic;
+    border-left: 4px solid  #999;
+    padding-left: 5px;
+}
