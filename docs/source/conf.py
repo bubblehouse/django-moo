@@ -24,6 +24,7 @@ author = 'Phil Christensen'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
+    'sphinx.ext.intersphinx',
     'myst_parser',
     'sphinx_rtd_theme',
     'sphinx_autodoc_typehints',
@@ -36,7 +37,20 @@ source_suffix = {
 
 templates_path = ['_templates']
 exclude_patterns = []
+
 autosummary_generate = True
+
+intersphinx_mapping = {
+    "django": ("https://django.readthedocs.io/en/5.0/", None),
+}
+
+# We recommend adding the following config value.
+# Sphinx defaults to automatically resolve *unresolved* labels using all your Intersphinx mappings.
+# This behavior has unintended side-effects, namely that documentations local references can
+# suddenly resolve to an external location.
+# See also:
+# https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html#confval-intersphinx_disabled_reftypes
+intersphinx_disabled_reftypes = ["*"]
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
