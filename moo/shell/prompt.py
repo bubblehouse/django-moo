@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+Prompt-Toolkit interface
+"""
+
 import asyncio
 import logging
 import pickle
