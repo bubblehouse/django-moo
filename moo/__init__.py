@@ -12,6 +12,6 @@ __version__ = "0.25.0"
 
 def get_version():
     """
-    Get the current version of Django-MOO.
+    Get the current version of DjangoMOO.
     """
     return __version__

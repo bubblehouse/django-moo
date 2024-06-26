@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Core entity models for Django-MOO
+Core entity models for DjangoMOO
 """
 
 from .verb import AccessibleVerb as Verb, VerbName, Repository, URLField
