@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, os.path.abspath("../.."))
 os.environ["DJANGO_SETTINGS_MODULE"] = "moo.settings.local"
 
-import django
+import django  # pylint: disable=wrong-import-position
 django.setup()
 
 # -- Project information -----------------------------------------------------
@@ -26,6 +26,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'myst_parser',
     'sphinx_rtd_theme',
+    'sphinx_autodoc_typehints',
 ]
 
 source_suffix = {
@@ -35,8 +36,7 @@ source_suffix = {
 
 templates_path = ['_templates']
 exclude_patterns = []
-
-
+autosummary_generate = True
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
