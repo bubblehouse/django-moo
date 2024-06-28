@@ -21,3 +21,21 @@ The best way to invoke another verb (as a method) from a running verb is with:
 This works basically the same in DjangoMOO verb code because all verbs are built with RestrictedPython's `compile_restricted_function` feature, and run inside a Python function definition.
 
 ### Handling Verb Errors
+
+DjangoMOO defines a number of custom exceptions:
+
+```{eval-rst}
+.. py:currentmodule:: moo.core.exceptions
+.. autoclass:: UsageError
+.. autoclass:: UserError
+.. autoclass:: AccessError
+.. autoclass:: AmbiguousObjectError
+.. autoclass:: AmbiguousVerbError
+.. autoclass:: ExecutionError
+.. autoclass:: NoSuchObjectError
+.. autoclass:: NoSuchPrepositionError
+.. autoclass:: NoSuchPropertyError
+.. autoclass:: NoSuchVerbError
+.. autoclass:: QuotaError
+.. autoclass:: RecursiveError
+```
