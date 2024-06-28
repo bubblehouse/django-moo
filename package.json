@@ -1,6 +1,6 @@
 {
   "name": "django-moo",
-  "version": "0.25.0",
+  "version": "0.25.1",
   "description": "Create your own text-based universe.",
   "devDependencies": {
     "@alexbabel/semantic-release-docker": "",
