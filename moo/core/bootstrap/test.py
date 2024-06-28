@@ -4,7 +4,7 @@ import warnings
 from django.conf import settings
 
 from moo.core import models, bootstrap, code
-from moo.core.models.object import create_object
+from moo.core import create_object
 
 log = logging.getLogger(__name__)
 

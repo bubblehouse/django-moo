@@ -6,6 +6,7 @@ The primary Object class
 import logging
 
 from django.db import models
+from django.db.models.query import QuerySet
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
 
@@ -17,14 +18,6 @@ from .verb import AccessibleVerb, VerbName
 from .property import AccessibleProperty
 
 log = logging.getLogger(__name__)
-
-def create_object(name, *a, **kw):
-    kw['name'] = name
-    if 'owner' not in kw:
-        kw['owner'] =  context.get('caller')
-    if 'location' not in kw and kw['owner']:
-        kw['location'] = kw['owner'].location
-    return AccessibleObject.objects.create(*a, **kw)
 
 @receiver(m2m_changed)
 def relationship_changed(sender, instance, action, model, signal, reverse, pk_set, using, **kwargs):
@@ -72,7 +65,12 @@ class Object(models.Model, AccessibleMixin):
     def kind(self):
         return 'object'
 
-    def find(self, name):
+    def find(self, name: str) -> QuerySet:
+        """
+        Find contents by the given name or alias.
+
+        :param name: the name or alias to search for, case-insensitive
+        """
         self.can_caller('read', self)
         qs = AccessibleObject.objects.filter(location=self, name__iexact=name)
         aliases = AccessibleObject.objects.filter(location=self, aliases__alias__iexact=name)
