@@ -1,3 +1,10 @@
+## [0.25.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.25.0...v0.25.1) (2024-06-28)
+
+
+### Bug Fixes
+
+* consolidate custom verb functions in moo.core ([e3c9329](https://gitlab.com/bubblehouse/django-moo/commit/e3c9329a1e93417eb9eda886e5ddbc4bd37729ce))
+
 ## [0.25.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.24.0...v0.25.0) (2024-06-17)
 
 
