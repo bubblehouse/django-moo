@@ -4,6 +4,7 @@ The primary Object class
 """
 
 import logging
+from typing import Generator
 
 from django.db import models
 from django.db.models.query import QuerySet
@@ -65,7 +66,7 @@ class Object(models.Model, AccessibleMixin):
     def kind(self):
         return 'object'
 
-    def find(self, name: str) -> QuerySet:
+    def find(self, name: str) -> 'QuerySet[AccessibleObject]':
         """
         Find contents by the given name or alias.
 
@@ -76,7 +77,7 @@ class Object(models.Model, AccessibleMixin):
         aliases = AccessibleObject.objects.filter(location=self, aliases__alias__iexact=name)
         return qs.union(aliases)
 
-    def get_ancestors(self):
+    def get_ancestors(self) -> Generator['AccessibleObject', None, None]:
         """
         Get the ancestor tree for this object.
         """
@@ -86,7 +87,7 @@ class Object(models.Model, AccessibleMixin):
             yield parent
             yield from parent.get_ancestors()
 
-    def get_descendents(self):
+    def get_descendents(self) -> Generator['AccessibleObject', None, None]:
         """
         Get the descendent tree for this object.
         """
