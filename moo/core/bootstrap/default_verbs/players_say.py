@@ -1,4 +1,4 @@
-from moo.core import api
+from moo.core import api, message_user
 
 if not api.parser.has_dobj_str():
     print("What do you want to say?")
