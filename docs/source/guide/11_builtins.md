@@ -5,6 +5,17 @@
 .. autofunction:: moo.core.message_user()
 ```
 
+## Object Attributes
+```{eval-rst}
+.. py:currentmodule:: moo.core.models
+.. autoattribute:: Object.name
+.. autoattribute:: Object.unique_name
+.. autoattribute:: Object.obvious
+.. autoattribute:: Object.owner
+.. autoattribute:: Object.parents
+.. autoattribute:: Object.location
+```
+
 ## Object Methods
 ```{eval-rst}
 .. py:currentmodule:: moo.core.models
@@ -19,17 +30,6 @@
 .. automethod:: Object.get_property()
 .. automethod:: Object.is_allowed()
 .. automethod:: Object.owns()
-```
-
-## Object Attributes
-```{eval-rst}
-.. py:currentmodule:: moo.core.models
-.. autoattribute:: Object.name
-.. autoattribute:: Object.unique_name
-.. autoattribute:: Object.obvious
-.. autoattribute:: Object.owner
-.. autoattribute:: Object.location
-.. autoattribute:: Object.parents
 ```
 
 ## Property Attributes

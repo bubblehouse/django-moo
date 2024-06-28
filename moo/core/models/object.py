@@ -52,12 +52,45 @@ def relationship_changed(sender, instance, action, model, signal, reverse, pk_se
             )
 
 class Object(models.Model, AccessibleMixin):
-    name = models.CharField(max_length=255)
-    unique_name = models.BooleanField(default=False)
-    obvious = models.BooleanField(default=True)
+    name = models.CharField(max_length=255) # The canonical name of the object
+    unique_name = models.BooleanField(default=False) # If True, this object is the only object with this name
+    obvious = models.BooleanField(default=True) # This object should be obvious among a group
     owner = models.ForeignKey('self', related_name='+', blank=True, null=True, on_delete=models.SET_NULL,)
-    location = models.ForeignKey('self', related_name='contents', blank=True, null=True, on_delete=models.SET_NULL)
+    """
+    The owner of this object.
+    """
     parents = models.ManyToManyField('self', related_name='children', blank=True, symmetrical=False, through='Relationship')
+    """
+    The parents of this object.
+    """
+    location = models.ForeignKey('self', related_name='contents', blank=True, null=True, on_delete=models.SET_NULL)
+    """
+    The location of this object. When changing, this kicks off some other verbs:
+
+    If where is a valid object, then the verb-call
+
+        where:accept(what)
+
+    is performed before any movement takes place. If the verb returns a false value and the programmer is not a wizard,
+    then where is considered to have refused entrance to what; move() raises E_NACC. If where does not define an accept
+    verb, then it is treated as if it defined one that always returned false.
+
+    If moving what into where would create a loop in the containment hierarchy (i.e., what would contain itself, even
+    indirectly), then E_RECMOVE is raised instead.
+
+    The `location` property of what is changed to be where, and the `contents` properties of the old and new locations
+    are modified appropriately. Let old-where be the location of what before it was moved. If old-where is a valid object,
+    then the verb-call
+
+        old-where:exitfunc(what)
+
+    is performed and its result is ignored; it is not an error if old-where does not define a verb named `exitfunc`.
+    Finally, if where and what are still valid objects, and where is still the location of what, then the verb-call
+
+        where:enterfunc(what)
+
+    is performed and its result is ignored; again, it is not an error if where does not define a verb named `enterfunc`.
+    """
 
     def __str__(self):
         return "#%s (%s)" % (self.id, self.name)
