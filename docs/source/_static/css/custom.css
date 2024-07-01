@@ -7,3 +7,10 @@ blockquote {
     border-left: 4px solid  #999;
     padding-left: 5px;
 }
+
+cite {
+    font-family: 'Courier New', Courier, monospace;
+    background-color: #ddd;
+    font-style: normal;
+    padding: 3px;
+}
