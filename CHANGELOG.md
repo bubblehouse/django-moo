@@ -1,3 +1,10 @@
+## [0.25.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.25.1...v0.25.2) (2024-07-02)
+
+
+### Bug Fixes
+
+* fixed use of args/kwargs with multiple verb invocations ([f7711e1](https://gitlab.com/bubblehouse/django-moo/commit/f7711e1dea22faa1bc971f18b59ba003a832d7c1))
+
 ## [0.25.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.25.0...v0.25.1) (2024-06-28)
 
 
