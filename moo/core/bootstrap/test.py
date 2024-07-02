@@ -46,6 +46,7 @@ with code.context(wizard, log.info):
     players = create_object('player class', location=book)
     players.add_verb("look", "inspect", filename="players_look.py", repo=repo, ability=True, method=True)
     players.add_verb("test-args", filename="players_test_args.py", repo=repo, ability=True, method=True)
+    players.add_verb("test-nested-verbs", filename="players_test_nested_verbs.py", repo=repo, ability=True, method=True)
     guests = create_object('guest class', location=book)
     guests.parents.add(players)
     authors = create_object('author class', location=book)

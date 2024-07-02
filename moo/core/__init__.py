@@ -41,7 +41,7 @@ def create_object(name,  *a, owner=None, location=None, parent=None, **kw):
         name=name,
         location=location,
         owner=owner,
-        parent=parent,
+        # parent=parent,
         *a, **kw
     )
 
@@ -94,8 +94,6 @@ class API:
 
     caller = descriptor('caller')  # The user object that invoked this code
     writer = descriptor('writer')  # A callable that will print to the caller's console
-    args = descriptor('args')
-    kwargs = descriptor('kwargs')
     parser = descriptor('parser')
 
 api = API()
