@@ -35,4 +35,14 @@ def test_args_is_not_null_when_using_eval(t_init: Object, t_wizard: Object):
     verb = Verb.objects.filter(names__name="test-args")
     with code.context(t_wizard, _writer):
         code.interpret(verb[0].code)
-    assert printed == ["METHOD"]
+    assert printed == ["METHOD:():{}"]
+
+@pytest.mark.django_db
+def test_args_when_calling_multiple_verbs(t_init: Object, t_wizard: Object):
+    printed = []
+    def _writer(msg):
+        printed.append(msg)
+    # TODO: this needs to test a verb calling a verb, not doing this
+    with code.context(t_wizard, _writer):
+        parse.interpret("test-nested-verbs")
+    assert printed == list(range(1, 11))
