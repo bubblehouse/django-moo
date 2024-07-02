@@ -17,14 +17,12 @@ log = logging.getLogger(__name__)
 
 def interpret(source, *args, runtype="exec", **kwargs):
     from . import api
-    api.args = args
-    api.kwargs = kwargs
     globals = get_default_globals()  # pylint: disable=redefined-builtin
     globals.update(get_restricted_environment(api.writer))
     if runtype == 'exec':
-        return r_exec(source, {}, globals)
+        return r_exec(source, {}, globals, *args, **kwargs)
     else:
-        return r_eval(source, {}, globals)
+        return r_eval(source, {}, globals, *args, **kwargs)
 
 def compile_verb_code(body, filename):
     """
@@ -33,22 +31,22 @@ def compile_verb_code(body, filename):
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', category=SyntaxWarning)
         result = compile_restricted_function(
-            p = "",
+            p = "*args, **kwargs",
             body = body,
             name = "verb",
             filename = filename
         )
     return result
 
-def r_eval(src, locals, globals, filename='<string>'):  # pylint: disable=redefined-builtin
+def r_eval(src, locals, globals, *args, filename='<string>', **kwargs):  # pylint: disable=redefined-builtin
     code = compile_verb_code(src, filename)
-    return do_eval(code, locals, globals, filename, runtype='eval')
+    return do_eval(code, locals, globals, *args, filename=filename, runtype='eval', **kwargs)
 
-def r_exec(src, locals, globals, filename='<string>'):  # pylint: disable=redefined-builtin
+def r_exec(src, locals, globals, *args, filename='<string>', **kwargs):  # pylint: disable=redefined-builtin
     code = compile_verb_code(src, filename)
-    return do_eval(code, locals, globals, filename, runtype='exec')
+    return do_eval(code, locals, globals, *args, filename=filename, runtype='exec', **kwargs)
 
-def do_eval(code, locals, globals, filename='<string>', runtype='eval'):  # pylint: disable=redefined-builtin
+def do_eval(code, locals, globals, *args, filename='<string>', runtype='eval', **kwargs):  # pylint: disable=redefined-builtin
     """
     Execute an expression in the provided environment.
     """
@@ -61,7 +59,7 @@ def do_eval(code, locals, globals, filename='<string>', runtype='eval'):  # pyli
     else:
         exec(code.code, globals, locals)  # pylint: disable=exec-used
         compiled_function = locals['verb']
-        value = compiled_function(*[], **{})
+        value = compiled_function(*args, **kwargs)
     return value
 
 def get_default_globals():
@@ -164,5 +162,3 @@ class context:
         api.caller = None
         api.writer = None
         api.parser = None
-        api.args = None
-        api.kwargs = None
