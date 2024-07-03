@@ -52,19 +52,19 @@ def relationship_changed(sender, instance, action, model, signal, reverse, pk_se
             )
 
 class Object(models.Model, AccessibleMixin):
-    name = models.CharField(max_length=255) # The canonical name of the object
-    unique_name = models.BooleanField(default=False) # If True, this object is the only object with this name
-    obvious = models.BooleanField(default=True) # This object should be obvious among a group
+    #: The canonical name of the object
+    name = models.CharField(max_length=255)
+    #: If True, this object is the only object with this name
+    unique_name = models.BooleanField(default=False)
+    #: This object should be obvious among a group
+    obvious = models.BooleanField(default=True)
+    #: The owner of this object.
     owner = models.ForeignKey('self', related_name='+', blank=True, null=True, on_delete=models.SET_NULL,)
-    """
-    The owner of this object.
-    """
+    #: The parents of this object.
     parents = models.ManyToManyField('self', related_name='children', blank=True, symmetrical=False, through='Relationship')
-    """
-    The parents of this object.
-    """
     location = models.ForeignKey('self', related_name='contents', blank=True, null=True, on_delete=models.SET_NULL)
     """
+    [`TODO <https://gitlab.com/bubblehouse/django-moo/-/issues/12>`_]
     The location of this object. When changing, this kicks off some other verbs:
 
     If where is a valid object, then the verb-call
@@ -72,11 +72,11 @@ class Object(models.Model, AccessibleMixin):
         where:accept(what)
 
     is performed before any movement takes place. If the verb returns a false value and the programmer is not a wizard,
-    then where is considered to have refused entrance to what; move() raises E_NACC. If where does not define an accept
+    then where is considered to have refused entrance to what; move() raises :class:`.PermissionError`. If where does not define an accept
     verb, then it is treated as if it defined one that always returned false.
 
     If moving what into where would create a loop in the containment hierarchy (i.e., what would contain itself, even
-    indirectly), then E_RECMOVE is raised instead.
+    indirectly), then :class:`.RecursiveError` is raised instead.
 
     The `location` property of what is changed to be where, and the `contents` properties of the old and new locations
     are modified appropriately. Let old-where be the location of what before it was moved. If old-where is a valid object,

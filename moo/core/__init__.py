@@ -9,12 +9,12 @@ from .code import context
 
 log = logging.getLogger(__name__)
 
-def create_object(name,  *a, owner=None, location=None, parent=None, **kw):
+def create_object(name,  *a, owner=None, location=None, parents=None, **kw):
     """
     [`TODO <https://gitlab.com/bubblehouse/django-moo/-/issues/11>`_]
     Creates and returns a new object whose parent is `parent` and whose owner is as described below.
     Either the given `parent` object must be None or a valid object with `derive` permission,
-    or else the programmer must own parent or be a wizard; otherwise E_PERM is raised. E_PERM is
+    or else the programmer must own parent or be a wizard; otherwise :class:`.PermissionError` is raised. :class:`.PermissionError` is
     also raised if owner is provided and not the same as the programmer, unless the programmer is a
     wizard. After the new object is created, its `initialize` verb, if any, is called with no arguments.
 
@@ -27,13 +27,22 @@ def create_object(name,  *a, owner=None, location=None, parent=None, **kw):
     of the property on the new object is the same as that on parent.
 
     If the intended owner of the new object has a property named `ownership_quota` and the value of that
-    property is an integer, then create_object() treats that value as a quota. If the quota is less than
-    or equal to zero, then the quota is considered to be exhausted and create() raises E_QUOTA instead
+    property is an integer, then `create_object()` treats that value as a quota. If the quota is less than
+    or equal to zero, then the quota is considered to be exhausted and `create_object()` raises :class:`.QuotaError` instead
     of creating an object. Otherwise, the quota is decremented and stored back into the `ownership_quota`
     property as a part of the creation of the new object.
+
+    :param name: canonical name
+    :type name: str
+    :param owner: owner of the Object being created
+    :type owner: Object
+    :param location: where to create the Object
+    :type location: Object
+    :param parents: a list of parents for the Object
+    :type parents: list(Object)
     """
     if owner is None:
-        owner =  context.get('caller')
+        owner = context.get('caller')
     if location is None and owner:
         location = owner.location
     from .models.object import AccessibleObject
@@ -50,7 +59,9 @@ def message_user(user_obj, message):
     Send a asynchronous message to the user.
 
     :param user_obj: the Object of the User to message
+    :type location: Object
     :param message: any pickle-able object
+    :type message: Any
     """
     from .models.auth import Player
     try:
@@ -72,7 +83,7 @@ def message_user(user_obj, message):
                 retry=True,
             )
 
-class API:
+class _API:
     """
     This wrapper class makes it easy to use a number of contextvars.
     """
@@ -96,4 +107,4 @@ class API:
     writer = descriptor('writer')  # A callable that will print to the caller's console
     parser = descriptor('parser')
 
-api = API()
+api = _API()
