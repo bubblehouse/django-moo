@@ -14,12 +14,11 @@ def create_object(name,  *a, owner=None, location=None, parents=None, **kw):
     [`TODO <https://gitlab.com/bubblehouse/django-moo/-/issues/11>`_]
     Creates and returns a new object whose parent is `parent` and whose owner is as described below.
     Either the given `parent` object must be None or a valid object with `derive` permission,
-    or else the programmer must own parent or be a wizard; otherwise :class:`.PermissionError` is raised. :class:`.PermissionError` is
-    also raised if owner is provided and not the same as the programmer, unless the programmer is a
-    wizard. After the new object is created, its `initialize` verb, if any, is called with no arguments.
+    otherwise :class:`.PermissionError` is raised. After the new object is created, its `initialize`
+    verb, if any, is called with no arguments.
 
     The owner of the new object is either the programmer (if `owner` is not provided), the new object
-    itself (if owner was given as None), or owner (otherwise).
+    itself (if owner was given as None), or the provided owner.
 
     In addition, the new object inherits all of the other properties on `parent`. These properties have
     the same permission bits as on `parent`. If the `inherit` permission bit is set, then the owner of the
@@ -40,6 +39,10 @@ def create_object(name,  *a, owner=None, location=None, parents=None, **kw):
     :type location: Object
     :param parents: a list of parents for the Object
     :type parents: list(Object)
+    :return: the new object
+    :rtype: Object
+    :raises PermissionError: if the caller is not allowed to `derive` from the parent
+    :raises QuotaError: if the caller has a quota and it has been exceeded
     """
     if owner is None:
         owner = context.get('caller')
@@ -56,7 +59,7 @@ def create_object(name,  *a, owner=None, location=None, parents=None, **kw):
 
 def message_user(user_obj, message):
     """
-    Send a asynchronous message to the user.
+    Send an asynchronous message to the user.
 
     :param user_obj: the Object of the User to message
     :type location: Object
