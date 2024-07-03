@@ -90,7 +90,7 @@ class Object(models.Model, AccessibleMixin):
     def kind(self):
         return 'object'
 
-    def find(self, name: str) -> 'QuerySet[AccessibleObject]':
+    def find(self, name: str) -> 'QuerySet["Object"]':
         """
         Find contents by the given name or alias.
 
@@ -101,7 +101,7 @@ class Object(models.Model, AccessibleMixin):
         aliases = AccessibleObject.objects.filter(location=self, aliases__alias__iexact=name)
         return qs.union(aliases)
 
-    def get_ancestors(self) -> Generator['AccessibleObject', None, None]:
+    def get_ancestors(self) -> Generator["Object", None, None]:
         """
         Get the ancestor tree for this object.
         """
@@ -111,7 +111,7 @@ class Object(models.Model, AccessibleMixin):
             yield parent
             yield from parent.get_ancestors()
 
-    def get_descendents(self) -> Generator['AccessibleObject', None, None]:
+    def get_descendents(self) -> Generator["Object", None, None]:
         """
         Get the descendent tree for this object.
         """
@@ -121,7 +121,18 @@ class Object(models.Model, AccessibleMixin):
             yield child
             yield from child.get_descendents()
 
-    def add_verb(self, *names, code=None, owner=None, repo=None, filename=None, ability=False, method=False):
+    def add_verb(self, *names:list[str], code:str=None, owner:"Object"=None, repo=None, filename:str=None, ability:bool=False, method:bool=False):
+        """
+        Defines a new :class:`.Verb` on the given object.
+
+        :param names: a list of names for the new verb
+        :param code: the Python code for the new Verb
+        :param owner: the owner of the Verb being created
+        :param repo: optional, the Git repo this code is from
+        :param filename: optional, the name of the code file within the repo
+        :param ability: if True, this verb can only be used by the object it is defined on
+        :param method: if True, this verb can be invoked by other verbs
+        """
         self.can_caller('write', self)
         owner = context.get('caller') or owner or self
         if filename:
@@ -140,13 +151,27 @@ class Object(models.Model, AccessibleMixin):
                 verb=verb,
                 name=name
             ))
+        return verb
 
     def invoke_verb(self, name, *args, **kwargs):
+        """
+        Invoke a :class:`.Verb` defined on the given object, traversing the inheritance tree until it's found.
+
+        :param name: the name of the verb
+        :param args: positional arguments for the verb
+        :param kwargs: keyword arguments for the verb
+        """
         qs = self._lookup_verb(name, recurse=True)
         self.can_caller('execute', qs[0])
         return qs[0](*args, **kwargs)
 
     def has_verb(self, name, recurse=True):
+        """
+        Check if a particular :class:`.Verb` is defined on this object.
+
+        :param name: the name of the verb
+        :param recurse: whether or not to traverse the inheritance tree
+        """
         self.can_caller('read', self)
         try:
             self._lookup_verb(name, recurse)
@@ -155,6 +180,12 @@ class Object(models.Model, AccessibleMixin):
         return True
 
     def get_verb(self, name, recurse=True):
+        """
+        Retrieve a specific :class:`.Verb` instance defined on this Object.
+
+        :param name: the name of the verb
+        :param recurse: whether or not to traverse the inheritance tree
+        """
         self.can_caller('read', self)
         qs = self._lookup_verb(name, recurse)
         if len(qs) > 1:
@@ -174,6 +205,14 @@ class Object(models.Model, AccessibleMixin):
             raise AccessibleVerb.DoesNotExist(f"No such verb `{name}`.")
 
     def set_property(self, name, value, inherited=False, owner=None):
+        """
+        Defines a new :class:`.Property` on the given object.
+
+        :param names: a list of names for the new Property
+        :param value: the value code for the new Property
+        :param inherited: if True, this property's owner will be reassigned on child instances
+        :param owner: the owner of the Property being created
+        """
         self.can_caller('write', self)
         owner = context.get('caller') or owner or self
         AccessibleProperty.objects.update_or_create(
@@ -188,6 +227,13 @@ class Object(models.Model, AccessibleMixin):
         )
 
     def get_property(self, name, recurse=True, original=False):
+        """
+        Retrieve a :class:`.Property` instance defined on this Object.
+
+        :param name: the name of the verb
+        :param recurse: whether or not to traverse the inheritance tree
+        :param original: if True, return the whole Property object, not just its value
+        """
         self.can_caller('read', self)
         qs = AccessibleProperty.objects.filter(origin=self, name=name)
         if not qs and recurse:
