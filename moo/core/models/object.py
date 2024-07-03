@@ -56,40 +56,31 @@ class Object(models.Model, AccessibleMixin):
     name = models.CharField(max_length=255)
     #: If True, this object is the only object with this name
     unique_name = models.BooleanField(default=False)
-    #: This object should be obvious among a group
+    #: This object should be obvious among a group. The meaning of this value is database-dependent.
     obvious = models.BooleanField(default=True)
-    #: The owner of this object.
+    #: The owner of this object. Changes require `entrust` permission.
     owner = models.ForeignKey('self', related_name='+', blank=True, null=True, on_delete=models.SET_NULL,)
-    #: The parents of this object.
+    #: The parents of this object. Changes require `derive` and `transmute` permissions, respectively
     parents = models.ManyToManyField('self', related_name='children', blank=True, symmetrical=False, through='Relationship')
     location = models.ForeignKey('self', related_name='contents', blank=True, null=True, on_delete=models.SET_NULL)
     """
     [`TODO <https://gitlab.com/bubblehouse/django-moo/-/issues/12>`_]
     The location of this object. When changing, this kicks off some other verbs:
 
-    If where is a valid object, then the verb-call
+    If `where` is the new object, then the verb-call `where.accept(self)` is performed before any movement takes place.
+    If the verb returns a false value and the programmer is not a wizard, then `where` is considered to have refused entrance
+    to `self` and raises :class:`.PermissionError`. If `where` does not define an `accept` verb, then it is treated as if
+    it defined one that always returned false.
 
-        where:accept(what)
-
-    is performed before any movement takes place. If the verb returns a false value and the programmer is not a wizard,
-    then where is considered to have refused entrance to what; move() raises :class:`.PermissionError`. If where does not define an accept
-    verb, then it is treated as if it defined one that always returned false.
-
-    If moving what into where would create a loop in the containment hierarchy (i.e., what would contain itself, even
+    If moving `what` into `self` would create a loop in the containment hierarchy (i.e., what would contain itself, even
     indirectly), then :class:`.RecursiveError` is raised instead.
 
-    The `location` property of what is changed to be where, and the `contents` properties of the old and new locations
-    are modified appropriately. Let old-where be the location of what before it was moved. If old-where is a valid object,
-    then the verb-call
+    Let `old-where` be the location of `self` before it was moved. If `old-where` is a valid object, then the verb-call
+    `old-where:exitfunc(self)` is performed and its result is ignored; it is not an error if `old-where` does not define
+    a verb named `exitfunc`.
 
-        old-where:exitfunc(what)
-
-    is performed and its result is ignored; it is not an error if old-where does not define a verb named `exitfunc`.
-    Finally, if where and what are still valid objects, and where is still the location of what, then the verb-call
-
-        where:enterfunc(what)
-
-    is performed and its result is ignored; again, it is not an error if where does not define a verb named `enterfunc`.
+    Finally, if `where` is still the location of `self`, then the verb-call `where:enterfunc(self)` is performed and its
+    result is ignored; again, it is not an error if `where` does not define a verb named `enterfunc`.
     """
 
     def __str__(self):
