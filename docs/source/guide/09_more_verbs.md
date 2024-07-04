@@ -32,10 +32,7 @@ DjangoMOO defines a number of custom exceptions:
 .. autoclass:: AmbiguousObjectError
 .. autoclass:: AmbiguousVerbError
 .. autoclass:: ExecutionError
-.. autoclass:: NoSuchObjectError
 .. autoclass:: NoSuchPrepositionError
-.. autoclass:: NoSuchPropertyError
-.. autoclass:: NoSuchVerbError
 .. autoclass:: QuotaError
 .. autoclass:: RecursiveError
 ```

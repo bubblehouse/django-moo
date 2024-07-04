@@ -14,7 +14,7 @@ import logging
 
 from django.db.models.query import QuerySet
 
-from .models import Object
+from .models import Object, Verb
 from .exceptions import *  # pylint: disable=wildcard-import
 
 log = logging.getLogger(__name__)
@@ -297,7 +297,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             Direct Object->Objects of the Preposition
         """
         if not(self.words):
-            raise NoSuchVerbError('parser: ' + self.command)
+            raise Verb.DoesNotExist(self.command)
 
         if(getattr(self, 'verb', None) is not None):
             return self.verb
@@ -329,7 +329,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
                 self.this = self.this[0]
 
         if not(self.this):
-            raise NoSuchVerbError('parser: ' + verb_str)
+            raise Verb.DoesNotExist('parser: ' + verb_str)
 
         #print "Verb found on: " + str(self.this)
         self.verb = self.this.get_verb(self.words[0], recurse=True)
@@ -371,7 +371,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         direct object found, raise a NoSuchObjectError
         """
         if not(self.dobj):
-            raise NoSuchObjectError(self.dobj_str)
+            raise Object.DoesNotExist(self.dobj_str)
         return self.dobj
 
     def get_pobj(self, prep):
@@ -389,7 +389,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         if(len(matches) > 1):
             raise AmbiguousObjectError(matches[0][1], matches)
         if not(matches):
-            raise NoSuchObjectError(self.prepositions[prep][0][1])
+            raise Object.DoesNotExist(self.prepositions[prep][0][1])
         return self.prepositions[prep][0][2]
 
     def get_dobj_str(self):
@@ -398,7 +398,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         direct object **string** found, raise a NoSuchObjectError
         """
         if not(self.dobj_str):
-            raise NoSuchObjectError('direct object')
+            raise Object.DoesNotExist('direct object')
         return self.dobj_str
 
     def get_pobj_str(self, prep, return_list=False):
@@ -419,7 +419,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             else:
                 raise matches[0]
         elif not(matches):
-            raise NoSuchObjectError(self.prepositions[prep][0][1])
+            raise Object.DoesNotExist(self.prepositions[prep][0][1])
         return self.prepositions[prep][0][1]
 
     def get_pobj_spec_str(self, prep, return_list=False):
