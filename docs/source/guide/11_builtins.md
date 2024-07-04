@@ -1,6 +1,7 @@
 # Built-in Functions
 ```{eval-rst}
 .. py:currentmodule:: moo.core
+.. autofunction:: moo.core.lookup()
 .. autofunction:: moo.core.create_object()
 .. autofunction:: moo.core.message_user()
 ```
