@@ -4,10 +4,33 @@ Core MOO functionality, object model, verbs.
 """
 
 import logging
+from typing import Union
 
 from .code import context
 
 log = logging.getLogger(__name__)
+
+def lookup(x:Union[int, str]):
+    """
+    Lookup an object globally by PK, name, or alias.
+
+    :param x: lookup value
+    :return: the result of the lookup
+    :rtype: Object
+    :raises Object.DoesNotExist: when a result cannot be found
+    """
+    from .models import Object
+    if isinstance(x, int):
+        return Object.objects.get(pk=x)
+    elif isinstance(x, str):
+        qs = Object.objects.filter(name__iexact=x)
+        aliases = Object.objects.filter(aliases__alias__iexact=x)
+        qs = qs.union(aliases)
+        if not qs:
+            raise Object.DoesNotExist(x)
+        return qs[0]
+    else:
+        raise ValueError(f"{x} is not a supported lookup value.")
 
 def create_object(name,  *a, owner=None, location=None, parents=None, **kw):
     """
@@ -38,7 +61,7 @@ def create_object(name,  *a, owner=None, location=None, parents=None, **kw):
     :param location: where to create the Object
     :type location: Object
     :param parents: a list of parents for the Object
-    :type parents: list(Object)
+    :type parents: list[Object]
     :return: the new object
     :rtype: Object
     :raises PermissionError: if the caller is not allowed to `derive` from the parent
