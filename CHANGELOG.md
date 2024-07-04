@@ -1,3 +1,10 @@
+## [0.25.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.25.2...v0.25.3) (2024-07-04)
+
+
+### Bug Fixes
+
+* added missing lookup() function ([fb41cc6](https://gitlab.com/bubblehouse/django-moo/commit/fb41cc6e404ec6e2c0b979ddd0a665893a72085a))
+
 ## [0.25.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.25.1...v0.25.2) (2024-07-02)
 
 
