@@ -14,11 +14,11 @@ def test_parse_imperative_command(t_init: Object, t_wizard: Object):
     assert not parser.has_dobj(), "unexpected object found for dobj"
     assert not parser.has_dobj_str(), "unexpected string found for dobj"
     assert not parser.prepositions, "unexpected prepositional objects found"
-    with pytest.raises(exceptions.NoSuchObjectError):
+    with pytest.raises(Object.DoesNotExist):
         parser.get_dobj()
     with pytest.raises(exceptions.NoSuchPrepositionError):
         parser.get_pobj("on")
-    with pytest.raises(exceptions.NoSuchObjectError):
+    with pytest.raises(Object.DoesNotExist):
         parser.get_dobj_str()
     with pytest.raises(exceptions.NoSuchPrepositionError):
         parser.get_pobj_str("on")
@@ -47,11 +47,11 @@ def test_parse_object_of_the_preposition(t_init: Object, t_wizard: Object):
     assert not parser.has_dobj_str(), "unexpected string found for dobj"
     assert parser.has_pobj_str('through'), "no prepositional object string found for 'through'"
     assert not parser.has_pobj('through'), "no prepositional object found for 'through'"
-    with pytest.raises(exceptions.NoSuchObjectError):
+    with pytest.raises(Object.DoesNotExist):
         parser.get_dobj()
-    with pytest.raises(exceptions.NoSuchObjectError):
+    with pytest.raises(Object.DoesNotExist):
         parser.get_pobj("through")
-    with pytest.raises(exceptions.NoSuchObjectError):
+    with pytest.raises(Object.DoesNotExist):
         parser.get_dobj_str()
     assert parser.get_pobj_str("through") == "peephole"
 
@@ -64,18 +64,18 @@ def test_parse_object_of_the_preposition_with_preposition(t_init: Object, t_wiza
     assert parser.get_pobj("with") == t_wizard
     assert parser.get_pobj_str("with") == "wizard"
     assert parser.get_pobj_str("through") == "peephole"
-    with pytest.raises(exceptions.NoSuchObjectError):
+    with pytest.raises(Object.DoesNotExist):
         parser.get_dobj()
     with pytest.raises(exceptions.NoSuchPrepositionError):
         parser.get_pobj("from")
-    with pytest.raises(exceptions.NoSuchObjectError):
+    with pytest.raises(Object.DoesNotExist):
         parser.get_dobj_str()
 
 @pytest.mark.django_db
 def test_parse_direct_object_object_of_the_preposition_with_preposition(t_init: Object, t_wizard: Object):
     lex = parse.Lexer("@eval glasses from wizard with tongs")
     parser = parse.Parser(lex, t_wizard)
-    with pytest.raises(exceptions.NoSuchObjectError):
+    with pytest.raises(Object.DoesNotExist):
         parser.get_dobj()
     with pytest.raises(exceptions.NoSuchPrepositionError):
         parser.get_pobj("under")
@@ -88,9 +88,9 @@ def test_parse_direct_object_object_of_the_preposition_with_preposition(t_init: 
 def test_parse_direct_object_and_multiple_prepositions_with_specifiers(t_init: Object, t_wizard: Object):
     lex = parse.Lexer("@eval the wizard from 'bag under stairs' with tongs in wizard's bag")
     parser = parse.Parser(lex, t_wizard)
-    with pytest.raises(exceptions.NoSuchObjectError):
+    with pytest.raises(Object.DoesNotExist):
         parser.get_pobj("from")
-    with pytest.raises(exceptions.NoSuchObjectError):
+    with pytest.raises(Object.DoesNotExist):
         parser.get_pobj("with")
     assert parser.get_pobj_str('from') == 'bag under stairs'
     assert parser.get_dobj() == t_wizard
