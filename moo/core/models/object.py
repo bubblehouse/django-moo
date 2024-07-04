@@ -60,8 +60,18 @@ class Object(models.Model, AccessibleMixin):
     obvious = models.BooleanField(default=True)
     #: The owner of this object. Changes require `entrust` permission.
     owner = models.ForeignKey('self', related_name='+', blank=True, null=True, on_delete=models.SET_NULL,)
-    #: The parents of this object. Changes require `derive` and `transmute` permissions, respectively
     parents = models.ManyToManyField('self', related_name='children', blank=True, symmetrical=False, through='Relationship')
+    """
+    The parents of this object. Changes require `derive` and `transmute` permissions, respectively.
+
+    .. code-block:: Python
+
+        from moo.core import api, lookup
+        # in the default DB, all wizards inherit from this Object
+        wizard_class = lookup("wizard class")
+        # Changes to ManyToMany fields like this are automatically saved
+        api.caller.parents.add(wizard_class)
+    """
     location = models.ForeignKey('self', related_name='contents', blank=True, null=True, on_delete=models.SET_NULL)
     """
     [`TODO <https://gitlab.com/bubblehouse/django-moo/-/issues/12>`_]
@@ -75,11 +85,11 @@ class Object(models.Model, AccessibleMixin):
     If moving `what` into `self` would create a loop in the containment hierarchy (i.e., what would contain itself, even
     indirectly), then :class:`.RecursiveError` is raised instead.
 
-    Let `old-where` be the location of `self` before it was moved. If `old-where` is a valid object, then the verb-call
-    `old-where:exitfunc(self)` is performed and its result is ignored; it is not an error if `old-where` does not define
+    Let `old` be the location of `self` before it was moved. If `old` is a valid object, then the verb-call
+    `old.exitfunc(self)` is performed and its result is ignored; it is not an error if `old` does not define
     a verb named `exitfunc`.
 
-    Finally, if `where` is still the location of `self`, then the verb-call `where:enterfunc(self)` is performed and its
+    Finally, if `where` is still the location of `self`, then the verb-call `where.enterfunc(self)` is performed and its
     result is ignored; again, it is not an error if `where` does not define a verb named `enterfunc`.
     """
 
@@ -257,10 +267,22 @@ class AccessibleObject(Object):
     class Meta:
         proxy = True
 
-    def owns(self, subject):
+    def owns(self, subject:Object) -> bool:
+        """
+        Convenience method to check if the `subject` is owned by `self`
+        """
         return subject.owner == self
 
-    def is_allowed(self, permission, subject, fatal=False):
+    def is_allowed(self, permission:str, subject, fatal:bool=False) -> bool:
+        """
+        Check if this object is allowed to perform an action on an object.
+
+        :param permission: the name of the permission to check
+        :param subject: the item to check against
+        :type subject: Union[Object, Verb, Property]
+        :param fatal: if True, raise a :class:`.PermissionError` instead of returning False
+        :raises PermissionError: if permission is denied and `fatal` is set to True
+        """
         permission = Permission.objects.get(name=permission)
         anything = Permission.objects.get(name='anything')
         rules = Access.objects.filter(

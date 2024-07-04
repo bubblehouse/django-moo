@@ -15,13 +15,21 @@ from .. import utils
 log = logging.getLogger(__name__)
 
 class Verb(models.Model, AccessibleMixin):
+    #: The Python code for this Verb
     code = models.TextField(blank=True, null=True)
+    #: Optional Git repo this code is from
     repo = models.ForeignKey("Repository", related_name='+', blank=True, null=True, on_delete=models.SET_NULL)
+    #: Optional name of the code file within the repo
     filename = models.CharField(max_length=255, blank=True, null=True)
+    #: Optional Git ref of the code file within the repo
     ref = models.CharField(max_length=255, blank=True, null=True)
+    #: The owner of this Verb. Changes require `entrust` permission.
     owner = models.ForeignKey("Object", related_name='+', blank=True, null=True, on_delete=models.SET_NULL)
+    #: The object on which this Verb is defined
     origin = models.ForeignKey("Object", related_name='verbs', on_delete=models.CASCADE)
+    #: If True, this verb can only be used by the object it is defined on
     ability = models.BooleanField(default=False)
+    #: If True, this verb can be invoked by other verbs
     method = models.BooleanField(default=False)
 
     def __str__(self):

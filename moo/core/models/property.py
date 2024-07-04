@@ -12,11 +12,17 @@ class Property(models.Model, AccessibleMixin):
     class Meta:
         verbose_name_plural = 'properties'
 
+    #: Name of the Property
     name = models.CharField(max_length=255)
+    #: Value of the Property
     value = models.TextField(blank=True, null=True)
+    #: Type of the Property
     type = models.CharField(max_length=255, choices=[(x,x) for x in ('string', 'python', 'dynamic')])
+    #: The owner of this Property. Changes require `entrust` permission.
     owner = models.ForeignKey("Object", related_name='+', null=True, on_delete=models.SET_NULL)
+    #: The object on which this Property is defined
     origin = models.ForeignKey("Object", related_name='properties', on_delete=models.CASCADE)
+    #: If True, this Property’s owner will be reassigned on child instances
     inherited = models.BooleanField(default=False)
 
     __original_inherited = None
