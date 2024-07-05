@@ -2,8 +2,8 @@
 ```{eval-rst}
 .. py:currentmodule:: moo.core
 .. autofunction:: moo.core.lookup()
-.. autofunction:: moo.core.create_object()
-.. autofunction:: moo.core.message_user()
+.. autofunction:: moo.core.create()
+.. autofunction:: moo.core.write()
 ```
 
 ## Object Attributes

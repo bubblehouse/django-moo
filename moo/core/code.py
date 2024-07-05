@@ -120,7 +120,6 @@ def get_restricted_environment(writer):
 
     for name in settings.ALLOWED_BUILTINS:
         safe_builtins[name] = __builtins__[name]
-    from moo.core import create_object
     env = dict(
         _apply_           = lambda f,*a,**kw: f(*a, **kw),
         _print_           = lambda x: _print_(),
@@ -133,7 +132,6 @@ def get_restricted_environment(writer):
         _unpack_sequence_ = guarded_unpack_sequence,
         __import__        = restricted_import,
         __builtins__      = safe_builtins,
-        create_object     = create_object,
     )
 
     return env
