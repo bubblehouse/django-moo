@@ -115,6 +115,18 @@ def invoke(*args, verb=None, callback=None, delay:int=0, periodic:bool=False, cr
     """
     Asynchronously execute a Verb, optionally returning the result to another Verb.
 
+    Here's a bad example of a talking parrot:
+
+    .. code-block:: Python
+
+        from moo.core import api, invoke
+        if api.parser is not None:
+            invoke(api.parser.verb, delay=30, periodic=True, value=0)
+            return
+        value = kwargs['value'] + 1
+        for obj in api.caller.location.filter(player__isnull=False):
+            write("A parrot squawks {value}.")
+
     :param verb: the Verb to execute
     :type verb: Verb
     :param callback: an optional callback Verb to receive the result
