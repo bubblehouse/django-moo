@@ -53,13 +53,13 @@ def relationship_changed(sender, instance, action, model, signal, reverse, pk_se
 
 class Object(models.Model, AccessibleMixin):
     #: The canonical name of the object
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, db_index=True)
     #: If True, this object is the only object with this name
-    unique_name = models.BooleanField(default=False)
+    unique_name = models.BooleanField(default=False, db_index=True)
     #: This object should be obvious among a group. The meaning of this value is database-dependent.
     obvious = models.BooleanField(default=True)
     #: The owner of this object. Changes require `entrust` permission.
-    owner = models.ForeignKey('self', related_name='+', blank=True, null=True, on_delete=models.SET_NULL,)
+    owner = models.ForeignKey('self', related_name='+', blank=True, null=True, on_delete=models.SET_NULL)
     parents = models.ManyToManyField('self', related_name='children', blank=True, symmetrical=False, through='Relationship')
     """
     The parents of this object. Changes require `derive` and `transmute` permissions, respectively.
@@ -72,7 +72,7 @@ class Object(models.Model, AccessibleMixin):
         # Changes to ManyToMany fields like this are automatically saved
         api.caller.parents.add(wizard_class)
     """
-    location = models.ForeignKey('self', related_name='contents', blank=True, null=True, on_delete=models.SET_NULL)
+    location = models.ForeignKey('self', related_name='contents', blank=True, null=True, on_delete=models.SET_NULL, db_index=True)
     """
     [`TODO <https://gitlab.com/bubblehouse/django-moo/-/issues/12>`_]
     The location of this object. When changing, this kicks off some other verbs:

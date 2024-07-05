@@ -73,7 +73,7 @@ class AccessibleVerb(Verb):
 
 class VerbName(models.Model):
     verb = models.ForeignKey(Verb, related_name='names', on_delete=models.CASCADE)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, db_index=True)
 
     class Meta:
         constraints = [
