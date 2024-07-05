@@ -13,6 +13,7 @@ from . import code, parse, exceptions
 from .models import Object, Verb
 
 log = logging.getLogger(__name__)
+background_log = logging.getLogger(f"{__name__}.background")
 
 @shared_task
 def parse_command(caller_id:int, line:str) -> list[Any]:
@@ -53,9 +54,11 @@ def parse_code(caller_id:int, source:str, runtype:str="exec") -> list[list[Any],
     return output, result
 
 @shared_task
-def invoke_verb(caller_id:int, verb_id:int, *args, callback_verb_id:Optional[int]=None, **kwargs) -> list[list[Any], Any]:
+def invoke_verb(*args, caller_id:int=None, verb_id:int=None, callback_verb_id:Optional[int]=None, **kwargs) -> None:
     """
     Asynchronously execute a Verb, optionally returning the result to another Verb.
+    The `print()` method logs to a `moo.core.tasks.background` instead of sending
+    to the caller; this could probably be improved.
 
     :param caller_id: the PK of the caller of this command
     :param verb_id: the PK of the Verb to execute
@@ -63,33 +66,12 @@ def invoke_verb(caller_id:int, verb_id:int, *args, callback_verb_id:Optional[int
     :return: a list of output lines and the result value, if any
     """
     from moo.core import api
-    output = []
     with transaction.atomic():
         caller = Object.objects.get(pk=caller_id)
         verb = Verb.objects.get(pk=verb_id)
-        with code.context(caller, output.append):
+        with code.context(caller, background_log.info):
             globals = code.get_default_globals()  # pylint: disable=redefined-builtin
             globals.update(code.get_restricted_environment(api.writer))
             result = code.r_exec(verb.code, {}, globals, *args, filename=repr(verb), **kwargs)
     if callback_verb_id:
-        callback_verb.delay(caller_id, callback_verb_id, output, result)
-
-@shared_task
-def callback_verb(caller_id:int, verb_id:int, output:list[Any], result:Any) -> None:
-    """
-    Return a result to a Verb.
-
-    :param caller_id: the PK of the caller of this command
-    :param verb_id: the PK of the Verb to execute
-    :param output: a list of output lines
-    :param result: the result value, if any
-    """
-    from moo.core import api
-    output = []
-    with transaction.atomic():
-        caller = Object.objects.get(pk=caller_id)
-        callback = Verb.objects.get(pk=verb_id)
-        with code.context(caller, output.append):
-            globals = code.get_default_globals()  # pylint: disable=redefined-builtin
-            globals.update(code.get_restricted_environment(api.writer))
-            code.r_exec(callback.code, {}, globals, filename=repr(callback), output=output, result=result)
+        invoke_verb.delay(caller_id=caller_id, verb_id=callback_verb_id, result=result)
