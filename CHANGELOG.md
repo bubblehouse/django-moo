@@ -1,3 +1,17 @@
+## [0.26.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.25.3...v0.26.0) (2024-07-05)
+
+
+### Features
+
+* began implementing support for background tasks ([0e79a9a](https://gitlab.com/bubblehouse/django-moo/commit/0e79a9a735582de64e607bb38d0543c072e46cb0))
+
+
+### Bug Fixes
+
+* added db_index to important fields ([1e72ccc](https://gitlab.com/bubblehouse/django-moo/commit/1e72ccc3af567c63b0ebb250219eaa819f7e9ea5))
+* cleaned up invoke_verb, added docs ([32b0724](https://gitlab.com/bubblehouse/django-moo/commit/32b0724e1fea98a4b3f1e71410c5ea20f2847d0b))
+* rename functions ([3001aa0](https://gitlab.com/bubblehouse/django-moo/commit/3001aa0611b3a04b253c3e128ed87053c26a704e))
+
 ## [0.25.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.25.2...v0.25.3) (2024-07-04)
 
 
