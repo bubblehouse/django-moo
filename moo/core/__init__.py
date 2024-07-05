@@ -4,9 +4,11 @@ Core MOO functionality, object model, verbs.
 """
 
 import logging
-from typing import Union
+from typing import Union, Optional
 
 from .code import context
+
+__all__ = ['lookup', 'create', 'write', 'invoke', 'api']
 
 log = logging.getLogger(__name__)
 
@@ -108,6 +110,62 @@ def write(obj, message):
                 declare=[queue],
                 retry=True,
             )
+
+def invoke(*args, verb=None, callback=None, delay:int=0, periodic:bool=False, cron:str=None, **kwargs):
+    """
+    Asynchronously execute a Verb, optionally returning the result to another Verb.
+
+    :param verb: the Verb to execute
+    :type verb: Verb
+    :param callback: an optional callback Verb to receive the result
+    :type callback: Verb
+    :param delay: seconds to wait before executing, cannot be used with `cron`
+    :param periodic: should this task continue to repeat? cannot be used with `cron`
+    :param cron: a crontab expression to schedule Verb execution
+    :param args: positional arguments for the Verb, if any
+    :param kwargs: keyword arguments for the Verb, if any
+    :returns: a :class:`.PeriodicTask` instance or `None` if the task is a one-shot
+    :rtype: Optional[:class:`.PeriodicTask`]
+    """
+    from django_celery_beat.models import PeriodicTask, IntervalSchedule, CrontabSchedule
+    from moo.core import tasks
+    kwargs.update(dict(
+        caller_id = api.caller.pk,
+        verb_id = verb.pk,
+        callback_verb_id = callback.pk if callback else None,
+    ))
+    if delay and periodic:
+        schedule, _ = IntervalSchedule.objects.get_or_create(
+            every=delay,
+            period=IntervalSchedule.SECONDS,
+        )
+        return PeriodicTask.objects.create(
+            interval    = schedule,
+            description = f"{api.caller.pk}:{verb}",
+            task        = 'moo.core.tasks.invoke_verb',
+            args        = args,
+            kwargs      = kwargs
+        )
+    elif cron:
+        cronparts = cron.split()
+        schedule, _ = CrontabSchedule.objects.get_or_create(
+            minute=cronparts[0],
+            hour=cronparts[1],
+            day_of_week=cronparts[2],
+            day_of_month=cronparts[3],
+            month_of_year=cronparts[4],
+        )
+        return PeriodicTask.objects.create(
+            interval    = schedule,
+            description = f"{api.caller.pk}:{verb}",
+            task        = 'moo.core.tasks.invoke_verb',
+            args        = args,
+            kwargs      = kwargs
+        )
+    else:
+        tasks.invoke_verb.apply_async(args, kwargs, countdown=delay)
+        return None
+
 
 class _API:
     """
