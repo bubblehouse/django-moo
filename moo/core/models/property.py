@@ -13,7 +13,7 @@ class Property(models.Model, AccessibleMixin):
         verbose_name_plural = 'properties'
 
     #: Name of the Property
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, db_index=True)
     #: Value of the Property
     value = models.TextField(blank=True, null=True)
     #: Type of the Property
