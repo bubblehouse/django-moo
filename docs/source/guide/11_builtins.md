@@ -4,6 +4,7 @@
 .. autofunction:: moo.core.lookup()
 .. autofunction:: moo.core.create()
 .. autofunction:: moo.core.write()
+.. autofunction:: moo.core.invoke()
 ```
 
 ## Object Attributes
