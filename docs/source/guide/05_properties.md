@@ -47,7 +47,7 @@ This section is complicated enough to call out in a separate heading. In LambdaM
 
 DjangoMOO properties support an `inherit` attribute that works the same way as LambdaMOO's `c` bit. When this attribute is set, children will inherit the property with the owner set to that of the child. Here's some pseudocode that creates a default room class that adds a default description to all its children, and ensures those children's owner can modify it:
 
-    room = create_object('default room')
+    room = create('default room')
     room.set_property("description", "There's not much to see here.", inherited=True)
 
 In our case, verbs run with the permission of the caller, but a similar issue would happen. To paraphrase the above, when **yduJ** ran one of **Ford's** verbs on a radio derived from his, they would run with **yduJ's** permissions, but the inherited properties would have been owned by **Ford**. By changing the ownership of the inherited property to belong to **yduJ**, the verb will run correctly.

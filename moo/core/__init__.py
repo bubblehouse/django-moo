@@ -32,7 +32,7 @@ def lookup(x:Union[int, str]):
     else:
         raise ValueError(f"{x} is not a supported lookup value.")
 
-def create_object(name,  *a, owner=None, location=None, parents=None, **kw):
+def create(name,  *a, owner=None, location=None, parents=None, **kw):
     """
     [`TODO <https://gitlab.com/bubblehouse/django-moo/-/issues/11>`_]
     Creates and returns a new object whose parent is `parent` and whose owner is as described below.
@@ -49,8 +49,8 @@ def create_object(name,  *a, owner=None, location=None, parents=None, **kw):
     of the property on the new object is the same as that on parent.
 
     If the intended owner of the new object has a property named `ownership_quota` and the value of that
-    property is an integer, then `create_object()` treats that value as a quota. If the quota is less than
-    or equal to zero, then the quota is considered to be exhausted and `create_object()` raises :class:`.QuotaError` instead
+    property is an integer, then `create()` treats that value as a quota. If the quota is less than
+    or equal to zero, then the quota is considered to be exhausted and `create()` raises :class:`.QuotaError` instead
     of creating an object. Otherwise, the quota is decremented and stored back into the `ownership_quota`
     property as a part of the creation of the new object.
 
@@ -80,18 +80,18 @@ def create_object(name,  *a, owner=None, location=None, parents=None, **kw):
         *a, **kw
     )
 
-def message_user(user_obj, message):
+def write(obj, message):
     """
     Send an asynchronous message to the user.
 
-    :param user_obj: the Object of the User to message
-    :type location: Object
+    :param obj: the Object to write to
+    :type obj: Object
     :param message: any pickle-able object
     :type message: Any
     """
     from .models.auth import Player
     try:
-        player = Player.objects.get(avatar=user_obj)
+        player = Player.objects.get(avatar=obj)
     except Player.DoesNotExist:
         return
     from ..celery import app
