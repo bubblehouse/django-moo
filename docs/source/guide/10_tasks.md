@@ -9,7 +9,6 @@ Each task in the DjangoMOO environment is executed asynchronously by the Celery 
 .. autofunction:: parse_command
 .. autofunction:: parse_code
 .. autofunction:: invoke_verb
-.. autofunction:: callback_verb
 ```
 
 ### Task Security
