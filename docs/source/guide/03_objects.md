@@ -12,20 +12,27 @@ Objects in DjangoMOO are all custom subclasses of the Django Model class, so the
 
 ## Fundamental Object Attributes
 
-There are seven fundamental attributes to every object, defined by `moo.core.models.Object`:
+There are several fundamental attributes to every object, defined by `moo.core.models.Object`:
 
-1. `pk` or `id` (`Int(64)`) - the unique identifying number of this object
-2. `name` (`CharField(255)`) - the name of this object
-3. `unique_name` (`Boolean`) - whether this object name is to be kept unique
-4. `obvious` (`Boolean`) - whether this object is obvious among a group of objects
-5. `owner` (`Object`, nullable) - the owner of this object
-6. `location` (`Object`, nullable) - where the object is located
-7. `parents` (`QuerySet`) - the parents of this object
+```{eval-rst}
+.. py:currentmodule:: moo.core.models
+.. autoattribute:: Object.pk
 
-There are also three additional attributes that are the `RelatedReference`:
-1. `aliases` (`RelatedReference`) - any Aliases defined for this object
-2. `contents` (`RelatedReference`) - the contents of this object
-3. `children` (`RelatedReference`) - the children of this object
+    The unique identifying number of this Object
+
+.. autoattribute:: Object.name
+.. autoattribute:: Object.unique_name
+.. autoattribute:: Object.obvious
+.. autoattribute:: Object.owner
+.. autoattribute:: Object.parents
+.. autoattribute:: Object.location
+.. autoattribute:: Object.aliases
+    :class:`Alias` instances can be created to give additional names for an instance.
+.. autoattribute:: Object.contents
+    This is the :class:`ReverseManyToOneDescriptor` of the `location` field above
+.. autoattribute:: Object.children
+    This is the :class:`ReverseManyToOneDescriptor` of the `parent` field above
+```
 
 A bigger change to the DjangoMOO architecture starts to emerge here, around how permissions are specified.
 * Player information is kept in a separate table, and `Player.avatar` is set to the player Object as needed.

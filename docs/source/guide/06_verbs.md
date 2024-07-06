@@ -17,9 +17,21 @@ To add a new Verb to an object, users must have the `develop` permission on that
 
 Verbs also have some attributes of their own:
 
-1. `method` (`Boolean`) - whether this verb is callable as a method
-2. `ability` (`Boolean`) - whether this object is an intrinsic ability
-3. `code` (`str`) - the actual code of the verb
+```{eval-rst}
+.. py:currentmodule:: moo.core.models
+.. autoattribute:: Verb.pk
+
+    The unique identifying number of this Verb
+
+.. autoattribute:: Verb.code
+.. autoattribute:: Verb.repo
+.. autoattribute:: Verb.filename
+.. autoattribute:: Verb.ref
+.. autoattribute:: Verb.owner
+.. autoattribute:: Verb.origin
+.. autoattribute:: Verb.ability
+.. autoattribute:: Verb.method
+```
 
 > In addition to an owner and some permission bits, every verb has three 'argument specifiers', one each for the direct object, the preposition, and the indirect object. The direct and indirect specifiers are each drawn from this set: `this`, `any`, or `none`. The preposition specifier is `none`, `any`, or one of the items in this list:
 >
