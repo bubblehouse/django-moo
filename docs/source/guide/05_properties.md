@@ -27,8 +27,19 @@ To add a new Property to an object, users must have the `write` permission on th
 
 Every property has the following attributes:
 
-1. `inherit` (`Boolean`) - whether this property changes ownership on inheritance
-3. `value` (`Any`) - the actual value of the property, a Picklable value
+```{eval-rst}
+.. py:currentmodule:: moo.core.models
+.. autoattribute:: Property.pk
+
+    The unique identifying number of this Property
+
+.. autoattribute:: Property.name
+.. autoattribute:: Property.value
+.. autoattribute:: Property.type
+.. autoattribute:: Property.owner
+.. autoattribute:: Property.origin
+.. autoattribute:: Property.inherited
+```
 
 #### Property Inheritance
 
