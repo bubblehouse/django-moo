@@ -4,7 +4,7 @@ Core MOO functionality, object model, verbs.
 """
 
 import logging
-from typing import Union, Optional
+from typing import Union
 
 from .code import context
 
@@ -115,45 +115,6 @@ def invoke(*args, verb=None, callback=None, delay:int=0, periodic:bool=False, cr
     """
     [`TODO <https://gitlab.com/bubblehouse/django-moo/-/issues/13>`_]
     Asynchronously execute a Verb, optionally returning the result to another Verb.
-
-    Here's a bad example of a talking parrot:
-
-    .. code-block:: Python
-
-        from moo.core import api, invoke
-        if api.parser is not None:
-            invoke(api.parser.verb, delay=30, periodic=True)
-            return
-        for obj in api.caller.location.filter(player__isnull=False):
-            write(obj, "A parrot squawks.")
-
-    Right now it's just repeating every thirty seconds, but we can make it slightly more intelligent
-    by handling our own repeating Verbs:
-
-    .. code-block:: Python
-
-        from moo.core import api, invoke
-        if api.parser is not None:
-            invoke(api.parser.verb, delay=30, value=0)
-            return
-        value = kwargs['value'] + 1
-        for obj in api.caller.location.filter(player__isnull=False):
-            write(obj, f"A parrot squawks {value}.")
-        invoke(api.parser.verb, delay=30, value=value)
-    
-    Let's say we didn't want to handle writing ourselves (we shouldn't) and wanted instead
-    to re-use the `say` Verb.
-
-    .. code-block:: Python
-
-        from moo.core import api, invoke
-        if api.parser is not None:
-            say = api.caller.get_verb('say', recurse=True)
-            invoke(verb=api.parser.verb, callback=say, delay=30, value=0)
-            return
-        value = kwargs['value'] + 1
-        return f"A parrot squawks {value}."
-    
     This is often a better alternative than using `__call__`-syntax to invoke
     a verb directly, since Verbs invoked this way will each have their own timeout.
 
@@ -207,7 +168,6 @@ def invoke(*args, verb=None, callback=None, delay:int=0, periodic:bool=False, cr
     else:
         tasks.invoke_verb.apply_async(args, kwargs, countdown=delay)
         return None
-
 
 class _API:
     """

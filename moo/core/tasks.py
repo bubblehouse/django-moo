@@ -63,7 +63,6 @@ def invoke_verb(*args, caller_id:int=None, verb_id:int=None, callback_verb_id:Op
     :param caller_id: the PK of the caller of this command
     :param verb_id: the PK of the Verb to execute
     :param callback_verb_id: the PK of the verb to send the result to
-    :return: a list of output lines and the result value, if any
     """
     from moo.core import api
     with transaction.atomic():
@@ -74,4 +73,4 @@ def invoke_verb(*args, caller_id:int=None, verb_id:int=None, callback_verb_id:Op
             globals.update(code.get_restricted_environment(api.writer))
             result = code.r_exec(verb.code, {}, globals, *args, filename=repr(verb), **kwargs)
     if callback_verb_id:
-        invoke_verb.delay(caller_id=caller_id, verb_id=callback_verb_id, result=result)
+        invoke_verb.delay(result, caller_id=caller_id, verb_id=callback_verb_id)
