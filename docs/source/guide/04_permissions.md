@@ -21,17 +21,19 @@ The `transmute` bit specifies whether or not the subject can create new objects 
 
 Whenever a new object is created, DjangoMOO invokes the `set_default_permission(new_obj)` verb on the "System Object", the Object with `pk=1`. The default version of this verb sets the initial permissions for the new object:
 
-    from moo.core import api
+```python
+from moo.core import api
 
-    obj = api.args[0]
-    obj.allow('wizards', 'anything')
-    obj.allow('owners', 'anything')
+obj = api.args[0]
+obj.allow('wizards', 'anything')
+obj.allow('owners', 'anything')
+obj.allow('everyone', 'read')
+
+if obj.kind == 'verb':
+    obj.allow('everyone', 'execute')
+else:
     obj.allow('everyone', 'read')
-
-    if obj.kind == 'verb':
-        obj.allow('everyone', 'execute')
-    else:
-        obj.allow('everyone', 'read')
+```
 
 You can also see here the 3 existing object groups the permission structure is currently aware of: `owners`, `wizards`, and `everyone`.
 
