@@ -50,6 +50,7 @@ def test_args_when_calling_multiple_verbs(t_init: Object, t_wizard: Object):
     assert printed == list(range(1, 11))
 
 @pytest.mark.django_db
+@override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_TASK_STORE_EAGER_RESULT=True)
 def test_simple_async_verb(t_init: Object, t_wizard: Object, caplog):
     printed = []
     def _writer(msg):
