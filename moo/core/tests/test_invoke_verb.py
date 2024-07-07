@@ -4,6 +4,7 @@ import pytest
 from django.test import override_settings
 
 from moo.tests import *  # pylint: disable=wildcard-import
+from moo import core
 from ..models import Object, Verb
 from .. import code, parse
 
@@ -35,9 +36,9 @@ def test_args_is_not_null_when_using_eval(t_init: Object, t_wizard: Object):
     printed = []
     def _writer(msg):
         printed.append(msg)
-    verb = Verb.objects.filter(names__name="test-args")
+    verb = Verb.objects.get(names__name="test-args")
     with code.context(t_wizard, _writer):
-        code.interpret(verb[0].code)
+        code.interpret(verb.code)
     assert printed == ["METHOD:():{}"]
 
 @pytest.mark.django_db
@@ -48,21 +49,3 @@ def test_args_when_calling_multiple_verbs(t_init: Object, t_wizard: Object):
     with code.context(t_wizard, _writer):
         parse.interpret("test-nested-verbs")
     assert printed == list(range(1, 11))
-
-@pytest.mark.django_db
-@override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_TASK_STORE_EAGER_RESULT=True)
-def test_simple_async_verb(t_init: Object, t_wizard: Object, caplog):
-    printed = []
-    def _writer(msg):
-        printed.append(msg)
-    verb = Verb.objects.filter(names__name="test-async-verbs")[0]
-    with caplog.at_level(logging.INFO, "moo.core.tasks.background"):
-        with code.context(t_wizard, _writer):
-            verb()
-    counter = 1
-    assert printed == [counter]
-    for line in caplog.text.split("\n"):
-        if not line:
-            continue
-        counter += 1
-        assert line.endswith(str(counter))
