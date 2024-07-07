@@ -1,4 +1,7 @@
+import logging
+
 import pytest
+from django.test import override_settings
 
 from moo.tests import *  # pylint: disable=wildcard-import
 from ..models import Object, Verb
@@ -42,7 +45,23 @@ def test_args_when_calling_multiple_verbs(t_init: Object, t_wizard: Object):
     printed = []
     def _writer(msg):
         printed.append(msg)
-    # TODO: this needs to test a verb calling a verb, not doing this
     with code.context(t_wizard, _writer):
         parse.interpret("test-nested-verbs")
     assert printed == list(range(1, 11))
+
+@pytest.mark.django_db
+def test_simple_async_verb(t_init: Object, t_wizard: Object, caplog):
+    printed = []
+    def _writer(msg):
+        printed.append(msg)
+    verb = Verb.objects.filter(names__name="test-async-verbs")[0]
+    with caplog.at_level(logging.INFO, "moo.core.tasks.background"):
+        with code.context(t_wizard, _writer):
+            verb()
+    counter = 1
+    assert printed == [counter]
+    for line in caplog.text.split("\n"):
+        if not line:
+            continue
+        counter += 1
+        assert line.endswith(str(counter))
