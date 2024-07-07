@@ -23,24 +23,32 @@ The `api` object has a couple of attributes that are useful in most verbs:
 
 The Django ORM brings in a few changes to how we access properties. We could potentially use the direct ORM method, like in this example:
 
-    qs = api.caller.location.properties.filter(name="description")
-    if qs:
-        print(qs[0].value)
-    else:
-        print("No description.")
+```python
+ qs = api.caller.location.properties.filter(name="description")
+ if qs:
+     print(qs[0].value)
+ else:
+     print("No description.")
+```
 
 This doesn't honor inheritance, so you'll probably prefer to use `Object.get_property()`:
 
-    description = api.caller.location.get_property('description')
-    print(f"The description is: {description}")
+```python
+ description = api.caller.location.get_property('description')
+ print(f"The description is: {description}")
+```
 
 It's possible to use the direct ORM method to *set* a property. This method can be useful if you want to further modify the property object or its permissions.
 
-    property = api.caller.location.properties.create(name="description", value="A dark room.")
+```python
+ property = api.caller.location.properties.create(name="description", value="A dark room.")
+```
 
 But similarly, you should probably just use:
 
-    api.caller.location.set_property("description", "A dark room.")
+```python
+api.caller.location.set_property("description", "A dark room.")
+```
 
 The property interface is still kind of in flux; there's probably no reason not to **[support "dot-syntax" for accessing properties](#9)**.
 
