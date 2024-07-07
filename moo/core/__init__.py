@@ -113,7 +113,6 @@ def write(obj, message):
 
 def invoke(*args, verb=None, callback=None, delay:int=0, periodic:bool=False, cron:str=None, **kwargs):
     """
-    [`TODO <https://gitlab.com/bubblehouse/django-moo/-/issues/13>`_]
     Asynchronously execute a Verb, optionally returning the result to another Verb.
     This is often a better alternative than using `__call__`-syntax to invoke
     a verb directly, since Verbs invoked this way will each have their own timeout.
