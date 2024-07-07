@@ -2,10 +2,59 @@
 
 Like properties, the default Django ORM doesn't honor inheritance, so there's a few custom methods on Object instances to help out.
 
-The best way to invoke another verb (as a method) from a running verb is with:
+The simplest way to invoke another verb (as a method) from a running verb is with:
 
 ```python
 obj.invoke_verb(name, **args, **kwargs)
+```
+
+This works for many convenience functions, but whatever time these functions use will count against the default
+verb timeout of 3 seconds.
+
+But if you're limited to 3 seconds in a Verb, how do you create longer tasks? The key is to compose your function
+into multiple Verb calls, which you can invoke asynchronously using the `invoke()` function:
+
+```{eval-rst}
+.. py:currentmodule:: moo.core
+.. autofunction:: invoke
+```
+
+Using `invoke()` let's create a bad example of a talking parrot:
+
+```python
+from moo.core import api, invoke
+if api.parser is not None:
+    invoke(api.parser.verb, delay=30, periodic=True)
+    return
+for obj in api.caller.location.filter(player__isnull=False):
+    write(obj, "A parrot squawks.")
+```
+
+Right now it's just repeating every thirty seconds, but we can make it slightly more intelligent
+by handling our own repeating Verbs:
+
+```python
+from moo.core import api, invoke
+if api.parser is not None:
+    invoke(api.parser.verb, delay=30, value=0)
+    return
+value = kwargs['value'] + 1
+for obj in api.caller.location.filter(player__isnull=False):
+    write(obj, f"A parrot squawks {value}.")
+invoke(api.parser.verb, delay=30, value=value)
+```
+
+Let's say we didn't want to handle writing ourselves (we shouldn't) and wanted instead
+to re-use the `say` Verb.
+
+```python
+from moo.core import api, invoke
+if api.parser is not None:
+    say = api.caller.get_verb('say', recurse=True)
+    invoke(verb=api.parser.verb, callback=say, delay=30, value=0)
+    return
+value = kwargs['value'] + 1
+return f"A parrot squawks {value}."
 ```
 
 ### Returning a Value from a Verb
