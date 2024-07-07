@@ -8,7 +8,7 @@ This is another good opportunity to quote Pavel Curtis:
 >
 > The identifying number associated with an object is unique to that object. It was assigned when the object was created and will never be reused, even if the object is destroyed. Thus, if we create an object and it is assigned the number `#1076`, the next object to be created will be assigned `#1077`, even if `#1076` is destroyed in the meantime.
 
-Objects in DjangoMOO are all custom subclasses of the Django Model class, so the "identifying number" is just the primary key of the object. Also, unlike LambdaMOO objects, there's a .save() function that needs to be called when a change is made to the intrinsic properties of an object.
+Objects in DjangoMOO are all custom subclasses of the Django Model class, so the "identifying number" is just the primary key of the object. Also, unlike LambdaMOO objects, there's a `save()` function that needs to be called when a change is made to the intrinsic properties of an object.
 
 ## Fundamental Object Attributes
 
