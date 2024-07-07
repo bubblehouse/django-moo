@@ -2,7 +2,7 @@
 
 ## Goals
 
-While django-moo's overarching goals are fairly similar to that of Lambda MOO's,
+While DjangoMOO's overarching goals are fairly similar to that of LambdaMOO's,
 the details of how it's been implemented are substantially different:
 
 * 100% Python – both the implementation and the internal game language are Python, which drives many other design details

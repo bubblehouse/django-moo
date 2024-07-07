@@ -4,7 +4,9 @@ Like properties, the default Django ORM doesn't honor inheritance, so there's a 
 
 The best way to invoke another verb (as a method) from a running verb is with:
 
-    obj.invoke_verb(name, **args, **kwargs)
+```python
+obj.invoke_verb(name, **args, **kwargs)
+```
 
 ### Returning a Value from a Verb
 
