@@ -50,25 +50,25 @@ Right now it's just repeating every thirty seconds, but we can make it slightly 
 by handling our own repeating Verbs:
 
 ```python
-    from moo.core import api, invoke
-    if api.parser is not None:
-        invoke(api.parser.verb, delay=30, value=0)
-        return
-    value = kwargs['value'] + 1
-    for obj in api.caller.location.filter(player__isnull=False):
-        write(obj, f"A parrot squawks {value}.")
-    invoke(api.parser.verb, delay=30, value=value)
+from moo.core import api, invoke
+if api.parser is not None:
+    invoke(api.parser.verb, delay=30, value=0)
+    return
+value = kwargs['value'] + 1
+for obj in api.caller.location.filter(player__isnull=False):
+    write(obj, f"A parrot squawks {value}.")
+invoke(api.parser.verb, delay=30, value=value)
 ```
 
 Let's say we didn't want to handle writing ourselves (we shouldn't) and wanted instead
 to re-use the `say` Verb.
 
 ```python
-    from moo.core import api, invoke
-    if api.parser is not None:
-        say = api.caller.get_verb('say', recurse=True)
-        invoke(verb=api.parser.verb, callback=say, delay=30, value=0)
-        return
-    value = kwargs['value'] + 1
-    return f"A parrot squawks {value}."
+from moo.core import api, invoke
+if api.parser is not None:
+    say = api.caller.get_verb('say', recurse=True)
+    invoke(verb=api.parser.verb, callback=say, delay=30, value=0)
+    return
+value = kwargs['value'] + 1
+return f"A parrot squawks {value}."
 ```

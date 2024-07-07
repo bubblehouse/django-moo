@@ -1,4 +1,4 @@
-# django-moo
+# DjangoMOO
 > LambdaMOO on Django
 
 ![release](https://gitlab.com/bubblehouse/django-moo/-/badges/release.svg)
@@ -7,7 +7,7 @@
 ![quality](https://bubblehouse.gitlab.io/django-moo/badges/lint.svg)
 ![docs](https://readthedocs.org/projects/django-moo/badge/?version=latest)
 
-moo is a game server for hosting text-based online MOO-like games.
+DjangoMOO is a game server for hosting text-based online MOO-like games.
 
 ## Quick Start
 Checkout the project and use Docker Compose to run the necessary components:
