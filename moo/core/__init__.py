@@ -37,7 +37,6 @@ def lookup(x:Union[int, str]):
 
 def create(name,  *a, owner=None, location=None, parents=None, **kw):
     """
-    [`TODO <https://gitlab.com/bubblehouse/django-moo/-/issues/11>`_]
     Creates and returns a new object whose parents are `parents` and whose owner is as described below.
     Provided `parents` are valid Objects with `derive` permission, otherwise :class:`.PermissionError` is
     raised. After the new object is created, its `initialize` verb, if any, is called with no arguments.
