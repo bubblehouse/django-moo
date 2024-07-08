@@ -7,6 +7,7 @@ import logging
 from typing import Union
 
 from .code import context
+from .exceptions import QuotaError
 
 __all__ = ['lookup', 'create', 'write', 'invoke', 'api']
 
@@ -37,18 +38,12 @@ def lookup(x:Union[int, str]):
 def create(name,  *a, owner=None, location=None, parents=None, **kw):
     """
     [`TODO <https://gitlab.com/bubblehouse/django-moo/-/issues/11>`_]
-    Creates and returns a new object whose parent is `parent` and whose owner is as described below.
-    Either the given `parent` object must be None or a valid object with `derive` permission,
-    otherwise :class:`.PermissionError` is raised. After the new object is created, its `initialize`
-    verb, if any, is called with no arguments.
+    Creates and returns a new object whose parents are `parents` and whose owner is as described below.
+    Provided `parents` are valid Objects with `derive` permission, otherwise :class:`.PermissionError` is
+    raised. After the new object is created, its `initialize` verb, if any, is called with no arguments.
 
-    The owner of the new object is either the programmer (if `owner` is not provided), the new object
-    itself (if owner was given as None), or the provided owner.
-
-    In addition, the new object inherits all of the other properties on `parent`. These properties have
-    the same permission bits as on `parent`. If the `inherit` permission bit is set, then the owner of the
-    property on the new object is the same as the owner of the new object itself; otherwise, the owner
-    of the property on the new object is the same as that on parent.
+    The owner of the new object is either the programmer (if `owner` is not provided), or the provided owner,
+    if the caller has permission to `entrust` the object.
 
     If the intended owner of the new object has a property named `ownership_quota` and the value of that
     property is an integer, then `create()` treats that value as a quota. If the quota is less than
@@ -69,18 +64,31 @@ def create(name,  *a, owner=None, location=None, parents=None, **kw):
     :raises PermissionError: if the caller is not allowed to `derive` from the parent
     :raises QuotaError: if the caller has a quota and it has been exceeded
     """
-    if owner is None:
-        owner = context.get('caller')
+    from .models.object import AccessibleObject, AccessibleProperty
+    if api.caller:
+        try:
+            quota = api.caller.get_property('ownership_quota', recurse=False)
+            if quota > 0:
+                api.caller.set_property('ownership_quota', quota - 1)
+            else:
+                raise QuotaError(f"{api.caller} has run out of quota.")
+        except AccessibleProperty.DoesNotExist:
+            pass
+        if owner is None:
+            owner = api.caller
     if location is None and owner:
         location = owner.location
-    from .models.object import AccessibleObject
-    return AccessibleObject.objects.create(
+    obj = AccessibleObject.objects.create(
         name=name,
         location=location,
         owner=owner,
-        # parent=parent,
         *a, **kw
     )
+    if parents:
+        obj.parents.add(*parents)
+    if obj.has_verb('initialize'):
+        invoke(obj.get_verb('initialize'))
+    return obj
 
 def write(obj, message):
     """

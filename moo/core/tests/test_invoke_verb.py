@@ -1,10 +1,6 @@
-import logging
-
 import pytest
-from django.test import override_settings
 
 from moo.tests import *  # pylint: disable=wildcard-import
-from moo import core
 from ..models import Object, Verb
 from .. import code, parse
 

@@ -4,6 +4,7 @@ The primary Object class
 """
 
 import logging
+import json
 from typing import Generator
 
 from django.db import models
@@ -219,7 +220,7 @@ class Object(models.Model, AccessibleMixin):
         Defines a new :class:`.Property` on the given object.
 
         :param names: a list of names for the new Property
-        :param value: the value code for the new Property
+        :param value: the value for the new Property
         :param inherited: if True, this property's owner will be reassigned on child instances
         :param owner: the owner of the Property being created
         """
@@ -229,7 +230,7 @@ class Object(models.Model, AccessibleMixin):
             name = name,
             origin = self,
             defaults = dict(
-                value = value,
+                value = json.dumps(value),
                 owner = owner,
                 type = "string",
                 inherited = inherited,
@@ -252,7 +253,7 @@ class Object(models.Model, AccessibleMixin):
                 if qs:
                     break
         if qs:
-            return qs[0] if original else qs[0].value
+            return qs[0] if original else json.loads(qs[0].value)
         else:
             raise AccessibleProperty.DoesNotExist(f"No such property `{name}`.")
 
@@ -266,6 +267,15 @@ class Object(models.Model, AccessibleMixin):
 class AccessibleObject(Object):
     class Meta:
         proxy = True
+
+    def delete(self, *args, **kwargs):
+        try:
+            quota = self.owner.get_property('ownership_quota', recurse=False)
+            if quota is not None:
+                self.owner.set_property('ownership_quota', quota + 1)
+        except AccessibleProperty.DoesNotExist:
+            pass
+        super().delete(*args, **kwargs)
 
     def owns(self, subject:Object) -> bool:
         """
