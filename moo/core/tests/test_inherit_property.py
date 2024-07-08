@@ -1,3 +1,5 @@
+import json
+
 import pytest
 
 from moo.tests import *  # pylint: disable=wildcard-import
@@ -10,7 +12,7 @@ def test_child_inherits_parent_property(t_init: Object):
     room = Object.objects.create(name="new room")
     room.parents.add(room_class)
     description = room.get_property(name="description")
-    assert description == parent_description.value
+    assert description == json.loads(parent_description.value)
 
 @pytest.mark.django_db
 def test_child_owns_inherited_property(t_init: Object):
