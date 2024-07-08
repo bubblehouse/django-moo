@@ -1,3 +1,10 @@
+## [0.27.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.26.0...v0.27.0) (2024-07-08)
+
+
+### Features
+
+* added object quotas and initialization ([98b5d00](https://gitlab.com/bubblehouse/django-moo/commit/98b5d006c67c598c9591f2a57271ee2ef719e66e))
+
 ## [0.26.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.25.3...v0.26.0) (2024-07-05)
 
 
