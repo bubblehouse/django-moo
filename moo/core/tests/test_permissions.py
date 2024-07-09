@@ -89,3 +89,23 @@ def test_cant_create_parent_of_an_object_that_isnt_yours(t_init, t_wizard):
         with pytest.raises(PermissionError) as excinfo:
             child_thing.parents.add(parent_thing)
         assert str(excinfo.value) == "#13 (Player) is not allowed transmute on #14 (child thing)"
+
+@pytest.mark.django_db
+def test_cant_change_owner_unless_allowed_to_entrust(t_init, t_wizard):
+    pytest.skip()
+
+@pytest.mark.django_db
+def test_cant_change_location_unless_allowed_to_move(t_init, t_wizard):
+    pytest.skip()
+
+@pytest.mark.django_db
+def test_change_location_calls_enterfunc(t_init, t_wizard):
+    pytest.skip()
+
+@pytest.mark.django_db
+def test_change_location_calls_exitfunc(t_init, t_wizard):
+    pytest.skip()
+
+@pytest.mark.django_db
+def test_change_location_calls_accept(t_init, t_wizard):
+    pytest.skip()
