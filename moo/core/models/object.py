@@ -94,6 +94,13 @@ class Object(models.Model, AccessibleMixin):
     result is ignored; again, it is not an error if `where` does not define a verb named `enterfunc`.
     """
 
+    @classmethod
+    def from_db(cls, db, field_names, values):
+        instance = super().from_db(db, field_names, values)
+        instance.original_owner = values[field_names.index('owner_id')]
+        instance.original_location = values[field_names.index('location_id')]
+        return instance
+
     def __str__(self):
         return "#%s (%s)" % (self.id, self.name)
 
@@ -258,11 +265,28 @@ class Object(models.Model, AccessibleMixin):
             raise AccessibleProperty.DoesNotExist(f"No such property `{name}`.")
 
     def save(self, *args, **kwargs):
-        needs_default_permissions = self.pk is None
+        will_move = False
+        newly_created = self.pk is None
+        if not newly_created:
+            self.can_caller('write', self)
+            if getattr(self, 'original_owner', None) != self.owner and self.owner:
+                self.can_caller('entrust', self)
+            if getattr(self, 'original_location', None) != self.location and self.location:
+                self.can_caller('move', self)
+                if self.location.has_verb('accept'):
+                    if not self.location.invoke_verb('accept', self):
+                        raise PermissionError(f"{self.location} did not accept {self}")
+                will_move = True
         super().save(*args, **kwargs)
-        if not needs_default_permissions:
-            return
-        utils.apply_default_permissions(self)
+        if will_move:
+            from moo.core import invoke
+            if old_location := getattr(self, 'original_location', None):
+                if old_location.has_verb('exitfunc'):
+                    invoke(self, verb=old_location.get_verb('exitfunc'))
+            if self.location and self.location.has_verb('enterfunc'):
+                invoke(self, verb=old_location.get_verb('enterfunc'))
+        if newly_created:
+            utils.apply_default_permissions(self)
 
 class AccessibleObject(Object):
     class Meta:
