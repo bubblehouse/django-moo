@@ -1,3 +1,10 @@
+## [0.28.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.27.0...v0.28.0) (2024-07-09)
+
+
+### Features
+
+* implement proper permissions and handlers for owners and locations ([88e422a](https://gitlab.com/bubblehouse/django-moo/commit/88e422ab4e40242b13dda705e8203f6a64aab8d4))
+
 ## [0.27.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.26.0...v0.27.0) (2024-07-08)
 
 
