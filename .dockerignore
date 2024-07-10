@@ -25,3 +25,4 @@ package-lock.json
 package.json
 static/
 __pycache__
+prof/
