@@ -1,3 +1,10 @@
+## [0.29.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.28.0...v0.29.0) (2024-07-10)
+
+
+### Features
+
+* proper location change behavior, closes [#12](https://gitlab.com/bubblehouse/django-moo/issues/12) ([32e94cb](https://gitlab.com/bubblehouse/django-moo/commit/32e94cb672907dd89b187fed1e000281c45a4e33))
+
 ## [0.28.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.27.0...v0.28.0) (2024-07-09)
 
 
