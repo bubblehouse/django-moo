@@ -4,6 +4,7 @@ The primary Object class
 """
 
 import logging
+import traceback
 import json
 from typing import Generator
 
@@ -12,7 +13,7 @@ from django.db.models.query import QuerySet
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
 
-from .. import bootstrap, exceptions, utils
+from .. import bootstrap, exceptions, utils, invoke
 from ..code import context
 from .acl import AccessibleMixin, Access, Permission
 from .auth import Player
@@ -265,28 +266,40 @@ class Object(models.Model, AccessibleMixin):
             raise AccessibleProperty.DoesNotExist(f"No such property `{name}`.")
 
     def save(self, *args, **kwargs):
-        will_move = False
-        newly_created = self.pk is None
-        if not newly_created:
-            self.can_caller('write', self)
-            if getattr(self, 'original_owner', None) != self.owner and self.owner:
-                self.can_caller('entrust', self)
-            if getattr(self, 'original_location', None) != self.location and self.location:
-                self.can_caller('move', self)
-                if self.location.has_verb('accept'):
-                    if not self.location.invoke_verb('accept', self):
-                        raise PermissionError(f"{self.location} did not accept {self}")
-                will_move = True
+        unsaved = self.pk is None
+        if unsaved:
+            # there's no permissions yet, so we can't check for `entrust`
+            caller = context.get('caller')
+            if caller and self.owner != caller:
+                raise PermissionError("Can't change owner at creation time.")
         super().save(*args, **kwargs)
-        if will_move:
-            from moo.core import invoke
-            if old_location := getattr(self, 'original_location', None):
-                if old_location.has_verb('exitfunc'):
-                    invoke(self, verb=old_location.get_verb('exitfunc'))
-            if self.location and self.location.has_verb('enterfunc'):
-                invoke(self, verb=old_location.get_verb('enterfunc'))
-        if newly_created:
+        # after saving, new objects need default permissions
+        if unsaved:
             utils.apply_default_permissions(self)
+        # ACL Check: to change owner, caller must be allowed to `entrust` on this object
+        original_owner = getattr(self, 'original_owner', None)
+        original_owner = Object.objects.get(pk=original_owner) if original_owner else None
+        if original_owner != self.owner and self.owner:
+            self.can_caller('entrust', self)
+        # ACL Check: to change anything else about the object you at least need `write`
+        self.can_caller('write', self)
+        # ACL Check: to change the location, caller must be allowed to `move` on this object
+        original_location = getattr(self, 'original_location', None)
+        original_location = Object.objects.get(pk=original_location) if original_location else None
+        if original_location != self.location and self.location:
+            self.can_caller('move', self)
+            # the new location must define an `accept` verb that returns True for this obejct
+            if self.location.has_verb('accept'):
+                if not self.location.invoke_verb('accept', self):
+                    raise PermissionError(f"{self.location} did not accept {self}")
+            else:
+                raise PermissionError(f"{self.location} did not accept {self}")
+            # the optional `exitfunc` Verb will be called asyncronously
+            if original_location and original_location.has_verb('exitfunc'):
+                invoke(self, verb=original_location.get_verb('exitfunc'))
+            # the optional `enterfun` Verb will be called asyncronously
+            if self.location and self.location.has_verb('enterfunc'):
+                invoke(self, verb=original_location.get_verb('enterfunc'))
 
 class AccessibleObject(Object):
     class Meta:

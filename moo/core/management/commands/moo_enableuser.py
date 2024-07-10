@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User  # pylint: disable=imported-auth-user
 
-from ...models import Object
+from ...models import Object, Player
 
 class Command(BaseCommand):
     help = 'Attach a Django user to an avatar in the game.'
@@ -17,5 +17,10 @@ class Command(BaseCommand):
     def handle(self,  username, avatar, wizard=False, **kwargs):  # pylint: disable=arguments-differ
         avatar = Object.objects.get(name=avatar, unique_name=True)
         user = User.objects.get(username=username)
+        if not getattr(user, "player", None):
+            player = Player()
+            player.save()
+            user.player = player
         user.player.avatar = avatar
         user.player.wizard = wizard
+        user.player.save()

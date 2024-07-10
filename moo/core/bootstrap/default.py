@@ -28,9 +28,18 @@ with warnings.catch_warnings():
     set_default_permissions(set_default_permissions)
     set_default_permissions(system)
 
+containers = create(name="containers class", unique_name=True)
+containers.add_verb("accept", code="return True", method=True)
+
 # Create the first real user
-wizard = create(name="Wizard", unique_name=True)
+wizard = create(name="Wizard", unique_name=True, parents=[containers])
 wizard.owner = wizard
+wizard.save()
+
+# Wizard owns containers
+containers.owner = wizard
+containers.save()
+
 wizard.save()
 # Wizard owns the system...
 system.owner = wizard
@@ -40,9 +49,9 @@ set_default_permissions.owner = wizard
 set_default_permissions.save()
 
 with code.context(wizard, log.info):
-    bag = create('bag of holding', location=wizard)
+    bag = create('bag of holding', parents=[containers], location=wizard)
     hammer = create('wizard hammer', location=bag)
-    book = create('class book', location=bag)
+    book = create('class book', parents=[containers], location=bag)
     players = create('player class', location=book)
     players.add_verb("look", "inspect", filename="players_look.py", repo=repo, ability=True)
     players.add_verb("say", filename="players_say.py", repo=repo, ability=True)
@@ -57,7 +66,7 @@ with code.context(wizard, log.info):
 
     wizard.parents.add(wizards)
 
-    rooms = create('room class', location=book)
+    rooms = create('room class', parents=[containers], location=book)
     rooms.set_property("description", "There's not much to see here.", inherited=True)
 
     lab = create('The Laboratory')
