@@ -1,9 +1,8 @@
 import pytest
 
 from moo.core.models import Object, Player
-from moo.core.models.object import AccessibleObject
 from moo.tests import *  # pylint: disable=wildcard-import
-from .. import code
+from .. import code, create, lookup
 
 @pytest.mark.django_db
 def test_regular_user_can_read_a_thing(t_init: Object, t_wizard: Object):
@@ -69,30 +68,50 @@ def test_cant_create_child_of_an_object_that_isnt_yours(t_init: Object, t_wizard
     printed = []
     def _writer(msg):
         printed.append(msg)
-    user = AccessibleObject.objects.get(name__iexact='player')
-    parent_thing = AccessibleObject.objects.create(name='parent thing', owner=t_wizard)
+    user = Object.objects.get(name__iexact='player')
+    parent_thing = Object.objects.create(name='parent thing', owner=t_wizard)
     with code.context(user, _writer):
-        child_thing = AccessibleObject.objects.create(name='child thing', owner=user)
+        child_thing = Object.objects.create(name='child thing', owner=user)
         with pytest.raises(PermissionError) as excinfo:
             child_thing.parents.add(parent_thing)
-        assert str(excinfo.value) == "#13 (Player) is not allowed derive on #14 (parent thing)"
+        assert str(excinfo.value) == f"#{user.pk} (Player) is not allowed derive on #{parent_thing.pk} (parent thing)"
 
 @pytest.mark.django_db
 def test_cant_create_parent_of_an_object_that_isnt_yours(t_init: Object, t_wizard: Object):
     printed = []
     def _writer(msg):
         printed.append(msg)
-    user = AccessibleObject.objects.get(name__iexact='player')
-    child_thing = AccessibleObject.objects.create(name='child thing', owner=t_wizard)
+    user = Object.objects.get(name__iexact='player')
+    child_thing = Object.objects.create(name='child thing', owner=t_wizard)
     with code.context(user, _writer):
-        parent_thing = AccessibleObject.objects.create(name='parent thing', owner=user)
+        parent_thing = Object.objects.create(name='parent thing', owner=user)
         with pytest.raises(PermissionError) as excinfo:
             child_thing.parents.add(parent_thing)
-        assert str(excinfo.value) == "#13 (Player) is not allowed transmute on #14 (child thing)"
+        assert str(excinfo.value) == f"#{user.pk} (Player) is not allowed transmute on #{child_thing.pk} (child thing)"
 
 @pytest.mark.django_db
 def test_cant_change_owner_unless_allowed_to_entrust(t_init: Object, t_wizard: Object):
-    pytest.skip()
+    printed = []
+    def _writer(msg):
+        printed.append(msg)
+    user = Object.objects.get(name__iexact='player')
+    with code.context(user, _writer):
+        with pytest.raises(PermissionError) as excinfo:
+            create("thing", owner=t_wizard)
+        assert str(excinfo.value) == "Can't change owner at creation time."
+        obj = create("thing")
+        with pytest.raises(PermissionError) as excinfo:
+            obj.owner = t_wizard
+            obj.save()
+        assert str(excinfo.value) == f"#{user.pk} (Player) is not allowed entrust on #{obj.pk} (thing)"
+    with code.context(t_wizard, _writer):
+        obj = lookup("thing")
+        obj.allow(user, 'entrust')
+        obj.allow(user, 'write')
+    with code.context(user, _writer):
+        obj = lookup("thing")
+        obj.owner = t_wizard
+        obj.save()
 
 @pytest.mark.django_db
 def test_cant_change_location_unless_allowed_to_move(t_init: Object, t_wizard: Object):
