@@ -28,12 +28,12 @@ django-ace = "^1.32.4"
 celery = {extras = ["redis"], version = "^5.4.0"}
 django-celery-results = "^2.5.1"
 django-celery-beat = "^2.6.0"
+
+[tool.poetry.group.dev.dependencies]
 sphinx = "^7.3.7"
 myst-parser = "^3.0.1"
 sphinx-rtd-theme = "^2.0.0"
 sphinx-autodoc-typehints = "^2.2.2"
-
-[tool.poetry.group.dev.dependencies]
 pylint = "^3.1.0"
 pylint-django = "^2.5.5"
 pytest-pylint = "^0.21.0"
@@ -43,6 +43,7 @@ pytest-spec = "^3.2.0"
 coverage = "^7.4.4"
 pytest-cov = "^4.1.0"
 pylint-gitlab = "^2.0.0"
+pytest-profiling = "^1.7.0"
 
 [build-system]
 requires = ["poetry-core"]
