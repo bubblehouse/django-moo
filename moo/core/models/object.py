@@ -299,7 +299,7 @@ class Object(models.Model, AccessibleMixin):
                 invoke(self, verb=original_location.get_verb('exitfunc'))
             # the optional `enterfun` Verb will be called asyncronously
             if self.location and self.location.has_verb('enterfunc'):
-                invoke(self, verb=original_location.get_verb('enterfunc'))
+                invoke(self, verb=self.location.get_verb('enterfunc'))
 
 class AccessibleObject(Object):
     class Meta:

@@ -1,4 +1,7 @@
+import logging
+
 import pytest
+from django.test import override_settings
 
 from moo.core.models import Object, Player
 from moo.tests import *  # pylint: disable=wildcard-import
@@ -115,16 +118,74 @@ def test_cant_change_owner_unless_allowed_to_entrust(t_init: Object, t_wizard: O
 
 @pytest.mark.django_db
 def test_cant_change_location_unless_allowed_to_move(t_init: Object, t_wizard: Object):
-    pytest.skip()
+    printed = []
+    def _writer(msg):
+        printed.append(msg)
+    with code.context(t_wizard, _writer):
+        obj = create("thing")
+    user = Object.objects.get(name__iexact='player')
+    with code.context(user, _writer):
+        obj = lookup("thing")
+        obj.location = user
+        with pytest.raises(PermissionError) as excinfo:
+            obj.save()
+        assert str(excinfo.value) == f"#{user.pk} (Player) is not allowed write on #{obj.pk} (thing)"
+    with code.context(t_wizard, _writer):
+        obj = lookup("thing")
+        obj.allow(user, 'move')
+        obj.allow(user, 'write')
+    with code.context(user, _writer):
+        obj = lookup("thing")
+        obj.location = user
+        obj.save()
+
 
 @pytest.mark.django_db
-def test_change_location_calls_enterfunc(t_init: Object, t_wizard: Object):
-    pytest.skip()
+@override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_TASK_STORE_EAGER_RESULT=True)
+def test_change_location_calls_enterfunc(t_init: Object, t_wizard: Object, caplog):
+    printed = []
+    def _writer(msg):
+        printed.append(msg)
+    with caplog.at_level(logging.INFO, "moo.core.tasks.background"):
+        with code.context(t_wizard, _writer):
+            containers = lookup("containers class")
+            box = create("box", parents=[containers])
+            box.add_verb("enterfunc", code="print(args[0])", method=True)
+            thing = create("thing")
+            thing.location = box
+            thing.save()
+    assert caplog.text.endswith(f"#{thing.pk} (thing)\n")
 
 @pytest.mark.django_db
-def test_change_location_calls_exitfunc(t_init: Object, t_wizard: Object):
-    pytest.skip()
+@override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_TASK_STORE_EAGER_RESULT=True)
+def test_change_location_calls_exitfunc(t_init: Object, t_wizard: Object, caplog):
+    printed = []
+    def _writer(msg):
+        printed.append(msg)
+    with caplog.at_level(logging.INFO, "moo.core.tasks.background"):
+        with code.context(t_wizard, _writer):
+            containers = lookup("containers class")
+            box = create("box", parents=[containers])
+            box.add_verb("exitfunc", code="print(args[0])", method=True)
+            thing = create("thing", location=box)
+            assert thing.location == box
+        with code.context(t_wizard, _writer):
+            thing = lookup("thing")
+            thing.location = t_wizard.location
+            thing.save()
+            assert thing.location == t_wizard.location
+    assert caplog.text.endswith(f"#{thing.pk} (thing)\n")
 
 @pytest.mark.django_db
 def test_change_location_calls_accept(t_init: Object, t_wizard: Object):
-    pytest.skip()
+    printed = []
+    def _writer(msg):
+        printed.append(msg)
+    user = Object.objects.get(name__iexact='player')
+    with code.context(user, _writer):
+        box = create("box")
+        box.add_verb("accept", code="return False", method=True)
+        with pytest.raises(PermissionError) as excinfo:
+            thing = create("thing", location=box)
+        thing = lookup("thing")
+        assert str(excinfo.value) == f"#{box.pk} (box) did not accept #{thing.pk} (thing)"
