@@ -142,7 +142,7 @@ def test_cant_change_location_unless_allowed_to_move(t_init: Object, t_wizard: O
 
 @pytest.mark.django_db
 @override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_TASK_STORE_EAGER_RESULT=True)
-def test_change_location_calls_enterfunc(t_init: Object, t_wizard: Object, caplog):
+def test_change_location_calls_enterfunc(t_init: Object, t_wizard: Object, caplog: pytest.LogCaptureFixture):
     printed = []
     def _writer(msg):
         printed.append(msg)
@@ -158,7 +158,7 @@ def test_change_location_calls_enterfunc(t_init: Object, t_wizard: Object, caplo
 
 @pytest.mark.django_db
 @override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_TASK_STORE_EAGER_RESULT=True)
-def test_change_location_calls_exitfunc(t_init: Object, t_wizard: Object, caplog):
+def test_change_location_calls_exitfunc(t_init: Object, t_wizard: Object, caplog: pytest.LogCaptureFixture):
     printed = []
     def _writer(msg):
         printed.append(msg)

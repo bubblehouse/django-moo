@@ -9,7 +9,7 @@ from .. import tasks, code
 
 @pytest.mark.django_db
 @override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_TASK_STORE_EAGER_RESULT=True)
-def test_simple_async_verb(t_init: Object, t_wizard: Object, caplog):
+def test_simple_async_verb(t_init: Object, t_wizard: Object, caplog: pytest.LogCaptureFixture):
     printed = []
     def _writer(msg):
         printed.append(msg)
@@ -27,7 +27,7 @@ def test_simple_async_verb(t_init: Object, t_wizard: Object, caplog):
 
 @pytest.mark.django_db
 @override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_TASK_STORE_EAGER_RESULT=True)
-def test_simple_async_verb_callback(t_init: Object, t_wizard: Object, caplog):
+def test_simple_async_verb_callback(t_init: Object, t_wizard: Object, caplog: pytest.LogCaptureFixture):
     verb = Verb.objects.get(names__name="test-async-verb")
     callback = Verb.objects.get(names__name="test-async-verb-callback")
     with caplog.at_level(logging.INFO, "moo.core.tasks.background"):
