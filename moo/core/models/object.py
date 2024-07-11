@@ -76,7 +76,6 @@ class Object(models.Model, AccessibleMixin):
     """
     location = models.ForeignKey('self', related_name='contents', blank=True, null=True, on_delete=models.SET_NULL, db_index=True)
     """
-    [`TODO <https://gitlab.com/bubblehouse/django-moo/-/issues/12>`_]
     The location of this object. When changing, this kicks off some other verbs:
 
     If `where` is the new object, then the verb-call `where.accept(self)` is performed before any movement takes place.
