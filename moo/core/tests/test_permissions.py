@@ -5,7 +5,7 @@ from django.test import override_settings
 
 from moo.core.models import Object, Player
 from moo.tests import *  # pylint: disable=wildcard-import
-from .. import code, create, lookup
+from .. import code, exceptions, create, lookup
 
 @pytest.mark.django_db
 def test_regular_user_can_read_a_thing(t_init: Object, t_wizard: Object):
@@ -189,3 +189,17 @@ def test_change_location_calls_accept(t_init: Object, t_wizard: Object):
             thing = create("thing", location=box)
         thing = lookup("thing")
         assert str(excinfo.value) == f"#{box.pk} (box) did not accept #{thing.pk} (thing)"
+
+@pytest.mark.django_db
+def test_change_location_checks_recursion(t_init: Object, t_wizard: Object):
+    printed = []
+    def _writer(msg):
+        printed.append(msg)
+    with code.context(t_wizard, _writer):
+        containers = lookup("containers class")
+        box = create("box", parents=[containers])
+        envelope = create("envelope", parents=[containers], location=box)
+        with pytest.raises(exceptions.RecursiveError) as excinfo:
+            box.location = envelope
+            box.save()
+        assert str(excinfo.value) == f"#{box.pk} (box) already contains #{envelope.pk} (envelope)"
