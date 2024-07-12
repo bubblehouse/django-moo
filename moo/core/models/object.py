@@ -119,6 +119,12 @@ class Object(models.Model, AccessibleMixin):
         aliases = AccessibleObject.objects.filter(location=self, aliases__alias__iexact=name)
         return qs.union(aliases)
 
+    def contains(self, obj: "Object"):
+        for item in self.get_contents():
+            if item == obj:
+                return True
+        return False
+
     def get_ancestors(self) -> Generator["Object", None, None]:
         """
         Get the ancestor tree for this object.
@@ -138,6 +144,16 @@ class Object(models.Model, AccessibleMixin):
         for child in self.children.all():
             yield child
             yield from child.get_descendents()
+
+    def get_contents(self) -> Generator["Object", None, None]:
+        """
+        Get the content tree for this object.
+        """
+        self.can_caller('read', self)
+        # TODO: One day when Django 5.0 works with `django-cte` this can be SQL.
+        for item in self.contents.all():
+            yield item
+            yield from item.get_contents()
 
     def add_verb(self, *names:list[str], code:str=None, owner:"Object"=None, repo=None, filename:str=None, ability:bool=False, method:bool=False):
         """
@@ -275,6 +291,9 @@ class Object(models.Model, AccessibleMixin):
         # after saving, new objects need default permissions
         if unsaved:
             utils.apply_default_permissions(self)
+        # Recursion Check: note that this leaves a broken object behind unless run in a transaction
+        if self.location and self.contains(self.location):
+            raise exceptions.RecursiveError(f"{self} already contains {self.location}")
         # ACL Check: to change owner, caller must be allowed to `entrust` on this object
         original_owner = getattr(self, 'original_owner', None)
         original_owner = Object.objects.get(pk=original_owner) if original_owner else None
