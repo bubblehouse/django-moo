@@ -1,3 +1,10 @@
+## [0.29.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.29.0...v0.29.1) (2024-07-12)
+
+
+### Bug Fixes
+
+* check for recursion when changing location ([f27c76a](https://gitlab.com/bubblehouse/django-moo/commit/f27c76a871976872fa50f19f3784f9373617644b))
+
 ## [0.29.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.28.0...v0.29.0) (2024-07-10)
 
 
