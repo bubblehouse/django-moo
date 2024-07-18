@@ -14,6 +14,9 @@ from moo.core.bootstrap import load_python
 
 @pytest.fixture()
 def t_init():
+    """
+    Test fixture that pre-seeds a basic bootstrapped environment.
+    """
     name = "test"
     Repository.objects.create(
         slug=name,
@@ -30,4 +33,7 @@ def t_init():
 
 @pytest.fixture()
 def t_wizard():
+    """
+    Test fixture that returns the Wizard account.
+    """
     yield Object.objects.get(name='Wizard')
