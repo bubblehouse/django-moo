@@ -1,3 +1,10 @@
+## [0.29.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.29.1...v0.29.2) (2024-07-18)
+
+
+### Bug Fixes
+
+* override delete() on Object, not AccessibleObject ([a4c0860](https://gitlab.com/bubblehouse/django-moo/commit/a4c08601cb3640b6c37ae31d499fd41b299f35a6))
+
 ## [0.29.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.29.0...v0.29.1) (2024-07-12)
 
 
