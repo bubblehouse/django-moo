@@ -280,6 +280,15 @@ class Object(models.Model, AccessibleMixin):
         else:
             raise AccessibleProperty.DoesNotExist(f"No such property `{name}`.")
 
+    def delete(self, *args, **kwargs):
+        try:
+            quota = self.owner.get_property('ownership_quota', recurse=False)
+            if quota is not None:
+                self.owner.set_property('ownership_quota', quota + 1)
+        except AccessibleProperty.DoesNotExist:
+            pass
+        super().delete(*args, **kwargs)
+
     def save(self, *args, **kwargs):
         unsaved = self.pk is None
         if unsaved:
@@ -322,15 +331,6 @@ class Object(models.Model, AccessibleMixin):
 class AccessibleObject(Object):
     class Meta:
         proxy = True
-
-    def delete(self, *args, **kwargs):
-        try:
-            quota = self.owner.get_property('ownership_quota', recurse=False)
-            if quota is not None:
-                self.owner.set_property('ownership_quota', quota + 1)
-        except AccessibleProperty.DoesNotExist:
-            pass
-        super().delete(*args, **kwargs)
 
     def owns(self, subject:Object) -> bool:
         """
