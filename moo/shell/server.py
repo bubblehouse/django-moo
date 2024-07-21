@@ -109,10 +109,13 @@ class SSHServer(PromptToolkitSSHServer):
 
 class SFTPServer(asyncssh.SFTPServer):
     """
-    Create an SFTP/SCP server for client access.
+    Create an SFTP/SCP server for access to Verbs and Properties
     """
-
     def __init__(self, chan: asyncssh.SSHServerChannel):
+        """
+        This is initialized in an async context, so we just save
+        the username to look up later.
+        """
         self.username = username = chan.get_extra_info('username')
         self.user = None
         self.caller = None
@@ -122,6 +125,9 @@ class SFTPServer(asyncssh.SFTPServer):
 
     @sync_to_async
     def download_path(self, path):
+        """
+        Pre-cache a directory before browsing to it or opening files.
+        """
         self.user = User.objects.get(username=self.username)
         self.caller = Object.objects.get(pk=self.user.player.avatar.pk)
         parts = path.decode('utf8').strip('/').split('/')
@@ -155,6 +161,9 @@ class SFTPServer(asyncssh.SFTPServer):
 
     @sync_to_async
     def upload_path(self, path):
+        """
+        Given the path of a modified file, upload it appropriately.
+        """
         self.user = User.objects.get(username=self.username)
         self.caller = Object.objects.get(pk=self.user.player.avatar.pk)
         path = path[len(self._chroot):]
