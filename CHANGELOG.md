@@ -1,3 +1,10 @@
+## [0.30.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.29.2...v0.30.0) (2024-07-21)
+
+
+### Features
+
+* added sftp/scp support for editing verbs and properties ([dcbe75f](https://gitlab.com/bubblehouse/django-moo/commit/dcbe75f1f2faba1a5b222d663b776d458cf50b93))
+
 ## [0.29.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.29.1...v0.29.2) (2024-07-18)
 
 
