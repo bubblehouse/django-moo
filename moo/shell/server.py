@@ -197,18 +197,18 @@ class SFTPServer(asyncssh.SFTPServer):
             except PermissionError as e:
                 raise SFTPPermissionDenied(path) from e
 
-    async def open(self, path, *args, **kwargs):
+    async def open(self, path, *args, **kwargs):  # pylint: disable=invalid-overridden-method
         await self.download_path(path)
         return super().open(path, *args, **kwargs)
 
-    async def open56(self, path, *args, **kwargs):
+    async def open56(self, path, *args, **kwargs):  # pylint: disable=invalid-overridden-method
         await self.download_path(path)
         return super().open56(path, *args, **kwargs)
 
-    async def lstat(self, path):
+    async def lstat(self, path):  # pylint: disable=invalid-overridden-method
         await self.download_path(path)
         return super().lstat(path)
 
-    async def close(self, f):
-        super().close(f)
-        await self.upload_path(f.name)
+    async def close(self, file_obj):  # pylint: disable=invalid-overridden-method
+        super().close(file_obj)
+        await self.upload_path(file_obj.name)
