@@ -7,6 +7,9 @@ import argparse
 import shlex
 import importlib.resources
 import logging
+import warnings
+
+from django.conf import settings
 
 log = logging.getLogger(__name__)
 
@@ -32,6 +35,44 @@ def load_python(python_path):
         exec(  # pylint: disable=exec-used
             compile(src, python_path, 'exec'), globals(), dict()
         )
+
+def initialize_dataset(dataset='default'):
+    from moo.core import create
+    from moo.core import models
+    for name in settings.DEFAULT_PERMISSIONS:
+        _ = models.Permission.objects.create(name=name)
+    repo = models.Repository.objects.get(slug=dataset)
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', category=RuntimeWarning)
+        system = create(name="System Object", unique_name=True)
+        set_default_permissions = models.Verb.objects.create(
+            method = True,
+            origin = system,
+            repo = repo,
+            code = get_source('_system_set_default_permissions.py', dataset=dataset)
+        )
+        set_default_permissions.names.add(models.VerbName.objects.create(
+            verb = set_default_permissions,
+            name = 'set_default_permissions'
+        ))
+        set_default_permissions(set_default_permissions)
+        set_default_permissions(system)
+    containers = create(name="containers class", unique_name=True)
+    containers.add_verb("accept", code="return True", method=True)
+    # Create the first real user
+    wizard = create(name="Wizard", unique_name=True, parents=[containers])
+    wizard.owner = wizard
+    wizard.save()
+    # Wizard owns containers
+    containers.owner = wizard
+    containers.save()
+    # Wizard owns the system...
+    system.owner = wizard
+    system.save()
+    # ...and the default permissions verb
+    set_default_permissions.owner = wizard
+    set_default_permissions.save()
+    return repo
 
 def load_verbs(repo, dataset='default'):
     from moo.core.models.object import Object

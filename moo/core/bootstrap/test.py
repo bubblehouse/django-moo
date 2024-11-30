@@ -1,51 +1,13 @@
 import logging
-import warnings
 
-from django.conf import settings
-
-from moo.core import models, bootstrap, code
-from moo.core import create
+from moo.core import bootstrap, code
+from moo.core import create, lookup
 
 log = logging.getLogger(__name__)
 
-for name in settings.DEFAULT_PERMISSIONS:
-    p = models.Permission.objects.create(name=name)
-
-repo = models.Repository.objects.get(slug='test')
-with warnings.catch_warnings():
-    warnings.simplefilter('ignore', category=RuntimeWarning)
-    system = create(name="System Object", unique_name=True)
-    set_default_permissions = models.Verb.objects.create(
-        method = True,
-        origin = system,
-        repo = repo,
-        code = bootstrap.get_source('_system_set_default_permissions.py', dataset='test')
-    )
-    set_default_permissions.names.add(models.VerbName.objects.create(
-        verb = set_default_permissions,
-        name = 'set_default_permissions'
-    ))
-    set_default_permissions(set_default_permissions)
-    set_default_permissions(system)
-
-containers = create(name="containers class", unique_name=True)
-containers.add_verb("accept", code="return True", method=True)
-
-# Create the first real user
-wizard = create(name="Wizard", unique_name=True, parents=[containers])
-wizard.owner = wizard
-wizard.save()
-
-# Wizard owns containers
-containers.owner = wizard
-containers.save()
-
-# Wizard owns the system...
-system.owner = wizard
-system.save()
-# ...and the default permissions verb
-set_default_permissions.owner = wizard
-set_default_permissions.save()
+repo = bootstrap.initialize_dataset('test')
+wizard = lookup('Wizard')
+containers = lookup('containers class')
 
 with code.context(wizard, log.info):
     bag = create('bag of holding', parents=[containers], location=wizard)
