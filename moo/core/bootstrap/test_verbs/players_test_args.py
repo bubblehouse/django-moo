@@ -1,3 +1,5 @@
+#!moo verb test-args --on "player class" --ability --method
+
 from moo.core import api
 
 if api.parser is not None:

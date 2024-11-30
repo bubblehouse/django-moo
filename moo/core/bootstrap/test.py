@@ -19,7 +19,7 @@ with warnings.catch_warnings():
         method = True,
         origin = system,
         repo = repo,
-        code = bootstrap.get_source('system_set_default_permissions.py', dataset='test')
+        code = bootstrap.get_source('_system_set_default_permissions.py', dataset='test')
     )
     set_default_permissions.names.add(models.VerbName.objects.create(
         verb = set_default_permissions,
@@ -52,13 +52,6 @@ with code.context(wizard, log.info):
     hammer = create('wizard hammer', location=bag)
     book = create('class book', parents=[containers], location=bag)
     players = create('player class', location=book)
-    players.add_verb("look", "inspect", filename="players_look.py", repo=repo, ability=True, method=True)
-    players.add_verb("say", filename="players_say.py", repo=repo, ability=True)
-    players.add_verb("test-args", filename="players_test_args.py", repo=repo, ability=True, method=True)
-    players.add_verb("test-nested-verbs", filename="players_test_nested_verbs.py", repo=repo, ability=True, method=True)
-    players.add_verb("test-async-verbs", filename="players_test_async_verbs.py", repo=repo, ability=True, method=True)
-    players.add_verb("test-async-verb", filename="players_test_async_verb.py", repo=repo, ability=True, method=True)
-    players.add_verb("test-async-verb-callback", filename="players_test_async_verb_callback.py", repo=repo, ability=True, method=True)
     guests = create('guest class', location=book)
     guests.parents.add(players)
     authors = create('author class', location=book)
@@ -84,3 +77,5 @@ with code.context(wizard, log.info):
 
     player = create(name="Player", unique_name=True, location=lab)
     player.parents.add(players, containers)
+
+    bootstrap.load_verbs(repo, dataset='test')

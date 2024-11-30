@@ -1,3 +1,5 @@
+#!moo verb test-async-verb --on "player class" --ability --method
+
 from moo.core import api, invoke
 
 counter = 1

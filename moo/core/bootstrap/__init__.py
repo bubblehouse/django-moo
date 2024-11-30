@@ -36,9 +36,14 @@ def load_python(python_path):
 def load_verbs(repo, dataset='default'):
     from moo.core.models.object import Object
     for ref in importlib.resources.files(f'moo.core.bootstrap.{dataset}_verbs').iterdir():
+        if not ref.is_file():
+            continue
         with ref.open() as f:
             contents = f.read()
-            first, code = contents.split("\n", maxsplit=1)
+            try:
+                first, code = contents.split("\n", maxsplit=1)
+            except ValueError:
+                continue
             if first.startswith("#!moo "):
                 log.info(f"Loading verb source `{ref.name}`...")
                 args = parser.parse_args(shlex.split(first[6:]))
