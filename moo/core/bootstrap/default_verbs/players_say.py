@@ -1,3 +1,5 @@
+#!moo verb say --on "player class" --ability
+
 from moo.core import api, write
 
 if not api.parser.has_dobj_str():
