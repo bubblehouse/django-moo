@@ -1,3 +1,5 @@
+#!moo verb say --on "player class" --ability
+
 from moo.core import api, write
 
 if not args and not api.parser.has_dobj_str():  # pylint: disable=undefined-variable  # type: ignore
