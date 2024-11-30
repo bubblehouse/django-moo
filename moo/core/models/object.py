@@ -169,7 +169,7 @@ class Object(models.Model, AccessibleMixin):
         """
         self.can_caller('write', self)
         owner = context.get('caller') or owner or self
-        if filename:
+        if filename and not code:
             code = bootstrap.get_source(filename, dataset=repo.slug)
         verb = AccessibleVerb.objects.create(
             method = method,
