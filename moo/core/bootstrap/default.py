@@ -19,7 +19,7 @@ with warnings.catch_warnings():
         method = True,
         origin = system,
         repo = repo,
-        code = bootstrap.get_source('system_set_default_permissions.py', dataset='default')
+        code = bootstrap.get_source('_system_set_default_permissions.py', dataset='default')
     )
     set_default_permissions.names.add(models.VerbName.objects.create(
         verb = set_default_permissions,
@@ -53,27 +53,23 @@ with code.context(wizard, log.info):
     hammer = create('wizard hammer', location=bag)
     book = create('class book', parents=[containers], location=bag)
     players = create('player class', location=book)
-    players.add_verb("look", "inspect", filename="players_look.py", repo=repo, ability=True)
-    players.add_verb("say", filename="players_say.py", repo=repo, ability=True)
-    guests = create('guest class', location=book)
-    guests.parents.add(players)
-    authors = create('author class', location=book)
-    authors.parents.add(players)
-    programmers = create('programmer class', location=book)
-    programmers.parents.add(authors)
-    wizards = create('wizard class', location=book)
-    wizards.parents.add(programmers)
+
+    guests = create('guest class', parents=[players], location=book)
+    authors = create('author class', parents=[players], location=book)
+    programmers = create('programmer class', parents=[authors], location=book)
+    wizards = create('wizard class', parents=[programmers], location=book)
 
     wizard.parents.add(wizards)
 
     rooms = create('room class', parents=[containers], location=book)
     rooms.set_property("description", "There's not much to see here.", inherited=True)
 
-    lab = create('The Laboratory')
-    lab.parents.add(rooms)
+    lab = create('The Laboratory', parents=[rooms])
     lab.set_property("description", """A cavernous laboratory filled with gadgetry of every kind,
     this seems like a dumping ground for every piece of dusty forgotten
     equipment a mad scientist might require.""")
 
     wizard.location = lab
     wizard.save()
+
+    bootstrap.load_verbs(repo)

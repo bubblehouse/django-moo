@@ -1,3 +1,5 @@
+#!moo verb look inspect --on "player class" --ability
+
 from moo.core import api
 
 if(api.parser.has_dobj()):
