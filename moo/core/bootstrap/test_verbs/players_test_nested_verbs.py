@@ -1,3 +1,5 @@
+#!moo verb test-nested-verbs --on "player class" --ability --method
+
 from moo.core import api
 
 counter = 1
