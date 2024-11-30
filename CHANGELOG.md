@@ -1,3 +1,19 @@
+## [0.31.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.30.0...v0.31.0) (2024-11-30)
+
+
+### Features
+
+* first pass at room movement verbs ([3d38859](https://gitlab.com/bubblehouse/django-moo/commit/3d38859238537f926473abb3f77a3064292614a1))
+* improve verb loading ([f14bbb5](https://gitlab.com/bubblehouse/django-moo/commit/f14bbb5c88d3a03fda22b386cb7a3203baeeef04))
+* move common boostrap code for universe into initialize_dataset ([f3df4f5](https://gitlab.com/bubblehouse/django-moo/commit/f3df4f514535d385e62ee558043407756676436b))
+
+
+### Bug Fixes
+
+* dont load from a file when the code is provided ([6bb56d8](https://gitlab.com/bubblehouse/django-moo/commit/6bb56d8bc97c4c5d10bd0a95c7b24439fa035bd2))
+* remove SFTP spike ([6938154](https://gitlab.com/bubblehouse/django-moo/commit/693815400d77a50d5dde82d4b44b9ac533b343e9))
+* verb cleanup ([8e8f10c](https://gitlab.com/bubblehouse/django-moo/commit/8e8f10c888e0e229b742ff926ad51e05141d52e5))
+
 ## [0.30.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.29.2...v0.30.0) (2024-07-21)
 
 
