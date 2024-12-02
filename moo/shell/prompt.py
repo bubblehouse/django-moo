@@ -81,9 +81,13 @@ class MooPrompt:
         caller = self.user.player.avatar
         log.info(f"{caller}: {line}")
         ct = tasks.parse_command.delay(caller.pk, line)
-        output = ct.get()
-        for item in output:
-            self.writer(item)
+        try:
+            output = ct.get()
+            for item in output:
+                self.writer(item)
+        except:  # pylint: disable=bare-except
+            import traceback
+            self.writer(f"[bold red]{traceback.format_exc()}[/bold red]")
 
     def writer(self, s, is_error=False):
         console = Console(color_system="truecolor")

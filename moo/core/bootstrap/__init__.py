@@ -37,8 +37,7 @@ def load_python(python_path):
         )
 
 def initialize_dataset(dataset='default'):
-    from moo.core import create
-    from moo.core import models
+    from moo.core import models, create
     for name in settings.DEFAULT_PERMISSIONS:
         _ = models.Permission.objects.create(name=name)
     repo = models.Repository.objects.get(slug=dataset)
