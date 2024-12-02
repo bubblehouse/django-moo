@@ -280,6 +280,19 @@ class Object(models.Model, AccessibleMixin):
         else:
             raise AccessibleProperty.DoesNotExist(f"No such property `{name}`.")
 
+    def has_property(self, name, recurse=True):
+        """
+        Check if a particular :class:`.Property` is defined on this object.
+        """
+        self.can_caller('read', self)
+        qs = AccessibleProperty.objects.filter(origin=self, name=name)
+        if not qs and recurse:
+            for ancestor in self.get_ancestors():
+                qs = AccessibleProperty.objects.filter(origin=ancestor, name=name)
+                if qs:
+                    break
+        return qs.exists()
+
     def delete(self, *args, **kwargs):
         try:
             quota = self.owner.get_property('ownership_quota', recurse=False)
