@@ -21,7 +21,16 @@ if has_description:
 else:
     print("[deep_pink4 bold]Not much to see here.[/deep_pink4 bold]")
 
-has_contents = obj.contents.filter(obvious=True)
-if has_contents:
+contents = obj.contents.filter(obvious=True)
+if contents:
     print('[yellow]Obvious contents:[/yellow]')
-    print(list(has_contents))
+    for content in contents:
+        print(f'{content.name}')
+
+# if you're looking at the room you're in, show the exits
+if obj == api.caller.location and obj.has_property('exits'):
+    exits = api.caller.location.get_property('exits')
+    if exits:
+        print('[yellow]Exits:[/yellow]')
+        for direction, exit in exits.items():
+            print(f'{direction}: {exit["destination"].name}')

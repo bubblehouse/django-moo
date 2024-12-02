@@ -1,4 +1,4 @@
-#!moo verb go --on "author class" --ability
+#!moo verb go --on "player class" --ability
 
 from moo.core import api
 
@@ -10,7 +10,7 @@ else:
     exits = {}
 
 if direction not in exits:
-    print(f'[color red]There is no exit in that direction.[/color]')
+    print(f'[color red]There is no exit in that direction.[/color red]')
     return # pylint: disable=return-outside-function  # type: ignore
 
 exit_info = exits[direction]
@@ -19,7 +19,7 @@ door = exit_info.get('door')
 
 # TODO: handle doors
 if door and not door.invoke_verb('open?'):
-    print(f'[color red]The {door.name} is closed.[/color]')
+    print(f'[color red]The {door.name} is closed.[/color red]')
     return # pylint: disable=return-outside-function  # type: ignore
 
 api.caller.location = destination
