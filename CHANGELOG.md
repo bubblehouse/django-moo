@@ -1,3 +1,16 @@
+## [0.32.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.31.0...v0.32.0) (2024-12-02)
+
+
+### Features
+
+* added has_property ([e13f961](https://gitlab.com/bubblehouse/django-moo/commit/e13f961a332d3001d5ae3379fe1500f71c2b81d3))
+
+
+### Bug Fixes
+
+* restore default bootstrap after mistaking it for test ([3312f1d](https://gitlab.com/bubblehouse/django-moo/commit/3312f1d048f38ea429f91467fcc8ca123ef49f7c))
+* small tweaks and debug improvements for verbs ([f0247c4](https://gitlab.com/bubblehouse/django-moo/commit/f0247c4d4db5a146a7b9838dbc4dcf391e8649e3))
+
 ## [0.31.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.30.0...v0.31.0) (2024-11-30)
 
 
