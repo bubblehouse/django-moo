@@ -268,6 +268,7 @@ class Object(models.Model, AccessibleMixin):
         :param recurse: whether or not to traverse the inheritance tree
         :param original: if True, return the whole Property object, not just its value
         """
+        from .. import moojson
         self.can_caller('read', self)
         qs = AccessibleProperty.objects.filter(origin=self, name=name)
         if not qs and recurse:
@@ -276,7 +277,7 @@ class Object(models.Model, AccessibleMixin):
                 if qs:
                     break
         if qs:
-            return qs[0] if original else json.loads(qs[0].value)
+            return qs[0] if original else moojson.loads(qs[0].value)
         else:
             raise AccessibleProperty.DoesNotExist(f"No such property `{name}`.")
 
