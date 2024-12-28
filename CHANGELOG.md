@@ -1,3 +1,12 @@
+## [0.33.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.33.0...v0.33.1) (2024-12-28)
+
+
+### Bug Fixes
+
+* class name consistency ([4c46ab1](https://gitlab.com/bubblehouse/django-moo/commit/4c46ab11cac02517a03e956c645ec7dc9cfc2eb1))
+* go verb needs to save the changes to caller location ([cd752b0](https://gitlab.com/bubblehouse/django-moo/commit/cd752b06f51e42f790bb80538785f3f797b7afcb))
+* use moo de-serialization for property values ([07b76ce](https://gitlab.com/bubblehouse/django-moo/commit/07b76ce2985ec334f0f78b2d3af96472a7f84118))
+
 ## [0.33.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.32.0...v0.33.0) (2024-12-28)
 
 

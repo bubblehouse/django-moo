@@ -1,7 +1,7 @@
 FROM python:3.11-slim-bullseye
 LABEL Maintainer="Phil Christensen <phil@bubblehouse.org>"
 LABEL Name="django-moo"
-LABEL Version="0.33.0"
+LABEL Version="0.33.1"
 
 # Install base dependencies
 RUN apt-get update \
