@@ -4,7 +4,6 @@ The primary Object class
 """
 
 import logging
-import traceback
 import json
 from typing import Generator
 
@@ -247,13 +246,14 @@ class Object(models.Model, AccessibleMixin):
         :param inherited: if True, this property's owner will be reassigned on child instances
         :param owner: the owner of the Property being created
         """
+        from .. import moojson
         self.can_caller('write', self)
         owner = context.get('caller') or owner or self
         AccessibleProperty.objects.update_or_create(
             name = name,
             origin = self,
             defaults = dict(
-                value = json.dumps(value),
+                value = moojson.dumps(value),
                 owner = owner,
                 type = "string",
                 inherited = inherited,
