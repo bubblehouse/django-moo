@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "djangomoo"
-version = "0.32.0"
+version = "0.33.0"
 description = "A game server for hosting text-based online MOO-like games."
 license = "AGPL"
 authors = ["Phil Christensen <phil@bubblehouse.org>"]
