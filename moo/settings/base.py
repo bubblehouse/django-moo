@@ -237,11 +237,11 @@ LOGGING = {
 # https://docs.celeryq.dev/en/stable/userguide/configuration.html
 
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_ACCEPT_CONTENT = ['application/x-python-serialize']
+CELERY_ACCEPT_CONTENT = ['moojson', 'json']
+CELERY_EVENT_SERIALIZER = 'moojson'
+CELERY_TASK_SERIALIZER = 'moojson'
+CELERY_RESULT_SERIALIZER = 'moojson'
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_CACHE_BACKEND = 'default'
-CELERY_EVENT_SERIALIZER = 'pickle'
-CELERY_TASK_SERIALIZER = 'pickle'
-CELERY_RESULT_SERIALIZER = 'pickle'
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 CELERY_TASK_TIME_LIMIT = 3

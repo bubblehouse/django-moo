@@ -10,8 +10,7 @@ import logging
 from django.conf import settings
 
 from RestrictedPython import compile_restricted, compile_restricted_function
-from RestrictedPython.Guards import safe_builtins
-from RestrictedPython.Guards import guarded_unpack_sequence
+from RestrictedPython.Guards import safe_builtins, guarded_unpack_sequence, guarded_iter_unpack_sequence
 
 log = logging.getLogger(__name__)
 
@@ -130,8 +129,13 @@ def get_restricted_environment(writer):
         _getiter_         = iter,
         _inplacevar_      = inplace_var_modification,
         _unpack_sequence_ = guarded_unpack_sequence,
+        _iter_unpack_sequence_ = guarded_iter_unpack_sequence,
         __import__        = restricted_import,
         __builtins__      = safe_builtins,
+        __metaclass__     = type,
+        __name__          = "__verb__",
+        __package__       = None,
+        __doc__           = None,
     )
 
     return env
