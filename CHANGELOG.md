@@ -1,3 +1,10 @@
+## [0.33.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.32.0...v0.33.0) (2024-12-28)
+
+
+### Features
+
+* implement serialization for moo types ([2c2470f](https://gitlab.com/bubblehouse/django-moo/commit/2c2470fb0d191bd320925a9bc19397b06a72f2be))
+
 ## [0.32.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.31.0...v0.32.0) (2024-12-02)
 
 
