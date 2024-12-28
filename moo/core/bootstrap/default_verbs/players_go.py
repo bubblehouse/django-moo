@@ -10,7 +10,7 @@ else:
     exits = {}
 
 if direction not in exits:
-    print(f'[color red]There is no exit in that direction.[/color red]')
+    print('[color red]There is no exit in that direction.[/color red]')
     return # pylint: disable=return-outside-function  # type: ignore
 
 exit_info = exits[direction]
@@ -23,4 +23,5 @@ if door and not door.invoke_verb('open?'):
     return # pylint: disable=return-outside-function  # type: ignore
 
 api.caller.location = destination
+api.caller.save()
 print(f'You go {direction}.')
