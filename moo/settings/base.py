@@ -13,9 +13,15 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 
+from celery.signals import setup_logging
+
+@setup_logging.connect
+def configure_celery_logging(**_kwargs):
+    from logging.config import dictConfig
+    dictConfig(CELERY_LOGGING)
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -161,7 +167,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': True,
+    'disable_existing_loggers': False,
     'filters': {
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse',
@@ -171,60 +177,22 @@ LOGGING = {
         },
     },
     'formatters': {
-        'django.server': {
-            '()': 'django.utils.log.ServerFormatter',
-            'format': '{levelname} {name} {message}',
-            'style': '{',
-        }
+        'simple': {
+            'format': '%(asctime)s: %(levelname)s %(message)s',
+        },
     },
     'handlers': {
         'console': {
             'level': 'DEBUG',
-            'filters': ['require_debug_true'],
             'class': 'logging.StreamHandler',
-        },
-        'django.server': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler'
-        },
-        'mail_admins': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler'
-        },
-        'null': {
-            'level': 'DEBUG',
-            'class': 'logging.NullHandler',
+            'formatter': 'simple',
         },
     },
     'loggers': {
-        'boto3': {
-            'level': 'WARNING',
+        '': {
             'handlers': ['console'],
-            'propagate': False
-        },
-        'botocore': {
-            'level': 'WARNING',
-            'handlers': ['console'],
-            'propagate': False
-        },
-        'django': {
-            'handlers': ['console', 'mail_admins'],
-            'level': 'INFO',
-        },
-        'django.server': {
-            'handlers': ['django.server'],
             'level': 'INFO',
             'propagate': False,
-        },
-        'moo': {
-            'handlers': ['console'],
-            'formatter': 'django.server',
-            'level': 'INFO',
-        },
-        'asyncssh': {
-            'handlers': ['console'],
-            'level': 'INFO',
         }
     }
 }
@@ -242,3 +210,59 @@ CELERY_CACHE_BACKEND = 'default'
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 CELERY_TASK_TIME_LIMIT = 3
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
+CELERY_LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {  # Sets up the format of the logging output
+        'simple': {
+            'format': '%(asctime)s: %(levelname)s %(message)s',
+        },
+        'celeryTask': {
+            '()': 'celery.app.log.TaskFormatter',
+            'fmt': '%(asctime)s: %(levelname)s %(task_name)s[%(task_id)s]: %(message)s'
+        },
+        'celeryProcess': {
+            '()': 'celery.utils.log.ColorFormatter',
+            'fmt': '%(asctime)s: %(levelname)s %(message)s'
+        },
+    },
+    'filters': {
+        'celeryTask': {
+            '()': 'moo.logging.CeleryTaskFilter',
+        },
+        'celeryProcess': {
+            '()': 'moo.logging.CeleryProcessFilter',
+        },
+        'notCelery': {
+            '()': 'moo.logging.NotCeleryFilter',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+            'filters': ['notCelery']
+        },
+        'console2': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'celeryTask',
+            'filters': ['celeryTask']
+        },
+        'console3': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'celeryProcess',
+            'filters': ['celeryProcess']
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['console', 'console2', 'console3'],
+            'level': 'INFO',
+            'propagate': False,
+        }
+    }
+}

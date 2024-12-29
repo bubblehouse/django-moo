@@ -4,15 +4,14 @@ Celery workers run the verb tasks.
 """
 
 from celery import Celery
+from kombu.serialization import register
+
+from .core import moojson
 
 app = Celery('moo')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
 
-# Register your new serializer methods into kombu
-from kombu.serialization import register
-from .core import moojson
-
-register('moojson', moojson.dumps, moojson.loads, 
+register('moojson', moojson.dumps, moojson.loads,
     content_type='application/x-moojson',
-    content_encoding='utf-8') 
+    content_encoding='utf-8')
