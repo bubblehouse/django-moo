@@ -18,7 +18,7 @@ direction = api.parser.get_dobj_str()
 room = lookup(api.parser.get_pobj_str('to'))
 
 if direction in exits:
-    print(f'[color red]There is already an exit in that direction.[/color]')
+    print('[color red]There is already an exit in that direction.[/color]')
     return # pylint: disable=return-outside-function  # type: ignore
 
 exits[direction] = {
