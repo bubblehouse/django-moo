@@ -22,6 +22,8 @@ def test_simple_async_verb(t_init: Object, t_wizard: Object, caplog: pytest.LogC
     for line in caplog.text.split("\n"):
         if not line:
             continue
+        if 'succeeded in' in line:
+            continue
         counter += 1
         assert line.endswith(str(counter))
 
@@ -35,6 +37,8 @@ def test_simple_async_verb_callback(t_init: Object, t_wizard: Object, caplog: py
     counter = 0
     for line in caplog.text.split("\n"):
         if not line:
+            continue
+        if 'succeeded in' in line:
             continue
         counter += 1
         assert line.endswith(str(counter))
