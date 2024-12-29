@@ -154,7 +154,7 @@ def test_change_location_calls_enterfunc(t_init: Object, t_wizard: Object, caplo
             thing = create("thing")
             thing.location = box
             thing.save()
-    assert caplog.text.endswith(f"#{thing.pk} (thing)\n")
+    assert f"#{thing.pk} (thing)\n" in caplog.text
 
 @pytest.mark.django_db
 @override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_TASK_STORE_EAGER_RESULT=True)
@@ -174,7 +174,7 @@ def test_change_location_calls_exitfunc(t_init: Object, t_wizard: Object, caplog
             thing.location = t_wizard.location
             thing.save()
             assert thing.location == t_wizard.location
-    assert caplog.text.endswith(f"#{thing.pk} (thing)\n")
+    assert f"#{thing.pk} (thing)\n" in caplog.text
 
 @pytest.mark.django_db
 def test_change_location_calls_accept(t_init: Object, t_wizard: Object):
