@@ -130,7 +130,7 @@ class Object(models.Model, AccessibleMixin):
         """
         self.can_caller('read', self)
         # TODO: One day when Django 5.0 works with `django-cte` this can be SQL.
-        for parent in self.parents.all():
+        for parent in self.parents.all():  # pylint: disable=no-member
             yield parent
             yield from parent.get_ancestors()
 

@@ -11,18 +11,15 @@ def loads(j):
             return d
         key = list(d.keys())[0]
         if(key[1] == '#'):
-            try:
-                if(key[0] == 'o'):
-                    return Object.objects.get(pk=int(key[2:]))
-                elif(key[0] == 'v'):
-                    return Verb.objects.get(pk=int(key[2:]))
-                elif(key[0] == 'p'):
-                    return Property.objects.get(pk=int(key[2:]))
-            except:
-                return 'missing:%s' % key
+            if(key[0] == 'o'):
+                return Object.objects.get(pk=int(key[2:]))
+            elif(key[0] == 'v'):
+                return Verb.objects.get(pk=int(key[2:]))
+            elif(key[0] == 'p'):
+                return Property.objects.get(pk=int(key[2:]))
         return d
     return json.loads(j, object_hook=to_entity)
-    
+
 def dumps(obj):
     from .models import Object, Verb, Property
     def from_entity(o):
