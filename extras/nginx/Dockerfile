@@ -1,4 +1,4 @@
-FROM nginx:1.23.2
+FROM nginx:1.27.3
 LABEL Maintainer="Phil Christensen <phil@bubblehouse.org>"
 
 # Install base dependencies
