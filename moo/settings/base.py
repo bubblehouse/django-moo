@@ -198,11 +198,6 @@ LOGGING = {
         },
     },
     'loggers': {
-        'boto': {
-            'level': 'WARNING',
-            'handlers': ['console'],
-            'propagate': False
-        },
         'boto3': {
             'level': 'WARNING',
             'handlers': ['console'],
@@ -224,6 +219,7 @@ LOGGING = {
         },
         'moo': {
             'handlers': ['console'],
+            'formatter': 'django.server',
             'level': 'INFO',
         },
         'asyncssh': {

@@ -8,11 +8,12 @@ from typing import Any, Optional
 
 from django.db import transaction
 from celery import shared_task
+from celery.utils.log import get_task_logger
 
 from . import code, parse, exceptions
 from .models import Object, Verb
 
-log = logging.getLogger(__name__)
+log = get_task_logger(__name__)
 background_log = logging.getLogger(f"{__name__}.background")
 
 @shared_task
