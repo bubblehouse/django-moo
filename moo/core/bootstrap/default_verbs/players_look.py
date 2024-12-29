@@ -32,5 +32,5 @@ if obj == api.caller.location and obj.has_property('exits'):
     exits = api.caller.location.get_property('exits')
     if exits:
         print('[yellow]Exits:[/yellow]')
-        for direction, exit in exits.items():
+        for direction, _ in exits.items():
             print(direction)
