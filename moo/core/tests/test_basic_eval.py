@@ -1,7 +1,6 @@
 import pytest
 
 from moo.core.models.object import Object
-from moo.tests import *  # pylint: disable=wildcard-import
 from .. import code
 
 @pytest.mark.django_db
