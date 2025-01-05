@@ -23,7 +23,7 @@ restrictedpython = "^7.0"
 ptpython = "^3.0.23"
 django-simplesshkey = "^2.1.0"
 watchdog = "^4.0.0"
-poetry-plugin-export = "^1.7.1"
+poetry-plugin-export = "^1.8.0"
 django-ace = "^1.32.4"
 celery = {extras = ["redis"], version = "^5.4.0"}
 django-celery-results = "^2.5.1"
