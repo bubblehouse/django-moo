@@ -16,7 +16,7 @@ ADD poetry.lock .
 ADD pyproject.toml .
 
 # Install Python application dependencies
-RUN pip install --no-cache-dir -q -U poetry pip \
+RUN pip install --no-cache-dir -q -U poetry poetry-plugin-export pip \
     && poetry export -o requirements.txt \
     && pip install --no-cache-dir -q -r requirements.txt
 
