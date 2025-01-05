@@ -35,7 +35,7 @@ def lookup(x:Union[int, str]):
     else:
         raise ValueError(f"{x} is not a supported lookup value.")
 
-def create(name,  *a, owner=None, location=None, parents=None, **kw):
+def create(name,  *a, **kw):
     """
     Creates and returns a new object whose parents are `parents` and whose owner is as described below.
     Provided `parents` are valid Objects with `derive` permission, otherwise :class:`.PermissionError` is
@@ -73,14 +73,13 @@ def create(name,  *a, owner=None, location=None, parents=None, **kw):
                 raise QuotaError(f"{api.caller} has run out of quota.")
         except AccessibleProperty.DoesNotExist:
             pass
-        if owner is None:
-            owner = api.caller
-    if location is None and owner:
-        location = owner.location
+        if 'owner' not in kw:
+            kw['owner'] = api.caller
+    if 'location' not in kw and 'owner' in kw:
+        kw['location'] = kw['owner'].location
+    parents = kw.pop('parents', [])
     obj = AccessibleObject.objects.create(
         name=name,
-        location=location,
-        owner=owner,
         *a, **kw
     )
     if parents:
