@@ -4,6 +4,7 @@ Support resources for PyTest framework.
 """
 
 import importlib.resources
+import logging
 
 import pytest
 from django.contrib.auth.models import User  # pylint: disable=imported-auth-user
@@ -12,12 +13,14 @@ from django.conf import settings
 from moo.core.models import Repository, Object, Player
 from moo.core.bootstrap import load_python
 
+log = logging.getLogger(__name__)
+
 @pytest.fixture()
-def t_init():
+def t_init(name="test"):
     """
     Test fixture that pre-seeds a basic bootstrapped environment.
     """
-    name = "test"
+    log.info(f"t_init: {name}")
     Repository.objects.create(
         slug=name,
         prefix=f'moo/core/bootstrap/{name}_verbs',

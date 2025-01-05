@@ -4,7 +4,6 @@ import pytest
 from django.test import override_settings
 
 from moo.core.models import Object, Player
-from moo.tests import *  # pylint: disable=wildcard-import
 from .. import code, exceptions, create, lookup
 
 @pytest.mark.django_db
