@@ -7,7 +7,7 @@ log = logging.getLogger(__name__)
 
 repo = bootstrap.initialize_dataset('test')
 wizard = lookup('Wizard')
-containers = lookup('containers class')
+containers = lookup('container class')
 
 with code.context(wizard, log.info):
     bag = create('bag of holding', parents=[containers], location=wizard)
