@@ -56,7 +56,7 @@ def initialize_dataset(dataset='default'):
         ))
         set_default_permissions(set_default_permissions)
         set_default_permissions(system)
-    containers = create(name="containers class", unique_name=True)
+    containers = create(name="container class", unique_name=True)
     containers.add_verb("accept", code="return True", method=True)
     # Create the first real user
     wizard = create(name="Wizard", unique_name=True, parents=[containers])

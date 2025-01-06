@@ -16,10 +16,11 @@ from moo.core.bootstrap import load_python
 log = logging.getLogger(__name__)
 
 @pytest.fixture()
-def t_init(name="test"):
+def t_init(request):
     """
     Test fixture that pre-seeds a basic bootstrapped environment.
     """
+    name = request.param if hasattr(request, 'param') else 'test'
     log.info(f"t_init: {name}")
     Repository.objects.create(
         slug=name,
