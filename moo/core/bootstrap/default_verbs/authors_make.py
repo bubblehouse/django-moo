@@ -8,4 +8,3 @@ if not(api.parser.has_dobj_str()):
 name = api.parser.get_dobj_str()
 new_obj = create(name)
 print('Created %s' % new_obj)
-
