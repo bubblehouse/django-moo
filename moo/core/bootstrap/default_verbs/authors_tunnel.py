@@ -27,3 +27,4 @@ exits[direction] = {
 }
 
 api.caller.location.set_property('exits', exits)
+print(f'[color yellow]Created an exit to the {direction} to "{room.name}".[/color yellow]')
