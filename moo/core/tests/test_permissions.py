@@ -147,7 +147,7 @@ def test_change_location_calls_enterfunc(t_init: Object, t_wizard: Object, caplo
         printed.append(msg)
     with caplog.at_level(logging.INFO, "moo.core.tasks.background"):
         with code.context(t_wizard, _writer):
-            containers = lookup("containers class")
+            containers = lookup("container class")
             box = create("box", parents=[containers])
             box.add_verb("enterfunc", code="print(args[0])", method=True)
             thing = create("thing")
@@ -163,7 +163,7 @@ def test_change_location_calls_exitfunc(t_init: Object, t_wizard: Object, caplog
         printed.append(msg)
     with caplog.at_level(logging.INFO, "moo.core.tasks.background"):
         with code.context(t_wizard, _writer):
-            containers = lookup("containers class")
+            containers = lookup("container class")
             box = create("box", parents=[containers])
             box.add_verb("exitfunc", code="print(args[0])", method=True)
             thing = create("thing", location=box)
@@ -195,7 +195,7 @@ def test_change_location_checks_recursion(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
     with code.context(t_wizard, _writer):
-        containers = lookup("containers class")
+        containers = lookup("container class")
         box = create("box", parents=[containers])
         envelope = create("envelope", parents=[containers], location=box)
         with pytest.raises(exceptions.RecursiveError) as excinfo:
