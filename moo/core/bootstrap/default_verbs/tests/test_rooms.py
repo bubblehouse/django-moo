@@ -1,7 +1,7 @@
 import pytest
 
-from ..models import Object
-from .. import code, parse
+from moo.core.models import Object
+from moo.core import code, parse
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
