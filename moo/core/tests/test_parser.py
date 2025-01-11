@@ -113,6 +113,12 @@ def test_parse_with_quoted_strings(t_init: Object, t_wizard: Object):
     assert parser.get_pobj_str('to') == 'something here'
 
 @pytest.mark.django_db
+def test_parse_specifier(t_init: Object, t_wizard: Object):
+    lex = parse.Lexer("make a jar")
+    parser = parse.Parser(lex, t_wizard)
+    assert parser.get_dobj_str() == 'jar'
+
+@pytest.mark.django_db
 def test_parse_with_quoted_strings_and_escapes(t_init: Object, t_wizard: Object):
     lex = parse.Lexer("@eval here as 'Large amounts of chalkdust lay all over the "
                        "objects in this room, and a large chalkboard at one end has "
