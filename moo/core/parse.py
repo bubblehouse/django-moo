@@ -204,15 +204,17 @@ class Parser:  # pylint: disable=too-many-instance-attributes
                     if not(obj):
                         obj = self.get_pronoun_object(name)
                     record[2] = obj
-
         if(hasattr(self, 'dobj_str') and self.dobj_str):
             #look for an object with this name/specifier
             self.dobj = self.find_object(self.dobj_spec_str, self.dobj_str)
             #try again (maybe it just looked like a specifier)
             if(not self.dobj and self.dobj_spec_str):
-                self.dobj_str = self.dobj_spec_str + ' ' + self.dobj_str
-                self.dobj_spec_str = ''
-                self.dobj = self.find_object(None, self.dobj_str)
+                dobj = self.find_object(None, self.dobj_spec_str + ' ' + self.dobj_str)
+                if dobj:
+                    # if we found an object, then correct the saved strings
+                    self.dobj_str = self.dobj_spec_str + ' ' + self.dobj_str
+                    self.dobj_spec_str = ''
+                    self.dobj = dobj
             #if there's nothing with this name, then we look for
             #pronouns before giving up
             if not(self.dobj):
