@@ -1,3 +1,17 @@
+## [0.33.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.33.1...v0.33.2) (2025-01-11)
+
+
+### Bug Fixes
+
+* broken BBcode colors ([d84f87f](https://gitlab.com/bubblehouse/django-moo/commit/d84f87f33f153e1b296f9cb105fe1e7e7d961537))
+* improve create when using args ([dd0b1bd](https://gitlab.com/bubblehouse/django-moo/commit/dd0b1bd849b7a920701b2205a7ec7fee845610bd))
+* logging improvements ([5909244](https://gitlab.com/bubblehouse/django-moo/commit/5909244f3e4fb158ebcbea9ca03f18d3a8ac0a54))
+* logging improvements for shell server ([181c1fe](https://gitlab.com/bubblehouse/django-moo/commit/181c1fe6a3a11e507d917fea26c798257ab2556d))
+* logging improvements for shell server ([44efe39](https://gitlab.com/bubblehouse/django-moo/commit/44efe39693daba8da1dd5a89dc02716cc1bd4786))
+* quiet down celery ([7005c7e](https://gitlab.com/bubblehouse/django-moo/commit/7005c7e05dd9f2caffa9428f0ac73fd4ea65be4a))
+* quiet down nginx, restore redirect ([6759ea3](https://gitlab.com/bubblehouse/django-moo/commit/6759ea34230570d4febce2f9ff461c216cd84a62))
+* updated dependencies ([47ff80d](https://gitlab.com/bubblehouse/django-moo/commit/47ff80d43b2128826dbab2fb750412868d0fc6b0))
+
 ## [0.33.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.33.0...v0.33.1) (2024-12-28)
 
 
