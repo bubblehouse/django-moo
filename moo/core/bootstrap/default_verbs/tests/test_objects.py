@@ -5,7 +5,7 @@ from moo.core import code, parse, lookup
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_creation_and_description(t_init: Object, t_wizard: Object):
+def test_creation(t_init: Object, t_wizard: Object):
     printed = []
     def _writer(msg):
         printed.append(msg)
@@ -18,18 +18,46 @@ def test_creation_and_description(t_init: Object, t_wizard: Object):
         ]
         printed.clear()
 
+@pytest.mark.django_db
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_transmutation(t_init: Object, t_wizard: Object):
+    printed = []
+    def _writer(msg):
+        printed.append(msg)
+    with code.context(t_wizard, _writer):
         parse.interpret("make a jar from container")
         assert printed == [
-            '[color yellow]Created #16 (jar)[/color yellow]',
-            '[color yellow]Transmuted #16 (jar) to #2 (container class)[/color yellow]'
+            '[color yellow]Created #15 (jar)[/color yellow]',
+            '[color yellow]Transmuted #15 (jar) to #2 (container class)[/color yellow]'
         ]
         printed.clear()
 
-        parse.interpret("describe jar as 'a dusty old container'")
-        parse.interpret("look at jar")
+@pytest.mark.django_db
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_description(t_init: Object, t_wizard: Object):
+    printed = []
+    def _writer(msg):
+        printed.append(msg)
+    with code.context(t_wizard, _writer):
+        parse.interpret("make a thingy")
         assert printed == [
-            "Description set for #16 (jar)",
-            "[bright_yellow]jar[/bright_yellow]",
-            "[deep_sky_blue1]a dusty old container[/deep_sky_blue1]"
+            '[color yellow]Created #15 (thingy)[/color yellow]',
+        ]
+        printed.clear()
+
+        parse.interpret("describe")
+        parse.interpret("describe thingy")
+        assert printed == [
+            '[red]What do you want to describe?[/red]',
+            '[red]What do you want to describe that as?[/red]',
+        ]
+        printed.clear()
+
+        parse.interpret("describe thingy as 'a dusty old widget'")
+        parse.interpret("look at thingy")
+        assert printed == [
+            "[color yellow]Description set for #15 (thingy)[/color yellow]",
+            "[bright_yellow]thingy[/bright_yellow]",
+            "[deep_sky_blue1]a dusty old widget[/deep_sky_blue1]"
         ]
         printed.clear()
