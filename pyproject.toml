@@ -28,8 +28,7 @@ django-ace = "^1.32.4"
 celery = {extras = ["redis"], version = "^5.4.0"}
 django-celery-results = "^2.5.1"
 django-celery-beat = "^2.6.0"
-black = "^24.10.0"
-isort = "^5.13.2"
+webssh = "^1.6.2"
 
 [tool.poetry.group.dev.dependencies]
 sphinx = "^7.3.7"

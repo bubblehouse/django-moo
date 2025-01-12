@@ -12,6 +12,8 @@ elif [ "$1" = 'manage.py' ]; then
     else
         exec python3.11 "$@"
     fi
+elif [ "$1" = 'webssh' ]; then
+    exec wssh --port=8422
 elif [ "$1" = 'celery' ]; then
     if [ "$2" = 'beat' ]; then
         exec celery -A moo beat --uid 33 -l INFO
