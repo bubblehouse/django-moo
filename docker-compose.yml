@@ -11,6 +11,16 @@ services:
       - 443:443
     links:
       - webapp
+  webssh:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: philchristensen/moo:latest
+    command: [webssh]
+    ports:
+      - 8422:8422
+    links:
+      - shell
   webapp:
     build:
       context: .
@@ -28,12 +38,12 @@ services:
       context: .
       dockerfile: Dockerfile
     image: philchristensen/moo:latest
+    command: [celery]
     links:
       - postgres
       - redis
     environment:
       DJANGO_SETTINGS_MODULE: moo.settings.local
-    command: [celery]
   shell:
     build:
       context: .
