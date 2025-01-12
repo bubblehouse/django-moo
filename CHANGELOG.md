@@ -1,3 +1,10 @@
+## [0.34.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.33.3...v0.34.0) (2025-01-12)
+
+
+### Features
+
+* reduce image size by using a builder image ([ca20fc6](https://gitlab.com/bubblehouse/django-moo/commit/ca20fc6748e6f95eaae80ab7a57f763e85aef48c))
+
 ## [0.33.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.33.2...v0.33.3) (2025-01-12)
 
 
