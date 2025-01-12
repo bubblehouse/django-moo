@@ -1,13 +1,13 @@
-FROM python:3.11-slim-bullseye
+FROM python:3.11-slim-bullseye AS builder
 LABEL Maintainer="Phil Christensen <phil@bubblehouse.org>"
 LABEL Name="django-moo"
 LABEL Version="0.33.3"
 
-# Install base dependencies
+# Install builder dependencies
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
        apt-transport-https curl unzip gnupg2 gcc g++ libc-dev libssl-dev libpq-dev \
-       ssl-cert git python3-pip ca-certificates ssh net-tools \
+       python3-pip ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
@@ -19,6 +19,17 @@ ADD pyproject.toml .
 RUN pip install --no-cache-dir -q -U poetry poetry-plugin-export pip \
     && poetry export -o requirements.txt \
     && pip install --no-cache-dir -q -r requirements.txt
+
+FROM python:3.11-slim-bullseye
+
+# Install base dependencies
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+       git ssl-cert ssh net-tools \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /usr/local/bin /usr/local/bin
+COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 
 # Setup directories and permissions
 RUN chgrp www-data /etc/ssl/private/ \
