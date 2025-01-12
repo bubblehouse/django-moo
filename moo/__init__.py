@@ -8,7 +8,7 @@ from .celery import app as celery_app
 
 __all__ = ('celery_app', 'get_version')
 
-__version__ = "0.33.2"
+__version__ = "0.33.3"
 
 def get_version():
     """

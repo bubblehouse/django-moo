@@ -1,3 +1,11 @@
+## [0.33.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.33.2...v0.33.3) (2025-01-12)
+
+
+### Bug Fixes
+
+* allow more look scenarios, update test ([69f60f2](https://gitlab.com/bubblehouse/django-moo/commit/69f60f21aae96fa502162180ab22f2d971b209b5))
+* improve describe verb and add test ([3a08e90](https://gitlab.com/bubblehouse/django-moo/commit/3a08e90367f5ff22617712aa66662d214bdd9fcf))
+
 ## [0.33.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.33.1...v0.33.2) (2025-01-11)
 
 
