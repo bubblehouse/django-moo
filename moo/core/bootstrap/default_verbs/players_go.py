@@ -4,24 +4,24 @@ from moo.core import api
 
 direction = api.parser.get_dobj_str()
 
-if api.caller.location.has_property('exits'):
-    exits = api.caller.location.get_property('exits')
+if api.caller.location.has_property("exits"):
+    exits = api.caller.location.get_property("exits")
 else:
     exits = {}
 
 if direction not in exits:
-    print('[red]There is no exit in that direction.[/red]')
-    return # pylint: disable=return-outside-function  # type: ignore
+    print("[red]There is no exit in that direction.[/red]")
+    return  # pylint: disable=return-outside-function  # type: ignore
 
 exit_info = exits[direction]
-destination = exit_info['destination']
-door = exit_info.get('door')
+destination = exit_info["destination"]
+door = exit_info.get("door")
 
 # TODO: handle doors
-if door and not door.invoke_verb('open?'):
-    print(f'[red]The {door.name} is closed.[/red]')
-    return # pylint: disable=return-outside-function  # type: ignore
+if door and not door.invoke_verb("open?"):
+    print(f"[red]The {door.name} is closed.[/red]")
+    return  # pylint: disable=return-outside-function  # type: ignore
 
 api.caller.location = destination
 api.caller.save()
-print(f'You go {direction}.')
+print(f"You go {direction}.")
