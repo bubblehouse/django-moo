@@ -1,14 +1,17 @@
 import pytest
 
-from moo.core.models import Object
 from moo.core import code, parse
+from moo.core.models import Object
+
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
     printed = []
+
     def _writer(msg):
         printed.append(msg)
+
     with code.context(t_wizard, _writer):
         home_location = t_wizard.location
         parse.interpret("dig north to Another Room")
@@ -18,9 +21,7 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
         printed.clear()
 
         parse.interpret("dig north to Another Room")
-        assert printed == [
-            '[color red]There is already an exit in that direction.[/color red]'
-        ]
+        assert printed == ["[color red]There is already an exit in that direction.[/color red]"]
         printed.clear()
 
         parse.interpret("go north")
