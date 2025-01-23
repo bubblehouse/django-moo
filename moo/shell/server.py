@@ -2,21 +2,23 @@
 """
 AsyncSSH server components.
 """
-import os
 import asyncio
-import logging
 import json
+import logging
+import os
 
-from django.contrib.auth.models import User  # pylint: disable=imported-auth-user
-
-from simplesshkey.models import UserKey
 import asyncssh
 from asgiref.sync import sync_to_async
-from prompt_toolkit.contrib.ssh import PromptToolkitSSHServer, PromptToolkitSSHSession
+from django.contrib.auth.models import \
+    User  # pylint: disable=imported-auth-user
+from prompt_toolkit.contrib.ssh import (PromptToolkitSSHServer,
+                                        PromptToolkitSSHSession)
+from simplesshkey.models import UserKey
 
 from .prompt import embed
 
 log = logging.getLogger(__name__)
+
 
 async def interact(ssh_session: PromptToolkitSSHSession) -> None:
     """
@@ -27,6 +29,7 @@ async def interact(ssh_session: PromptToolkitSSHSession) -> None:
     await embed(ssh_session.user)
     log.info(f"{ssh_session.user} disconnected.")
 
+
 async def server(port=8022):
     """
     Create an AsyncSSH server on the requested port.
@@ -35,12 +38,10 @@ async def server(port=8022):
     """
     await asyncio.sleep(1)
     await asyncssh.create_server(
-        lambda: SSHServer(interact),
-        "",
-        port,
-        server_host_keys=["/etc/ssh/ssh_host_ecdsa_key"]
+        lambda: SSHServer(interact), "", port, server_host_keys=["/etc/ssh/ssh_host_ecdsa_key"]
     )
     await asyncio.Future()
+
 
 class SSHServer(PromptToolkitSSHServer):
     """
@@ -88,8 +89,8 @@ class SSHServer(PromptToolkitSSHServer):
         :param key: the SSH key
         """
         for user_key in UserKey.objects.filter(user__username=username):
-            user_pem = ' '.join(user_key.key.split()[:2]) + "\n"
-            server_pem = key.export_public_key().decode('utf8')
+            user_pem = " ".join(user_key.key.split()[:2]) + "\n"
+            server_pem = key.export_public_key().decode("utf8")
             if user_pem == server_pem:
                 self.user = user_key.user  # pylint: disable=attribute-defined-outside-init
                 return True

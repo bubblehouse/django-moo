@@ -3,9 +3,11 @@
 Core entity models for DjangoMOO
 """
 
-from .verb import AccessibleVerb as Verb, VerbName, Repository, URLField
-from .property import AccessibleProperty as Property
-from .object import AccessibleObject as Object, Relationship, Alias
 from .acl import *
 from .auth import *
+from .object import AccessibleObject as Object
+from .object import Alias, Relationship
+from .property import AccessibleProperty as Property
 from .task import *
+from .verb import AccessibleVerb as Verb
+from .verb import Repository, URLField, VerbName

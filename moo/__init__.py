@@ -6,9 +6,10 @@ A game server for hosting text-based online MOO-like games.
 # Django starts so that shared_task will use this app.
 from .celery import app as celery_app
 
-__all__ = ('celery_app', 'get_version')
+__all__ = ("celery_app", "get_version")
 
 __version__ = "0.34.0"
+
 
 def get_version():
     """
