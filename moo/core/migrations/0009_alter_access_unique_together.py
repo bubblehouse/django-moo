@@ -6,12 +6,14 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0008_alter_relationship_child_alter_relationship_parent'),
+        ("core", "0008_alter_relationship_child_alter_relationship_parent"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='access',
-            unique_together={('object', 'verb', 'property', 'rule', 'permission', 'type', 'accessor', 'group', 'weight')},
+            name="access",
+            unique_together={
+                ("object", "verb", "property", "rule", "permission", "type", "accessor", "group", "weight")
+            },
         ),
     ]
