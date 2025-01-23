@@ -6,42 +6,42 @@ Prompt-Toolkit interface
 import asyncio
 import logging
 import pickle
+
 from asgiref.sync import sync_to_async
-
+from kombu import Exchange, Queue, simple
 from prompt_toolkit import ANSI
-from prompt_toolkit.shortcuts import print_formatted_text
-from prompt_toolkit.styles import Style
 from prompt_toolkit.application import run_in_terminal
+from prompt_toolkit.shortcuts import print_formatted_text
 from prompt_toolkit.shortcuts.prompt import PromptSession
+from prompt_toolkit.styles import Style
 from rich.console import Console
-from kombu import simple, Exchange, Queue
 
-from ..core import models, tasks
 from ..celery import app
+from ..core import models, tasks
 
 log = logging.getLogger(__name__)
+
 
 async def embed(
     user: models.User,
 ) -> None:
     repl = MooPrompt(user)
-    await asyncio.wait([asyncio.ensure_future(f()) for f in (
-        repl.process_commands,
-        repl.process_messages
-    )])
+    await asyncio.wait([asyncio.ensure_future(f()) for f in (repl.process_commands, repl.process_messages)])
+
 
 class MooPrompt:
-    style = Style.from_dict({
-        # User input (default text).
-        '':          '#ffffff',
-
-        # Prompt.
-        'name':     '#884444',
-        'at':       '#00aa00',
-        'colon':    '#0000aa',
-        'pound':    '#00aa00',
-        'location': '#00aa55',
-    })
+    style = Style.from_dict(
+        {
+            # User input (default text).
+            "": "#ffffff",
+            # Prompt.
+            "name": "#884444",
+            "at": "#00aa00",
+            "colon": "#0000aa",
+            "pound": "#00aa00",
+            "location": "#00aa55",
+        }
+    )
 
     def __init__(self, user, *a, **kw):
         self.user = user
@@ -66,11 +66,11 @@ class MooPrompt:
     def generate_prompt(self):
         caller = self.user.player.avatar
         return [
-            ('class:name',     str(caller.name)),
-            ('class:at',       '@'),
-            ('class:location', str(caller.location.name)),
-            ('class:colon',    ':'),
-            ('class:pound',    '$ '),
+            ("class:name", str(caller.name)),
+            ("class:at", "@"),
+            ("class:location", str(caller.location.name)),
+            ("class:colon", ":"),
+            ("class:pound", "$ "),
         ]
 
     @sync_to_async
@@ -87,6 +87,7 @@ class MooPrompt:
                 self.writer(item)
         except:  # pylint: disable=bare-except
             import traceback
+
             self.writer(f"[bold red]{traceback.format_exc()}[/bold red]")
 
     def writer(self, s, is_error=False):
@@ -101,7 +102,9 @@ class MooPrompt:
         try:
             with app.default_connection() as conn:
                 channel = conn.channel()
-                queue = Queue('messages', Exchange('moo', type='direct', channel=channel), f'user-{self.user.pk}', channel=channel)
+                queue = Queue(
+                    "messages", Exchange("moo", type="direct", channel=channel), f"user-{self.user.pk}", channel=channel
+                )
                 while not self.is_exiting:
                     sb = simple.SimpleBuffer(channel, queue, no_ack=True)
                     try:
@@ -111,7 +114,7 @@ class MooPrompt:
                         continue
                     if msg:
                         content = pickle.loads(msg.body)
-                        await run_in_terminal(lambda: self.writer(content['message']))
+                        await run_in_terminal(lambda: self.writer(content["message"]))
                     sb.close()
         except:  # pylint: disable=bare-except
             log.exception("Stopping message processing")

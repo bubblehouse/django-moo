@@ -4,6 +4,7 @@ import pytest
 
 from ..models import Object, Property
 
+
 @pytest.mark.django_db
 def test_child_inherits_parent_property(t_init: Object):
     room_class = Object.objects.get(name="room class")
@@ -12,6 +13,7 @@ def test_child_inherits_parent_property(t_init: Object):
     room.parents.add(room_class)
     description = room.get_property(name="description")
     assert description == json.loads(parent_description.value)
+
 
 @pytest.mark.django_db
 def test_child_owns_inherited_property(t_init: Object):
@@ -22,6 +24,7 @@ def test_child_owns_inherited_property(t_init: Object):
     description = room.get_property(name="description", recurse=False, original=True)
     assert description.origin == room
 
+
 @pytest.mark.django_db
 def test_returned_property_is_from_correct_object(t_init: Object):
     player = Object.objects.get(name="Player")
@@ -30,6 +33,7 @@ def test_returned_property_is_from_correct_object(t_init: Object):
     room.parents.add(room_class)
     description = room.get_property(name="description", recurse=False, original=True)
     assert description.owner == player
+
 
 @pytest.mark.django_db
 def test_property_inheritance_can_change_after_save(t_init: Object, t_wizard: Object):
