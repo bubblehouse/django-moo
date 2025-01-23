@@ -17,7 +17,7 @@ ADD pyproject.toml .
 
 # Install Python application dependencies
 RUN pip install --no-cache-dir -q -U poetry poetry-plugin-export pip \
-    && poetry export -o requirements.txt \
+    && poetry export --with=dev -o requirements.txt \
     && pip install --no-cache-dir -q -r requirements.txt
 
 FROM python:3.11-slim-bullseye
