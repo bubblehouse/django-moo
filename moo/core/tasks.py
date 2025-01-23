@@ -6,18 +6,19 @@ Celery Tasks for executing commands or raw Python code.
 import logging
 from typing import Any, Optional
 
-from django.db import transaction
 from celery import shared_task
 from celery.utils.log import get_task_logger
+from django.db import transaction
 
-from . import code, parse, exceptions
+from . import code, exceptions, parse
 from .models import Object, Verb
 
 log = get_task_logger(__name__)
 background_log = logging.getLogger(f"{__name__}.background")
 
+
 @shared_task
-def parse_command(caller_id:int, line:str) -> list[Any]:
+def parse_command(caller_id: int, line: str) -> list[Any]:
     """
     Parse a command-line and invoke the requested verb.
 
@@ -38,8 +39,9 @@ def parse_command(caller_id:int, line:str) -> list[Any]:
                 output.append(f"[bold red]{e}[/bold red]")
     return output
 
+
 @shared_task
-def parse_code(caller_id:int, source:str, runtype:str="exec") -> list[list[Any], Any]:
+def parse_code(caller_id: int, source: str, runtype: str = "exec") -> list[list[Any], Any]:
     """
     Execute code in a task.
 
@@ -54,8 +56,11 @@ def parse_code(caller_id:int, source:str, runtype:str="exec") -> list[list[Any],
             result = code.interpret(source, runtype=runtype)
     return output, result
 
+
 @shared_task
-def invoke_verb(*args, caller_id:int=None, verb_id:int=None, callback_verb_id:Optional[int]=None, **kwargs) -> None:
+def invoke_verb(
+    *args, caller_id: int = None, verb_id: int = None, callback_verb_id: Optional[int] = None, **kwargs
+) -> None:
     """
     Asynchronously execute a Verb, optionally returning the result to another Verb.
     The `print()` method logs to a `moo.core.tasks.background` instead of sending
@@ -66,6 +71,7 @@ def invoke_verb(*args, caller_id:int=None, verb_id:int=None, callback_verb_id:Op
     :param callback_verb_id: the PK of the verb to send the result to
     """
     from moo.core import api
+
     with transaction.atomic():
         caller = Object.objects.get(pk=caller_id)
         verb = Verb.objects.get(pk=verb_id)

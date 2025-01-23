@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0009_alter_access_unique_together'),
+        ("core", "0009_alter_access_unique_together"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='object',
-            name='obvious',
+            model_name="object",
+            name="obvious",
             field=models.BooleanField(default=True),
         ),
     ]

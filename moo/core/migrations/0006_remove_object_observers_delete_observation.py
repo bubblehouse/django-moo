@@ -6,15 +6,15 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0005_verbname_unique_verb_name'),
+        ("core", "0005_verbname_unique_verb_name"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='object',
-            name='observers',
+            model_name="object",
+            name="observers",
         ),
         migrations.DeleteModel(
-            name='Observation',
+            name="Observation",
         ),
     ]

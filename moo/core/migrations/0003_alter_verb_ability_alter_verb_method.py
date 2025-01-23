@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0002_alter_object_observers_alter_object_unique_name'),
+        ("core", "0002_alter_object_observers_alter_object_unique_name"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='verb',
-            name='ability',
+            model_name="verb",
+            name="ability",
             field=models.BooleanField(default=False),
         ),
         migrations.AlterField(
-            model_name='verb',
-            name='method',
+            model_name="verb",
+            name="method",
             field=models.BooleanField(default=False),
         ),
     ]

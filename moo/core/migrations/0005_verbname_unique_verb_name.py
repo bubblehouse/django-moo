@@ -6,12 +6,12 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0004_accessibleobject_accessibleproperty_accessibleverb_and_more'),
+        ("core", "0004_accessibleobject_accessibleproperty_accessibleverb_and_more"),
     ]
 
     operations = [
         migrations.AddConstraint(
-            model_name='verbname',
-            constraint=models.UniqueConstraint(models.F('verb'), models.F('name'), name='unique_verb_name'),
+            model_name="verbname",
+            constraint=models.UniqueConstraint(models.F("verb"), models.F("name"), name="unique_verb_name"),
         ),
     ]
