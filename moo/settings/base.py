@@ -15,10 +15,13 @@ from pathlib import Path
 
 from celery.signals import setup_logging
 
+
 @setup_logging.connect
 def configure_celery_logging(**_kwargs):
     from logging.config import dictConfig
+
     dictConfig(CELERY_LOGGING)
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -32,30 +35,26 @@ ALLOWED_HOSTS = []
 # Application definition
 DEFAULT_GIT_REPO_URL = "https://gitlab.com/bubblehouse/django-moo.git"
 DEFAULT_PERMISSIONS = (
-    'anything',
-    'read',
-    'write',
-    'entrust',
-    'grant',
-    'execute',
-    'move',
-    'transmute',
-    'derive',
-    'develop',
-    'administer',
+    "anything",
+    "read",
+    "write",
+    "entrust",
+    "grant",
+    "execute",
+    "move",
+    "transmute",
+    "derive",
+    "develop",
+    "administer",
 )
 
 ALLOWED_MODULES = (
-    'moo.core',
-    'hashlib',
-    'string',
+    "moo.core",
+    "hashlib",
+    "string",
 )
 
-ALLOWED_BUILTINS = (
-    'dir',
-    'getattr', 'hasattr',
-    'dict', 'list', 'set'
-)
+ALLOWED_BUILTINS = ("dir", "getattr", "hasattr", "dict", "list", "set")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -69,7 +68,7 @@ INSTALLED_APPS = [
     "django_celery_results",
     "django_celery_beat",
     "moo.core",
-    "moo.shell"
+    "moo.shell",
 ]
 
 MIDDLEWARE = [
@@ -118,9 +117,9 @@ DATABASES = {
 # https://docs.djangoproject.com/en/4.2/ref/settings/#caches
 
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': 'redis://localhost:6379',
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://localhost:6379",
     }
 }
 
@@ -166,103 +165,100 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {
+        "require_debug_false": {
+            "()": "django.utils.log.RequireDebugFalse",
         },
-        'require_debug_true': {
-            '()': 'django.utils.log.RequireDebugTrue',
-        },
-    },
-    'formatters': {
-        'simple': {
-            'format': '%(asctime)s: %(levelname)s %(message)s',
+        "require_debug_true": {
+            "()": "django.utils.log.RequireDebugTrue",
         },
     },
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple',
+    "formatters": {
+        "simple": {
+            "format": "%(asctime)s: %(levelname)s %(message)s",
         },
     },
-    'loggers': {
-        '': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': False,
+    "handlers": {
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+        },
+    },
+    "loggers": {
+        "": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
         }
-    }
+    },
 }
 
 # Celery configuration
 # https://docs.celeryq.dev/en/stable/userguide/configuration.html
 
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_ACCEPT_CONTENT = ['moojson', 'json']
-CELERY_EVENT_SERIALIZER = 'moojson'
-CELERY_TASK_SERIALIZER = 'moojson'
-CELERY_RESULT_SERIALIZER = 'moojson'
-CELERY_RESULT_BACKEND = 'django-db'
-CELERY_CACHE_BACKEND = 'default'
-CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_ACCEPT_CONTENT = ["moojson", "json"]
+CELERY_EVENT_SERIALIZER = "moojson"
+CELERY_TASK_SERIALIZER = "moojson"
+CELERY_RESULT_SERIALIZER = "moojson"
+CELERY_RESULT_BACKEND = "django-db"
+CELERY_CACHE_BACKEND = "default"
+CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 CELERY_TASK_TIME_LIMIT = 3
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 CELERY_LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {  # Sets up the format of the logging output
-        'simple': {
-            'format': '%(asctime)s: %(levelname)s %(message)s',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {  # Sets up the format of the logging output
+        "simple": {
+            "format": "%(asctime)s: %(levelname)s %(message)s",
         },
-        'celeryTask': {
-            '()': 'celery.app.log.TaskFormatter',
-            'fmt': '%(asctime)s: %(levelname)s %(task_name)s[%(task_id)s]: %(message)s'
+        "celeryTask": {
+            "()": "celery.app.log.TaskFormatter",
+            "fmt": "%(asctime)s: %(levelname)s %(task_name)s[%(task_id)s]: %(message)s",
         },
-        'celeryProcess': {
-            '()': 'celery.utils.log.ColorFormatter',
-            'fmt': '%(asctime)s: %(levelname)s %(message)s'
+        "celeryProcess": {"()": "celery.utils.log.ColorFormatter", "fmt": "%(asctime)s: %(levelname)s %(message)s"},
+    },
+    "filters": {
+        "celeryTask": {
+            "()": "moo.logging.CeleryTaskFilter",
+        },
+        "celeryProcess": {
+            "()": "moo.logging.CeleryProcessFilter",
+        },
+        "notCelery": {
+            "()": "moo.logging.NotCeleryFilter",
         },
     },
-    'filters': {
-        'celeryTask': {
-            '()': 'moo.logging.CeleryTaskFilter',
+    "handlers": {
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+            "filters": ["notCelery"],
         },
-        'celeryProcess': {
-            '()': 'moo.logging.CeleryProcessFilter',
+        "console2": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "celeryTask",
+            "filters": ["celeryTask"],
         },
-        'notCelery': {
-            '()': 'moo.logging.NotCeleryFilter',
-        },
-    },
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'simple',
-            'filters': ['notCelery']
-        },
-        'console2': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'celeryTask',
-            'filters': ['celeryTask']
-        },
-        'console3': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'celeryProcess',
-            'filters': ['celeryProcess']
+        "console3": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "celeryProcess",
+            "filters": ["celeryProcess"],
         },
     },
-    'loggers': {
-        '': {
-            'handlers': ['console', 'console2', 'console3'],
-            'level': 'INFO',
-            'propagate': False,
+    "loggers": {
+        "": {
+            "handlers": ["console", "console2", "console3"],
+            "level": "INFO",
+            "propagate": False,
         }
-    }
+    },
 }

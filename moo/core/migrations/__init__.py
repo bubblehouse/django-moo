@@ -2,4 +2,3 @@
 """
 Django database migrations
 """
-
