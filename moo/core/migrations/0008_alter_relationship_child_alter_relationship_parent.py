@@ -7,18 +7,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0007_property_inherited'),
+        ("core", "0007_property_inherited"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='relationship',
-            name='child',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='core.object'),
+            model_name="relationship",
+            name="child",
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name="+", to="core.object"),
         ),
         migrations.AlterField(
-            model_name='relationship',
-            name='parent',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='core.object'),
+            model_name="relationship",
+            name="parent",
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name="+", to="core.object"),
         ),
     ]

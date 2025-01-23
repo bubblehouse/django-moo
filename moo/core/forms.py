@@ -4,17 +4,17 @@ Custom Django forms used in Admin interface.
 """
 
 from django import forms
-
 from django_ace import AceWidget
 
 from .models import verb
 
+
 class VerbAdminForm(forms.ModelForm):
     class Meta:
         model = verb.Verb
-        fields = '__all__'
+        fields = "__all__"
         widgets = {
-            'code': AceWidget(
+            "code": AceWidget(
                 mode="python",
                 theme="solarized_dark",
                 wordwrap=False,
