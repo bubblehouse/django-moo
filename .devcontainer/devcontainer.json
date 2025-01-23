@@ -14,19 +14,17 @@
 	"customizations": {
 		"vscode": {
 			"settings": {
-				// We want VSCode to use the venv python interpreter.
 				"python.defaultInterpreterPath": "/usr/localbin/python",
-				// Python test-related settings.
 				"python.testing.unittestEnabled": true,
-				"python.testing.pytestEnabled": true
+				"python.testing.pytestEnabled": true,
 				// Language-specific editor settings for Python files.
-				// "[python]": {
-				// 	"editor.defaultFormatter": "ms-python.black-formatter",
-				// 	"editor.formatOnSave": true,
-				// 	"editor.codeActionsOnSave": {
-				// 		"source.organizeImports": "explicit"
-				// 	}
-				// }
+				"[python]": {
+					"editor.defaultFormatter": "ms-python.black-formatter",
+					"editor.formatOnSave": true,
+					"editor.codeActionsOnSave": {
+						"source.organizeImports": "explicit"
+					}
+				}
 			},
 			"extensions": [
 				"ms-python.debugpy",
