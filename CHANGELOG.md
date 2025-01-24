@@ -1,3 +1,10 @@
+## [0.35.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.34.0...v0.35.0) (2025-01-24)
+
+
+### Features
+
+* add devcontainer support ([d88812e](https://gitlab.com/bubblehouse/django-moo/commit/d88812ea2dbadf3b543b85e9111d69e85b11b290))
+
 ## [0.34.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.33.3...v0.34.0) (2025-01-12)
 
 
