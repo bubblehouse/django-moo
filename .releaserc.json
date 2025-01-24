@@ -2,9 +2,10 @@
   "branches": [
     "main",
     {
-      "name": "feature/*",
+      "name": "feature/embedded-ssh-client",
       "channel": false,
-      "prerelease": "rc"
+      "prerelease": "rc",
+      "mangle": false
     }
   ],
   "preset": "conventionalcommits",
