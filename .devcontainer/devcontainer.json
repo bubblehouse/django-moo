@@ -4,7 +4,7 @@
 		"../docker-compose.yml",
 		"../docker-compose.override.yml"
 	],
-	"service": "shell",
+	"service": "webapp",
 	"workspaceFolder": "/usr/src/app",
 	"shutdownAction": "stopCompose",
 	"overrideCommand": true,
@@ -17,6 +17,7 @@
 				"python.defaultInterpreterPath": "/usr/localbin/python",
 				"python.testing.unittestEnabled": true,
 				"python.testing.pytestEnabled": true,
+				"python.testing.pytestArgs": ["."],
 				// Language-specific editor settings for Python files.
 				"[python]": {
 					"editor.defaultFormatter": "ms-python.black-formatter",
