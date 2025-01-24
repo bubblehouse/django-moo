@@ -5,12 +5,10 @@ Django backend admin support.
 
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from django.contrib.auth.models import \
-    User  # pylint: disable=imported-auth-user
+from django.contrib.auth.models import User  # pylint: disable=imported-auth-user
 
 from .forms import VerbAdminForm
-from .models import (acl, auth, object,  # pylint: disable=redefined-builtin
-                     property, task, verb)
+from .models import acl, auth, object, property, task, verb  # pylint: disable=redefined-builtin
 
 
 class VerbInline(admin.TabularInline):
