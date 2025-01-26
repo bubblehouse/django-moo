@@ -16,7 +16,7 @@ docker-compose.override.yml
 node_modules
 .pytest_cache
 __pycache__
-.vscode
+.vscode/settings.json
 docs/build/*
 docs/source/generated/*
 prof/
