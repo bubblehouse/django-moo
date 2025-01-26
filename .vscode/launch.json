@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Celery Server",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "celery",
+            "args": [
+                "-A", "moo", "worker", "-E", "--uid", "33", "-l", "INFO", "-P", "solo"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env": {
+                "DJANGO_SETTINGS_MODULE": "moo.settings.local"
+            }
+        }
+    ]
+}
