@@ -19,6 +19,8 @@ services:
     command: [webssh]
     ports:
       - 8422:8422
+    volumes:
+      - ./extras/webssh/index.html:/usr/local/lib/python3.11/site-packages/webssh/templates/index.html
     links:
       - shell
   webapp:
