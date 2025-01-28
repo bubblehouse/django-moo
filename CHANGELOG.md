@@ -1,3 +1,15 @@
+## [0.36.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.35.0...v0.36.0) (2025-01-28)
+
+
+### Features
+
+* install a web-based ssh client on the root page ([1216a1c](https://gitlab.com/bubblehouse/django-moo/commit/1216a1c77163ceffca8a7a2cce2afffa046e211d))
+
+
+### Bug Fixes
+
+* hard-code hostname and port for webssh ([00120ef](https://gitlab.com/bubblehouse/django-moo/commit/00120efa04ba3b744b39e76a14d95cff4b5fe7e6))
+
 ## [0.35.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.34.0...v0.35.0) (2025-01-24)
 
 
