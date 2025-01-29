@@ -1,3 +1,10 @@
+## [0.36.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.36.0...v0.36.1) (2025-01-29)
+
+
+### Bug Fixes
+
+* prevent wssh from being hijacked for other connections ([417651f](https://gitlab.com/bubblehouse/django-moo/commit/417651f1d30b989140bb5b84623b8c1ac2b0c6bb))
+
 ## [0.36.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.35.0...v0.36.0) (2025-01-28)
 
 
