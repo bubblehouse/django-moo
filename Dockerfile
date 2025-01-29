@@ -42,7 +42,11 @@ RUN chgrp www-data /etc/ssl/private/ \
     && chgrp www-data /usr/src/app/static/ \
     && chmod ug+rwx /usr/src/app/static/ \
     && chgrp www-data /etc/ssh/ssh_host_ecdsa_key \
-    && chmod ug+rw /etc/ssh/ssh_host_ecdsa_key
+    && chmod ug+rw /etc/ssh/ssh_host_ecdsa_key \
+    && chgrp www-data /etc/ssh/ssh_host_ecdsa_key.pub \
+    && chmod ug+rw /etc/ssh/ssh_host_ecdsa_key.pub
+
+RUN echo "[shell]:8022 $(cat /etc/ssh/ssh_host_ecdsa_key.pub | cut -d ' ' -f 1,2)" > /etc/ssh/pregenerated_known_hosts
 
 ADD . /usr/src/app
 ADD extras/entrypoint.sh /entrypoint.sh
