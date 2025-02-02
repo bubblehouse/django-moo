@@ -24,17 +24,27 @@ Run `migrate`, `collectstatic`, and bootstrap the initial database with some sam
     docker compose run webapp manage.py createsuperuser --username phil
     docker compose run webapp manage.py moo_enableuser --wizard phil Wizard
 
-Now you should be able to connect to https://localhost/admin and login with the superuser you just created, or login via SSH, described below.
+Now you should be able to connect to https://localhost/ and login with the superuser you just created, described below.
+
+## Login via Web
+
+To make things easier for folks without SSH access or who are behind firewalls, the server interface is exposed through [webssh](https://github.com/huashengdun/webssh).
+
+![WebSSH Client Example](https://gitlab.com/bubblehouse/django-moo/-/raw/main/docs/images/webssh-client-example.png)
+
+This client is only able to open connections to the local SSH server.
+
+### Admin Interface
+
+As a secondary way to view the contents of a running server, a Django Admin interface is available at `/admin`. It's really a last resort for most things, but it's still the best way to modify verb code in a running server:
+
+![Django Admin Example](https://gitlab.com/bubblehouse/django-moo/-/raw/main/docs/images/django-admin-example.png)
 
 ## Login via SSH
 
-In this example, my superuser is called `phil`, and I'm automatically prompted for my password.
+Of course, it's also possible (perhaps even preferred) to connect directly over SSH:
 
-    $ ssh localhost -p 8022 -l phil
-    (phil@localhost) Password:
-    ==> look
-    A cavernous laboratory filled with gadgetry of every kind, this seems like a dumping ground for every piece of dusty forgotten equipment a mad scientist might require.
-    ==>
+![SSH Client Example](https://gitlab.com/bubblehouse/django-moo/-/raw/main/docs/images/ssh-client-example.png)
 
 It's also possible to associate an SSH Key with your user in the Django Admin so as to skip the password prompt.
 
