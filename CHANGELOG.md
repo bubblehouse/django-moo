@@ -1,3 +1,11 @@
+## [0.36.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.36.1...v0.36.2) (2025-02-02)
+
+
+### Bug Fixes
+
+* add viewport meta tag to fix mobile ([b05506c](https://gitlab.com/bubblehouse/django-moo/commit/b05506c3c3db7fbfa3d8d5895fdc64db3a3fb95a))
+* allow login form to wrap on smaller screens ([13907f4](https://gitlab.com/bubblehouse/django-moo/commit/13907f4e994daafbf3067d121e816013039bfd33))
+
 ## [0.36.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.36.0...v0.36.1) (2025-01-29)
 
 
