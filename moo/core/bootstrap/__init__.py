@@ -86,7 +86,7 @@ def load_verbs(repo, dataset="default"):
             with open(path, encoding="utf8") as f:
                 contents = f.read()
                 try:
-                    first, code = contents.split("\n", maxsplit=1)
+                    first, _ = contents.split("\n", maxsplit=1)
                 except ValueError:
                     continue
                 if first.startswith("#!moo "):
@@ -95,7 +95,7 @@ def load_verbs(repo, dataset="default"):
                     obj = Object.objects.get(name=args.on)
                     obj.add_verb(
                         *args.names,
-                        code=code,
+                        code=contents,
                         filename=str(path.resolve()),
                         repo=repo,
                         ability=args.ability,
