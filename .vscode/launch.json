@@ -33,7 +33,7 @@
                 "solo"
             ],
             "console": "integratedTerminal",
-            "justMyCode": false,
+            "justMyCode": true,
             "env": {
                 "DJANGO_SETTINGS_MODULE": "moo.settings.local"
             }
