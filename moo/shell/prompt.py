@@ -65,6 +65,7 @@ class MooPrompt:
     @sync_to_async
     def generate_prompt(self):
         caller = self.user.player.avatar
+        caller.refresh_from_db()
         return [
             ("class:name", str(caller.name)),
             ("class:at", "@"),
