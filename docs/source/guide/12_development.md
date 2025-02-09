@@ -28,7 +28,8 @@ to run the application stack. You'll still want to follow them all:
 >     docker compose run webapp manage.py createsuperuser --username phil
 >     docker compose run webapp manage.py moo_enableuser --wizard phil Wizard
 
-Once this part is complete, though, you'll want to open up the project folder in VSCode. You should be prompted to reopen the project as a Dev Container, if not, invoke "Dev Containers: Reopen in Container" from the command bar.
+Once this part is complete, though, you'll want to open up the project folder in VSCode. You should be prompted to
+reopen the project as a Dev Container, if not, invoke "Dev Containers: Reopen in Container" from the command bar.
 
 ## Using VSCode with django-moo
 
@@ -45,3 +46,5 @@ the terminals you create will all be on the `celery` container instance, and you
 mode using the launch job on the "Run and Debug" tab.
 
 ![django-moo debugging](https://gitlab.com/bubblehouse/django-moo/-/raw/main/docs/images/vscode-debug.png)
+
+It's not as easy to debug the contents of a verb, as right now breakpoints in verb code don't seem to be honored.
