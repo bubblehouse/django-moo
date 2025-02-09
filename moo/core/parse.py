@@ -32,7 +32,7 @@ def interpret(line):
     verb = parser.get_verb()
     globals = code.get_default_globals()  # pylint: disable=redefined-builtin
     globals.update(code.get_restricted_environment(api.writer))
-    code.r_exec(verb.code, {}, globals, filename=repr(verb))
+    code.r_exec(verb.code, {}, globals, filename=verb.filename)
 
 
 def unquote(s):

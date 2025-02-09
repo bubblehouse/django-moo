@@ -81,18 +81,25 @@ def load_verbs(repo, dataset="default"):
     for ref in importlib.resources.files(f"moo.core.bootstrap.{dataset}_verbs").iterdir():
         if not ref.is_file():
             continue
-        with ref.open() as f:
-            contents = f.read()
-            try:
-                first, code = contents.split("\n", maxsplit=1)
-            except ValueError:
-                continue
-            if first.startswith("#!moo "):
-                log.info(f"Loading verb source `{ref.name}`...")
-                args = parser.parse_args(shlex.split(first[6:]))
-                obj = Object.objects.get(name=args.on)
-                obj.add_verb(
-                    *args.names, code=code, filename=ref.name, repo=repo, ability=args.ability, method=args.method
-                )
-            else:
-                log.info(f"Skipping verb source `{ref.name}`...")
+
+        with importlib.resources.as_file(ref) as path:
+            with open(path, encoding="utf8") as f:
+                contents = f.read()
+                try:
+                    first, code = contents.split("\n", maxsplit=1)
+                except ValueError:
+                    continue
+                if first.startswith("#!moo "):
+                    log.info(f"Loading verb source `{ref.name}`...")
+                    args = parser.parse_args(shlex.split(first[6:]))
+                    obj = Object.objects.get(name=args.on)
+                    obj.add_verb(
+                        *args.names,
+                        code=code,
+                        filename=str(path.resolve()),
+                        repo=repo,
+                        ability=args.ability,
+                        method=args.method,
+                    )
+                else:
+                    log.info(f"Skipping verb source `{ref.name}`...")
