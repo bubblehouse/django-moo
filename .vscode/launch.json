@@ -2,15 +2,38 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Shell Server",
+            "type": "debugpy",
+            "request": "launch",
+            "args": [
+                "moo_shell"
+            ],
+            "django": true,
+            "autoStartBrowser": false,
+            "program": "${workspaceFolder}/manage.py",
+            "env": {
+                "DJANGO_SETTINGS_MODULE": "moo.settings.local"
+            }
+        },
+        {
             "name": "Celery Server",
             "type": "debugpy",
             "request": "launch",
             "module": "celery",
             "args": [
-                "-A", "moo", "worker", "-E", "--uid", "33", "-l", "INFO", "-P", "solo"
+                "-A",
+                "moo",
+                "worker",
+                "-E",
+                "--uid",
+                "33",
+                "-l",
+                "INFO",
+                "-P",
+                "solo"
             ],
             "console": "integratedTerminal",
-            "justMyCode": true,
+            "justMyCode": false,
             "env": {
                 "DJANGO_SETTINGS_MODULE": "moo.settings.local"
             }
