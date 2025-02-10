@@ -1,3 +1,14 @@
+## [0.36.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.36.2...v0.36.3) (2025-02-09)
+
+
+### Bug Fixes
+
+* dont remove shebang when bootstrapping ([792d65a](https://gitlab.com/bubblehouse/django-moo/commit/792d65afdc6a6dac986be930aa3723dafe1e866e))
+* final issues with verbs in debugger ([f75ae53](https://gitlab.com/bubblehouse/django-moo/commit/f75ae532d1f46522aa2d0507df10d79b664c4158))
+* prompt correctly updating from DB ([fbe1d87](https://gitlab.com/bubblehouse/django-moo/commit/fbe1d8774b7728c20cd99fda861590f7f731753a))
+* proper filename handling fixes debug issues ([f4cdcfc](https://gitlab.com/bubblehouse/django-moo/commit/f4cdcfce176677f529ebb9bbf4452c5078f3f38c))
+* set __file__ when using a file-backed verb ([9285e93](https://gitlab.com/bubblehouse/django-moo/commit/9285e93bd9ba913cf01375116348157c8155e017))
+
 ## [0.36.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.36.1...v0.36.2) (2025-02-02)
 
 
