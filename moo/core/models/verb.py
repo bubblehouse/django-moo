@@ -41,8 +41,8 @@ class Verb(models.Model, AccessibleMixin):
         return "verb"
 
     def annotated(self):
-        ability_decoration = ["", "@"][self.ability]
-        method_decoration = ["", "()"][self.method]
+        ability_decoration = ["", "@"][int(self.ability)]
+        method_decoration = ["", "()"][int(self.method)]
         verb_name = self.name()
         return "".join([ability_decoration, verb_name, method_decoration])
 
