@@ -8,6 +8,7 @@ import logging
 from typing import Generator
 
 from django.db import models
+from django.core.exceptions import FieldDoesNotExist
 from django.db.models.query import QuerySet
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
@@ -367,11 +368,18 @@ class Object(models.Model, AccessibleMixin):
                 invoke(self, verb=self.location.get_verb("enterfunc"))
 
 
+# these are the name that django relies on __getattr__ for, there may be others
+RESERVED_NAMES = ['resolve_expression', 'get_source_expressions', '_prefetched_objects_cache', 'original_owner', 'original_location']
+
 class AccessibleObject(Object):
     class Meta:
         proxy = True
 
+    # this doesn't work because django uses __getattr__ so heavily
     def __getattr__(self, name):
+        if name in RESERVED_NAMES:
+            return super().__getattr__(name)  # pylint: disable=no-member
+        log.error("Getting %s", name)
         if verb := self.get_verb(name, recurse=True):
             return verb
         if property := self.get_property(name, recurse=True):  # pylint: disable=redefined-builtin
