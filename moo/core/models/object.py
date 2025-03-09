@@ -23,9 +23,7 @@ log = logging.getLogger(__name__)
 
 
 @receiver(m2m_changed)
-def relationship_changed(
-    sender, instance, action, model, signal, reverse, pk_set, using, **kwargs
-):
+def relationship_changed(sender, instance, action, model, signal, reverse, pk_set, using, **kwargs):
     child = instance
     if not (sender is Relationship and not reverse):
         return
@@ -40,9 +38,7 @@ def relationship_changed(
     for pk in pk_set:
         parent = model.objects.get(pk=pk)
         # pylint: disable=redefined-builtin
-        for property in AccessibleProperty.objects.filter(
-            origin=parent, inherited=True
-        ):
+        for property in AccessibleProperty.objects.filter(origin=parent, inherited=True):
             AccessibleProperty.objects.update_or_create(
                 name=property.name,
                 origin=child,
@@ -67,9 +63,7 @@ class Object(models.Model, AccessibleMixin):
     #: This object should be obvious among a group. The meaning of this value is database-dependent.
     obvious = models.BooleanField(default=True)
     #: The owner of this object. Changes require `entrust` permission.
-    owner = models.ForeignKey(
-        "self", related_name="+", blank=True, null=True, on_delete=models.SET_NULL
-    )
+    owner = models.ForeignKey("self", related_name="+", blank=True, null=True, on_delete=models.SET_NULL)
     parents = models.ManyToManyField(
         "self",
         related_name="children",
@@ -137,9 +131,7 @@ class Object(models.Model, AccessibleMixin):
         """
         self.can_caller("read", self)
         qs = AccessibleObject.objects.filter(location=self, name__iexact=name)
-        aliases = AccessibleObject.objects.filter(
-            location=self, aliases__alias__iexact=name
-        )
+        aliases = AccessibleObject.objects.filter(location=self, aliases__alias__iexact=name)
         return qs.union(aliases)
 
     def contains(self, obj: "Object"):
@@ -351,18 +343,14 @@ class Object(models.Model, AccessibleMixin):
             raise exceptions.RecursiveError(f"{self} already contains {self.location}")
         # ACL Check: to change owner, caller must be allowed to `entrust` on this object
         original_owner = getattr(self, "original_owner", None)
-        original_owner = (
-            Object.objects.get(pk=original_owner) if original_owner else None
-        )
+        original_owner = Object.objects.get(pk=original_owner) if original_owner else None
         if original_owner != self.owner and self.owner:
             self.can_caller("entrust", self)
         # ACL Check: to change anything else about the object you at least need `write`
         self.can_caller("write", self)
         # ACL Check: to change the location, caller must be allowed to `move` on this object
         original_location = getattr(self, "original_location", None)
-        original_location = (
-            Object.objects.get(pk=original_location) if original_location else None
-        )
+        original_location = Object.objects.get(pk=original_location) if original_location else None
         if original_location != self.location and self.location:
             self.can_caller("move", self)
             # the new location must define an `accept` verb that returns True for this obejct
@@ -382,6 +370,13 @@ class Object(models.Model, AccessibleMixin):
 class AccessibleObject(Object):
     class Meta:
         proxy = True
+
+    def __getattr__(self, name):
+        if verb := self.get_verb(name, recurse=True):
+            return verb
+        if property := self.get_property(name, recurse=True):  # pylint: disable=redefined-builtin
+            return property.value
+        raise AttributeError(f"{self} has no attribute `{name}`")
 
     def owns(self, subject: Object) -> bool:
         """
@@ -445,9 +440,7 @@ class AccessibleObject(Object):
             for rule in rules.order_by("rule", "type"):
                 if rule.rule == "deny":
                     if fatal:
-                        raise PermissionError(
-                            f"{self} is explicitly denied {permission} on {subject}"
-                        )
+                        raise PermissionError(f"{self} is explicitly denied {permission} on {subject}")
                     return False
             return True
         elif fatal:
