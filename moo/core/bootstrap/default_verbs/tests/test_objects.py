@@ -17,7 +17,7 @@ def test_creation(t_init: Object, t_wizard: Object):
         widget = lookup("widget")
         assert widget.location == t_wizard.location
         assert printed == [
-            "[color yellow]Created #15 (widget)[/color yellow]",
+            f"[color yellow]Created #{widget.id} (widget)[/color yellow]",
         ]
 
 
@@ -31,9 +31,11 @@ def test_transmutation(t_init: Object, t_wizard: Object):
 
     with code.context(t_wizard, _writer):
         parse.interpret("make a jar from container")
+        jar = lookup("jar")
+        container = lookup("container class")
         assert printed == [
-            "[color yellow]Created #15 (jar)[/color yellow]",
-            "[color yellow]Transmuted #15 (jar) to #2 (container class)[/color yellow]",
+            f"[color yellow]Created #{jar.id} (jar)[/color yellow]",
+            f"[color yellow]Transmuted #{jar.id} (jar) to #{container.id} (container class)[/color yellow]",
         ]
 
 
@@ -47,8 +49,9 @@ def test_description(t_init: Object, t_wizard: Object):
 
     with code.context(t_wizard, _writer):
         parse.interpret("make a thingy")
+        thingy = lookup("thingy")
         assert printed == [
-            "[color yellow]Created #15 (thingy)[/color yellow]",
+            f"[color yellow]Created #{thingy.id} (thingy)[/color yellow]",
         ]
         printed.clear()
 
@@ -63,7 +66,7 @@ def test_description(t_init: Object, t_wizard: Object):
         parse.interpret("describe thingy as 'a dusty old widget'")
         parse.interpret("look at thingy")
         assert printed == [
-            "[color yellow]Description set for #15 (thingy)[/color yellow]",
+            f"[color yellow]Description set for #{thingy.id} (thingy)[/color yellow]",
             "[bright_yellow]thingy[/bright_yellow]",
             "[deep_sky_blue1]a dusty old widget[/deep_sky_blue1]",
         ]
