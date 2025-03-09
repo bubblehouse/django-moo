@@ -353,6 +353,8 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             verb = possible.get_verb(verb_str)
             if verb.ability and possible != self.caller:
                 continue
+            if verb.method:
+                continue
             # if not self.caller.is_allowed('execute', verb):
             #     continue
             result.append(possible)
