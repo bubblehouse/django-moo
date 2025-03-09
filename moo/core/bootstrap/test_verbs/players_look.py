@@ -1,4 +1,4 @@
-#!moo verb look inspect --on "player class" --ability --method
+#!moo verb look --on "player class" --ability
 
 from moo.core import api
 
