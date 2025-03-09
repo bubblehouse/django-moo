@@ -16,7 +16,7 @@ def test_caller_can_invoke_trivial_verb(t_init: Object, t_wizard: Object):
         writer = code.context.get("writer")
         globals = code.get_default_globals()  # pylint: disable=redefined-builtin
         globals.update(code.get_restricted_environment(writer))
-        src = "from moo.core import api\napi.caller.invoke_verb('look')"
+        src = "from moo.core import api\napi.caller.invoke_verb('inspect')"
         code.r_exec(src, {}, globals)
         assert printed == [description.value]
 
@@ -29,7 +29,7 @@ def test_args_is_null_when_using_parser(t_init: Object, t_wizard: Object):
         printed.append(msg)
 
     with code.context(t_wizard, _writer):
-        parse.interpret("test-args")
+        parse.interpret("test-args-parser")
     assert printed == ["PARSER"]
 
 
