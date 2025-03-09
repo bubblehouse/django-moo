@@ -1,3 +1,19 @@
+## [0.37.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.36.3...v0.37.0) (2025-03-09)
+
+
+### Features
+
+* added preliminary door support ([e77ddef](https://gitlab.com/bubblehouse/django-moo/commit/e77ddef119c4c74961e86ba174281d6a2d4c6489))
+* implement getattr support for props and verbs ([f2d1cf7](https://gitlab.com/bubblehouse/django-moo/commit/f2d1cf7df3d8fd5b4ad369a43965cbbcdb860255))
+
+
+### Bug Fixes
+
+* getattr support for props and verbs ([9586e6f](https://gitlab.com/bubblehouse/django-moo/commit/9586e6f351e8055d2b17aa0169872b3f30b62907))
+* ignore methods when parsing for verbs ([8644f0f](https://gitlab.com/bubblehouse/django-moo/commit/8644f0f5083874f89b6041398f3b0b2c20bc4cf5))
+* tests broken by parser changes ([7c4969e](https://gitlab.com/bubblehouse/django-moo/commit/7c4969e5d1431083c2ef83a41a180cc2c7b06956))
+* tests broken by parser changes ([42939c3](https://gitlab.com/bubblehouse/django-moo/commit/42939c39ac74a6ac44a71740dacd2e1948a4e417))
+
 ## [0.36.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.36.2...v0.36.3) (2025-02-09)
 
 
