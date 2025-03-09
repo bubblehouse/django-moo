@@ -379,11 +379,10 @@ class AccessibleObject(Object):
     def __getattr__(self, name):
         if name in RESERVED_NAMES:
             return super().__getattr__(name)  # pylint: disable=no-member
-        log.error("Getting %s", name)
-        if verb := self.get_verb(name, recurse=True):
-            return verb
-        if property := self.get_property(name, recurse=True):  # pylint: disable=redefined-builtin
-            return property.value
+        if self.has_verb(name, recurse=True):
+            return self.get_verb(name, recurse=True)
+        if self.has_property(name, recurse=True):
+            return self.get_property(name, recurse=True)
         raise AttributeError(f"{self} has no attribute `{name}`")
 
     def owns(self, subject: Object) -> bool:
