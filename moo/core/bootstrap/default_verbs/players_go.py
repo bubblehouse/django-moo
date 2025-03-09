@@ -17,9 +17,8 @@ exit_info = exits[direction]
 destination = exit_info["destination"]
 door = exit_info.get("door")
 
-# TODO: handle doors
-if door and not door.invoke_verb("open?"):
-    print(f"[red]The {door.name} is closed.[/red]")
+if door and door.is_locked():
+    print(f"[red]The {door.name} is locked.[/red]")
     return  # pylint: disable=return-outside-function  # type: ignore
 
 api.caller.location = destination

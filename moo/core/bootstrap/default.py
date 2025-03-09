@@ -24,6 +24,11 @@ with code.context(wizard, log.info):
 
     wizard.parents.add(wizards)
 
+    door = create("door class", location=book)
+    door.set_property("open", False, inherited=True)
+    door.set_property("locked", False, inherited=True)
+    door.set_property("autolock", False, inherited=True)
+
     rooms = create("room class", parents=[containers], location=book)
     rooms.set_property("description", "There's not much to see here.", inherited=True)
 
