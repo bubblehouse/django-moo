@@ -19,7 +19,6 @@ def test_creation(t_init: Object, t_wizard: Object):
         assert printed == [
             "[color yellow]Created #15 (widget)[/color yellow]",
         ]
-        printed.clear()
 
 
 @pytest.mark.django_db
@@ -36,7 +35,6 @@ def test_transmutation(t_init: Object, t_wizard: Object):
             "[color yellow]Created #15 (jar)[/color yellow]",
             "[color yellow]Transmuted #15 (jar) to #2 (container class)[/color yellow]",
         ]
-        printed.clear()
 
 
 @pytest.mark.django_db
@@ -69,4 +67,3 @@ def test_description(t_init: Object, t_wizard: Object):
             "[bright_yellow]thingy[/bright_yellow]",
             "[deep_sky_blue1]a dusty old widget[/deep_sky_blue1]",
         ]
-        printed.clear()
