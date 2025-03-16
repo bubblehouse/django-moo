@@ -53,7 +53,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "moo.settings.test"
 python_files = ["tests/*.py"]
-addopts = "--spec --cov=moo --no-cov-on-fail"
+addopts = "--spec"
 spec_test_format = "{result} {docstring_summary}"
 
 [tool.black]
