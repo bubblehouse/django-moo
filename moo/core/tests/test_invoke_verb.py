@@ -56,3 +56,15 @@ def test_args_when_calling_multiple_verbs(t_init: Object, t_wizard: Object):
     with code.context(t_wizard, _writer):
         parse.interpret("test-nested-verbs")
     assert printed == list(range(1, 11))
+
+
+@pytest.mark.django_db
+def test_write_to_caller(t_init: Object, t_wizard: Object):
+    printed = []
+
+    def _writer(msg):
+        printed.append(msg)
+
+    with code.context(t_wizard, _writer):
+        with pytest.warns(RuntimeWarning, match=r"ConnectionError\(\#3 \(Wizard\)\)\: TEST_STRING"):
+            code.interpret("from moo.core import api, write\nwrite(api.caller, 'TEST_STRING')")
