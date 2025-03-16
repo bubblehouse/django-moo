@@ -1,3 +1,12 @@
+## [0.37.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.37.0...v0.37.1) (2025-03-16)
+
+
+### Bug Fixes
+
+* door locking issues resolved ([0711aba](https://gitlab.com/bubblehouse/django-moo/commit/0711ababdf601a4d9f669a7ef4c4662d5431b87b))
+* handle verb names in methods properly ([a5522e7](https://gitlab.com/bubblehouse/django-moo/commit/a5522e7f001dfbf6d74d60fa5e84eb59b6fe71f9))
+* throw warnings when trying to write without redis ([997e2df](https://gitlab.com/bubblehouse/django-moo/commit/997e2df5c641d6a77148d7f6562ab10d24513da9))
+
 ## [0.37.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.36.3...v0.37.0) (2025-03-09)
 
 
