@@ -4,7 +4,10 @@ Core MOO functionality, object model, verbs.
 """
 
 import logging
+import warnings
 from typing import Union
+
+from redis.exceptions import ConnectionError
 
 from .code import context
 from .exceptions import QuotaError
@@ -110,7 +113,11 @@ def write(obj, message):
     from ..celery import app
 
     with app.default_connection() as conn:
-        channel = conn.channel()
+        try:
+            channel = conn.channel()
+        except ConnectionError:
+            warnings.warn(RuntimeWarning(f"ConnectionError({obj}): {message}"))
+            return
         queue = Queue(
             "messages", Exchange("moo", type="direct", channel=channel), f"user-{player.user.pk}", channel=channel
         )
@@ -143,8 +150,7 @@ def invoke(*args, verb=None, callback=None, delay: int = 0, periodic: bool = Fal
     :returns: a :class:`.PeriodicTask` instance or `None` if the task is a one-shot
     :rtype: Optional[:class:`.PeriodicTask`]
     """
-    from django_celery_beat.models import (CrontabSchedule, IntervalSchedule,
-                                           PeriodicTask)
+    from django_celery_beat.models import CrontabSchedule, IntervalSchedule, PeriodicTask
 
     from moo.core import tasks
 
