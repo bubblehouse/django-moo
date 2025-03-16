@@ -255,7 +255,10 @@ class Object(models.Model, AccessibleMixin):
         qs = self._lookup_verb(name, recurse)
         if len(qs) > 1:
             raise exceptions.AmbiguousVerbError(name, list(qs.all()))
-        return qs[0]
+        v = qs[0]
+        if v.method:
+            v.invoked_name = name
+        return v
 
     def _lookup_verb(self, name, recurse=True):
         qs = AccessibleVerb.objects.filter(origin=self, names__name=name)

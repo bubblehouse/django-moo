@@ -67,6 +67,10 @@ class AccessibleVerb(Verb):
     def __call__(self, *args, **kwargs):
         if not (self.method):
             raise RuntimeError("%s is not a method." % self)
+        if hasattr(self, "invoked_name"):
+            l = list(args)
+            l.insert(0, self.invoked_name)
+            args = tuple(l)
         result = interpret(self.code, *args, **kwargs)
         return result
 
