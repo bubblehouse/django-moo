@@ -1,7 +1,18 @@
 import pytest
 
-from moo.core import code, parse, lookup, create
+from moo.core import api, code, create, lookup, parse
 from moo.core.models import Object
+
+
+def setup_doors(t_wizard: Object):
+    rooms = lookup("room class")
+    room = create("Test Room", parents=[rooms])
+    doors = lookup("door class")
+    door = create("wooden door", parents=[doors], location=room)
+    t_wizard.location = room
+    t_wizard.save()
+    api.caller.refresh_from_db()
+    return room, door
 
 
 @pytest.mark.django_db
@@ -13,30 +24,41 @@ def test_creation(t_init: Object, t_wizard: Object):
         printed.append(msg)
 
     with code.context(t_wizard, _writer):
-        rooms = lookup("room class")
-        room = create("Test Room", parents=[rooms])
-        doors = lookup("door class")
-        door = create("wooden door", parents=[doors], location=room)
-        t_wizard.location = room
-        t_wizard.save()
-        from moo.core import api
-        api.caller.refresh_from_db()
+        room, door = setup_doors(t_wizard)
         parse.interpret("dig north to Another Room through wooden door")
-        assert printed == ["[color yellow]Created an exit to the north to \"Another Room\".[/color yellow]"]
+        assert printed == ['[color yellow]Created an exit to the north to "Another Room".[/color yellow]']
         assert t_wizard.location == room
         assert room.has_property("exits")
         assert room.exits["north"]["door"] == door
-        assert not door.is_locked()
 
         printed.clear()
         parse.interpret("go north")
         api.caller.refresh_from_db()
         assert printed == ["You go north."]
 
-# * Are there doors in your game?
-#   * Yes
-# * Can the player open them?
-#   * Yes
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_locking(t_init: Object, t_wizard: Object):
+    printed = []
+
+    def _writer(msg):
+        printed.append(msg)
+
+    with code.context(t_wizard, _writer):
+        _, door = setup_doors(t_wizard)
+        parse.interpret("dig north to Another Room through wooden door")
+        assert printed == ['[color yellow]Created an exit to the north to "Another Room".[/color yellow]']
+        printed.clear()
+        parse.interpret("lock wooden door")
+        assert printed == ["The door is locked."]
+        assert door.is_locked()
+        printed.clear()
+        parse.interpret("unlock wooden door")
+        assert printed == ["The door is unlocked."]
+        assert not door.is_locked()
+
+
 # * Can the player open every door in the game?
 #   * If they can write the open property
 # * Or are some doors for decoration?
