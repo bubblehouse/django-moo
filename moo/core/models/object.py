@@ -7,8 +7,8 @@ import json
 import logging
 from typing import Generator
 
-from django.db import models
 from django.core.exceptions import FieldDoesNotExist
+from django.db import models
 from django.db.models.query import QuerySet
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
@@ -123,6 +123,15 @@ class Object(models.Model, AccessibleMixin):
     @property
     def kind(self):
         return "object"
+
+    def is_named(self, name: str) -> bool:
+        """
+        Check if this object has a name or alias that matches the given name.
+        """
+        for alias in self.aliases.all():
+            if alias.alias.lower() == name.lower():
+                return True
+        return self.name.lower() == name.lower()  # pylint: disable=no-member
 
     def find(self, name: str) -> 'QuerySet["Object"]':
         """
@@ -369,7 +378,14 @@ class Object(models.Model, AccessibleMixin):
 
 
 # these are the name that django relies on __getattr__ for, there may be others
-RESERVED_NAMES = ['resolve_expression', 'get_source_expressions', '_prefetched_objects_cache', 'original_owner', 'original_location']
+RESERVED_NAMES = [
+    "resolve_expression",
+    "get_source_expressions",
+    "_prefetched_objects_cache",
+    "original_owner",
+    "original_location",
+]
+
 
 class AccessibleObject(Object):
     class Meta:
