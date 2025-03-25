@@ -1,5 +1,16 @@
 ---
+# A complete deployment of django-moo includes a number of containers. While the compose file
+# covers everything needed for a typical deployment, the components can also be deployed in a
+# more typically high-availability cloud environment.
 services:
+  # The `nginx` container provides trivial routing to three different things:
+  #
+  # * Routing `/` to the `webssh` container
+  # * Routing `/admin/` to the `webapp` container
+  # * Static assets (`/static/`) generated for the Django application
+  #
+  # In a fully productionalized deployment, this tier would likely be replaced with an S3 bucket
+  # for static assets, and some kind of load balancer for routing.
   nginx:
     build:
       context: extras/nginx
@@ -11,6 +22,11 @@ services:
       - 443:443
     links:
       - webapp
+  # The `webssh` container runs a deployment of the [webssh](https://github.com/huashengdun/webssh) UI.
+  # This has a modified configuration that can only connect to the local `shell` container.
+  #
+  # While it's not strictly necessary to use this interface, it provides access to users who may not
+  # be able to connect over non-web ports.
   webssh:
     build:
       context: .
@@ -23,6 +39,7 @@ services:
       - ./extras/webssh/index.html:/usr/local/lib/python3.11/site-packages/webssh/templates/index.html
     links:
       - shell
+  # The `webapp` container is where the Django front-end runs. So far this is only needed for access to the Django admin.
   webapp:
     build:
       context: .
@@ -35,6 +52,9 @@ services:
       - redis
     environment:
       DJANGO_SETTINGS_MODULE: moo.settings.local
+  # The `celery` container runs a single Celery worker, along with the Beat scheduler.
+  # Note that in production, you'll want to run multiple workers for better performance,
+  # and you'll want to run the scheduler separately.
   celery:
     build:
       context: .
@@ -46,6 +66,9 @@ services:
       - redis
     environment:
       DJANGO_SETTINGS_MODULE: moo.settings.local
+  # The `shell` container runs the SSH server that displays the MOO interface.
+  # As part of the Dockerfile we create pregenerate an SSH host file that's used
+  # by the webssh container to restrict connections to this host.
   shell:
     build:
       context: .
@@ -59,6 +82,8 @@ services:
       - redis
     environment:
       DJANGO_SETTINGS_MODULE: moo.settings.local
+  # The PostgreSQL database needs to define a moo user with an appropriate password.
+  # This is a simple deployment, so we're not using a production-ready PostgreSQL container.
   postgres:
     image: postgres
     ports:
@@ -67,6 +92,8 @@ services:
       POSTGRES_PASSWORD: moo
       POSTGRES_USER: moo
       POSTGRES_DB: moo
+  # Redis provides the queueing system Celery uses to run background tasks.
+  # It also provides a cache for the Django application.
   redis:
     image: redis
     ports:
