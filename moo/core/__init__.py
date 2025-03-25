@@ -7,8 +7,6 @@ import logging
 import warnings
 from typing import Union
 
-from redis.exceptions import ConnectionError
-
 from .code import context
 from .exceptions import QuotaError
 
@@ -102,6 +100,7 @@ def write(obj, message):
     :param message: any pickle-able object
     :type message: Any
     """
+    from redis.exceptions import ConnectionError  # pylint: disable=redefined-builtin
     from .models.auth import Player
 
     try:
