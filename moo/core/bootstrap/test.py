@@ -42,4 +42,4 @@ with code.context(wizard, log.info):
     player = create(name="Player", unique_name=True, location=lab)
     player.parents.add(players, containers)
 
-    bootstrap.load_verbs(repo, dataset="test")
+    bootstrap.load_verbs(repo, "moo.core.bootstrap.test_verbs")
