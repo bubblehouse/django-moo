@@ -1,22 +1,14 @@
+# This is a simple example override file that mounts the current directory as an overlay.
 services:
   nginx:
-    # # nginx gets noisy
-    # logging:
-    #   driver: none
     volumes:
       - .:/usr/src/app
   webapp:
-    environment:
-      DJANGO_SETTINGS_MODULE: moo.settings.local
     volumes:
       - .:/usr/src/app
   shell:
-    environment:
-      DJANGO_SETTINGS_MODULE: moo.settings.local
     volumes:
       - .:/usr/src/app
   celery:
-    environment:
-      DJANGO_SETTINGS_MODULE: moo.settings.local
     volumes:
       - .:/usr/src/app
