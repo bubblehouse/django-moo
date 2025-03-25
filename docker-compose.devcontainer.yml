@@ -1,4 +1,5 @@
 ---
+# This file is used to configure the development container for the project.
 services:
   celery:
     # Overrides default command so things don't shut down after the process ends.
