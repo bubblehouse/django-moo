@@ -45,11 +45,6 @@ def initialize_dataset(dataset="default"):
     create a `System Object` that is used to store global properties and verbs.
 
     It will also create a `Wizard` user that is used to manage the system.
-
-    @param dataset: The name of the dataset to initialize.
-    @type dataset: str
-    @return: The repository object for the dataset.
-    @rtype: moo.core.models.Repository
     """
     from moo.core import create, models
 
@@ -88,20 +83,13 @@ def initialize_dataset(dataset="default"):
     return repo
 
 
-def load_verbs(repo, dataset="default"):
+def load_verbs(repo, verb_package):
     """
-    Load the verbs for a dataset.
-
-    This will load the verbs from the `moo.core.bootstrap.{dataset}_verbs` module.
-
-    @param repo: The repository object for the dataset.
-    @type repo: moo.core.models.Repository
-    @param dataset: The name of the dataset to load the verbs for.
-    @type dataset: str
+    Load the verbs from a Python package into the database and associate them with the given repository.
     """
     from moo.core.models.object import Object
 
-    for ref in importlib.resources.files(f"moo.core.bootstrap.{dataset}_verbs").iterdir():
+    for ref in importlib.resources.files(verb_package).iterdir():
         if not ref.is_file():
             continue
 
