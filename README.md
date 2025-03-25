@@ -1,5 +1,5 @@
 # DjangoMOO
-> LambdaMOO on Django
+> "LambdaMOO on Django"
 
 ![release](https://gitlab.com/bubblehouse/django-moo/-/badges/release.svg)
 ![pipeline](https://gitlab.com/bubblehouse/django-moo/badges/main/pipeline.svg?ignore_skipped=true&job=test)

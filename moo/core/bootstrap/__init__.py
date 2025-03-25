@@ -38,6 +38,19 @@ def load_python(python_path):
 
 
 def initialize_dataset(dataset="default"):
+    """
+    Initialize a new dataset.
+
+    This will create the default objects and permissions for the dataset. Notably, it will
+    create a `System Object` that is used to store global properties and verbs.
+
+    It will also create a `Wizard` user that is used to manage the system.
+
+    @param dataset: The name of the dataset to initialize.
+    @type dataset: str
+    @return: The repository object for the dataset.
+    @rtype: moo.core.models.Repository
+    """
     from moo.core import create, models
 
     for name in settings.DEFAULT_PERMISSIONS:
@@ -76,6 +89,16 @@ def initialize_dataset(dataset="default"):
 
 
 def load_verbs(repo, dataset="default"):
+    """
+    Load the verbs for a dataset.
+
+    This will load the verbs from the `moo.core.bootstrap.{dataset}_verbs` module.
+
+    @param repo: The repository object for the dataset.
+    @type repo: moo.core.models.Repository
+    @param dataset: The name of the dataset to load the verbs for.
+    @type dataset: str
+    """
     from moo.core.models.object import Object
 
     for ref in importlib.resources.files(f"moo.core.bootstrap.{dataset}_verbs").iterdir():
