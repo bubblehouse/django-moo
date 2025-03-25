@@ -22,6 +22,16 @@ parser.add_argument("--method", action="store_true", help="Whether the verb is a
 
 
 def get_source(filename, dataset="default"):
+    """
+    Get the source code for a verb from a Python package.
+
+    :param filename: The name of the file to get the source code for.
+    :type filename: str
+    :param dataset: The name of the dataset to get the source code for.
+    :type dataset: str
+    :return: The source code for the verb.
+    :rtype: str
+    """
     ref = importlib.resources.files("moo.core.bootstrap") / f"{dataset}_verbs/{filename}"
     with importlib.resources.as_file(ref) as path:
         with open(path, encoding="utf8") as f:
@@ -31,6 +41,9 @@ def get_source(filename, dataset="default"):
 def load_python(python_path):
     """
     Execute a provided Python bootstrap file against the provided database.
+
+    :param python_path: The path to the Python file to execute.
+    :type python_path: str
     """
     with open(python_path, encoding="utf8") as f:
         src = f.read()
@@ -45,6 +58,11 @@ def initialize_dataset(dataset="default"):
     create a `System Object` that is used to store global properties and verbs.
 
     It will also create a `Wizard` user that is used to manage the system.
+
+    :param dataset: The name of the dataset to initialize.
+    :type dataset: str
+    :return: The repository object for the dataset.
+    :rtype: Repository
     """
     from moo.core import create, models
 
@@ -86,6 +104,27 @@ def initialize_dataset(dataset="default"):
 def load_verbs(repo, verb_package):
     """
     Load the verbs from a Python package into the database and associate them with the given repository.
+
+    Verb files should start with a shebang:
+
+    .. code-block::
+
+            #!moo [-h] [--on ON] [--ability] [--method] {verb} names [names ...]
+
+            positional arguments:
+            {verb}
+            names
+
+            options:
+            -h, --help  show this help message and exit
+            --on ON     The object to add or modify the verb on
+            --ability   Whether the verb is an intrinsic ability
+            --method    Whether the verb is a method (callable from verb code)
+
+    :param repo: The repository object for the dataset.
+    :type repo: Repository
+    :param verb_package: The Python package to load the verbs from.
+    :type verb_package: str
     """
     from moo.core.models.object import Object
 

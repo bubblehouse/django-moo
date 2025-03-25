@@ -27,3 +27,9 @@ These steps are handled by `moo.core.bootstrap.initialize_dataset()`:
 .. py:currentmodule:: moo.core.bootstrap
 .. autofunction:: initialize_dataset
 ```
+
+Once all the objects are created and necessary properties created, the `moo.core.bootstrap.load_verbs()` function can load all the verb code
+
+```{eval-rst}
+.. autofunction:: load_verbs
+```
