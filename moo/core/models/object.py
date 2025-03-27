@@ -157,8 +157,8 @@ class Object(models.Model, AccessibleMixin):
         self.can_caller("read", self)
         # TODO: One day when Django 5.0 works with `django-cte` this can be SQL.
         for parent in self.parents.all():  # pylint: disable=no-member
-            yield parent
             yield from parent.get_ancestors()
+            yield parent
 
     def get_descendents(self) -> Generator["Object", None, None]:
         """
@@ -230,21 +230,23 @@ class Object(models.Model, AccessibleMixin):
         self.can_caller("execute", qs[0])
         return qs[0](*args, **kwargs)
 
-    def has_verb(self, name, recurse=True):
+    def has_verb(self, name, recurse=True, ability=None, method=None):
         """
         Check if a particular :class:`.Verb` is defined on this object.
 
         :param name: the name of the verb
         :param recurse: whether or not to traverse the inheritance tree
+        :param ability: if True, only return abilities
+        :param method: if True, only return methods
         """
         self.can_caller("read", self)
         try:
-            self._lookup_verb(name, recurse)
+            self._lookup_verb(name, recurse, ability, method)
         except AccessibleVerb.DoesNotExist:
             return False
         return True
 
-    def get_verb(self, name, recurse=True):
+    def get_verb(self, name, recurse=True, ability=None, method=None):
         """
         Retrieve a specific :class:`.Verb` instance defined on this Object.
 
@@ -252,7 +254,7 @@ class Object(models.Model, AccessibleMixin):
         :param recurse: whether or not to traverse the inheritance tree
         """
         self.can_caller("read", self)
-        qs = self._lookup_verb(name, recurse)
+        qs = self._lookup_verb(name, recurse, ability, method)
         if len(qs) > 1:
             raise exceptions.AmbiguousVerbError(name, list(qs.all()))
         v = qs[0]
@@ -260,11 +262,21 @@ class Object(models.Model, AccessibleMixin):
             v.invoked_name = name
         return v
 
-    def _lookup_verb(self, name, recurse=True):
+    def _lookup_verb(self, name, recurse=True, ability=None, method=None):
+        if ability and method:
+            raise ValueError("Cannot return both ability and method verbs.")
         qs = AccessibleVerb.objects.filter(origin=self, names__name=name)
+        if ability is not None:
+            qs = qs.filter(ability=ability)
+        if method is not None:
+            qs = qs.filter(method=method)
         if not qs and recurse:
             for ancestor in self.get_ancestors():
                 qs = AccessibleVerb.objects.filter(origin=ancestor, names__name=name)
+                if ability is not None:
+                    qs = qs.filter(ability=ability)
+                if method is not None:
+                    qs = qs.filter(method=method)
                 if qs:
                     break
         if qs:

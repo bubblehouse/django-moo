@@ -326,7 +326,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         for prep in self.prepositions.values():
             checks.extend([pobj[2] for pobj in prep if pobj[2]])
 
-        matches = [x for x in checks if x and x.has_verb(verb_str)]
+        matches = [x for x in checks if x and x.has_verb(verb_str, method=False)]
         self.this = self.filter_matches(matches)
         if isinstance(self.this, list):
             if len(self.this) > 1:
@@ -340,7 +340,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             raise Verb.DoesNotExist("parser: " + verb_str)
 
         # print "Verb found on: " + str(self.this)
-        self.verb = self.this.get_verb(self.words[0], recurse=True)
+        self.verb = self.this.get_verb(self.words[0], method=False)
         return self.verb
 
     def filter_matches(self, selection):
@@ -350,7 +350,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         for possible in selection:
             if possible in result:
                 continue
-            verb = possible.get_verb(verb_str)
+            verb = possible.get_verb(verb_str, method=False)
             if verb.ability and possible != self.caller:
                 continue
             if verb.method:
