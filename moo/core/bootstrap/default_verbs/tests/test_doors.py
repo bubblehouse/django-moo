@@ -76,6 +76,9 @@ def test_open(t_init: Object, t_wizard: Object):
         assert printed == ["The door is open."]
         assert door.is_open()
         printed.clear()
+        parse.interpret("look through wooden door")
+        assert printed == ["You look through the door."]
+        printed.clear()
         parse.interpret("close wooden door")
         assert printed == ["The door is closed."]
         assert not door.is_open()

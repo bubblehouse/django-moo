@@ -326,7 +326,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         for prep in self.prepositions.values():
             checks.extend([pobj[2] for pobj in prep if pobj[2]])
 
-        matches = [x for x in checks if x and x.has_verb(verb_str, method=False)]
+        matches = [x for x in reversed(checks) if x and x.has_verb(verb_str, method=False)]
         self.this = self.filter_matches(matches)
         if isinstance(self.this, list):
             if len(self.this) > 1:
