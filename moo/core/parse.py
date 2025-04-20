@@ -70,6 +70,14 @@ class Pattern:
     POBJ_TEST = re.compile(PREP_SRC + r"\s" + PHRASE_SRC)
     MULTI_WORD = re.compile(r"((\"|\').+?(?!\\).\2)|(\S+)")
 
+    @classmethod
+    def initializePrepositions(cls):
+        from .models import Preposition
+        for preps in cls.PREPS:
+            preposition = Preposition.objects.create()
+            for name in preps:
+                preposition.names.create(name=name)
+
     def tokenize(self, s):
         """
         Find all words or double-quoted-strings in the text

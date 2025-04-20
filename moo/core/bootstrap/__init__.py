@@ -65,9 +65,12 @@ def initialize_dataset(dataset="default"):
     :rtype: Repository
     """
     from moo.core import create, models
+    from moo.core.parse import Pattern
 
     for name in settings.DEFAULT_PERMISSIONS:
         _ = models.Permission.objects.create(name=name)
+    Pattern.initializePrepositions()
+
     repo = models.Repository.objects.get(slug=dataset)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)

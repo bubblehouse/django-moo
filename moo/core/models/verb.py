@@ -14,6 +14,28 @@ from .acl import AccessibleMixin
 
 log = logging.getLogger(__name__)
 
+OBJECT_SPECIFIER_CHOICES = (
+    ("this", "this"),
+    ("any", "any"),
+    ("none", "none")
+)
+
+PREPOSITION_SPECIFIER_CHOICES = (
+    ("any", "any"),
+    ("none", "none")
+)
+
+class Preposition(models.Model):
+    pass
+
+class PrepositionName(models.Model):
+    name = models.CharField(max_length=255)
+    preposition = models.ForeignKey(Preposition, related_name="names", on_delete=models.CASCADE)
+
+class ArgumentSpecifier(models.Model):
+    preposition = models.ForeignKey(Preposition, related_name="+", on_delete=models.SET_NULL, blank=True, null=True)
+    prepositionSpecifier = models.CharField(max_length=255, choices=PREPOSITION_SPECIFIER_CHOICES, blank=True, null=True, db_index=True)
+    objectSpecifier = models.CharField(max_length=255, choices=OBJECT_SPECIFIER_CHOICES, db_index=True)
 
 class Verb(models.Model, AccessibleMixin):
     #: The Python code for this Verb

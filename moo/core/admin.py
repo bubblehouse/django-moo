@@ -46,6 +46,12 @@ class VerbAdmin(admin.ModelAdmin):
 class VerbNameAdmin(admin.ModelAdmin):
     raw_id_fields = ("verb",)
 
+@admin.register(verb.Preposition)
+class PrepositionAdmin(admin.ModelAdmin):
+    list_display = ("prepositions",)
+
+    def prepositions(self, obj):
+        return ", ".join([name.name for name in obj.names.all()])
 
 @admin.register(property.Property)
 class PropertyAdmin(admin.ModelAdmin):
