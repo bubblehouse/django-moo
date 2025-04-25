@@ -1,12 +1,6 @@
 {
   "branches": [
-    "main",
-    {
-      "name": "feature/embedded-ssh-client",
-      "channel": false,
-      "prerelease": "rc",
-      "mangle": false
-    }
+    "main"
   ],
   "preset": "conventionalcommits",
   "plugins": [
@@ -124,6 +118,7 @@
         ]
       }
     ],
+    "semantic-release-pypi",
     [
       "@semantic-release/git",
       {
