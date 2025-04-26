@@ -77,8 +77,8 @@ release:
     DOCKER_REGISTRY_PASSWORD: ${GITLAB_TOKEN}
     DOCKER_BUILDKIT: 1
     POETRY_CACHE_DIR: .cache/pypoetry
-    TWINE_USERNAME: philchristensen
-    TWINE_PASSWORD: ${TWINE_PASSWORD}
+    PYPI_USERNAME: pchriste
+    PYPI_TOKEN: ${TWINE_PASSWORD}
   script:
     - npm install
     - docker buildx install
