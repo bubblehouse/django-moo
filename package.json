@@ -6,13 +6,13 @@
     "@alexbabel/semantic-release-docker": "",
     "@commitlint/cli": "",
     "@commitlint/config-conventional": "",
-    "semantic-release-replace-plugin": "",
     "@semantic-release/changelog": "",
     "@semantic-release/exec": "",
     "@semantic-release/git": "",
     "@semantic-release/gitlab": "",
     "conventional-changelog-conventionalcommits": "^6.1.0",
-    "semantic-release": "^21.1.1"
+    "semantic-release": "^21.1.1",
+    "semantic-release-replace-plugin": ""
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -22,5 +22,8 @@
     "url": "https://gitlab.com/bubblehouse/django-moo"
   },
   "author": "Phil Christensen",
-  "license": "Proprietary"
+  "license": "Proprietary",
+  "dependencies": {
+    "semantic-release-pypi": "^5.1.0"
+  }
 }
