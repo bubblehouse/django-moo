@@ -77,7 +77,6 @@ release:
     DOCKER_REGISTRY_PASSWORD: ${GITLAB_TOKEN}
     DOCKER_BUILDKIT: 1
     POETRY_CACHE_DIR: .cache/pypoetry
-    PYPI_USERNAME: pchriste
     PYPI_TOKEN: ${TWINE_PASSWORD}
   script:
     - npm install
