@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "djangomoo"
+name = "django-moo"
 version = "0.37.1"
 description = "A game server for hosting text-based online MOO-like games."
 license = "AGPL"
