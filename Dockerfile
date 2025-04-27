@@ -20,7 +20,7 @@ RUN pip install --no-cache-dir -q -U poetry poetry-plugin-export pip \
     && poetry export --with=dev -o requirements.txt \
     && pip install --no-cache-dir -q -r requirements.txt
 
-FROM python:3.11-slim-bullseye
+FROM python:3.11.12-slim-bullseye
 
 # Install base dependencies
 RUN apt-get update \
