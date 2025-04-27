@@ -9,7 +9,7 @@ lint:
   stage: lint
   tags:
     - shacklyn
-  image: registry.gitlab.com/bubblehouse/runner-base:1.2.1
+  image: registry.gitlab.com/bubblehouse/runner-base:1.2.2
   variables:
     POETRY_CACHE_DIR: .cache/pypoetry
     DJANGO_SETTINGS_MODULE: moo.settings.test
@@ -41,7 +41,7 @@ test:
   stage: test
   tags:
     - shacklyn
-  image: registry.gitlab.com/bubblehouse/runner-base:1.2.1
+  image: registry.gitlab.com/bubblehouse/runner-base:1.2.2
   variables:
     POETRY_CACHE_DIR: .cache/pypoetry
   script:
@@ -66,7 +66,7 @@ release:
   stage: release
   tags:
     - shacklyn
-  image: registry.gitlab.com/bubblehouse/runner-base:1.2.1
+  image: registry.gitlab.com/bubblehouse/runner-base:1.2.2
   variables:
     GIT_COMMITTER_EMAIL: phil@bubblehouse.org
     GIT_COMMITTER_NAME: Phil Christensen
