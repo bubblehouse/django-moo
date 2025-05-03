@@ -1,3 +1,17 @@
+## [0.38.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.37.1...v0.38.0) (2025-05-03)
+
+
+### Features
+
+* first release to PyPI ([9357b30](https://gitlab.com/bubblehouse/django-moo/commit/9357b3054bbc71494ad5f6e8baf306a0fcf65860))
+
+
+### Bug Fixes
+
+* allow use of external packages, update docstrings ([8ee3261](https://gitlab.com/bubblehouse/django-moo/commit/8ee32610980d5bdb1f5263f3169974374e850b17))
+* dependency fix for redis, move import ([0fd6b65](https://gitlab.com/bubblehouse/django-moo/commit/0fd6b6594bc83ddbfc80b11478795aef78a1f4a1))
+* improve method handling to handle system.describe() implementation ([a65a03b](https://gitlab.com/bubblehouse/django-moo/commit/a65a03b0bfd0b6627c22591280ca483ef3dd163a))
+
 ## [0.37.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.37.0...v0.37.1) (2025-03-16)
 
 
