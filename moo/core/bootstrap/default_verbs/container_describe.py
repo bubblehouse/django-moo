@@ -1,4 +1,4 @@
-#!moo verb describe --on "container class" --method
+#!moo verb describe --on "container class"
 
 from moo.core import lookup
 

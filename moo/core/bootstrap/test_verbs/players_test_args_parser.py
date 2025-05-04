@@ -1,4 +1,4 @@
-#!moo verb test-args-parser --on "player class" --ability
+#!moo verb test-args-parser --on "player class" --dspec this
 
 from moo.core import api
 

@@ -1,4 +1,4 @@
-#!moo verb describe --on "author class" --ability
+#!moo verb describe --on "author class" --dspec this
 
 from moo.core import api
 

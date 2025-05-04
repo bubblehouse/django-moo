@@ -1,4 +1,4 @@
-#!moo verb describe --on "System Object" --method
+#!moo verb describe --on "System Object"
 
 from moo.core import api
 

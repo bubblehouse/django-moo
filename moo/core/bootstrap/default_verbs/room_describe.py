@@ -1,4 +1,4 @@
-#!moo verb describe --on "room class" --method
+#!moo verb describe --on "room class"
 
 from moo.core import lookup
 

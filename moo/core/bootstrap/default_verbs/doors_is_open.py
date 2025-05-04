@@ -1,4 +1,4 @@
-#!moo verb is_open is_locked --on "door class" --method
+#!moo verb is_open is_locked --on "door class"
 
 from moo.core import api
 

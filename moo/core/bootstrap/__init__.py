@@ -13,12 +13,31 @@ from django.conf import settings
 
 log = logging.getLogger(__name__)
 
+
+class ISpecAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        """
+        Custom action to handle the indirect object specifier.
+        """
+        values = values or []
+        result = {}
+        for value in values:
+            if ":" not in value:
+                raise argparse.ArgumentTypeError(f"Invalid indirect object specifier: {value}")
+            preposition, specifier = value.split(":", 1)
+            if specifier not in ["this", "any", "none"]:
+                raise argparse.ArgumentTypeError(f"Invalid indirect object specifier: {specifier}")
+            result[preposition] = specifier
+        namespace.ispec = result
+        return namespace
+
+
 parser = argparse.ArgumentParser("moo")
 parser.add_argument("subcommand", choices=["verb"])
 parser.add_argument("names", nargs="+")
 parser.add_argument("--on", help="The object to add or modify the verb on")
-parser.add_argument("--ability", action="store_true", help="Whether the verb is an intrinsic ability")
-parser.add_argument("--method", action="store_true", help="Whether the verb is a method (callable from verb code)")
+parser.add_argument("--dspec", choices=["this", "any", "none"], help="The direct object specifier")
+parser.add_argument("--ispec", metavar="PREP:SPEC", nargs="+", help="Indirect object specifiers", action=ISpecAction)
 
 
 def get_source(filename, dataset="default"):
@@ -76,7 +95,6 @@ def initialize_dataset(dataset="default"):
         warnings.simplefilter("ignore", category=RuntimeWarning)
         system = create(name="System Object", unique_name=True)
         set_default_permissions = models.Verb.objects.create(
-            method=True,
             origin=system,
             repo=repo,
             code=get_source("_system_set_default_permissions.py", dataset=dataset),
@@ -87,7 +105,7 @@ def initialize_dataset(dataset="default"):
         set_default_permissions(set_default_permissions)
         set_default_permissions(system)
     containers = create(name="container class", unique_name=True)
-    containers.add_verb("accept", code="return True", method=True)
+    containers.add_verb("accept", code="return True")
     # Create the first real user
     wizard = create(name="Wizard", unique_name=True, parents=[containers])
     wizard.owner = wizard
@@ -151,8 +169,8 @@ def load_verbs(repo, verb_package):
                         code=contents,
                         filename=str(path.resolve()),
                         repo=repo,
-                        ability=args.ability,
-                        method=args.method,
+                        direct_object=args.dspec,
+                        indirect_objects=args.ispec,
                     )
                 else:
                     log.info(f"Skipping verb source `{ref.name}`...")

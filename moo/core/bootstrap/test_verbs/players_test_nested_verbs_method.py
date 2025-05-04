@@ -1,4 +1,4 @@
-#!moo verb test-nested-verbs-method --on "player class" --method
+#!moo verb test-nested-verbs-method --on "player class"
 
 from moo.core import api
 
