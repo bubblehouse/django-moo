@@ -4,7 +4,7 @@ from moo.core import exceptions, parse
 from moo.core.models.object import Object
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_parse_imperative_command(t_init: Object, t_wizard: Object):
     lex = parse.Lexer("look")
     parser = parse.Parser(lex, t_wizard)
@@ -24,7 +24,7 @@ def test_parse_imperative_command(t_init: Object, t_wizard: Object):
         parser.get_pobj_str("on")
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_parse_direct_object(t_init: Object, t_wizard: Object):
     bag = Object.objects.get(name="bag of holding")
     lex = parse.Lexer("look my bag of holding")
@@ -41,7 +41,7 @@ def test_parse_direct_object(t_init: Object, t_wizard: Object):
         parser.get_pobj_str("on")
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_parse_object_of_the_preposition(t_init: Object, t_wizard: Object):
     lex = parse.Lexer("look through peephole")
     parser = parse.Parser(lex, t_wizard)
@@ -58,7 +58,7 @@ def test_parse_object_of_the_preposition(t_init: Object, t_wizard: Object):
     assert parser.get_pobj_str("through") == "peephole"
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_parse_object_of_the_preposition_with_preposition(t_init: Object, t_wizard: Object):
     lex = parse.Lexer("look through peephole with wizard")
     parser = parse.Parser(lex, t_wizard)
@@ -75,7 +75,7 @@ def test_parse_object_of_the_preposition_with_preposition(t_init: Object, t_wiza
         parser.get_dobj_str()
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_parse_direct_object_object_of_the_preposition_with_preposition(t_init: Object, t_wizard: Object):
     lex = parse.Lexer("@eval glasses from wizard with tongs")
     parser = parse.Parser(lex, t_wizard)
@@ -89,7 +89,7 @@ def test_parse_direct_object_object_of_the_preposition_with_preposition(t_init: 
     assert parser.get_pobj_str("from") == "wizard"
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_parse_direct_object_and_multiple_prepositions_with_specifiers(t_init: Object, t_wizard: Object):
     lex = parse.Lexer("@eval the wizard from 'bag under stairs' with tongs in wizard's bag")
     parser = parse.Parser(lex, t_wizard)
@@ -102,7 +102,7 @@ def test_parse_direct_object_and_multiple_prepositions_with_specifiers(t_init: O
     assert parser.get_pobj_str("with") == "tongs"
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_parse_command_referring_to_aliases(t_init: Object, t_wizard: Object):
     alias = t_wizard.aliases.create(alias="The Wiz")
     lex = parse.Lexer("@eval the Wiz from 'bag under stairs' with tongs in wizard's bag")
@@ -114,21 +114,21 @@ def test_parse_command_referring_to_aliases(t_init: Object, t_wizard: Object):
     assert not parser.has_dobj()
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_parse_with_quoted_strings(t_init: Object, t_wizard: Object):
     lex = parse.Lexer("@eval wizard to 'something here'")
     parser = parse.Parser(lex, t_wizard)
     assert parser.get_pobj_str("to") == "something here"
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_parse_specifier(t_init: Object, t_wizard: Object):
     lex = parse.Lexer("make a jar")
     parser = parse.Parser(lex, t_wizard)
     assert parser.get_dobj_str() == "jar"
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_parse_with_quoted_strings_and_escapes(t_init: Object, t_wizard: Object):
     lex = parse.Lexer(
         "@eval here as 'Large amounts of chalkdust lay all over the "
@@ -143,7 +143,7 @@ def test_parse_with_quoted_strings_and_escapes(t_init: Object, t_wizard: Object)
     assert "\\" not in parser.get_pobj_str("as")
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_parse_with_my_object(t_init: Object, t_wizard: Object):
     box = Object.objects.create(name="box")
     box.location = t_wizard
@@ -159,7 +159,7 @@ def test_parse_with_my_object(t_init: Object, t_wizard: Object):
     assert parser.has_dobj()
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_parse_with_complex_name(t_init: Object, t_wizard: Object):
     box = Object.objects.create(name="box containing spaces")
     box.location = t_wizard.location

@@ -4,7 +4,7 @@ from moo.core import code, lookup, parse
 from moo.core.models import Object
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_creation(t_init: Object, t_wizard: Object):
     printed = []
@@ -21,7 +21,7 @@ def test_creation(t_init: Object, t_wizard: Object):
         ]
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_transmutation(t_init: Object, t_wizard: Object):
     printed = []
@@ -39,7 +39,7 @@ def test_transmutation(t_init: Object, t_wizard: Object):
         ]
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_description(t_init: Object, t_wizard: Object):
     printed = []

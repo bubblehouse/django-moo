@@ -8,7 +8,7 @@ from moo.core.models import Object, Player
 from .. import code, create, exceptions, lookup
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_regular_user_can_read_a_thing(t_init: Object, t_wizard: Object):
     thing = Object.objects.create(name="thing", owner=t_wizard)
     user = Object.objects.get(name__iexact="player")
@@ -21,7 +21,7 @@ def test_regular_user_can_read_a_thing(t_init: Object, t_wizard: Object):
     assert not user.is_allowed("develop", thing)
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_regular_user_who_owns_a_thing(t_init: Object, t_wizard: Object):
     user = Object.objects.get(name__iexact="player")
     thing = Object.objects.create(name="thing", owner=user)
@@ -34,7 +34,7 @@ def test_regular_user_who_owns_a_thing(t_init: Object, t_wizard: Object):
     assert user.is_allowed("develop", thing)
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_everyone_can_read_a_thing(t_init: Object, t_wizard: Object):
     thing = Object.objects.create(name="thing")
     jim = Object.objects.create(name="Jim", unique_name=True)
@@ -47,7 +47,7 @@ def test_everyone_can_read_a_thing(t_init: Object, t_wizard: Object):
     assert not jim.is_allowed("develop", thing)
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_wizard_can_do_most_things(t_init: Object, t_wizard: Object):
     # Objects are only Wizards if they have an associated Player with wizard=True
     Player.objects.create(avatar=t_wizard, wizard=True)
@@ -61,7 +61,7 @@ def test_wizard_can_do_most_things(t_init: Object, t_wizard: Object):
     assert t_wizard.is_allowed("develop", thing)
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_add_a_simple_deny_clase(t_init: Object, t_wizard: Object):
     user = Object.objects.get(name__iexact="player")
     thing = Object.objects.create(name="thing", owner=user)
@@ -72,7 +72,7 @@ def test_add_a_simple_deny_clase(t_init: Object, t_wizard: Object):
     assert not user.is_allowed("write", thing)
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_cant_create_child_of_an_object_that_isnt_yours(t_init: Object, t_wizard: Object):
     printed = []
 
@@ -88,7 +88,7 @@ def test_cant_create_child_of_an_object_that_isnt_yours(t_init: Object, t_wizard
         assert str(excinfo.value) == f"#{user.pk} (Player) is not allowed derive on #{parent_thing.pk} (parent thing)"
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_cant_create_parent_of_an_object_that_isnt_yours(t_init: Object, t_wizard: Object):
     printed = []
 
@@ -104,7 +104,7 @@ def test_cant_create_parent_of_an_object_that_isnt_yours(t_init: Object, t_wizar
         assert str(excinfo.value) == f"#{user.pk} (Player) is not allowed transmute on #{child_thing.pk} (child thing)"
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_cant_change_owner_unless_allowed_to_entrust(t_init: Object, t_wizard: Object):
     printed = []
 
@@ -131,7 +131,7 @@ def test_cant_change_owner_unless_allowed_to_entrust(t_init: Object, t_wizard: O
         obj.save()
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_cant_change_location_unless_allowed_to_move(t_init: Object, t_wizard: Object):
     printed = []
 
@@ -157,7 +157,7 @@ def test_cant_change_location_unless_allowed_to_move(t_init: Object, t_wizard: O
         obj.save()
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 @override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_TASK_STORE_EAGER_RESULT=True)
 def test_change_location_calls_enterfunc(t_init: Object, t_wizard: Object, caplog: pytest.LogCaptureFixture):
     printed = []
@@ -169,14 +169,14 @@ def test_change_location_calls_enterfunc(t_init: Object, t_wizard: Object, caplo
         with code.context(t_wizard, _writer):
             containers = lookup("container class")
             box = create("box", parents=[containers])
-            box.add_verb("enterfunc", code="print(args[0])", method=True)
+            box.add_verb("enterfunc", code="print(args[0])")
             thing = create("thing")
             thing.location = box
             thing.save()
     assert f"#{thing.pk} (thing)\n" in caplog.text
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 @override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_TASK_STORE_EAGER_RESULT=True)
 def test_change_location_calls_exitfunc(t_init: Object, t_wizard: Object, caplog: pytest.LogCaptureFixture):
     printed = []
@@ -188,7 +188,7 @@ def test_change_location_calls_exitfunc(t_init: Object, t_wizard: Object, caplog
         with code.context(t_wizard, _writer):
             containers = lookup("container class")
             box = create("box", parents=[containers])
-            box.add_verb("exitfunc", code="print(args[0])", method=True)
+            box.add_verb("exitfunc", code="print(args[0])")
             thing = create("thing", location=box)
             assert thing.location == box
         with code.context(t_wizard, _writer):
@@ -199,7 +199,7 @@ def test_change_location_calls_exitfunc(t_init: Object, t_wizard: Object, caplog
     assert f"#{thing.pk} (thing)\n" in caplog.text
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_change_location_calls_accept(t_init: Object, t_wizard: Object):
     printed = []
 
@@ -209,14 +209,14 @@ def test_change_location_calls_accept(t_init: Object, t_wizard: Object):
     user = Object.objects.get(name__iexact="player")
     with code.context(user, _writer):
         box = create("box")
-        box.add_verb("accept", code="return False", method=True)
+        box.add_verb("accept", code="return False")
         with pytest.raises(PermissionError) as excinfo:
             thing = create("thing", location=box)
         thing = lookup("thing")
         assert str(excinfo.value) == f"#{box.pk} (box) did not accept #{thing.pk} (thing)"
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_change_location_checks_recursion(t_init: Object, t_wizard: Object):
     printed = []
 

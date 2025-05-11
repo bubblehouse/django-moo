@@ -5,7 +5,7 @@ from ..exceptions import QuotaError
 from ..models import Object
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_create_object(t_init: Object, t_wizard: Object):
     printed = []
 
@@ -18,7 +18,7 @@ def test_create_object(t_init: Object, t_wizard: Object):
     assert obj.pk > 0
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_create_object_with_quota(t_init: Object, t_wizard: Object):
     printed = []
 
@@ -36,7 +36,7 @@ def test_create_object_with_quota(t_init: Object, t_wizard: Object):
     assert obj.pk > 0
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_delete_object_with_quota(t_init: Object, t_wizard: Object):
     printed = []
 

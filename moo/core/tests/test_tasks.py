@@ -7,7 +7,7 @@ from .. import code, tasks
 from ..models import Object, Verb
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 @override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_TASK_STORE_EAGER_RESULT=True)
 def test_simple_async_verb(t_init: Object, t_wizard: Object, caplog: pytest.LogCaptureFixture):
     printed = []
@@ -30,7 +30,7 @@ def test_simple_async_verb(t_init: Object, t_wizard: Object, caplog: pytest.LogC
         assert line.endswith(str(counter))
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 @override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_TASK_STORE_EAGER_RESULT=True)
 def test_simple_async_verb_callback(t_init: Object, t_wizard: Object, caplog: pytest.LogCaptureFixture):
     verb = Verb.objects.get(names__name="test-async-verb")

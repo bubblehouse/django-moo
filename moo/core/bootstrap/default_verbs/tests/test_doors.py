@@ -15,7 +15,7 @@ def setup_doors(t_wizard: Object):
     return room, door
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_creation(t_init: Object, t_wizard: Object):
     printed = []
@@ -37,7 +37,7 @@ def test_creation(t_init: Object, t_wizard: Object):
         assert printed == ["You go north."]
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_locking(t_init: Object, t_wizard: Object):
     printed = []
@@ -59,7 +59,7 @@ def test_locking(t_init: Object, t_wizard: Object):
         assert not door.is_locked()
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_open(t_init: Object, t_wizard: Object):
     printed = []
