@@ -12,6 +12,7 @@ There are a long list of prepositions supported, some of which are interchangeab
 import logging
 import re
 
+from django.conf import settings
 from django.db.models.query import QuerySet
 
 from .exceptions import *  # pylint: disable=wildcard-import
@@ -42,27 +43,7 @@ def unquote(s):
 
 
 class Pattern:
-    # Here are all our supported prepositions
-    PREPS = [
-        ["with", "using"],
-        ["at", "to"],
-        ["in front of"],
-        ["in", "inside", "into", "within"],
-        ["on top of", "on", "onto", "upon", "above"],
-        ["out of", "from inside", "from"],
-        ["over"],
-        ["through"],
-        ["under", "underneath", "beneath", "below"],
-        ["around", "round"],
-        ["between", "among"],
-        ["behind", "past"],
-        ["beside", "by", "near", "next to", "along"],
-        ["for", "about"],
-        # ['is'],
-        ["as"],
-        ["off", "off of"],
-    ]
-    PREP_SRC = r"(?:\b)(?P<prep>" + "|".join(sum(PREPS, [])) + r")(?:\b)"
+    PREP_SRC = r"(?:\b)(?P<prep>" + "|".join(sum(settings.PREPOSITIONS, [])) + r")(?:\b)"
     SPEC = r"(?P<spec_str>my|the|a|an|\S+(?:\'s|s\'))"
     PHRASE_SRC = r"(?:" + SPEC + r"\s)?(?P<obj_str>.+)"
     PREP = re.compile(PREP_SRC)
@@ -73,7 +54,8 @@ class Pattern:
     @classmethod
     def initializePrepositions(cls):
         from .models import Preposition
-        for preps in cls.PREPS:
+
+        for preps in settings.PREPOSITIONS:
             preposition = Preposition.objects.create()
             for name in preps:
                 preposition.names.create(name=name)
@@ -334,7 +316,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         for prep in self.prepositions.values():
             checks.extend([pobj[2] for pobj in prep if pobj[2]])
 
-        matches = [x for x in reversed(checks) if x and x.has_verb(verb_str, method=False)]
+        matches = [x for x in reversed(checks) if x and x.has_verb(verb_str)]
         self.this = self.filter_matches(matches)
         if isinstance(self.this, list):
             if len(self.this) > 1:
@@ -348,24 +330,34 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             raise Verb.DoesNotExist("parser: " + verb_str)
 
         # print "Verb found on: " + str(self.this)
-        self.verb = self.this.get_verb(self.words[0], method=False)
+        self.verb = self.this.get_verb(self.words[0])
         return self.verb
 
     def filter_matches(self, selection):
+        # TODO: this needs to start honoring the direct_object and indirect_object fields
         result = []
         # print "selection is " + str(selection)
         verb_str = self.words[0]
         for possible in selection:
-            if possible in result:
+            verb = possible.get_verb(verb_str)
+            try:
+                if verb.direct_object == "this":
+                    assert self.dobj == possible
+                elif verb.direct_object == "none":
+                    assert not self.has_dobj_str()
+                for ispec in verb.indirect_objects.all():
+                    if ispec.preposition is None:
+                        assert ispec.preposition_specifier == "any"
+                    else:
+                        prep = ispec.preposition.name
+                        pobj = self.prepositions[prep][2]
+                        if ispec.specifier == "this":
+                            assert pobj == possible
+                        elif ispec.specifier == "none":
+                            assert not self.has_pobj_str(prep)
+                result.append(possible)
+            except AssertionError:
                 continue
-            verb = possible.get_verb(verb_str, method=False)
-            if verb.ability and possible != self.caller:
-                continue
-            if verb.method:
-                continue
-            # if not self.caller.is_allowed('execute', verb):
-            #     continue
-            result.append(possible)
         # print "result is " + str(result)
         return result
 

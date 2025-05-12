@@ -18,7 +18,7 @@ from ..code import context
 from .acl import Access, AccessibleMixin, Permission
 from .auth import Player
 from .property import AccessibleProperty
-from .verb import AccessibleVerb, VerbName
+from .verb import AccessibleVerb, Preposition, PrepositionName, PrepositionSpecifier, VerbName
 
 log = logging.getLogger(__name__)
 
@@ -187,8 +187,8 @@ class Object(models.Model, AccessibleMixin):
         owner: "Object" = None,
         repo=None,
         filename: str = None,
-        ability: bool = False,
-        method: bool = False,
+        direct_object: str = None,
+        indirect_objects: dict[str, str] = None,
     ):
         """
         Defines a new :class:`.Verb` on the given object.
@@ -198,22 +198,36 @@ class Object(models.Model, AccessibleMixin):
         :param owner: the owner of the Verb being created
         :param repo: optional, the Git repo this code is from
         :param filename: optional, the name of the code file within the repo
-        :param ability: if True, this verb can only be used by the object it is defined on
-        :param method: if True, this verb can be invoked by other verbs
+        :param direct_object: a direct object specifier for the verb
+        :param indirect_objects: a list of indirect object specifiers for the verb
         """
         self.can_caller("write", self)
         owner = context.get("caller") or owner or self
         if filename and not code:
             code = bootstrap.get_source(filename, dataset=repo.slug)
         verb = AccessibleVerb.objects.create(
-            method=method,
-            ability=ability,
             origin=self,
             owner=owner,
             repo=repo,
             filename=filename,
             code=code,
+            direct_object=direct_object,
         )
+        if indirect_objects is not None:
+            for prep, specifier in indirect_objects.items():
+                if prep in ["any", "none"]:
+                    p = None
+                    prep_specifier = prep
+                else:
+                    p = Preposition.objects.get(name=prep)
+                    prep_specifier = None
+                verb.indirect_objects.add(
+                    PrepositionSpecifier.objects.update_or_create(
+                        preposition=p,
+                        preposion_specifier=prep_specifier,
+                        specifier=specifier
+                    )[0]
+                )
         for name in names:
             verb.names.add(VerbName.objects.create(verb=verb, name=name))
         return verb
@@ -230,23 +244,21 @@ class Object(models.Model, AccessibleMixin):
         self.can_caller("execute", qs[0])
         return qs[0](*args, **kwargs)
 
-    def has_verb(self, name, recurse=True, ability=None, method=None):
+    def has_verb(self, name, recurse=True):
         """
         Check if a particular :class:`.Verb` is defined on this object.
 
         :param name: the name of the verb
         :param recurse: whether or not to traverse the inheritance tree
-        :param ability: if True, only return abilities
-        :param method: if True, only return methods
         """
         self.can_caller("read", self)
         try:
-            self._lookup_verb(name, recurse, ability, method)
+            self._lookup_verb(name, recurse)
         except AccessibleVerb.DoesNotExist:
             return False
         return True
 
-    def get_verb(self, name, recurse=True, ability=None, method=None):
+    def get_verb(self, name, recurse=True):
         """
         Retrieve a specific :class:`.Verb` instance defined on this Object.
 
@@ -254,29 +266,19 @@ class Object(models.Model, AccessibleMixin):
         :param recurse: whether or not to traverse the inheritance tree
         """
         self.can_caller("read", self)
-        qs = self._lookup_verb(name, recurse, ability, method)
+        qs = self._lookup_verb(name, recurse)
         if len(qs) > 1:
             raise exceptions.AmbiguousVerbError(name, list(qs.all()))
         v = qs[0]
-        if v.method:
+        if v.is_method:
             v.invoked_name = name
         return v
 
-    def _lookup_verb(self, name, recurse=True, ability=None, method=None):
-        if ability and method:
-            raise ValueError("Cannot return both ability and method verbs.")
+    def _lookup_verb(self, name, recurse=True):
         qs = AccessibleVerb.objects.filter(origin=self, names__name=name)
-        if ability is not None:
-            qs = qs.filter(ability=ability)
-        if method is not None:
-            qs = qs.filter(method=method)
         if not qs and recurse:
             for ancestor in self.get_ancestors():
                 qs = AccessibleVerb.objects.filter(origin=ancestor, names__name=name)
-                if ability is not None:
-                    qs = qs.filter(ability=ability)
-                if method is not None:
-                    qs = qs.filter(method=method)
                 if qs:
                     break
         if qs:

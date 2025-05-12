@@ -4,7 +4,7 @@ from moo.core import api
 
 obj = args[1]  # pylint: disable=undefined-variable  # type: ignore
 
-if obj.has_verb("describe", method=True):
+if obj.has_verb("describe"):
     return obj.describe()  # pylint: disable=return-outside-function  # type: ignore
 elif obj.has_property("description"):
     description = obj.get_property("description")

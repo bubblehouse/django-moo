@@ -8,8 +8,7 @@ import logging
 
 import pytest
 from django.conf import settings
-from django.contrib.auth.models import \
-    User  # pylint: disable=imported-auth-user
+from django.contrib.auth.models import User  # pylint: disable=imported-auth-user
 
 from moo.core.bootstrap import load_python
 from moo.core.models import Object, Player, Repository
