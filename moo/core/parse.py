@@ -309,7 +309,6 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         location = self.caller.location
         if location:
             checks.append(location)
-            checks.extend(location.contents.all())
 
         checks.append(self.dobj)
 

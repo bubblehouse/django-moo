@@ -1,4 +1,4 @@
-#!moo verb test-nested-verbs --on "player class" --dspec this
+#!moo verb test-nested-verbs --on "player class" --dspec any
 
 from moo.core import api
 
