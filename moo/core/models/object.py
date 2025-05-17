@@ -187,7 +187,7 @@ class Object(models.Model, AccessibleMixin):
         owner: "Object" = None,
         repo=None,
         filename: str = None,
-        direct_object: str = None,
+        direct_object: str = "none",
         indirect_objects: dict[str, str] = None,
     ):
         """
@@ -219,13 +219,12 @@ class Object(models.Model, AccessibleMixin):
                     p = None
                     prep_specifier = prep
                 else:
-                    p = Preposition.objects.get(name=prep)
-                    prep_specifier = None
+                    pn = PrepositionName.objects.get(name=prep)
+                    p = pn.preposition
+                    prep_specifier = "none"
                 verb.indirect_objects.add(
                     PrepositionSpecifier.objects.update_or_create(
-                        preposition=p,
-                        preposion_specifier=prep_specifier,
-                        specifier=specifier
+                        preposition=p, preposition_specifier=prep_specifier, specifier=specifier
                     )[0]
                 )
         for name in names:

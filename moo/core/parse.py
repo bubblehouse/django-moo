@@ -334,31 +334,26 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         return self.verb
 
     def filter_matches(self, selection):
-        # TODO: this needs to start honoring the direct_object and indirect_object fields
         result = []
-        # print "selection is " + str(selection)
         verb_str = self.words[0]
         for possible in selection:
-            verb = possible.get_verb(verb_str)
-            try:
-                if verb.direct_object == "this":
-                    assert self.dobj == possible
-                elif verb.direct_object == "none":
-                    assert not self.has_dobj_str()
-                for ispec in verb.indirect_objects.all():
-                    if ispec.preposition is None:
-                        assert ispec.preposition_specifier == "any"
-                    else:
-                        prep = ispec.preposition.name
-                        pobj = self.prepositions[prep][2]
-                        if ispec.specifier == "this":
-                            assert pobj == possible
-                        elif ispec.specifier == "none":
-                            assert not self.has_pobj_str(prep)
-                result.append(possible)
-            except AssertionError:
+            if possible in result:
                 continue
-        # print "result is " + str(result)
+            verb = possible.get_verb(verb_str)
+            if verb.direct_object == "this" and self.dobj != possible:
+                continue
+            if verb.direct_object == "none" and self.has_dobj_str():
+                continue
+            for prep, values in self.prepositions.items():
+                for ispec in verb.indirect_objects.all():
+                    if ispec.preposition_specifier == "none":
+                        continue
+                    if ispec.preposition_specifier == "this" and values[2] != possible:
+                        continue
+                    if ispec.preposition_specifier != "any":
+                        if not ispec.preposition.names.filter(name=prep).exists():
+                            continue
+            result.append(possible)
         return result
 
     def get_pronoun_object(self, pronoun):

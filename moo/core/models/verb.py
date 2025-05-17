@@ -52,7 +52,7 @@ class Verb(models.Model, AccessibleMixin):
     origin = models.ForeignKey("Object", related_name="verbs", on_delete=models.CASCADE)
     #: If the Verb can be called with a direct obect
     direct_object = models.CharField(
-        max_length=255, choices=settings.OBJECT_SPECIFIER_CHOICES, db_index=True, db_default="none"
+        max_length=255, choices=settings.OBJECT_SPECIFIER_CHOICES, db_index=True, default="none", db_default="none"
     )
     #: If the Verb can be called with an indirect obect
     indirect_objects = models.ManyToManyField(PrepositionSpecifier, related_name="+", blank=True)

@@ -1,4 +1,4 @@
-#!moo verb tunnel --on "author class" --dspec this
+#!moo verb tunnel --on "author class" --dspec any
 
 from moo.core import api, lookup
 
