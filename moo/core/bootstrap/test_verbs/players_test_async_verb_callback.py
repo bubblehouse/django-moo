@@ -1,3 +1,3 @@
-#!moo verb test-async-verb-callback --on "player class" --dspec any
+#!moo verb test-async-verb-callback --on "player class" --dspec this
 
 print(args[0])  # pylint: disable=undefined-variable  # type: ignore

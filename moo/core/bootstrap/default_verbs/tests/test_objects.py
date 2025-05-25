@@ -1,7 +1,7 @@
 import pytest
 
 from moo.core import code, lookup, parse
-from moo.core.models import Object
+from moo.core.models import Object, Verb
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -55,10 +55,11 @@ def test_description(t_init: Object, t_wizard: Object):
         ]
         printed.clear()
 
-        parse.interpret("describe")
+        with pytest.raises(Verb.DoesNotExist):
+            parse.interpret("describe")
+
         parse.interpret("describe thingy")
         assert printed == [
-            "[red]What do you want to describe?[/red]",
             "[red]What do you want to describe that as?[/red]",
         ]
         printed.clear()

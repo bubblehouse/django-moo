@@ -1,4 +1,4 @@
-#!moo verb describe --on "System Object"
+#!moo verb describe --on "System Object" --dspec this
 
 from moo.core import api
 

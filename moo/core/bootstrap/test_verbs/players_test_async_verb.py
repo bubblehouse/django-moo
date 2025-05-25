@@ -1,4 +1,4 @@
-#!moo verb test-async-verb --on "player class" --dspec any
+#!moo verb test-async-verb --on "player class" --dspec this
 
 from moo.core import api, invoke
 
