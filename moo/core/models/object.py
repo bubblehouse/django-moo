@@ -240,8 +240,10 @@ class Object(models.Model, AccessibleMixin):
         :param kwargs: keyword arguments for the verb
         """
         qs = self._lookup_verb(name, recurse=True)
-        self.can_caller("execute", qs[0])
-        return qs[0](*args, **kwargs)
+        verb = qs[0]
+        self.can_caller("execute", verb)
+        verb.invoked_name = name
+        return verb(*args, **kwargs)
 
     def has_verb(self, name, recurse=True):
         """
@@ -257,7 +259,7 @@ class Object(models.Model, AccessibleMixin):
             return False
         return True
 
-    def get_verb(self, name, recurse=True):
+    def get_verb(self, name, recurse=True, allow_ambiguous=False):
         """
         Retrieve a specific :class:`.Verb` instance defined on this Object.
 
@@ -265,23 +267,28 @@ class Object(models.Model, AccessibleMixin):
         :param recurse: whether or not to traverse the inheritance tree
         """
         self.can_caller("read", self)
-        qs = self._lookup_verb(name, recurse)
-        if len(qs) > 1:
-            raise exceptions.AmbiguousVerbError(name, list(qs.all()))
-        v = qs[0]
-        if v.is_method:
+        verbs = self._lookup_verb(name, recurse)
+        if len(verbs) > 1 and not allow_ambiguous:
+            raise exceptions.AmbiguousVerbError(name, verbs)
+        for v in verbs:
             v.invoked_name = name
+        if allow_ambiguous:
+            return verbs
+        v = verbs[0]
         return v
 
     def _lookup_verb(self, name, recurse=True):
+        found = []
         qs = AccessibleVerb.objects.filter(origin=self, names__name=name)
         if not qs and recurse:
             for ancestor in self.get_ancestors():
                 qs = AccessibleVerb.objects.filter(origin=ancestor, names__name=name)
                 if qs:
-                    break
-        if qs:
-            return qs
+                    found.extend(qs.all())
+        elif qs:
+            found.extend(qs.all())
+        if found:
+            return found
         else:
             raise AccessibleVerb.DoesNotExist(f"No such verb `{name}`.")
 

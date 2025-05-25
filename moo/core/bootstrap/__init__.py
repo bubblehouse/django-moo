@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 class ISpecAction(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
+    def __call__(self, parser, namespace, values, option_string=None):  # pylint: disable=redefined-outer-name
         """
         Custom action to handle the indirect object specifier.
         """
@@ -107,7 +107,8 @@ def initialize_dataset(dataset="default"):
     containers = create(name="container class", unique_name=True)
     containers.add_verb("accept", code="return True")
     # Create the first real user
-    wizard = create(name="Wizard", unique_name=True, parents=[containers])
+    wizard = create(name="Wizard", unique_name=True)
+    wizard.add_verb("accept", code="return True")
     wizard.owner = wizard
     wizard.save()
     # Wizard owns containers

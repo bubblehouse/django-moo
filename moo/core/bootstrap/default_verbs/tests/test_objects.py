@@ -55,11 +55,11 @@ def test_description(t_init: Object, t_wizard: Object):
         ]
         printed.clear()
 
-        with pytest.raises(Verb.DoesNotExist):
-            parse.interpret("describe")
+        parse.interpret("describe")
 
         parse.interpret("describe thingy")
         assert printed == [
+            "[red]What do you want to describe?[/red]",
             "[red]What do you want to describe that as?[/red]",
         ]
         printed.clear()

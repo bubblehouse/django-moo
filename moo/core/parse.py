@@ -291,7 +291,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         Determine the most likely verb for this sentence. There is a search
         order for verbs, as follows::
 
-            Caller->Caller's Contents->Location->Items in Location->
+            Caller->Caller's Contents->Location->
             Direct Object->Objects of the Preposition
         """
         if not (self.words):
@@ -330,29 +330,31 @@ class Parser:  # pylint: disable=too-many-instance-attributes
 
         # print "Verb found on: " + str(self.this)
         self.verb = self.this.get_verb(self.words[0])
+        self.verb.invoked_name = self.words[0]
         return self.verb
 
     def filter_matches(self, selection):
         result = []
         verb_str = self.words[0]
         for possible in selection:
-            if possible in result:
-                continue
-            verb = possible.get_verb(verb_str)
-            if verb.direct_object == "this" and self.dobj != possible:
-                continue
-            if verb.direct_object == "none" and self.has_dobj_str():
-                continue
-            for prep, values in self.prepositions.items():
+            for verb in possible.get_verb(verb_str, allow_ambiguous=True):
+                if verb.direct_object == "this" and self.dobj != possible:
+                    continue
+                if verb.direct_object == "none" and self.has_dobj_str():
+                    continue
                 for ispec in verb.indirect_objects.all():
-                    if ispec.preposition_specifier == "none":
-                        continue
-                    if ispec.preposition_specifier == "this" and values[2] != possible:
-                        continue
-                    if ispec.preposition_specifier != "any":
-                        if not ispec.preposition.names.filter(name=prep).exists():
+                    for prep, values in self.prepositions.items():
+                        if ispec.preposition_specifier == "none":
                             continue
-            result.append(possible)
+                        if ispec.preposition_specifier == "this" and values[2] != possible:
+                            continue
+                        if ispec.preposition_specifier != "any":
+                            if not ispec.preposition.names.filter(name=prep).exists():
+                                continue
+                # sometimes an object has multiple verbs with the same name after inheritance
+                # so we need to check if the verb is already in the list
+                if possible not in result:
+                    result.append(possible)
         return result
 
     def get_pronoun_object(self, pronoun):

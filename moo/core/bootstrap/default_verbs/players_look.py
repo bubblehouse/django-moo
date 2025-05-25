@@ -1,4 +1,4 @@
-#!moo verb look inspect --on "player class" --dspec any --ispec at:any
+#!moo verb look inspect --on "player class" --dspec none --ispec at:any
 
 from moo.core import api, lookup
 
