@@ -152,7 +152,10 @@ def invoke(*args, verb=None, callback=None, delay: int = 0, periodic: bool = Fal
     from django_celery_beat.models import CrontabSchedule, IntervalSchedule, PeriodicTask
 
     from moo.core import tasks
-
+    if hasattr(verb, "invoked_name"):
+        l = list(args)
+        l.insert(0, verb.invoked_name)
+        args = tuple(l)
     kwargs.update(
         dict(
             caller_id=api.caller.pk,

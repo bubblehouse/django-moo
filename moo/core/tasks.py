@@ -80,4 +80,6 @@ def invoke_verb(
             globals.update(code.get_restricted_environment(api.writer))
             result = code.r_exec(verb.code, {}, globals, *args, filename=repr(verb), **kwargs)
     if callback_verb_id:
-        invoke_verb.delay(result, caller_id=caller_id, verb_id=callback_verb_id)
+        callback = Verb.objects.get(pk=callback_verb_id)
+        invoked_name = callback.names.first().name
+        invoke_verb.delay(invoked_name, result, caller_id=caller_id, verb_id=callback_verb_id)
