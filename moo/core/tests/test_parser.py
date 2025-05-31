@@ -152,6 +152,7 @@ def test_parse_with_my_object(t_init: Object, t_wizard: Object):
     parser = parse.Parser(lex, t_wizard)
     assert parser.has_dobj()
     user = Object.objects.get(name__iexact="player")
+    user.add_verb("accept", code="return True")
     box.location = user
     box.save()
     lex = parse.Lexer("@eval player's box")
