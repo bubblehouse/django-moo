@@ -7,13 +7,13 @@ if api.parser.has_dobj():
 else:
     door_description = api.parser.get_dobj_str()
     exits = api.caller.location.get_property("exits", {})
-    for direction, exit in exits.items():
+    for direction, exit in exits.items():  # pylint: disable=unused-variable,redefined-builtin
         if exit["door"].is_named(door_description):
             door = exit["door"]
             break
     else:
         print(f"There is no door called {door_description} here.")
-        return
+        return  # pylint: disable=return-outside-function  # type: ignore
 
 # this is the simplest kind of door, where access control is
 # determined by the ownership of the corresponding properties

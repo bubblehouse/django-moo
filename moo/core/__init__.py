@@ -156,6 +156,8 @@ def invoke(*args, verb=None, callback=None, delay: int = 0, periodic: bool = Fal
         l = list(args)
         l.insert(0, verb.invoked_name)
         args = tuple(l)
+    if hasattr(verb, "invoked_object"):
+        kwargs["this_id"] = verb.invoked_object.pk
     kwargs.update(
         dict(
             caller_id=api.caller.pk,

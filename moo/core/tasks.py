@@ -75,6 +75,7 @@ def invoke_verb(
     with transaction.atomic():
         caller = Object.objects.get(pk=caller_id)
         verb = Verb.objects.get(pk=verb_id)
+        kwargs["this"] = Object.objects.get(pk=kwargs.pop("this_id"))
         with code.context(caller, background_log.info):
             globals = code.get_default_globals()  # pylint: disable=redefined-builtin
             globals.update(code.get_restricted_environment(api.writer))

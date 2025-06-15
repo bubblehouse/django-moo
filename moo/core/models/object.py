@@ -259,34 +259,42 @@ class Object(models.Model, AccessibleMixin):
             return False
         return True
 
-    def get_verb(self, name, recurse=True, allow_ambiguous=False):
+    def get_verb(self, name, recurse=True, allow_ambiguous=False, return_first=True):
         """
         Retrieve a specific :class:`.Verb` instance defined on this Object.
 
         :param name: the name of the verb
         :param recurse: whether or not to traverse the inheritance tree
+        :param return_first: if True, return the first matching verb, otherwise return all matching verbs
         """
         self.can_caller("read", self)
-        verbs = self._lookup_verb(name, recurse)
+        verbs = self._lookup_verb(name, recurse, return_first)
         if len(verbs) > 1 and not allow_ambiguous:
             raise exceptions.AmbiguousVerbError(name, verbs)
         for v in verbs:
             v.invoked_name = name
+            v.invoked_object = self
         if allow_ambiguous:
             return verbs
         v = verbs[0]
         return v
 
-    def _lookup_verb(self, name, recurse=True):
+    def _lookup_verb(self, name, recurse=True, return_first=True):
         found = []
         qs = AccessibleVerb.objects.filter(origin=self, names__name=name)
         if not qs and recurse:
             for ancestor in self.get_ancestors():
                 qs = AccessibleVerb.objects.filter(origin=ancestor, names__name=name)
                 if qs:
-                    found.extend(qs.all())
+                    if return_first:
+                        return qs
+                    else:
+                        found.extend(qs.all())
         elif qs:
-            found.extend(qs.all())
+            if return_first:
+                return qs
+            else:
+                found.extend(qs.all())
         if found:
             return found
         else:

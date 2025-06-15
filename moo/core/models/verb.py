@@ -101,6 +101,8 @@ class AccessibleVerb(Verb):
             l = list(args)
             l.insert(0, self.invoked_name)
             args = tuple(l)
+        if hasattr(self, "invoked_object"):
+            kwargs["this"] = self.invoked_object
         result = interpret(self.code, *args, **kwargs)
         return result
 

@@ -331,13 +331,15 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         # print "Verb found on: " + str(self.this)
         self.verb = self.this.get_verb(self.words[0])
         self.verb.invoked_name = self.words[0]
+        self.verb.invoked_object = self.this
         return self.verb
 
     def filter_matches(self, selection):
         result = []
         verb_str = self.words[0]
         for possible in selection:
-            for verb in possible.get_verb(verb_str, allow_ambiguous=True):
+            # TODO: when we get multple verbs back, we need to return the first one that satisfies
+            for verb in possible.get_verb(verb_str, allow_ambiguous=True, return_first=False):
                 if verb.direct_object == "this" and self.dobj != possible:
                     continue
                 if verb.direct_object == "none" and self.has_dobj_str():
