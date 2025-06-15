@@ -4,6 +4,7 @@ Celery Tasks for executing commands or raw Python code.
 """
 
 import logging
+import warnings
 from typing import Any, Optional
 
 from celery import shared_task
@@ -75,7 +76,12 @@ def invoke_verb(
     with transaction.atomic():
         caller = Object.objects.get(pk=caller_id)
         verb = Verb.objects.get(pk=verb_id)
-        kwargs["this"] = Object.objects.get(pk=kwargs.pop("this_id"))
+        if "this_id" in kwargs:
+            kwargs["this"] = Object.objects.get(pk=kwargs.pop("this_id"))
+        else:
+            warnings.warn(
+                RuntimeWarning("invoke_verb: no this_id provided")
+            )
         with code.context(caller, background_log.info):
             globals = code.get_default_globals()  # pylint: disable=redefined-builtin
             globals.update(code.get_restricted_environment(api.writer))
