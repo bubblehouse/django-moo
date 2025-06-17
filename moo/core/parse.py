@@ -338,11 +338,12 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         result = []
         verb_str = self.words[0]
         for possible in selection:
-            # TODO: when we get multple verbs back, we need to return the first one that satisfies
             for verb in possible.get_verb(verb_str, allow_ambiguous=True, return_first=False):
                 if verb.direct_object == "this" and self.dobj != possible:
                     continue
                 if verb.direct_object == "none" and self.has_dobj_str():
+                    continue
+                if verb.direct_object == "any" and not self.has_dobj_str():
                     continue
                 for ispec in verb.indirect_objects.all():
                     for prep, values in self.prepositions.items():
