@@ -4,7 +4,7 @@ from moo.core import code, parse
 from moo.core.models import Object
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
     printed = []

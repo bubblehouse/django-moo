@@ -56,6 +56,31 @@ ALLOWED_MODULES = (
 
 ALLOWED_BUILTINS = ("dir", "getattr", "hasattr", "dict", "list", "set")
 
+# Here are all our supported prepositions
+PREPOSITIONS = [
+    ["with", "using"],
+    ["at", "to"],
+    ["in front of"],
+    ["in", "inside", "into", "within"],
+    ["on top of", "on", "onto", "upon", "above"],
+    ["out of", "from inside", "from"],
+    ["over"],
+    ["through"],
+    ["under", "underneath", "beneath", "below"],
+    ["around", "round"],
+    ["between", "among"],
+    ["behind", "past"],
+    ["beside", "by", "near", "next to", "along"],
+    ["for", "about"],
+    # ['is'],
+    ["as"],
+    ["off", "off of"],
+]
+
+OBJECT_SPECIFIER_CHOICES = (("this", "this"), ("any", "any"), ("none", "none"))
+
+PREPOSITION_SPECIFIER_CHOICES = (("any", "any"), ("none", "none"))
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",

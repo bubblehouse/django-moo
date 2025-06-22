@@ -5,7 +5,7 @@ from moo.core.models.object import Object
 from .. import code
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_eval_simple_command(t_init: Object, t_wizard: Object):
     def _writer(msg):
         raise RuntimeError("print was called unexpectedly")
@@ -18,7 +18,7 @@ def test_eval_simple_command(t_init: Object, t_wizard: Object):
         assert result == []
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_trivial_printing(t_init: Object, t_wizard: Object):
     printed = []
 
@@ -34,7 +34,7 @@ def test_trivial_printing(t_init: Object, t_wizard: Object):
         assert printed == ["test"]
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_printing_imported_caller(t_init: Object, t_wizard: Object):
     printed = []
 
