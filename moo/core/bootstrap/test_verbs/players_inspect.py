@@ -1,4 +1,4 @@
-#!moo verb inspect --on "player class" --method
+#!moo verb inspect --on "player class" --dspec this
 
 from moo.core import api
 

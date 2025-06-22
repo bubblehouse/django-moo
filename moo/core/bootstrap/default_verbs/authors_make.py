@@ -1,4 +1,4 @@
-#!moo verb make --on "author class" --ability
+#!moo verb make --on "author class" --dspec any --ispec from:any
 
 from moo.core import api, create, lookup
 

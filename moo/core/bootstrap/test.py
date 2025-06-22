@@ -40,6 +40,5 @@ with code.context(wizard, log.info):
     wizard.save()
 
     player = create(name="Player", unique_name=True, location=lab)
-    player.parents.add(players, containers)
 
     bootstrap.load_verbs(repo, "moo.core.bootstrap.test_verbs")
