@@ -1,3 +1,10 @@
+## [0.39.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.38.0...v0.39.0) (2025-06-22)
+
+
+### Features
+
+* support verb specifiers ([f2ea0e3](https://gitlab.com/bubblehouse/django-moo/commit/f2ea0e33ca182c73912c5285ad4fe1067a1bae2a))
+
 ## [0.38.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.37.1...v0.38.0) (2025-05-03)
 
 
