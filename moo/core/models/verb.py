@@ -5,6 +5,7 @@ Verb model
 
 import logging
 
+from django.conf import settings
 from django.core import validators
 from django.db import models
 
@@ -13,6 +14,27 @@ from ..code import interpret
 from .acl import AccessibleMixin
 
 log = logging.getLogger(__name__)
+
+
+class Preposition(models.Model):
+    pass
+
+
+class PrepositionName(models.Model):
+    name = models.CharField(max_length=255)
+    preposition = models.ForeignKey(Preposition, related_name="names", on_delete=models.CASCADE)
+
+
+class PrepositionSpecifier(models.Model):
+    preposition = models.ForeignKey(Preposition, related_name="+", on_delete=models.SET_NULL, blank=True, null=True)
+    preposition_specifier = models.CharField(
+        max_length=255,
+        choices=settings.PREPOSITION_SPECIFIER_CHOICES,
+        db_index=True,
+    )
+    specifier = models.CharField(
+        max_length=255, choices=settings.OBJECT_SPECIFIER_CHOICES, db_index=True, default="none"
+    )
 
 
 class Verb(models.Model, AccessibleMixin):
@@ -28,10 +50,12 @@ class Verb(models.Model, AccessibleMixin):
     owner = models.ForeignKey("Object", related_name="+", blank=True, null=True, on_delete=models.SET_NULL)
     #: The object on which this Verb is defined
     origin = models.ForeignKey("Object", related_name="verbs", on_delete=models.CASCADE)
-    #: If True, this verb can only be used by the object it is defined on
-    ability = models.BooleanField(default=False)
-    #: If True, this verb can be invoked by other verbs
-    method = models.BooleanField(default=False)
+    #: If the Verb can be called with a direct obect
+    direct_object = models.CharField(
+        max_length=255, choices=settings.OBJECT_SPECIFIER_CHOICES, db_index=True, default="none", db_default="none"
+    )
+    #: If the Verb can be called with an indirect obect
+    indirect_objects = models.ManyToManyField(PrepositionSpecifier, related_name="+", blank=True)
 
     def __str__(self):
         return "%s {#%s on %s}" % (self.annotated(), self.id, self.origin)
@@ -40,9 +64,17 @@ class Verb(models.Model, AccessibleMixin):
     def kind(self):
         return "verb"
 
+    @property
+    def is_ability(self):
+        return self.direct_object == "this" and self.indirect_objects is None
+
+    @property
+    def is_method(self):
+        return self.direct_object is None and self.indirect_objects is not None
+
     def annotated(self):
-        ability_decoration = ["", "@"][int(self.ability)]
-        method_decoration = ["", "()"][int(self.method)]
+        ability_decoration = ["", "@"][int(self.is_ability)]
+        method_decoration = ["", "()"][int(self.is_method)]
         verb_name = self.name()
         return "".join([ability_decoration, verb_name, method_decoration])
 
@@ -65,12 +97,12 @@ class AccessibleVerb(Verb):
         proxy = True
 
     def __call__(self, *args, **kwargs):
-        if not (self.method):
-            raise RuntimeError("%s is not a method." % self)
         if hasattr(self, "invoked_name"):
             l = list(args)
             l.insert(0, self.invoked_name)
             args = tuple(l)
+        if hasattr(self, "invoked_object"):
+            kwargs["this"] = self.invoked_object
         result = interpret(self.code, *args, **kwargs)
         return result
 

@@ -16,7 +16,7 @@ class VerbInline(admin.TabularInline):
     fk_name = "origin"
     extra = 1
     exclude = ("code",)
-    readonly_fields = ("filename", "ability", "method", "owner")
+    readonly_fields = ("filename", "direct_object", "owner")
 
 
 class PropertyInline(admin.TabularInline):
@@ -45,6 +45,14 @@ class VerbAdmin(admin.ModelAdmin):
 @admin.register(verb.VerbName)
 class VerbNameAdmin(admin.ModelAdmin):
     raw_id_fields = ("verb",)
+
+
+@admin.register(verb.Preposition)
+class PrepositionAdmin(admin.ModelAdmin):
+    list_display = ("prepositions",)
+
+    def prepositions(self, obj):
+        return ", ".join([name.name for name in obj.names.all()])
 
 
 @admin.register(property.Property)

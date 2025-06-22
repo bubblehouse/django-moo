@@ -12,6 +12,7 @@ There are a long list of prepositions supported, some of which are interchangeab
 import logging
 import re
 
+from django.conf import settings
 from django.db.models.query import QuerySet
 
 from .exceptions import *  # pylint: disable=wildcard-import
@@ -42,33 +43,22 @@ def unquote(s):
 
 
 class Pattern:
-    # Here are all our supported prepositions
-    PREPS = [
-        ["with", "using"],
-        ["at", "to"],
-        ["in front of"],
-        ["in", "inside", "into", "within"],
-        ["on top of", "on", "onto", "upon", "above"],
-        ["out of", "from inside", "from"],
-        ["over"],
-        ["through"],
-        ["under", "underneath", "beneath", "below"],
-        ["around", "round"],
-        ["between", "among"],
-        ["behind", "past"],
-        ["beside", "by", "near", "next to", "along"],
-        ["for", "about"],
-        # ['is'],
-        ["as"],
-        ["off", "off of"],
-    ]
-    PREP_SRC = r"(?:\b)(?P<prep>" + "|".join(sum(PREPS, [])) + r")(?:\b)"
+    PREP_SRC = r"(?:\b)(?P<prep>" + "|".join(sum(settings.PREPOSITIONS, [])) + r")(?:\b)"
     SPEC = r"(?P<spec_str>my|the|a|an|\S+(?:\'s|s\'))"
     PHRASE_SRC = r"(?:" + SPEC + r"\s)?(?P<obj_str>.+)"
     PREP = re.compile(PREP_SRC)
     PHRASE = re.compile(PHRASE_SRC)
     POBJ_TEST = re.compile(PREP_SRC + r"\s" + PHRASE_SRC)
     MULTI_WORD = re.compile(r"((\"|\').+?(?!\\).\2)|(\S+)")
+
+    @classmethod
+    def initializePrepositions(cls):
+        from .models import Preposition
+
+        for preps in settings.PREPOSITIONS:
+            preposition = Preposition.objects.create()
+            for name in preps:
+                preposition.names.create(name=name)
 
     def tokenize(self, s):
         """
@@ -301,7 +291,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         Determine the most likely verb for this sentence. There is a search
         order for verbs, as follows::
 
-            Caller->Caller's Contents->Location->Items in Location->
+            Caller->Caller's Contents->Location->
             Direct Object->Objects of the Preposition
         """
         if not (self.words):
@@ -319,14 +309,13 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         location = self.caller.location
         if location:
             checks.append(location)
-            checks.extend(location.contents.all())
 
         checks.append(self.dobj)
 
         for prep in self.prepositions.values():
             checks.extend([pobj[2] for pobj in prep if pobj[2]])
 
-        matches = [x for x in checks if x and x.has_verb(verb_str, method=False)]
+        matches = [x for x in reversed(checks) if x and x.has_verb(verb_str)]
         self.this = self.filter_matches(matches)
         if isinstance(self.this, list):
             if len(self.this) > 1:
@@ -340,25 +329,35 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             raise Verb.DoesNotExist("parser: " + verb_str)
 
         # print "Verb found on: " + str(self.this)
-        self.verb = self.this.get_verb(self.words[0], method=False)
+        self.verb = self.this.get_verb(self.words[0])
+        self.verb.invoked_name = self.words[0]
+        self.verb.invoked_object = self.this
         return self.verb
 
     def filter_matches(self, selection):
         result = []
-        # print "selection is " + str(selection)
         verb_str = self.words[0]
         for possible in selection:
-            if possible in result:
-                continue
-            verb = possible.get_verb(verb_str, method=False)
-            if verb.ability and possible != self.caller:
-                continue
-            if verb.method:
-                continue
-            # if not self.caller.is_allowed('execute', verb):
-            #     continue
-            result.append(possible)
-        # print "result is " + str(result)
+            for verb in possible.get_verb(verb_str, allow_ambiguous=True, return_first=False):
+                if verb.direct_object == "this" and self.dobj != possible:
+                    continue
+                if verb.direct_object == "none" and self.has_dobj_str():
+                    continue
+                if verb.direct_object == "any" and not self.has_dobj_str():
+                    continue
+                for ispec in verb.indirect_objects.all():
+                    for prep, values in self.prepositions.items():
+                        if ispec.preposition_specifier == "none":
+                            continue
+                        if ispec.preposition_specifier == "this" and values[2] != possible:
+                            continue
+                        if ispec.preposition_specifier != "any":
+                            if not ispec.preposition.names.filter(name=prep).exists():
+                                continue
+                # sometimes an object has multiple verbs with the same name after inheritance
+                # so we need to check if the verb is already in the list
+                if possible not in result:
+                    result.append(possible)
         return result
 
     def get_pronoun_object(self, pronoun):

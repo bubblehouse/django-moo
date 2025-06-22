@@ -46,6 +46,7 @@ class AmbiguousObjectError(UserError):
             result = message
         else:
             result = 'When you say, "' + self.name + '", do you mean '
+            matches = list(matches)
             for index in range(len(matches)):  # pylint: disable=consider-using-enumerate
                 match = matches[index]
                 if index < len(matches) - 1:
@@ -69,6 +70,7 @@ class AmbiguousVerbError(UserError):
     def __init__(self, name, matches):
         self.name = name
         result = 'More than one object defines "' + self.name + '": '
+        matches = list(matches)
         for match in matches:
             index = matches.index(match)
             if index < len(matches) - 1:
