@@ -4,7 +4,7 @@ from .. import code, parse
 from ..models import Object, Verb
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_caller_can_invoke_trivial_verb(t_init: Object, t_wizard: Object):
     printed = []
     description = t_wizard.location.properties.get(name="description")
@@ -21,7 +21,7 @@ def test_caller_can_invoke_trivial_verb(t_init: Object, t_wizard: Object):
         assert printed == [description.value]
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_args_is_null_when_using_parser(t_init: Object, t_wizard: Object):
     printed = []
 
@@ -33,7 +33,7 @@ def test_args_is_null_when_using_parser(t_init: Object, t_wizard: Object):
     assert printed == ["PARSER"]
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_args_is_not_null_when_using_eval(t_init: Object, t_wizard: Object):
     printed = []
 
@@ -46,7 +46,7 @@ def test_args_is_not_null_when_using_eval(t_init: Object, t_wizard: Object):
     assert printed == ["METHOD:():{}"]
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_args_when_calling_multiple_verbs(t_init: Object, t_wizard: Object):
     printed = []
 
@@ -58,7 +58,7 @@ def test_args_when_calling_multiple_verbs(t_init: Object, t_wizard: Object):
     assert printed == list(range(1, 11))
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_write_to_caller(t_init: Object, t_wizard: Object):
     printed = []
 
