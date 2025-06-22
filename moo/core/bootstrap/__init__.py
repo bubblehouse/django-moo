@@ -162,7 +162,7 @@ def load_verbs(repo, verb_package):
                 except ValueError:
                     continue
                 if first.startswith("#!moo "):
-                    log.info(f"Loading verb source `{ref.name}`...")
+                    log.debug(f"Loading verb source `{ref.name}`...")
                     args = parser.parse_args(shlex.split(first[6:]))
                     obj = Object.objects.get(name=args.on)
                     obj.add_verb(
@@ -174,4 +174,4 @@ def load_verbs(repo, verb_package):
                         indirect_objects=args.ispec,
                     )
                 else:
-                    log.info(f"Skipping verb source `{ref.name}`...")
+                    log.debug(f"Skipping verb source `{ref.name}`...")
