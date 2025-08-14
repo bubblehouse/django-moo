@@ -14,6 +14,7 @@ import re
 
 from django.conf import settings
 from django.db.models.query import QuerySet
+import more_itertools
 
 from .exceptions import *  # pylint: disable=wildcard-import
 from .models import Object, Verb
@@ -249,12 +250,6 @@ class Parser:  # pylint: disable=too-many-instance-attributes
 
     def get_verb(self):
         """
-        Determine the most likely verb for this sentence. There is a search
-        order for verbs, as follows::
-
-            Caller->Caller's Contents->Location->
-            Direct Object->Objects of the Preposition
-
         For each of these items the parser will look for a verb using the
         following rules:
 
@@ -268,71 +263,31 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             4. Verbs found later in the search order will take precedence
                over verbs found earlier in the search order.
         """
-        if not (self.words):
-            raise Verb.DoesNotExist(self.command)
-
-        if getattr(self, "verb", None) is not None:
+        if self.verb:
             return self.verb
 
-        verb_str = self.words[0]
-        matches = []
+        search_order = filter(None, more_itertools.collapse([
+            self.caller,
+            list(self.caller.contents.all()),
+            self.caller.location,
+            self.dobj,
+            [[x[2] for x in prep] for prep in self.prepositions.values()]
+        ]))
 
-        checks = [self.caller]
-        checks.extend(self.caller.contents.all())
-
-        location = self.caller.location
-        if location:
-            checks.append(location)
-
-        checks.append(self.dobj)
-
-        for prep in self.prepositions.values():
-            checks.extend([pobj[2] for pobj in prep if pobj[2]])
-
-        matches = [x for x in reversed(checks) if x and x.has_verb(verb_str)]
-        self.this = self.filter_matches(matches)
-        if isinstance(self.this, list):
-            if len(self.this) > 1:
-                raise AmbiguousVerbError(verb_str, self.this)
-            if len(self.this) == 0:
-                self.this = None
-            else:
-                self.this = self.this[0]
+        for obj in search_order:
+            try:
+                if verb := obj.parse_verb(self):
+                    self.this = obj
+                    self.verb = verb
+            except Verb.DoesNotExist:
+                continue
 
         if not (self.this):
-            raise Verb.DoesNotExist("parser: " + verb_str)
+            raise Verb.DoesNotExist("parser: " + self.words[0])
 
-        # print "Verb found on: " + str(self.this)
-        self.verb = self.this.get_verb(self.words[0])
         self.verb.invoked_name = self.words[0]
         self.verb.invoked_object = self.this
         return self.verb
-
-    def filter_matches(self, selection):
-        result = []
-        verb_str = self.words[0]
-        for possible in selection:
-            for verb in possible.get_verb(verb_str, allow_ambiguous=True, return_first=False):
-                if verb.direct_object == "this" and self.dobj != possible:
-                    continue
-                if verb.direct_object == "none" and self.has_dobj_str():
-                    continue
-                if verb.direct_object == "any" and not self.has_dobj_str():
-                    continue
-                for ispec in verb.indirect_objects.all():
-                    for prep, values in self.prepositions.items():
-                        if ispec.preposition_specifier == "none":
-                            continue
-                        if ispec.preposition_specifier == "this" and values[2] != possible:
-                            continue
-                        if ispec.preposition_specifier != "any":
-                            if not ispec.preposition.names.filter(name=prep).exists():
-                                continue
-                # sometimes an object has multiple verbs with the same name after inheritance
-                # so we need to check if the verb is already in the list
-                if possible not in result:
-                    result.append(possible)
-        return result
 
     def get_pronoun_object(self, pronoun):
         """

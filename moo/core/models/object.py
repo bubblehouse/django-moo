@@ -279,6 +279,37 @@ class Object(models.Model, AccessibleMixin):
         v = verbs[0]
         return v
 
+    def parse_verb(self, parser):
+        """
+        Check if this parser instance could refer to a verb on this object.
+        """
+        result = []
+        for verb in self._lookup_verb(parser.words[0], recurse=True, return_first=False):
+            if verb.direct_object == "this" and parser.dobj != self:
+                continue
+            if verb.direct_object == "none" and parser.has_dobj_str():
+                continue
+            if verb.direct_object == "any" and not parser.has_dobj_str():
+                continue
+            for ispec in verb.indirect_objects.all():
+                for prep, values in parser.prepositions.items():
+                    if ispec.preposition_specifier == "none":
+                        continue
+                    if ispec.preposition_specifier == "this" and values[2] != self:
+                        continue
+                    if ispec.preposition_specifier != "any":
+                        if not ispec.preposition.names.filter(name=prep).exists():
+                            continue
+            # sometimes an object has multiple verbs with the same name after inheritance
+            # so we need to check if the verb is already in the list
+            if verb not in result:
+                result.append(verb)
+        if not result:
+            return None
+        if len(result) == 1:
+            return result[0]
+        raise exceptions.AmbiguousVerbError(parser.words[0], result)
+
     def _lookup_verb(self, name, recurse=True, return_first=True):
         found = []
         qs = AccessibleVerb.objects.filter(origin=self, names__name=name)
