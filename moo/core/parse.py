@@ -154,15 +154,6 @@ class Lexer:
 
             self.prepositions.setdefault(result["prep"], []).append([result["spec_str"], result["obj_str"], None])
 
-    def get_details(self):
-        return dict(
-            command=self.command,
-            dobj_str=self.dobj_str,
-            dobj_spec_str=self.dobj_spec_str,
-            words=self.words,
-            prepositions=self.prepositions,
-        )
-
 
 class Parser:  # pylint: disable=too-many-instance-attributes
     """
@@ -180,16 +171,13 @@ class Parser:  # pylint: disable=too-many-instance-attributes
 
         self.this = None
         self.verb = None
-        self.prepositions = {}
-        self.command = None
-        self.words = []
-        self.dobj_str = ""
-        self.dobj_spec_str = ""
+        self.prepositions = lexer.prepositions
+        self.command = lexer.command
+        self.words = lexer.words
+        self.dobj_str = lexer.dobj_str
+        self.dobj_spec_str = lexer.dobj_spec_str
 
         if self.lexer:
-            for key, value in list(self.lexer.get_details().items()):
-                self.__dict__[key] = value
-
             for matches in self.prepositions.values():
                 for record in matches:
                     spec, name, _ = record
@@ -204,7 +192,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
                     if not (obj):
                         obj = self.get_pronoun_object(name)
                     record[2] = obj
-        if hasattr(self, "dobj_str") and self.dobj_str:
+        if self.dobj_str:
             # look for an object with this name/specifier
             self.dobj = self.find_object(self.dobj_spec_str, self.dobj_str)
             # try again (maybe it just looked like a specifier)
@@ -223,33 +211,6 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             # didn't find anything, probably because nothing was there.
             self.dobj = None
             self.dobj_str = None
-
-    def get_environment(self):
-        """
-        Return a dictionary of environment variables supplied by the parser results.
-        """
-        return dict(
-            parser=self,
-            command=self.command,
-            caller=self.caller,
-            dobj=self.dobj,
-            dobj_str=self.dobj_str,
-            dobj_spec_str=self.dobj_spec_str,
-            words=self.words,
-            prepositions=self.prepositions,
-            this=self.this,
-            self=self.verb,
-            system=Object.objects.get(pk=1),
-            here=self.caller.location if self.caller else None,
-            get_dobj=self.get_dobj,
-            get_dobj_str=self.get_dobj_str,
-            has_dobj=self.has_dobj,
-            has_dobj_str=self.has_dobj_str,
-            get_pobj=self.get_pobj,
-            get_pobj_str=self.get_pobj_str,
-            has_pobj=self.has_pobj,
-            has_pobj_str=self.has_pobj_str,
-        )
 
     def find_object(self, specifier, name, return_list=False):
         """
@@ -293,6 +254,19 @@ class Parser:  # pylint: disable=too-many-instance-attributes
 
             Caller->Caller's Contents->Location->
             Direct Object->Objects of the Preposition
+
+        For each of these items the parser will look for a verb using the
+        following rules:
+
+            1. For each object in the search order, look for a verb with the
+               same name as the first word in the command by traversing its
+               inheritance chain.
+            2. For each matching verb found, check if the verb's direct object
+               and indirect object specifiers match the direct object and the
+               objects of the prepositions already defined in the parser.
+            3. Continue until a verb is found or the end of the chain is reached.
+            4. Verbs found later in the search order will take precedence
+               over verbs found earlier in the search order.
         """
         if not (self.words):
             raise Verb.DoesNotExist(self.command)
