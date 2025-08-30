@@ -1,3 +1,10 @@
+## [0.40.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.39.0...v0.40.0) (2025-08-30)
+
+
+### Features
+
+* added "either" dspec to support verbs with optional direct objects ([31ae9a3](https://gitlab.com/bubblehouse/django-moo/commit/31ae9a30c41098ee1f0bae578be1537f1ddc027f))
+
 ## [0.39.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.38.0...v0.39.0) (2025-06-22)
 
 
