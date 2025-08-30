@@ -62,9 +62,9 @@ def test_description(t_init: Object, t_wizard: Object):
         printed.clear()
 
         parse.interpret("describe thingy as 'a dusty old widget'")
-        # parse.interpret("look at thingy")
+        parse.interpret("look at thingy")
         print(printed)
         assert printed == [
             f"[color yellow]Description set for #{thingy.id} (thingy)[/color yellow]",
-            # "[bright_yellow]thingy[/bright_yellow]\n[deep_sky_blue1]a dusty old widget[/deep_sky_blue1]",
+            "[bright_yellow]thingy[/bright_yellow]\n[deep_sky_blue1]a dusty old widget[/deep_sky_blue1]",
         ]

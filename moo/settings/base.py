@@ -77,7 +77,7 @@ PREPOSITIONS = [
     ["off", "off of"],
 ]
 
-OBJECT_SPECIFIER_CHOICES = (("this", "this"), ("any", "any"), ("none", "none"))
+OBJECT_SPECIFIER_CHOICES = (("this", "this"), ("any", "any"), ("none", "none"), ("either", "either"))
 
 PREPOSITION_SPECIFIER_CHOICES = (("any", "any"), ("none", "none"))
 
