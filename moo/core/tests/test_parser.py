@@ -169,3 +169,10 @@ def test_parse_with_complex_name(t_init: Object, t_wizard: Object):
     parser = parse.Parser(lex, t_wizard)
     assert parser.get_dobj_str() == "box containing spaces"
     assert parser.get_dobj() == box
+
+def test_expand_wildcard():
+    from moo.core import utils
+    assert utils.expand_wildcard("describe") == ["describe"]
+    assert utils.expand_wildcard("desc*ribe") == ["desc", "descr", "descri", "describ", "describe"]
+    assert utils.expand_wildcard("l*ook") == ["l", "lo", "loo", "look"]
+    assert utils.expand_wildcard("l**k") == ["l", "l*", "l*k"]

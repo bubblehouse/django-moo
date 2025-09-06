@@ -228,7 +228,8 @@ class Object(models.Model, AccessibleMixin):
                     )[0]
                 )
         for name in names:
-            verb.names.add(VerbName.objects.create(verb=verb, name=name))
+            for item in utils.expand_wildcard(name):
+                verb.names.add(VerbName.objects.create(verb=verb, name=item))
         return verb
 
     def invoke_verb(self, name, *args, **kwargs):
