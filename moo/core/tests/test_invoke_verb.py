@@ -68,3 +68,19 @@ def test_write_to_caller(t_init: Object, t_wizard: Object):
     with code.context(t_wizard, _writer):
         with pytest.warns(RuntimeWarning, match=r"ConnectionError\(\#3 \(Wizard\)\)\: TEST_STRING"):
             code.interpret("from moo.core import api, write\nwrite(api.caller, 'TEST_STRING')")
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_parse_with_wildard(t_init: Object, t_wizard: Object):
+    box = Object.objects.create(name="box")
+    box.location = t_wizard.location
+    box.save()
+    printed = []
+
+    def _writer(msg):
+        printed.append(msg)
+
+    with code.context(t_wizard, _writer):
+        lex = parse.Lexer("desc box")
+        parser = parse.Parser(lex, t_wizard)
+        verb = parser.get_verb()
+        assert verb.names.filter(name="describe").exists()
