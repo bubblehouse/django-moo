@@ -1,3 +1,10 @@
+## [0.41.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.40.0...v0.41.0) (2025-09-06)
+
+
+### Features
+
+* add support for asterisk wildcard when creating verbs, closes [#8](https://gitlab.com/bubblehouse/django-moo/issues/8) ([eb017ba](https://gitlab.com/bubblehouse/django-moo/commit/eb017ba97dc9d4633ea542a3b72d5781b4ddcf15))
+
 ## [0.40.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.39.0...v0.40.0) (2025-08-30)
 
 
