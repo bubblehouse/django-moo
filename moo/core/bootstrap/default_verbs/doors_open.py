@@ -1,4 +1,4 @@
-#!moo verb open close unlock lock --on "door class" --dspec any
+#!moo verb open close unlock lock --on "Generic Exit" --dspec any
 
 from moo.core import api, write
 

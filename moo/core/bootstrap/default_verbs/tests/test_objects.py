@@ -30,12 +30,12 @@ def test_transmutation(t_init: Object, t_wizard: Object):
         printed.append(msg)
 
     with code.context(t_wizard, _writer):
-        parse.interpret("make a jar from container")
+        parse.interpret("make a jar from Generic Container")
         jar = lookup("jar")
-        container = lookup("container class")
+        container = lookup("Generic Container")
         assert printed == [
             f"[color yellow]Created #{jar.id} (jar)[/color yellow]",
-            f"[color yellow]Transmuted #{jar.id} (jar) to #{container.id} (container class)[/color yellow]",
+            f"[color yellow]Transmuted #{jar.id} (jar) to #{container.id} (Generic Container)[/color yellow]",
         ]
 
 

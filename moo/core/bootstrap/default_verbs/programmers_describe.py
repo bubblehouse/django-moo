@@ -1,4 +1,4 @@
-#!moo verb describe --on "author class" --dspec any --ispec as:any
+#!moo verb describe --on "Generic Programmer" --dspec any --ispec as:any
 
 from moo.core import api
 

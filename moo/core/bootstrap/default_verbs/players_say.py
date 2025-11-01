@@ -1,4 +1,4 @@
-#!moo verb say --on "player class" --dspec any
+#!moo verb say --on "Generic Player" --dspec any
 
 from moo.core import api, write
 

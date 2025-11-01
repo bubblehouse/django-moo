@@ -5,9 +5,9 @@ from moo.core.models import Object
 
 
 def setup_doors(t_wizard: Object):
-    rooms = lookup("room class")
+    rooms = lookup("Generic Room")
     room = create("Test Room", parents=[rooms])
-    doors = lookup("door class")
+    doors = lookup("Generic Exit")
     door = create("wooden door", parents=[doors], location=room)
     t_wizard.location = room
     t_wizard.save()

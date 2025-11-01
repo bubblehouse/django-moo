@@ -1,4 +1,4 @@
-#!moo verb describe --on "room class" --dspec this
+#!moo verb describe --on "Generic Room" --dspec this
 
 from moo.core import lookup, api
 

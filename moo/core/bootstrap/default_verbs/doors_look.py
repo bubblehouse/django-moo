@@ -1,4 +1,4 @@
-#!moo verb look --on "door class" --dspec none --ispec through:any
+#!moo verb look --on "Generic Exit" --dspec none --ispec through:any
 
 from moo.core import api, lookup
 
