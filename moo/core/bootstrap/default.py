@@ -31,6 +31,9 @@ with code.context(wizard, log.info):
     door.set_property("locked", False, inherited=True)
     door.set_property("autolock", False, inherited=True)
 
+    notes = create("Generic Note", parents=[thing], location=None)
+    letters = create("Generic Letter", parents=[notes], location=None)
+
     lab = create("The Laboratory", location=None)
     lab.parents.add(rooms)
     lab.set_property(
