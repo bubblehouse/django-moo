@@ -103,6 +103,8 @@ class AccessibleVerb(Verb):
             args = tuple(l)
         if hasattr(self, "invoked_object"):
             kwargs["this"] = self.invoked_object
+        if self.filename is not None:
+            kwargs['filename'] = self.filename
         result = interpret(self.code, *args, **kwargs)
         return result
 
