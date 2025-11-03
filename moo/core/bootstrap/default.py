@@ -15,6 +15,7 @@ with code.context(wizard, log.info):
     rooms = create("Generic Room", parents=[root], location=None)
     rooms.set_property("description", "There's not much to see here.", inherited=True)
     rooms.add_verb("accept", code="return True")
+    rooms.set_property("exits", {}, inherited=True)
     mail_room = create("Mail Distribution Center", parents=[rooms], location=None)
 
     player = create("Generic Player", parents=[root], location=None)
