@@ -76,16 +76,11 @@ def invoke_verb(
     with transaction.atomic():
         caller = Object.objects.get(pk=caller_id)
         verb = Verb.objects.get(pk=verb_id)
-        if "this_id" in kwargs:
-            kwargs["this"] = Object.objects.get(pk=kwargs.pop("this_id"))
-        else:
-            warnings.warn(
-                RuntimeWarning("invoke_verb: no this_id provided")
-            )
+        this = verb.origin
         with code.context(caller, background_log.info):
             globals = code.get_default_globals()  # pylint: disable=redefined-builtin
             globals.update(code.get_restricted_environment(api.writer))
-            result = code.r_exec(verb.code, {}, globals, *args, filename=repr(verb), **kwargs)
+            result = code.r_exec(verb.code, {}, globals, this, *args, filename=repr(verb), **kwargs)
     if callback_verb_id:
         callback = Verb.objects.get(pk=callback_verb_id)
         invoked_name = callback.names.first().name
