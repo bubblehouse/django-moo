@@ -22,6 +22,25 @@ def test_caller_can_invoke_trivial_verb(t_init: Object, t_wizard: Object):
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_override_verb_in_subclass(t_init: Object, t_wizard: Object):
+    printed = []
+
+    def _writer(msg):
+        printed.append(msg)
+
+    with code.context(t_wizard, _writer):
+        from .. import create
+        root = create("Root Class")
+        root.add_verb("accept", code="return False")
+        room = create("Test Room", parents=[root], location=None)
+        with pytest.raises(PermissionError):
+            test_obj = create("Test Object", location=room)
+        room.add_verb("accept", code="return True")
+        test_obj = create("Test Object", location=room)
+        assert test_obj.location == room
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_args_is_null_when_using_parser(t_init: Object, t_wizard: Object):
     printed = []
 

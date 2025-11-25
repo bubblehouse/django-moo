@@ -11,10 +11,16 @@ containers.name = "Generic Container"
 containers.save()
 
 with code.context(wizard, log.info):
+    sys = lookup(1)
+    sys.set_property("player_start", None)
+
     root = create("Root Class", location=None)
+    root.add_verb("accept", code="return True")
+    root.set_property("description", "The root class from which all objects inherit.", inherited=True)
+    root.set_property("key", None, inherited=True)
+
     rooms = create("Generic Room", parents=[root], location=None)
     rooms.set_property("description", "There's not much to see here.", inherited=True)
-    rooms.add_verb("accept", code="return True")
     rooms.set_property("exits", {}, inherited=True)
     mail_room = create("Mail Distribution Center", parents=[rooms], location=None)
 
@@ -34,8 +40,7 @@ with code.context(wizard, log.info):
     notes = create("Generic Note", parents=[thing], location=None)
     letters = create("Generic Letter", parents=[notes], location=None)
 
-    lab = create("The Laboratory", location=None)
-    lab.parents.add(rooms)
+    lab = create("The Laboratory", parents=[rooms], location=None)
     lab.set_property(
         "description",
         """A cavernous laboratory filled with gadgetry of every kind,
@@ -48,5 +53,7 @@ with code.context(wizard, log.info):
 
     new_player = create(name="Player", unique_name=True, location=lab)
     new_player.parents.add(player, containers)
+
+    root.get_verb("accept").delete()
 
     bootstrap.load_verbs(repo, "moo.core.bootstrap.default_verbs")

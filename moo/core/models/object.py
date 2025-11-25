@@ -392,6 +392,8 @@ class Object(models.Model, AccessibleMixin):
         return qs.exists()
 
     def delete(self, *args, **kwargs):
+        if self.has_verb("recycle", recurse=False):
+            self.invoke_verb("recycle")
         try:
             quota = self.owner.get_property("ownership_quota", recurse=False)
             if quota is not None:

@@ -197,6 +197,13 @@ def invoke(*args, verb=None, callback=None, delay: int = 0, periodic: bool = Fal
         tasks.invoke_verb.apply_async(args, kwargs, countdown=delay)
         return None
 
+def set_task_perms(who):
+    """
+    Set the task permissions to those of `who`.
+    :param who: the Object whose permissions to assume
+    :type who: Object
+    """
+    api.caller = who
 
 class _API:
     """
