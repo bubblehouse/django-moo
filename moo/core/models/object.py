@@ -315,7 +315,7 @@ class Object(models.Model, AccessibleMixin):
         found = []
         qs = AccessibleVerb.objects.filter(origin=self, names__name=name)
         if not qs and recurse:
-            for ancestor in self.get_ancestors():
+            for ancestor in reversed(list(self.get_ancestors())):
                 qs = AccessibleVerb.objects.filter(origin=ancestor, names__name=name)
                 if qs:
                     if return_first:
@@ -369,7 +369,7 @@ class Object(models.Model, AccessibleMixin):
         self.can_caller("read", self)
         qs = AccessibleProperty.objects.filter(origin=self, name=name)
         if not qs and recurse:
-            for ancestor in self.get_ancestors():
+            for ancestor in reversed(list(self.get_ancestors())):
                 qs = AccessibleProperty.objects.filter(origin=ancestor, name=name)
                 if qs:
                     break
@@ -385,7 +385,7 @@ class Object(models.Model, AccessibleMixin):
         self.can_caller("read", self)
         qs = AccessibleProperty.objects.filter(origin=self, name=name)
         if not qs and recurse:
-            for ancestor in self.get_ancestors():
+            for ancestor in reversed(list(self.get_ancestors())):
                 qs = AccessibleProperty.objects.filter(origin=ancestor, name=name)
                 if qs:
                     break
