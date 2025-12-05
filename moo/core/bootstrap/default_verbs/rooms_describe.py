@@ -2,7 +2,7 @@
 
 from moo.core import lookup, api
 
-obj = kwargs['this']  # pylint: disable=undefined-variable  # type: ignore
+obj = this  # pylint: disable=undefined-variable  # type: ignore
 system = lookup("system object")
 
 response = f"[bright_yellow]{obj.name}[/bright_yellow]\n"
