@@ -119,12 +119,12 @@ class AccessibleVerb(Verb):
         )
 
     def __call__(self, *args, **kwargs):
-        if hasattr(self, "invoked_name"):
+        if self.is_bound():
             l = list(args)
             l.insert(0, self.invoked_name)
             args = tuple(l)
         this = None
-        if hasattr(self, "invoked_object"):
+        if self.is_bound():
             this = self.invoked_object
         if self.filename is not None:
             kwargs['filename'] = self.filename

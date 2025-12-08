@@ -244,6 +244,7 @@ class Object(models.Model, AccessibleMixin):
         verb = qs[0]
         self.can_caller("execute", verb)
         verb.invoked_name = name
+        verb.invoked_object = self
         return verb(*args, **kwargs)
 
     def has_verb(self, name, recurse=True):
