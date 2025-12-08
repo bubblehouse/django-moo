@@ -96,6 +96,28 @@ class AccessibleVerb(Verb):
     class Meta:
         proxy = True
 
+    def is_bound(self):
+        return hasattr(self, "invoked_object") and hasattr(self, "invoked_name")
+
+    def passthrough(self, *args, **kwargs):
+        """
+        Invoke this verb on the parent objects, if they exist.
+        """
+        if not self.is_bound():
+            raise RuntimeError("Cannot use passthrough on an unbound verb.")
+
+        parents = self.invoked_object.parents.all()
+        for parent in parents:
+            if parent.has_verb(self.invoked_name):
+                verb = parent.get_verb(self.invoked_name)
+                verb.invoked_object = parent
+                verb.invoked_name = self.invoked_name
+                return interpret(self.code, parent, *args, **kwargs)
+        warnings.warn(
+            "Passthrough ignored: no parent has verb %s" % self.invoked_name,
+            RuntimeWarning,
+        )
+
     def __call__(self, *args, **kwargs):
         if hasattr(self, "invoked_name"):
             l = list(args)
