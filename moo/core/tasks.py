@@ -76,11 +76,8 @@ def invoke_verb(
     with transaction.atomic():
         caller = Object.objects.get(pk=caller_id)
         verb = Verb.objects.get(pk=verb_id)
-        this = verb.origin
         with code.context(caller, background_log.info):
-            globals = code.get_default_globals()  # pylint: disable=redefined-builtin
-            globals.update(code.get_restricted_environment(api.writer))
-            result = code.r_exec(verb.code, {}, globals, this, *args, filename=repr(verb), **kwargs)
+            result = verb(*args, **kwargs)
     if callback_verb_id:
         callback = Verb.objects.get(pk=callback_verb_id)
         invoked_name = callback.names.first().name

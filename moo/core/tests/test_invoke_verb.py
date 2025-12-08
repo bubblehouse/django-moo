@@ -1,6 +1,6 @@
 import pytest
 
-from .. import code, parse
+from .. import code, parse, create
 from ..models import Object, Verb
 
 
@@ -103,3 +103,25 @@ def test_parse_with_wildard(t_init: Object, t_wizard: Object):
         parser = parse.Parser(lex, t_wizard)
         verb = parser.get_verb()
         assert verb.names.filter(name="describe").exists()
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_verb_passthrough(t_init: Object, t_wizard: Object):
+    superbox = create(name="superbox", owner=t_wizard)
+    superbox.location = t_wizard.location
+    superbox.save()
+
+    box = create(name="box", parents=[superbox], owner=t_wizard)
+    box.location = t_wizard.location
+    box.save()
+
+    printed = []
+
+    def _writer(msg):
+        printed.append(msg)
+
+    with code.context(t_wizard, _writer):
+        superbox.add_verb("testpassthrough", code="""return "Superbox verb." """)
+        box.add_verb("testpassthrough", code="""return "%s with some extra stuff." % passthrough() """)
+        result = box.invoke_verb("testpassthrough")
+        assert result == "Superbox verb. with some extra stuff."
+
