@@ -23,4 +23,4 @@ elif api.parser.has_pobj_str("at"):
 else:
     obj = api.caller.location
 
-print(system.describe(obj))
+print(obj.look_self())

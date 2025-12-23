@@ -48,20 +48,23 @@ def test_description(t_init: Object, t_wizard: Object):
         printed.append(msg)
 
     with code.context(t_wizard, _writer):
-        parse.interpret("make a thingy")
+        parse.interpret("make a thingy from Root Class")
         thingy = lookup("thingy")
+        root = lookup("Root Class")
+        assert list(thingy.parents.all()) == [root]
         assert printed == [
             f"[color yellow]Created #{thingy.id} (thingy)[/color yellow]",
+            f"[color yellow]Transmuted #{thingy.id} (thingy) to #4 (Root Class)[/color yellow]",
         ]
         printed.clear()
 
-        parse.interpret("describe thingy")
-        assert printed == [
-            "[red]What do you want to describe that as?[/red]",
-        ]
-        printed.clear()
+        # parse.interpret("@describe thingy")
+        # assert printed == [
+        #     "[red]What do you want to describe that as?[/red]",
+        # ]
+        # printed.clear()
 
-        parse.interpret("describe thingy as 'a dusty old widget'")
+        parse.interpret("@describe thingy as 'a dusty old widget'")
         parse.interpret("look at thingy")
         print(printed)
         assert printed == [

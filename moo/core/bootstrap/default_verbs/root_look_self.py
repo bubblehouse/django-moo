@@ -12,4 +12,4 @@ objects that are in the room.
 
 from moo.core import api
 
-return api.parser.this.description()  # pylint: disable=return-outside-function  # type: ignore
+return this.description()  # pylint: disable=return-outside-function  # type: ignore
