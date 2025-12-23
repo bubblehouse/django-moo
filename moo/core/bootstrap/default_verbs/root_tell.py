@@ -13,11 +13,11 @@ messages sent between objects in a room.
 The `$player` class overrides this verb to filter messages in two different ways, as show below:
 
 if (typeof(this.gaglist) != LIST || !(player in this.gaglist))
-  if (player != this and this.paranoid == 1)
-    pass("<", player.name, "(", player, ")> ", @args);
-  else
-    pass(@args);
-  endif
+    if (player != this and this.paranoid == 1)
+        pass("<", player.name, "(", player, ")> ", @args);
+    else
+        pass(@args);
+    endif
 endif
 
 Firstly, if the message comes from a player that we don't want to listen to - the player has been gagged - then the
@@ -30,4 +30,4 @@ from moo.core import api, write
 
 if this.is_player():
     for arg in args:
-      write(this, arg)
+        write(this, arg)

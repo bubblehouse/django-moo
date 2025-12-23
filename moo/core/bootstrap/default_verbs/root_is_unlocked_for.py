@@ -7,7 +7,7 @@ Returns `True` if the object is unlocked for the argument. If the value of this.
 this is not the case. the verb $lock_utils:eval_key() is used to determine the result.
 """
 
-if not this.key
+if not this.key:
     return True  # pylint: disable=return-outside-function. # type: ignore
 
 #TODO use lock_utils:eval_key() to evaluate the key against the thing

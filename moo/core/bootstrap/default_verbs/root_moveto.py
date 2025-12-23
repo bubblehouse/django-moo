@@ -1,5 +1,7 @@
 #!moo verb moveto --on "Root Class"
 
+from moo.core import set_task_perms
+
 where = args[1]
 
 """
@@ -13,8 +15,6 @@ Again, by overriding the verb definition on an object, it is possible to augment
 For example, you could keep a list of places visited by simply recording the where objects in a list every time this
 function is called.
 """
-
-from moo.core import set_task_perms
 
 set_task_perms(this)
 this.location = where

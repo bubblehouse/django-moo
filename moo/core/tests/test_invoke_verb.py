@@ -29,7 +29,6 @@ def test_override_verb_in_subclass(t_init: Object, t_wizard: Object):
         printed.append(msg)
 
     with code.context(t_wizard, _writer):
-        from .. import create
         root = create("Root Class")
         root.add_verb("accept", code="return False")
         room = create("Test Room", parents=[root], location=None)
@@ -124,4 +123,3 @@ def test_verb_passthrough(t_init: Object, t_wizard: Object):
         box.add_verb("testpassthrough", code="""return "%s with some extra stuff." % passthrough() """)
         result = box.invoke_verb("testpassthrough")
         assert result == "Superbox verb. with some extra stuff."
-
