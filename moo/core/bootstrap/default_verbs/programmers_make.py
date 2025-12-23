@@ -13,9 +13,9 @@ print("[color yellow]Created %s[/color yellow]" % new_obj)
 if api.parser.has_pobj_str("from"):
     parent_name = api.parser.get_pobj_str("from")
     try:
-        new_obj.parent = lookup(parent_name)
+        parent = lookup(parent_name)
+        new_obj.parents.add(parent)
     except new_obj.DoesNotExist:
         print(f"[color red]No such object: {parent_name}[/color red]")
         return  # pylint: disable=return-outside-function  # type: ignore
-    new_obj.save()
-    print("[color yellow]Transmuted %s to %s[/color yellow]" % (new_obj, new_obj.parent))
+    print("[color yellow]Transmuted %s to %s[/color yellow]" % (new_obj, parent))
