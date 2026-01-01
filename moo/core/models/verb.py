@@ -152,7 +152,9 @@ class AccessibleVerb(Verb):
             args = tuple(l)
         if self.filename is not None:
             kwargs['filename'] = self.filename
-        result = interpret(self.code, this, self.passthrough, *args, **kwargs)
+        from ..models import Object
+        system = Object.objects.get(pk=1)
+        result = interpret(self.code, this, self.passthrough, system, *args, **kwargs)
         return result
 
 

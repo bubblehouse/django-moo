@@ -32,7 +32,7 @@ def compile_verb_code(body, filename):
     """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=SyntaxWarning)
-        result = compile_restricted_function(p="this=None, passthrough=None, *args, **kwargs", body=body, name="verb", filename=filename)
+        result = compile_restricted_function(p="this=None, passthrough=None, _=None, *args, **kwargs", body=body, name="verb", filename=filename)
     return result
 
 

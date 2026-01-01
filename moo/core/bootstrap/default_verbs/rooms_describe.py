@@ -3,7 +3,6 @@
 from moo.core import lookup, api
 
 obj = this  # pylint: disable=undefined-variable  # type: ignore
-system = lookup("system object")
 
 response = f"[bright_yellow]{obj.name}[/bright_yellow]\n"
 if obj.has_property("description"):

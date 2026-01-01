@@ -2,8 +2,6 @@
 
 from moo.core import api, lookup
 
-system = lookup("system object")
-
 door_description = api.parser.get_pobj_str("through")
 exits = api.caller.location.get_property("exits", {})
 for direction, exit in exits.items():  # pylint: disable=unused-variable,redefined-builtin

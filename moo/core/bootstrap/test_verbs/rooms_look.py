@@ -1,8 +1,6 @@
 #!moo verb look --on "room class"
 
-from moo.core import api
-
-qs = api.parser.this.properties.filter(name="description")
+qs = this.properties.filter(name="description")  # pylint: disable=undefined-variable. # type: ignore
 if qs:
     print(qs[0].value)
 else:

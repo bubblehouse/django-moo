@@ -1,8 +1,6 @@
 #!moo verb is_open is_locked --on "Generic Exit" --dspec this
 
-from moo.core import api
-
-door = api.parser.this
+door = this  # pylint: disable=undefined-variable. # type: ignore
 
 if args[0] == "is_open":  # pylint: disable=undefined-variable. # type: ignore
     prop_name = "open"

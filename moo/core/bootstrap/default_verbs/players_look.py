@@ -2,8 +2,6 @@
 
 from moo.core import api, lookup
 
-system = lookup("system object")
-
 if api.parser.has_dobj():
     obj = api.parser.get_dobj()
 elif api.parser.has_dobj_str():
