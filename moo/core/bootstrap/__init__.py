@@ -131,17 +131,19 @@ def load_verbs(repo, verb_package):
 
     .. code-block::
 
-            #!moo [-h] [--on ON] [--ability] [--method] {verb} names [names ...]
+            #!moo [-h] [--on ON] [--dspec {this,any,none,either}] [--ispec PREP:SPEC [PREP:SPEC ...]] {verb} names [names ...]
 
             positional arguments:
             {verb}
             names
 
             options:
-            -h, --help  show this help message and exit
-            --on ON     The object to add or modify the verb on
-            --ability   Whether the verb is an intrinsic ability
-            --method    Whether the verb is a method (callable from verb code)
+            -h, --help            show this help message and exit
+            --on ON               The object to add or modify the verb on
+            --dspec {this,any,none,either}
+                                    The direct object specifier
+            --ispec PREP:SPEC [PREP:SPEC ...]
+                                    Indirect object specifiers
 
     :param repo: The repository object for the dataset.
     :type repo: Repository
