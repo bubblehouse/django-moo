@@ -131,6 +131,12 @@ class Object(models.Model, AccessibleMixin):
     def kind(self):
         return "object"
 
+    def is_player(self) -> bool:
+        """
+        Check if this object is a player avatar.
+        """
+        return Player.objects.filter(avatar=self).exists()
+
     def is_named(self, name: str) -> bool:
         """
         Check if this object has a name or alias that matches the given name.
