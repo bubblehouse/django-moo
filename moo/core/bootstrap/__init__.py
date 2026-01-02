@@ -151,7 +151,7 @@ def load_verbs(repo, verb_package):
     :type verb_package: str
     """
     from moo.core.models.object import Object
-
+    system = Object.objects.get(pk=1)
     for ref in importlib.resources.files(verb_package).iterdir():
         if not ref.is_file():
             continue
@@ -166,7 +166,10 @@ def load_verbs(repo, verb_package):
                 if first.startswith("#!moo "):
                     log.debug(f"Loading verb source `{ref.name}`...")
                     args = parser.parse_args(shlex.split(first[6:]))
-                    obj = Object.objects.get(name=args.on)
+                    if args.on.startswith("$"):
+                        obj = system.get_property(name=args.on[1:])
+                    else:
+                        obj = Object.objects.get(name=args.on)
                     obj.add_verb(
                         *args.names,
                         code=contents,
