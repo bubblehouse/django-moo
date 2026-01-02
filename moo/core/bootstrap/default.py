@@ -1,4 +1,5 @@
 import logging
+from time import time
 
 from moo.core import bootstrap, code, create, lookup
 
@@ -20,15 +21,48 @@ with code.context(wizard, log.info):
     root.set_property("description", "The root class from which all objects inherit.", inherited=True)
     root.set_property("key", None, inherited=True)
 
-
     rooms = create("Generic Room", parents=[root], location=None)
     sys.set_property("room", rooms)
     rooms.set_property("description", "There's not much to see here.", inherited=True)
     rooms.set_property("exits", {}, inherited=True)
+    rooms.set_property("victim_ejection_message", "You have been ejected from %s by %s.", inherited=True)
+    rooms.set_property("ejection_message", "You have ejected %s.", inherited=True)
+    rooms.set_property("room_ejection_message", "%s has been ejected by %s.", inherited=True)
+    rooms.set_property("residents", [], inherited=True)
+    rooms.set_property("free_entry", True, inherited=True)
+    rooms.set_property("entrances", {}, inherited=True)
+    rooms.set_property("dark", False, inherited=True)
+    rooms.set_property("content_list_type", 0, inherited=True)
+
     mail_room = create("Mail Distribution Center", parents=[rooms], location=None)
 
     player = create("Generic Player", parents=[root], location=None)
     sys.set_property("player", player)
+    player.set_property("last_connect_time", time(), inherited=True)
+    player.set_property("ownership_quota", 1000)
+    player.set_property("gender", "neuter", inherited=True)
+    player.set_property("ps", "it", inherited=True)
+    player.set_property("po", "it", inherited=True)
+    player.set_property("pp", "its", inherited=True)
+    player.set_property("pr", "itself", inherited=True)
+    player.set_property("pq", "its", inherited=True)
+    player.set_property("psc", "It", inherited=True)
+    player.set_property("poc", "It", inherited=True)
+    player.set_property("ppc", "Its", inherited=True)
+    player.set_property("prc", "Itself", inherited=True)
+    player.set_property("pqc", "Its", inherited=True)
+    player.set_property("home", None, inherited=True)
+    player.set_property("gaglist", [], inherited=True)
+    player.set_property("paranoid", False, inherited=True)
+    player.set_property("responsible", [], inherited=True)
+    player.set_property("lines", 10, inherited=True)
+    player.set_property("object_gaglist", [], inherited=True)
+    player.set_property("page_absent_msg", "%n is not currently logged in.", inherited=True)
+    player.set_property("page_origin_msg", "You sense that %s is looking for you in %s.", inherited=True)
+    player.set_property("page_echo_msg", "Your message has been sent.", inherited=True)
+    player.set_property("whereis_location_msg", "%s is in %s.", inherited=True)
+    player.set_property("who_location_msg", "%l", inherited=True)
+
     programmers = create("Generic Programmer", parents=[player], location=None)
     sys.set_property("programmer", programmers)
     wizards = create("Generic Wizard", parents=[programmers], location=None)
