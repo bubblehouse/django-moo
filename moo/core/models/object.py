@@ -39,16 +39,23 @@ def relationship_changed(sender, instance, action, model, signal, reverse, pk_se
     for pk in pk_set:
         parent = model.objects.get(pk=pk)
         # pylint: disable=redefined-builtin
-        for property in AccessibleProperty.objects.filter(origin=parent, inherited=True):
+        # NOTE: `inherited` is confusing, it means "inherited owner"
+        # by default, *all* properties when inherited should be owned by the child
+        # only if this flag is set should the existing owner be preserved
+        for property in AccessibleProperty.objects.filter(origin=parent):
+            if property.inherited:
+                new_owner = property.owner
+            else:
+                new_owner = child.owner
             AccessibleProperty.objects.update_or_create(
                 name=property.name,
                 origin=child,
                 defaults=dict(
-                    owner=child.owner,
+                    owner=new_owner,
                     inherited=property.inherited,
                 ),
                 create_defaults=dict(
-                    owner=child.owner,
+                    owner=new_owner,
                     inherited=property.inherited,
                     value=property.value,
                     type=property.type,
