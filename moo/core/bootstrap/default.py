@@ -15,30 +15,40 @@ with code.context(wizard, log.info):
     sys.set_property("player_start", None)
 
     root = create("Root Class", location=None)
+    sys.set_property("root_class", root)
     root.add_verb("accept", code="return True")
     root.set_property("description", "The root class from which all objects inherit.", inherited=True)
     root.set_property("key", None, inherited=True)
 
+
     rooms = create("Generic Room", parents=[root], location=None)
+    sys.set_property("room", rooms)
     rooms.set_property("description", "There's not much to see here.", inherited=True)
     rooms.set_property("exits", {}, inherited=True)
     mail_room = create("Mail Distribution Center", parents=[rooms], location=None)
 
     player = create("Generic Player", parents=[root], location=None)
+    sys.set_property("player", player)
     programmers = create("Generic Programmer", parents=[player], location=None)
+    sys.set_property("programmer", programmers)
     wizards = create("Generic Wizard", parents=[programmers], location=None)
+    sys.set_property("wizard", wizards)
     wizard.parents.add(wizards)
 
     thing = create("Generic Thing", parents=[root], location=None)
+    sys.set_property("thing", thing)
     containers.parents.add(thing)
 
     door = create("Generic Exit", location=None)
+    sys.set_property("exit", door)
     door.set_property("open", False, inherited=True)
     door.set_property("locked", False, inherited=True)
     door.set_property("autolock", False, inherited=True)
 
     notes = create("Generic Note", parents=[thing], location=None)
+    sys.set_property("note", notes)
     letters = create("Generic Letter", parents=[notes], location=None)
+    sys.set_property("letter", letters)
 
     lab = create("The Laboratory", parents=[rooms], location=None)
     lab.set_property(
