@@ -1,4 +1,6 @@
-#!moo verb say --on $room
+#!moo verb say --on $room --dspec any
+
+from moo.core import api, lookup
 
 """
 This verb provides one of the basic ways in which players communicate. The action of the :say verb is very simple: it
@@ -8,3 +10,11 @@ all the objects in a room, not just the players, through the `tell` verbs on the
 By overriding this verb, it is possible to provide all sorts of effects that work on everything said in the room. For
 example, you could redirect messages to other rooms, or repeat messages to provide cavernous echoes.
 """
+if api.parser.words:
+    args = [args[0], " ".join(api.parser.words[1:])]
+
+api.caller.tell("You: " + " ".join(args[1:]))
+for obj in this.contents.all():
+    if obj != api.caller:
+        obj = lookup(obj.id)
+        obj.tell(api.caller.name + ": " + " ".join(args[1:]))

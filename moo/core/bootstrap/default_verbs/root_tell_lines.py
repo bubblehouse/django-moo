@@ -1,4 +1,4 @@
-#!moo verb tell --on "Root Class"
+#!moo verb tell_lines --on "Root Class"
 
 strings = args[1]
 
