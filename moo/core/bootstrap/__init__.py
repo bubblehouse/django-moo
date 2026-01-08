@@ -152,31 +152,40 @@ def load_verbs(repo, verb_package):
     """
     from moo.core.models.object import Object
     system = Object.objects.get(pk=1)
-    for ref in importlib.resources.files(verb_package).iterdir():
-        if not ref.is_file():
-            continue
 
-        with importlib.resources.as_file(ref) as path:
-            with open(path, encoding="utf8") as f:
-                contents = f.read()
-                try:
-                    first, _ = contents.split("\n", maxsplit=1)
-                except ValueError:
-                    continue
-                if first.startswith("#!moo "):
-                    log.debug(f"Loading verb source `{ref.name}`...")
-                    args = parser.parse_args(shlex.split(first[6:]))
-                    if args.on.startswith("$"):
-                        obj = system.get_property(name=args.on[1:])
-                    else:
-                        obj = Object.objects.get(name=args.on)
-                    obj.add_verb(
-                        *args.names,
-                        code=contents,
-                        filename=str(path.resolve()),
-                        repo=repo,
-                        direct_object=args.dspec,
-                        indirect_objects=args.ispec,
-                    )
+    def _iterate_file_paths(ref):
+        if ref.is_dir():
+            for subref in ref.iterdir():
+                _iterate_file_paths(subref)
+        elif ref.is_file():
+            with importlib.resources.as_file(ref) as path:
+                if str(path).endswith(".py"):
+                    _process_file_path(path)
+
+    def _process_file_path(path):
+        with open(path, encoding="utf8") as f:
+            contents = f.read()
+            try:
+                first, _ = contents.split("\n", maxsplit=1)
+            except ValueError:
+                return
+            if first.startswith("#!moo "):
+                log.debug(f"Loading verb source `{ref.name}`...")
+                args = parser.parse_args(shlex.split(first[6:]))
+                if args.on.startswith("$"):
+                    obj = system.get_property(name=args.on[1:])
                 else:
-                    log.debug(f"Skipping verb source `{ref.name}`...")
+                    obj = Object.objects.get(name=args.on)
+                obj.add_verb(
+                    *args.names,
+                    code=contents,
+                    filename=str(path.resolve()),
+                    repo=repo,
+                    direct_object=args.dspec,
+                    indirect_objects=args.ispec,
+                )
+            else:
+                log.debug(f"Skipping verb source `{ref.name}`...")
+
+    for ref in importlib.resources.files(verb_package).iterdir():
+        _iterate_file_paths(ref)
