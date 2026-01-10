@@ -1,7 +1,5 @@
 #!moo verb emote --on $room
 
-from moo.core import api
-
 """
 This verb is used for the pose type of interaction with other players. It functions in a similar way to the :say verb,
 but instead places the player's name at the front of the text. The actual output is done in two stages. The :emote verb
@@ -10,5 +8,12 @@ other objects in the room of the pose action. This provides a two stage mechanis
 overridden to provide special effects.
 """
 
-api.caller.tell("You " + " ".join(args))
-this.emote1(args)
+from moo.core import api
+
+if api.parser.words:
+    message = " ".join(api.parser.words[1:])
+else:
+    message = " ".join(args[1:])
+
+api.caller.tell("You " + message)
+this.emote1(message)

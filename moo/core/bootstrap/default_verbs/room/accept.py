@@ -1,7 +1,5 @@
 #!moo verb accept --on "Generic Room"
 
-thing = args[0]
-
 """
 This verb is used to control what objects are permitted to be placed inside other objects. If this verb returns
 `False`, then the object where cannot be moved into this object. Conversely, if the verb returns a non-zero value, the
@@ -29,5 +27,6 @@ This complex set of conditions shows how an arbitrary set of criteria can be app
 """
 
 # TODO: Implement room accept logic
+thing = args[0]
 
 return True
