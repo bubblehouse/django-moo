@@ -10,7 +10,7 @@ from django.conf import settings
 from django.core import validators
 from django.db import models
 
-from .. import utils
+from .. import utils, lookup
 from ..code import interpret
 from .acl import AccessibleMixin
 
@@ -131,13 +131,15 @@ class AccessibleVerb(Verb):
         if not self.is_bound():
             raise RuntimeError("Cannot use passthrough on an unbound verb.")
 
-        parents = self.invoked_object.parents.all()
+        # the origin is where the verb is defined, not where it was found
+        parents = self.origin.parents.all()
         for parent in parents:
             if parent.has_verb(self.invoked_name):
                 verb = parent.get_verb(self.invoked_name)
-                verb.invoked_object = parent
+                verb.invoked_object = self.invoked_object
                 verb.invoked_name = self.invoked_name
-                return interpret(verb.code, self.invoked_object, verb.passthrough, *args, **kwargs)
+                assert verb != self, "Infinite passthrough loop detected."
+                return verb(*args, **kwargs)
         warnings.warn(
             "Passthrough ignored: no parent has verb %s" % self.invoked_name,
             RuntimeWarning,
@@ -152,8 +154,7 @@ class AccessibleVerb(Verb):
             args = tuple(l)
         if self.filename is not None:
             kwargs['filename'] = self.filename
-        from ..models import Object
-        system = Object.objects.get(pk=1)
+        system = lookup(1)
         result = interpret(self.code, this, self.passthrough, system, *args, **kwargs)
         return result
 

@@ -10,3 +10,5 @@ The `description` property of the room is actually printed by using the passthro
 `look_self`). Changes in the way an object's description is stored by the root class are invisible to this verb,
 because of the way passthrough is used.
 """
+
+return passthrough()  # pylint: disable=undefined-variable
