@@ -1,4 +1,4 @@
-#!moo verb huh --on "Generic Room"
+#!moo verb huh --on $room
 
 """
 This verb is a stub used to call the huh2 verb. It is called by the LambdaMOO server when it can't match a sentence

@@ -1,4 +1,4 @@
-#!moo verb tell_contents --on "Generic Room"
+#!moo verb tell_contents --on $room
 
 """
 This verb tells us what things are visible in the room. It goes through the contents list of the room, and if it is not

@@ -1,4 +1,4 @@
-#!moo verb match_exit --on "Generic Room"
+#!moo verb match_exit --on $room
 
 """
 This verb is used to determine if exit is the name of an exit leading out of the room. It performs a simple string

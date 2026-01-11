@@ -1,4 +1,4 @@
-#!moo verb accept --on "Generic Room"
+#!moo verb accept --on $room
 
 """
 This verb is used to control what objects are permitted to be placed inside other objects. If this verb returns

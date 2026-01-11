@@ -1,4 +1,4 @@
-#!moo verb add_exit --on "Generic Room"
+#!moo verb add_exit --on $room
 
 """
 This verb is used to add exit to the list of exits leading out of the room. This verb, and the :match_exit verb provide

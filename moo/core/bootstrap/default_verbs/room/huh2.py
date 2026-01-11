@@ -1,4 +1,4 @@
-#!moo verb huh2 --on "Generic Room"
+#!moo verb huh2 --on $room
 
 """
 This verb is called by the `huh` verb to provide default handling of unrecognized commands given to players

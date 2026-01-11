@@ -1,4 +1,4 @@
-#!moo verb @entrances --on "Generic Room"
+#!moo verb @entrances --on $room
 
 """
 This verb is a player command used to list the entrances to the player's current location. Only the owner of a room may

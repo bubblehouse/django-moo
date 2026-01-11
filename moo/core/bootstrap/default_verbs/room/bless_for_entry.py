@@ -1,4 +1,4 @@
-#!moo verb bless_for_entry --on "Generic Room"
+#!moo verb bless_for_entry --on $room
 
 """
 This verb is called by an exit to allow an object special permission to enter a room. Two properties on the room store

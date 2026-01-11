@@ -1,4 +1,4 @@
-#!moo verb match_object --on "Generic Room"
+#!moo verb match_object --on $room
 
 """
 This is the verb used to search the player's locale for an object that has the name or pseudonym name. This verb

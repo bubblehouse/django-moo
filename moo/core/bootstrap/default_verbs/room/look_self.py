@@ -1,4 +1,4 @@
-#!moo verb look_self --on "Generic Room"
+#!moo verb look_self --on $room
 
 """
 This verb overrides the $root_class definition of the verb `look_self` in order to provide a fuller description of a
