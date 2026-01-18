@@ -5,9 +5,9 @@ from moo.core.models import Object
 
 
 def setup_doors(t_wizard: Object):
-    rooms = lookup("room class")
+    rooms = lookup("Generic Room")
     room = create("Test Room", parents=[rooms])
-    doors = lookup("door class")
+    doors = lookup("Generic Exit")
     door = create("wooden door", parents=[doors], location=room)
     t_wizard.location = room
     t_wizard.save()
@@ -23,16 +23,16 @@ def test_creation(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer):
+    with code.context(t_wizard, _writer) as ctx:
         room, door = setup_doors(t_wizard)
-        parse.interpret("dig north to Another Room through wooden door")
+        parse.interpret(ctx, "dig north to Another Room through wooden door")
         assert printed == ['[color yellow]Created an exit to the north to "Another Room".[/color yellow]']
         assert t_wizard.location == room
         assert room.has_property("exits")
         assert room.exits["north"]["door"] == door
 
         printed.clear()
-        parse.interpret("go north")
+        parse.interpret(ctx, "go north")
         api.caller.refresh_from_db()
         assert printed == ["You go north."]
 
@@ -45,16 +45,16 @@ def test_locking(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer):
+    with code.context(t_wizard, _writer) as ctx:
         _, door = setup_doors(t_wizard)
-        parse.interpret("dig north to Another Room through wooden door")
+        parse.interpret(ctx, "dig north to Another Room through wooden door")
         assert printed == ['[color yellow]Created an exit to the north to "Another Room".[/color yellow]']
         printed.clear()
-        parse.interpret("lock wooden door")
+        parse.interpret(ctx, "lock wooden door")
         assert printed == ["The door is locked."]
         assert door.is_locked()
         printed.clear()
-        parse.interpret("unlock wooden door")
+        parse.interpret(ctx, "unlock wooden door")
         assert printed == ["The door is unlocked."]
         assert not door.is_locked()
 
@@ -67,18 +67,18 @@ def test_open(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer):
+    with code.context(t_wizard, _writer) as ctx:
         _, door = setup_doors(t_wizard)
-        parse.interpret("dig north to Another Room through wooden door")
+        parse.interpret(ctx, "dig north to Another Room through wooden door")
         assert printed == ['[color yellow]Created an exit to the north to "Another Room".[/color yellow]']
         printed.clear()
-        parse.interpret("open wooden door")
+        parse.interpret(ctx, "open wooden door")
         assert printed == ["The door is open."]
         assert door.is_open()
         printed.clear()
-        parse.interpret("look through wooden door")
-        assert printed == ["[bright_yellow]Another Room[/bright_yellow]\nThere's not much to see here."]
+        parse.interpret(ctx, "look through wooden door")
+        assert printed == ["[bright_yellow]Another Room[/bright_yellow]\n[deep_sky_blue1]There's not much to see here.[/deep_sky_blue1]"]
         printed.clear()
-        parse.interpret("close wooden door")
+        parse.interpret(ctx, "close wooden door")
         assert printed == ["The door is closed."]
         assert not door.is_open()

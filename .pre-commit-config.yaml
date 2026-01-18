@@ -21,6 +21,7 @@ repos:
           - celery
           - django_celery_results
           - django_celery_beat
+          - more_itertools
   - repo: https://github.com/pryorda/dockerfilelint-precommit-hooks
     rev: v0.1.0
     hooks:

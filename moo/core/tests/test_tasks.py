@@ -8,7 +8,6 @@ from ..models import Object, Verb
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
-@override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_TASK_STORE_EAGER_RESULT=True)
 def test_simple_async_verb(t_init: Object, t_wizard: Object, caplog: pytest.LogCaptureFixture):
     printed = []
 
@@ -19,8 +18,8 @@ def test_simple_async_verb(t_init: Object, t_wizard: Object, caplog: pytest.LogC
     with caplog.at_level(logging.INFO, "moo.core.tasks.background"):
         with code.context(t_wizard, _writer):
             verb()
+    assert printed == [1]
     counter = 1
-    assert printed == [counter]
     for line in caplog.text.split("\n"):
         if not line:
             continue
@@ -31,7 +30,6 @@ def test_simple_async_verb(t_init: Object, t_wizard: Object, caplog: pytest.LogC
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
-@override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_TASK_STORE_EAGER_RESULT=True)
 def test_simple_async_verb_callback(t_init: Object, t_wizard: Object, caplog: pytest.LogCaptureFixture):
     verb = Verb.objects.get(names__name="test-async-verb")
     callback = Verb.objects.get(names__name="test-async-verb-callback")
