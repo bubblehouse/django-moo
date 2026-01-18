@@ -12,8 +12,8 @@ def test_creation(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer):
-        parse.interpret("make a widget")
+    with code.context(t_wizard, _writer) as ctx:
+        parse.interpret(ctx, "make a widget")
         widget = lookup("widget")
         assert widget.location == t_wizard.location
         assert printed == [
@@ -29,8 +29,8 @@ def test_transmutation(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer):
-        parse.interpret("make a jar from Generic Container")
+    with code.context(t_wizard, _writer) as ctx:
+        parse.interpret(ctx, "make a jar from Generic Container")
         jar = lookup("jar")
         container = lookup("Generic Container")
         assert printed == [
@@ -47,8 +47,8 @@ def test_description(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer):
-        parse.interpret("make a thingy from Root Class")
+    with code.context(t_wizard, _writer) as ctx:
+        parse.interpret(ctx, "make a thingy from Root Class")
         thingy = lookup("thingy")
         root = lookup("Root Class")
         assert list(thingy.parents.all()) == [root]
@@ -58,14 +58,14 @@ def test_description(t_init: Object, t_wizard: Object):
         ]
         printed.clear()
 
-        # parse.interpret("@describe thingy")
+        # parse.interpret(ctx, "@describe thingy")
         # assert printed == [
         #     "[red]What do you want to describe that as?[/red]",
         # ]
         # printed.clear()
 
-        parse.interpret("@describe thingy as 'a dusty old widget'")
-        parse.interpret("look at thingy")
+        parse.interpret(ctx, "@describe thingy as 'a dusty old widget'")
+        parse.interpret(ctx, "look at thingy")
         print(printed)
         assert printed == [
             f"[color yellow]Description set for #{thingy.id} (thingy)[/color yellow]",

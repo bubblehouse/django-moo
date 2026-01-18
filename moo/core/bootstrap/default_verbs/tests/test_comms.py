@@ -11,9 +11,9 @@ def test_say(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer):
+    with code.context(t_wizard, _writer) as ctx:
         with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
-            parse.interpret("say Hello, world!")
+            parse.interpret(ctx, "say Hello, world!")
         assert [str(x.message) for x in warnings.list] == [
             "ConnectionError(#3 (Wizard)): You: Hello, world!"
         ]
