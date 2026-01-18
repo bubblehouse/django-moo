@@ -7,7 +7,11 @@ Since we're using "stock" Django model instances inside our custom code, the ini
     description = api.caller.location.properties.filter(name="description")
     print(description.value)
 
-Future improvements to the `AccessibleObject` abstract class may allow for direct access.
+Improvements to the `AccessibleObject` abstract class allow for direct access:
+
+    api.caller.location.description
+
+But note that verbs are searched first, so this would instead return a verb with an identical name, if it exists.
 
 > First, an object has a property corresponding to every property in its parent object. To use the jargon of object-oriented programming, this is a kind of inheritance. If some object has a property named `foo`, then so will all of its children and thus its children's children, and so on.
 >
@@ -15,7 +19,7 @@ Future improvements to the `AccessibleObject` abstract class may allow for direc
 >
 > Every defined property (as opposed to those that are built-in) has an owner and a set of permissions for non-owners. The owner of the property can get and set the property's value and can change the non-owner permissions. Only a wizard can change the owner of a property.
 >
-> The initial owner of a property is the player who added it; this is usually, but not always, the player who owns the object to which the property was added. This is because properties can only be added by the object owner or a wizard, unless the object is publicly writable (i.e., its `w` property is 1), which is rare. Thus, the owner of an object may not necessarily be the owner of every (or even any) property on that object.
+> The initial owner of a property is the player who added it; this is usually, but not always, the player who owns the object to which the property was added. This is because properties can only be added by the object owner or a wizard, unless the object is  writable, which is rare. Thus, the owner of an object may not necessarily be the owner of every (or even any) property on that object.
 
 To add a new Property to an object, users must have the `write` permission on that object (owners and wizards get this by default). Properties support the following permissions for any given object or object group:
 
@@ -56,11 +60,9 @@ This section is complicated enough to call out in a separate heading. In LambdaM
 > As I explain later, programs run with the permissions of their author. So, in this case, Ford's nice verb for setting the channel ran with his permissions. But, since the `channel` property in the generic radio had the `c` permission bit set, the `channel` property on yduJ's radio was owned by her. Ford didn't have permission to change it! The fix was simple. Ford changed the permissions on the `channel` property of the generic radio to be just `r`, without the `c` bit, and yduJ made a new radio. This time, when yduJ's radio inherited the `channel` property, yduJ did not inherit ownership of it; Ford remained the owner. Now the radio worked properly, because Ford's verb had permission to change the channel.
 >
 
-DjangoMOO properties support an `inherit` attribute that works the same way as LambdaMOO's `c` bit. When this attribute is set, children will inherit the property with the owner set to that of the child. Here's some pseudocode that creates a default room class that adds a default description to all its children, and ensures those children's owner can modify it:
+DjangoMOO properties support an `inherited` attribute that works the same way as LambdaMOO's `c` bit. When `inherited=True`, children will inherit the property with the owner unchanged. Here's some pseudocode that creates a default room class that adds a fixed description to all its children, and ensures those children's owner cannot modify it:
 
 ```python
-room = create('default room')
+room = create('empty room')
 room.set_property("description", "There's not much to see here.", inherited=True)
 ```
-
-In our case, verbs run with the permission of the caller, but a similar issue would happen. To paraphrase the above, when **yduJ** ran one of **Ford's** verbs on a radio derived from his, they would run with **yduJ's** permissions, but the inherited properties would have been owned by **Ford**. By changing the ownership of the inherited property to belong to **yduJ**, the verb will run correctly.

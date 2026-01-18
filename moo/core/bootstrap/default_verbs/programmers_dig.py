@@ -1,4 +1,4 @@
-#!moo verb dig --on "author class" --dspec any --ispec "through:any"
+#!moo verb dig --on "Generic Programmer" --dspec any --ispec "through:any"
 
 from moo.core import api, create, lookup
 
@@ -20,7 +20,7 @@ if direction in exits:
     print("[color red]There is already an exit in that direction.[/color red]")
     return  # pylint: disable=return-outside-function  # type: ignore
 
-room_class = lookup("room class")
+room_class = lookup("Generic Room")
 room = create(api.parser.get_pobj_str("to"), parents=[room_class], location=None)
 
 exits[direction] = {"door": door, "destination": room}

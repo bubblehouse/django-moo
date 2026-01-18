@@ -25,7 +25,7 @@ with code.context(wizard, log.info):
     wizard.parents.add(wizards)
 
     rooms = create("room class", parents=[containers], location=book)
-    rooms.set_property("description", "There's not much to see here.", inherited=True)
+    rooms.set_property("description", "There's not much to see here.")
 
     lab = create("The Laboratory")
     lab.parents.add(rooms)

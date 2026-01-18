@@ -1,9 +1,8 @@
-#!moo verb describe --on "room class" --dspec this
+#!moo verb describe --on $room --dspec this
 
 from moo.core import lookup, api
 
-obj = kwargs['this']  # pylint: disable=undefined-variable  # type: ignore
-system = lookup("system object")
+obj = this  # pylint: disable=undefined-variable  # type: ignore
 
 response = f"[bright_yellow]{obj.name}[/bright_yellow]\n"
 if obj.has_property("description"):

@@ -31,6 +31,7 @@
 .. automethod:: Object.set_property()
 .. automethod:: Object.get_property()
 .. automethod:: Object.is_allowed()
+.. automethod:: Object.is_player()
 .. automethod:: Object.owns()
 ```
 
