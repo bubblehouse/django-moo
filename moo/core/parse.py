@@ -22,7 +22,7 @@ from .models import Object, Verb
 log = logging.getLogger(__name__)
 
 
-def interpret(line):
+def interpret(ctx, line):
     """
     For a given user, execute a command.
     """
@@ -30,7 +30,7 @@ def interpret(line):
 
     lex = Lexer(line)
     parser = Parser(lex, api.caller)
-    api.parser = parser
+    ctx.set_parser(parser)
     verb = parser.get_verb()
     verb()
 

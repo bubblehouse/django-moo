@@ -143,30 +143,54 @@ def get_restricted_environment(writer):
     return env
 
 
-class context:
-    vars = contextvars.ContextVar("vars")
+_active_user = contextvars.ContextVar("active_user", default=None)
+_active_writer = contextvars.ContextVar("active_writer", default=None)
+_active_parser = contextvars.ContextVar("active_parser", default=None)
 
+class context:
+    """
+    The context class is what holds critical per-execution information such as
+    the active user and writer.  It uses contextvars to maintain this information across
+    asynchronous calls.
+
+    This contextmanager should really only be used once per top-level request, such as
+    when a user invokes a verb or issues a command in the console. Nested uses of this
+    contextmanager are supported for unit testing purposes, since eager Celery execution
+    means that verb invocations within verbs happen synchronously.
+    """
     @classmethod
     def get(cls, name):
-        d = cls.vars.get({})
-        return d.get(name)
+        if name == "caller":
+            return _active_user.get()
+        if name == "writer":
+            return _active_writer.get()
+        if name == "parser":
+            return _active_parser.get()
+        raise NotImplementedError(f"Unknown context variable: {name}")
 
     def __init__(self, caller, writer):
         from .models.object import AccessibleObject
 
         self.caller = AccessibleObject.objects.get(pk=caller.pk) if caller else None
+        self.caller_token = None
         self.writer = writer
+        self.writer_token = None
+        self.parser = None
+        self.parser_token = None
+
+    def set_parser(self, parser):
+        self.parser = parser
+        self.parser_token = _active_parser.set(self.parser)
 
     def __enter__(self):
-        from . import api
-
-        api.caller = self.caller
-        api.writer = self.writer
+        self.caller_token = _active_user.set(self.caller)
+        self.writer_token = _active_writer.set(self.writer)
         return self
 
     def __exit__(self, cls, value, traceback):
-        from . import api
-
-        api.caller = None
-        api.writer = None
-        api.parser = None
+        if self.caller_token:
+            _active_user.reset(self.caller_token)
+        if self.writer_token:
+            _active_writer.reset(self.writer_token)
+        if self.parser_token:
+            _active_parser.reset(self.parser_token)

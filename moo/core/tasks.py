@@ -31,10 +31,10 @@ def parse_command(caller_id: int, line: str) -> list[Any]:
     output = []
     with transaction.atomic():
         caller = Object.objects.get(pk=caller_id)
-        with code.context(caller, output.append):
+        with code.context(caller, output.append) as ctx:
             try:
                 log.info(f"{caller}: {line}")
-                parse.interpret(line)
+                parse.interpret(ctx, line)
             except exceptions.UserError as e:
                 log.error(f"{caller}: {e}")
                 output.append(f"[bold red]{e}[/bold red]")
@@ -78,7 +78,7 @@ def invoke_verb(
         verb = Verb.objects.get(pk=verb_id)
         with code.context(caller, background_log.info):
             result = verb(*args, **kwargs)
-    if callback_verb_id:
-        callback = Verb.objects.get(pk=callback_verb_id)
-        invoked_name = callback.names.first().name
-        invoke_verb.delay(invoked_name, result, caller_id=caller_id, verb_id=callback_verb_id)
+            if callback_verb_id:
+                callback = Verb.objects.get(pk=callback_verb_id)
+                invoked_name = callback.names.first().name
+                invoke_verb.delay(invoked_name, result, caller_id=caller_id, verb_id=callback_verb_id)

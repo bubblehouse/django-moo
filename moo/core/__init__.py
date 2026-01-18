@@ -219,13 +219,7 @@ class _API:
             self.name = name
 
         def __get__(self, obj, objtype=None):
-            d = context.vars.get({})
-            return d.get(self.name)
-
-        def __set__(self, obj, value):
-            d = context.vars.get({})
-            d[self.name] = value
-            context.vars.set(d)
+            return context.get(self.name)
 
     caller = descriptor("caller")  # The user object that invoked this code
     writer = descriptor("writer")  # A callable that will print to the caller's console
