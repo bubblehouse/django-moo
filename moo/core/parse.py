@@ -22,21 +22,17 @@ from .models import Object, Verb
 log = logging.getLogger(__name__)
 
 
-def interpret(line):
+def interpret(ctx, line):
     """
     For a given user, execute a command.
     """
-    from . import api, code
+    from . import api
 
     lex = Lexer(line)
     parser = Parser(lex, api.caller)
-    api.parser = parser
+    ctx.set_parser(parser)
     verb = parser.get_verb()
-    globals = code.get_default_globals()  # pylint: disable=redefined-builtin
-    globals.update(code.get_restricted_environment(api.writer))
-    filename = verb.filename or "<string>"
-    globals["__file__"] = filename
-    code.r_exec(verb.code, {}, globals, filename=filename)
+    verb()
 
 
 def unquote(s):

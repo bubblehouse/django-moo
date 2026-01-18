@@ -5,7 +5,13 @@ Like properties, the default Django ORM doesn't honor inheritance, so there's a 
 The simplest way to invoke another verb (as a method) from a running verb is with:
 
 ```python
-obj.invoke_verb(name, **args, **kwargs)
+obj.invoke_verb(name, *args, **kwargs)
+```
+
+or using the getattr override:
+
+```python
+obj.announce(*args, **kwargs)
 ```
 
 This works for many convenience functions, but whatever time these functions use will count against the default
@@ -69,7 +75,19 @@ return f"A parrot squawks {value}."
 >
 > When it is executed, execution of the current verb is terminated immediately after evaluating the given expression, if any. The verb-call expression that started the execution of this verb then returns either the value of expression or the integer 0, if no expression was provided.
 
-This works basically the same in DjangoMOO verb code because all verbs are built with RestrictedPython's `compile_restricted_function` feature, and run inside a Python function definition.
+This works basically the same in DjangoMOO verb code because all verbs are built with RestrictedPython's `compile_restricted_function` feature, and run inside a Python function definition that looks like this:
+
+```python
+    def verb(this, passthrough, _, *args, **kwargs):
+        """
+        :param this: the Object where the current verb was found, often a child of the origin object
+        :param passthrough: a function that calls the current function on the parent object, somewhat similar to super()
+        :param _: a reference to the #1 or "system" object
+        :param args: function arguments when run as a method, or an empty list
+        :param kwargs: function arguments when run as a method, or an empty dict
+        :return: Any
+        """
+```
 
 ### Handling Verb Errors
 

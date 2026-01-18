@@ -10,7 +10,7 @@ from typing import Union
 from .code import context
 from .exceptions import QuotaError
 
-__all__ = ["lookup", "create", "write", "invoke", "api"]
+__all__ = ["lookup", "create", "write", "invoke", "set_task_perms", "api"]
 
 log = logging.getLogger(__name__)
 
@@ -197,6 +197,13 @@ def invoke(*args, verb=None, callback=None, delay: int = 0, periodic: bool = Fal
         tasks.invoke_verb.apply_async(args, kwargs, countdown=delay)
         return None
 
+def set_task_perms(who):
+    """
+    Set the task permissions to those of `who`.
+    :param who: the Object whose permissions to assume
+    :type who: Object
+    """
+    api.caller = who
 
 class _API:
     """
@@ -212,13 +219,7 @@ class _API:
             self.name = name
 
         def __get__(self, obj, objtype=None):
-            d = context.vars.get({})
-            return d.get(self.name)
-
-        def __set__(self, obj, value):
-            d = context.vars.get({})
-            d[self.name] = value
-            context.vars.set(d)
+            return context.get(self.name)
 
     caller = descriptor("caller")  # The user object that invoked this code
     writer = descriptor("writer")  # A callable that will print to the caller's console

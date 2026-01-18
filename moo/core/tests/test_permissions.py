@@ -121,7 +121,7 @@ def test_cant_change_owner_unless_allowed_to_entrust(t_init: Object, t_wizard: O
             obj.owner = t_wizard
             obj.save()
         assert str(excinfo.value) == f"#{user.pk} (Player) is not allowed entrust on #{obj.pk} (thing)"
-    with code.context(t_wizard, _writer):
+    with code.context(t_wizard, _writer) as ctx:
         obj = lookup("thing")
         obj.allow(user, "entrust")
         obj.allow(user, "write")
@@ -138,7 +138,7 @@ def test_cant_change_location_unless_allowed_to_move(t_init: Object, t_wizard: O
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer):
+    with code.context(t_wizard, _writer) as ctx:
         obj = create("thing")
     user = Object.objects.get(name__iexact="player")
     with code.context(user, _writer):
@@ -147,7 +147,7 @@ def test_cant_change_location_unless_allowed_to_move(t_init: Object, t_wizard: O
         with pytest.raises(PermissionError) as excinfo:
             obj.save()
         assert str(excinfo.value) == f"#{user.pk} (Player) is not allowed write on #{obj.pk} (thing)"
-    with code.context(t_wizard, _writer):
+    with code.context(t_wizard, _writer) as ctx:
         obj = lookup("thing")
         obj.allow(user, "move")
         obj.allow(user, "write")
@@ -158,7 +158,6 @@ def test_cant_change_location_unless_allowed_to_move(t_init: Object, t_wizard: O
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
-@override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_TASK_STORE_EAGER_RESULT=True)
 def test_change_location_calls_enterfunc(t_init: Object, t_wizard: Object, caplog: pytest.LogCaptureFixture):
     printed = []
 
@@ -177,7 +176,6 @@ def test_change_location_calls_enterfunc(t_init: Object, t_wizard: Object, caplo
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
-@override_settings(CELERY_TASK_ALWAYS_EAGER=True, CELERY_TASK_STORE_EAGER_RESULT=True)
 def test_change_location_calls_exitfunc(t_init: Object, t_wizard: Object, caplog: pytest.LogCaptureFixture):
     printed = []
 

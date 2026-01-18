@@ -1,8 +1,6 @@
-#!moo verb look inspect --on "player class" --dspec either --ispec at:any
+#!moo verb look inspect --on "Generic Player" --dspec either --ispec at:any
 
 from moo.core import api, lookup
-
-system = lookup("system object")
 
 if api.parser.has_dobj():
     obj = api.parser.get_dobj()
@@ -23,4 +21,4 @@ elif api.parser.has_pobj_str("at"):
 else:
     obj = api.caller.location
 
-print(system.describe(obj))
+print(obj.look_self())

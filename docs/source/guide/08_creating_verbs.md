@@ -19,6 +19,16 @@ The `api` object has a couple of attributes that are useful in most verbs:
 3. `parser` - the Parser object when run from the command-line, otherwise None
 4. `args`, `kwargs` - function arguments when run as a method, otherwise None
 
+### Verb Arguments
+
+Since verb code is run in a function context, we always get a set of arguments that are available in verb code:
+
+1. `this` - the Object where the current verb was found, often a child of the origin object
+2. `passthrough()` - a function that calls the current function on the parent object, somewhat similar to super()
+3. `_` - a reference to the #1 or "system" object
+4. `args` - function arguments when run as a method, or an empty list
+5. `kwargs` - function arguments when run as a method, or an empty dict
+
 ### Getting and Setting the Values of Properties
 
 The Django ORM brings in a few changes to how we access properties. We could potentially use the direct ORM method, like in this example:
@@ -50,11 +60,9 @@ But similarly, you should probably just use:
 api.caller.location.set_property("description", "A dark room.")
 ```
 
-The property interface is still kind of in flux; there's probably no reason not to **[support "dot-syntax" for accessing properties](#9)**.
-
 So far these examples haven't required any calls to `obj.save()`; this is only required for changes to the intrinsic object properties like `name`, `unique_name`, `obvious`, and `owner`.
 
-> [**[TODO](https://gitlab.com/bubblehouse/django-moo/-/issues/9)**] The LambdaCore database uses several properties on `#0`, the system object, for various special purposes. For example, the value of `#0.room` is the "generic room" object, `#0.exit` is the "generic exit" object, etc. This allows MOO programs to refer to these useful objects more easily (and more readably) than using their object numbers directly. To make this usage even easier and more readable, the expression
+> The LambdaCore database uses several properties on `#0`, the system object, for various special purposes. For example, the value of `#0.room` is the "generic room" object, `#0.exit` is the "generic exit" object, etc. This allows MOO programs to refer to these useful objects more easily (and more readably) than using their object numbers directly. To make this usage even easier and more readable, the expression
 >
 > `$name`
 >
@@ -63,3 +71,5 @@ So far these examples haven't required any calls to `obj.save()`; this is only r
 > `#0.name`
 >
 > Thus, for example, the value `$nothing` mentioned earlier is really `#-1`, the value of `#0.nothing`.
+
+To similate this feature, LambdaMOO python code uses the magical `_` variable as a reference to the System Object, e.g., `_.root` instead of `$root`.

@@ -131,17 +131,19 @@ def load_verbs(repo, verb_package):
 
     .. code-block::
 
-            #!moo [-h] [--on ON] [--ability] [--method] {verb} names [names ...]
+            #!moo [-h] [--on ON] [--dspec {this,any,none,either}] [--ispec PREP:SPEC [PREP:SPEC ...]] {verb} names [names ...]
 
             positional arguments:
             {verb}
             names
 
             options:
-            -h, --help  show this help message and exit
-            --on ON     The object to add or modify the verb on
-            --ability   Whether the verb is an intrinsic ability
-            --method    Whether the verb is a method (callable from verb code)
+            -h, --help            show this help message and exit
+            --on ON               The object to add or modify the verb on
+            --dspec {this,any,none,either}
+                                    The direct object specifier
+            --ispec PREP:SPEC [PREP:SPEC ...]
+                                    Indirect object specifiers
 
     :param repo: The repository object for the dataset.
     :type repo: Repository
@@ -149,29 +151,41 @@ def load_verbs(repo, verb_package):
     :type verb_package: str
     """
     from moo.core.models.object import Object
+    system = Object.objects.get(pk=1)
+
+    def _iterate_file_paths(ref):
+        if ref.is_dir():
+            for subref in ref.iterdir():
+                _iterate_file_paths(subref)
+        elif ref.is_file():
+            with importlib.resources.as_file(ref) as path:
+                if str(path).endswith(".py"):
+                    _process_file_path(path)
+
+    def _process_file_path(path):
+        with open(path, encoding="utf8") as f:
+            contents = f.read()
+            try:
+                first, _ = contents.split("\n", maxsplit=1)
+            except ValueError:
+                return
+            if first.startswith("#!moo "):
+                log.debug(f"Loading verb source `{ref.name}`...")
+                args = parser.parse_args(shlex.split(first[6:]))
+                if args.on.startswith("$"):
+                    obj = system.get_property(name=args.on[1:])
+                else:
+                    obj = Object.objects.get(name=args.on)
+                obj.add_verb(
+                    *args.names,
+                    code=contents,
+                    filename=str(path.resolve()),
+                    repo=repo,
+                    direct_object=args.dspec,
+                    indirect_objects=args.ispec,
+                )
+            else:
+                log.debug(f"Skipping verb source `{ref.name}`...")
 
     for ref in importlib.resources.files(verb_package).iterdir():
-        if not ref.is_file():
-            continue
-
-        with importlib.resources.as_file(ref) as path:
-            with open(path, encoding="utf8") as f:
-                contents = f.read()
-                try:
-                    first, _ = contents.split("\n", maxsplit=1)
-                except ValueError:
-                    continue
-                if first.startswith("#!moo "):
-                    log.debug(f"Loading verb source `{ref.name}`...")
-                    args = parser.parse_args(shlex.split(first[6:]))
-                    obj = Object.objects.get(name=args.on)
-                    obj.add_verb(
-                        *args.names,
-                        code=contents,
-                        filename=str(path.resolve()),
-                        repo=repo,
-                        direct_object=args.dspec,
-                        indirect_objects=args.ispec,
-                    )
-                else:
-                    log.debug(f"Skipping verb source `{ref.name}`...")
+        _iterate_file_paths(ref)

@@ -52,5 +52,3 @@ Verbs also have some attributes of their own:
 > * `off/off of`
 >
 > The argument specifiers are used in the process of parsing commands, described in the next chapter.
-
-**As of yet, [DjangoMOO does not define argument specifiers on the verb itself](https://gitlab.com/bubblehouse/django-moo/-/issues/5), instead allowing verbs to fetch different parts of the command string regardless of preposition.**
