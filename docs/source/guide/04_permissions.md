@@ -37,6 +37,4 @@ else:
 
 You can also see here the 3 existing object groups the permission structure is currently aware of: `owners`, `wizards`, and `everyone`.
 
-Another major change should be discussed here as well: in DjangoMOO, verbs run with the permission of the _caller_, not the original author of the verb. The permissions layer is what should protect all access, not the rights of the running application.
-
 We'll get into more detail on verbs in a later section.

@@ -39,16 +39,23 @@ def relationship_changed(sender, instance, action, model, signal, reverse, pk_se
     for pk in pk_set:
         parent = model.objects.get(pk=pk)
         # pylint: disable=redefined-builtin
-        for property in AccessibleProperty.objects.filter(origin=parent, inherited=True):
+        # NOTE: `inherited` is confusing, it means "inherited owner"
+        # by default, *all* properties when inherited should be owned by the child
+        # only if this flag is set should the existing owner be preserved
+        for property in AccessibleProperty.objects.filter(origin=parent):
+            if property.inherited:
+                new_owner = property.owner
+            else:
+                new_owner = child.owner
             AccessibleProperty.objects.update_or_create(
                 name=property.name,
                 origin=child,
                 defaults=dict(
-                    owner=child.owner,
+                    owner=new_owner,
                     inherited=property.inherited,
                 ),
                 create_defaults=dict(
-                    owner=child.owner,
+                    owner=new_owner,
                     inherited=property.inherited,
                     value=property.value,
                     type=property.type,
@@ -123,6 +130,12 @@ class Object(models.Model, AccessibleMixin):
     @property
     def kind(self):
         return "object"
+
+    def is_player(self) -> bool:
+        """
+        Check if this object is a player avatar.
+        """
+        return Player.objects.filter(avatar=self).exists()
 
     def is_named(self, name: str) -> bool:
         """
@@ -244,6 +257,7 @@ class Object(models.Model, AccessibleMixin):
         verb = qs[0]
         self.can_caller("execute", verb)
         verb.invoked_name = name
+        verb.invoked_object = self
         return verb(*args, **kwargs)
 
     def has_verb(self, name, recurse=True):
@@ -315,7 +329,7 @@ class Object(models.Model, AccessibleMixin):
         found = []
         qs = AccessibleVerb.objects.filter(origin=self, names__name=name)
         if not qs and recurse:
-            for ancestor in self.get_ancestors():
+            for ancestor in reversed(list(self.get_ancestors())):
                 qs = AccessibleVerb.objects.filter(origin=ancestor, names__name=name)
                 if qs:
                     if return_first:
@@ -369,7 +383,7 @@ class Object(models.Model, AccessibleMixin):
         self.can_caller("read", self)
         qs = AccessibleProperty.objects.filter(origin=self, name=name)
         if not qs and recurse:
-            for ancestor in self.get_ancestors():
+            for ancestor in reversed(list(self.get_ancestors())):
                 qs = AccessibleProperty.objects.filter(origin=ancestor, name=name)
                 if qs:
                     break
@@ -385,13 +399,15 @@ class Object(models.Model, AccessibleMixin):
         self.can_caller("read", self)
         qs = AccessibleProperty.objects.filter(origin=self, name=name)
         if not qs and recurse:
-            for ancestor in self.get_ancestors():
+            for ancestor in reversed(list(self.get_ancestors())):
                 qs = AccessibleProperty.objects.filter(origin=ancestor, name=name)
                 if qs:
                     break
         return qs.exists()
 
     def delete(self, *args, **kwargs):
+        if self.has_verb("recycle", recurse=False):
+            self.invoke_verb("recycle")
         try:
             quota = self.owner.get_property("ownership_quota", recurse=False)
             if quota is not None:

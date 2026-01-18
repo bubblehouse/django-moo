@@ -4,12 +4,13 @@ Verb model
 """
 
 import logging
+import warnings
 
 from django.conf import settings
 from django.core import validators
 from django.db import models
 
-from .. import utils
+from .. import utils, lookup
 from ..code import interpret
 from .acl import AccessibleMixin
 
@@ -96,14 +97,65 @@ class AccessibleVerb(Verb):
     class Meta:
         proxy = True
 
+    def is_bound(self):
+        return hasattr(self, "invoked_object") and hasattr(self, "invoked_name")
+
+    def passthrough(self, *args, **kwargs):
+        """
+        Invoke this verb on the parent objects, if they exist.
+
+        Often, it is useful for a child object to define a verb that augments the behavior of a verb on its parent
+        object. For example, in the LambdaCore database, the root object (which is an ancestor of every other object)
+        defines a verb called `description' that simply returns the value of this.description; this verb is used by
+        the implementation of the look command. In many cases, a programmer would like the description of some object
+        to include some non-constant part; for example, a sentence about whether or not the object was `awake' or
+        `sleeping'. This sentence should be added onto the end of the normal description. The programmer would like to
+        have a means of calling the normal description verb and then appending the sentence onto the end of that
+        description. The function `passthrough()` is for exactly such situations.
+
+        passthrough calls the verb with the same name as the current verb but as defined on the parent of the object
+        that defines the current verb. The arguments given to passthrough are the ones given to the called verb and the
+        returned value of the called verb is returned from the call to passthrough. The initial value of `this` in the
+        called verb is the same as in the calling verb.
+
+        Thus, in the example above, the child-object's description verb might have the following implementation:
+
+            return passthrough() + "  It is " + (this.awake ? "awake." | "sleeping.")
+
+        That is, it calls its parent's description verb and then appends to the result a sentence whose content is
+        computed based on the value of a property on the object.
+
+        In almost all cases, you will want to call `passthrough()' with the same arguments as were given to the current
+        verb. This is easy to write in Python; just call passthrough(*args).
+        """
+        if not self.is_bound():
+            raise RuntimeError("Cannot use passthrough on an unbound verb.")
+
+        # the origin is where the verb is defined, not where it was found
+        parents = self.origin.parents.all()
+        for parent in parents:
+            if parent.has_verb(self.invoked_name):
+                verb = parent.get_verb(self.invoked_name)
+                verb.invoked_object = self.invoked_object
+                verb.invoked_name = self.invoked_name
+                assert verb != self, "Infinite passthrough loop detected."
+                return verb(*args, **kwargs)
+        warnings.warn(
+            "Passthrough ignored: no parent has verb %s" % self.invoked_name,
+            RuntimeWarning,
+        )
+
     def __call__(self, *args, **kwargs):
-        if hasattr(self, "invoked_name"):
+        this = None
+        if self.is_bound():
+            this = self.invoked_object
             l = list(args)
             l.insert(0, self.invoked_name)
             args = tuple(l)
-        if hasattr(self, "invoked_object"):
-            kwargs["this"] = self.invoked_object
-        result = interpret(self.code, *args, **kwargs)
+        if self.filename is not None:
+            kwargs['filename'] = self.filename
+        system = lookup(1)
+        result = interpret(self.code, this, self.passthrough, system, *args, **kwargs)
         return result
 
 

@@ -46,5 +46,3 @@ the terminals you create will all be on the `celery` container instance, and you
 mode using the launch job on the "Run and Debug" tab.
 
 ![django-moo debugging](https://gitlab.com/bubblehouse/django-moo/-/raw/main/docs/images/vscode-debug.png)
-
-It's not as easy to debug the contents of a verb, as right now breakpoints in verb code don't seem to be honored.
