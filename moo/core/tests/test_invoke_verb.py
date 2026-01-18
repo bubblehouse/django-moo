@@ -46,8 +46,8 @@ def test_args_is_null_when_using_parser(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer):
-        parse.interpret("test-args-parser")
+    with code.context(t_wizard, _writer) as ctx:
+        parse.interpret(ctx, "test-args-parser")
     assert printed == ["PARSER"]
 
 
@@ -71,8 +71,8 @@ def test_args_when_calling_multiple_verbs(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer):
-        parse.interpret("test-nested-verbs")
+    with code.context(t_wizard, _writer) as ctx:
+        parse.interpret(ctx, "test-nested-verbs")
     assert printed == list(range(1, 11))
 
 
