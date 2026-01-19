@@ -1,3 +1,10 @@
+## [0.42.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.41.0...v0.42.0) (2026-01-19)
+
+
+### Features
+
+* begin to mimic LambdaCore in the `default` bootstrap configuration. ([6f6434f](https://gitlab.com/bubblehouse/django-moo/commit/6f6434f1a845af538a5e02fe3f8450493fc8175f))
+
 ## [0.41.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.40.0...v0.41.0) (2025-09-06)
 
 
