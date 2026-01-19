@@ -147,15 +147,14 @@ class AccessibleVerb(Verb):
 
     def __call__(self, *args, **kwargs):
         this = None
+        name = "__main__"
         if self.is_bound():
             this = self.invoked_object
-            l = list(args)
-            l.insert(0, self.invoked_name)
-            args = tuple(l)
+            name = self.invoked_name
         if self.filename is not None:
             kwargs['filename'] = self.filename
         system = lookup(1)
-        result = interpret(self.code, this, self.passthrough, system, *args, **kwargs)
+        result = interpret(self.code, name, this, self.passthrough, system, *args, **kwargs)
         return result
 
 

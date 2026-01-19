@@ -8,7 +8,7 @@ has moved into using the `$room.look_self` verb on the room. If the object is th
 description of `$room.bless_for_entry`.
 """
 
-thing = args[1]
+thing = args[0]
 if thing.is_player():
     thing.tell(this.look_self())
 
