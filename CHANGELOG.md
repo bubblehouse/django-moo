@@ -1,3 +1,10 @@
+## [0.43.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.42.0...v0.43.0) (2026-01-19)
+
+
+### Features
+
+* instead of having the verb name as args[0], make it verb_name ([5c61bc3](https://gitlab.com/bubblehouse/django-moo/commit/5c61bc3f4b6e92e17f07ce671b5c2bd298343365))
+
 ## [0.42.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.41.0...v0.42.0) (2026-01-19)
 
 
