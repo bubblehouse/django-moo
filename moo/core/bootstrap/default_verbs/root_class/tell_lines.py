@@ -5,7 +5,7 @@ This outputs out the list of strings strings to the object, using the tell verb 
 is output on a separate line.
 """
 
-strings = args[1]
+strings = args[0]
 
 for arg in strings:
     this.tell(arg)
