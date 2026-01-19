@@ -1,6 +1,6 @@
 #!moo verb open close unlock lock --on "Generic Exit" --dspec any
 
-from moo.core import api, write
+from moo.core import api
 
 if api.parser.has_dobj():
     door = api.parser.get_dobj()

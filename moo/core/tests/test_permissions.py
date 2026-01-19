@@ -168,7 +168,7 @@ def test_change_location_calls_enterfunc(t_init: Object, t_wizard: Object, caplo
         with code.context(t_wizard, _writer):
             containers = lookup("container class")
             box = create("box", parents=[containers])
-            box.add_verb("enterfunc", code="print(args[1])")
+            box.add_verb("enterfunc", code="print(args[0])")
             thing = create("thing")
             thing.location = box
             thing.save()
@@ -186,7 +186,7 @@ def test_change_location_calls_exitfunc(t_init: Object, t_wizard: Object, caplog
         with code.context(t_wizard, _writer):
             containers = lookup("container class")
             box = create("box", parents=[containers])
-            box.add_verb("exitfunc", code="print(args[1])")
+            box.add_verb("exitfunc", code="print(args[0])")
             thing = create("thing", location=box)
             assert thing.location == box
         with code.context(t_wizard, _writer):

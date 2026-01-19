@@ -74,6 +74,7 @@ def test_open(t_init: Object, t_wizard: Object):
         printed.clear()
         parse.interpret(ctx, "open wooden door")
         assert printed == ["The door is open."]
+        assert door.is_open.invoked_name == "is_open"
         assert door.is_open()
         printed.clear()
         parse.interpret(ctx, "look through wooden door")
