@@ -13,7 +13,7 @@ from moo.core import api
 if api.parser.words:
     message = " ".join(api.parser.words[1:])
 else:
-    message = " ".join(args[1:])
+    message = " ".join(args)
 
 api.caller.tell("You " + message)
 this.emote1(message)

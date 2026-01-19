@@ -15,11 +15,11 @@ from RestrictedPython.Guards import (guarded_iter_unpack_sequence,
 log = logging.getLogger(__name__)
 
 
-def interpret(source, *args, runtype="exec", **kwargs):
+def interpret(source, name, *args, runtype="exec", **kwargs):
     from . import api
 
     globals = get_default_globals()  # pylint: disable=redefined-builtin
-    globals.update(get_restricted_environment(api.writer))
+    globals.update(get_restricted_environment(name, api.writer))
     if runtype == "exec":
         return r_exec(source, {}, globals, *args, **kwargs)
     else:
@@ -69,7 +69,7 @@ def get_default_globals():
     return {"__name__": "__main__", "__package__": None, "__doc__": None}
 
 
-def get_restricted_environment(writer):
+def get_restricted_environment(name, writer):
     """
     Construct an environment dictionary.
     """
@@ -119,8 +119,8 @@ def get_restricted_environment(writer):
 
     safe_builtins["__import__"] = restricted_import
 
-    for name in settings.ALLOWED_BUILTINS:
-        safe_builtins[name] = __builtins__[name]
+    for n in settings.ALLOWED_BUILTINS:
+        safe_builtins[n] = __builtins__[n]
     env = dict(
         _apply_=lambda f, *a, **kw: f(*a, **kw),
         _print_=lambda x: _print_(),
@@ -135,9 +135,10 @@ def get_restricted_environment(writer):
         __import__=restricted_import,
         __builtins__=safe_builtins,
         __metaclass__=type,
-        __name__="__verb__",
+        __name__=name,
         __package__=None,
         __doc__=None,
+        verb_name=name
     )
 
     return env

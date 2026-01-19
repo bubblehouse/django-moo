@@ -14,7 +14,7 @@ from moo.core import api, lookup
 if api.parser.words:
     message = " ".join(api.parser.words[1:])
 else:
-    message = " ".join(args[1:])
+    message = " ".join(args)
 
 api.caller.tell("You: " + message)
 for obj in this.contents.all():

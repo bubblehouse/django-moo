@@ -4,7 +4,7 @@ from moo.core import api, invoke
 
 counter = 1
 if args and len(args):  # pylint: disable=undefined-variable  # type: ignore
-    counter = args[1] + 1  # pylint: disable=undefined-variable  # type: ignore
+    counter = args[0] + 1  # pylint: disable=undefined-variable  # type: ignore
 
 print(counter)
 

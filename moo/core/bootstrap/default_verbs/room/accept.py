@@ -8,7 +8,7 @@ property of an object.
 
 The `$room` class definition provides for a flexible scheme using various different criteria, as shown in the following code:
 
-what = args[1];
+what = args[0];
 return this:is_unlocked_for(what) &&
        (this.free_entry ||
        what.owner == this.owner ||

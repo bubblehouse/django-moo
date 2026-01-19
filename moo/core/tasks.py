@@ -54,7 +54,7 @@ def parse_code(caller_id: int, source: str, runtype: str = "exec") -> list[list[
     with transaction.atomic():
         caller = Object.objects.get(pk=caller_id)
         with code.context(caller, output.append):
-            result = code.interpret(source, runtype=runtype)
+            result = code.interpret(source, "__main__", runtype=runtype)
     return output, result
 
 
@@ -80,5 +80,4 @@ def invoke_verb(
             result = verb(*args, **kwargs)
             if callback_verb_id:
                 callback = Verb.objects.get(pk=callback_verb_id)
-                invoked_name = callback.names.first().name
-                invoke_verb.delay(invoked_name, result, caller_id=caller_id, verb_id=callback_verb_id)
+                invoke_verb.delay(result, caller_id=caller_id, verb_id=callback_verb_id)

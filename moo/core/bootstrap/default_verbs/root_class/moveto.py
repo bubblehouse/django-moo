@@ -14,7 +14,7 @@ function is called.
 
 from moo.core import set_task_perms
 
-where = args[1]
+where = args[0]
 
 set_task_perms(this)
 this.location = where

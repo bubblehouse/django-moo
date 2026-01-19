@@ -10,6 +10,6 @@ The `$root_class` definition returns `False`. In this case, no objects are allow
 children of the `$root_class`.
 """
 
-thing = args[1]
+thing = args[0]
 
 return False

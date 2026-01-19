@@ -3,7 +3,7 @@
 if api.parser.words:
     message = " ".join(api.parser.words[1:])
 else:
-    message = " ".join(args[1:])
+    message = " ".join(args)
 
 """
 This verb is a general purpose verb used to send a message to every object in the room except the player that invoked

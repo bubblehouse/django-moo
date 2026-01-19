@@ -11,4 +11,4 @@ as long as you adhere to the same interface to `description` and `describe`.
 
 from moo.core import api
 
-this.set_property("description", args[1])
+this.set_property("description", args[0])

@@ -15,7 +15,7 @@ def test_caller_can_invoke_trivial_verb(t_init: Object, t_wizard: Object):
     with code.context(t_wizard, _writer):
         writer = code.context.get("writer")
         globals = code.get_default_globals()  # pylint: disable=redefined-builtin
-        globals.update(code.get_restricted_environment(writer))
+        globals.update(code.get_restricted_environment("__main__", writer))
         src = "from moo.core import api\napi.caller.invoke_verb('inspect')"
         code.r_exec(src, {}, globals)
         assert printed == [description.value]
@@ -60,7 +60,7 @@ def test_args_is_not_null_when_using_eval(t_init: Object, t_wizard: Object):
 
     verb = Verb.objects.get(names__name="test-args")
     with code.context(t_wizard, _writer):
-        code.interpret(verb.code)
+        code.interpret(verb.code, "__main__")
     assert printed == ["METHOD:():{}"]
 
 
@@ -85,7 +85,7 @@ def test_write_to_caller(t_init: Object, t_wizard: Object):
 
     with code.context(t_wizard, _writer):
         with pytest.warns(RuntimeWarning, match=r"ConnectionError\(\#3 \(Wizard\)\)\: TEST_STRING"):
-            code.interpret("from moo.core import api, write\nwrite(api.caller, 'TEST_STRING')")
+            code.interpret("from moo.core import api, write\nwrite(api.caller, 'TEST_STRING')", "__main__")
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_parse_with_wildard(t_init: Object, t_wizard: Object):
