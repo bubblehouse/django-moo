@@ -1,4 +1,4 @@
-#!moo verb is_open is_locked --on "Generic Exit" --dspec this
+#!moo verb is_open is_locked --on $exit --dspec this
 
 door = this  # pylint: disable=undefined-variable. # type: ignore
 

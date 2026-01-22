@@ -9,7 +9,7 @@ This is the verb to use for moving players through exits. It does not allow obje
 call to the exit's `move` verb is needed, with the object you wish to move through the exit as an argument.
 """
 
-from moo.core.exceptions import UserError
+from moo.core import UserError
 
 player = args[0]
 if not player.is_player():

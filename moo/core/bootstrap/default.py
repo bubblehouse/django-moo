@@ -75,7 +75,7 @@ with code.context(wizard, log.info):
     sys.set_property("thing", thing)
     containers.parents.add(thing)
 
-    exit = create("Generic Exit", location=None)
+    exit = create("Generic Exit", parents=[root], location=None)
     sys.set_property("exit", exit)
     exit.set_property("open", False, inherited=True)
     exit.set_property("locked", False, inherited=True)
