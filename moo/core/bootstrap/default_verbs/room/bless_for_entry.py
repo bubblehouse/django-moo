@@ -11,3 +11,9 @@ become blessed, and then later gain entry to the room. The object being blessed 
 blessing. Once the object has moved into the room, it's blessed status is removed by resetting the blessed_object
 property in the room to $nothing.
 """
+
+from moo.core import api
+
+thing = args[0]
+this.set_property("blessed_object", thing)
+this.set_property("blessed_task_id", api.task_id)

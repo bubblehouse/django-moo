@@ -11,7 +11,7 @@ call to the exit's `move` verb is needed, with the object you wish to move throu
 
 from moo.core.exceptions import UserError
 
-player = args[1]
+player = args[0]
 if not player.is_player():
     raise UserError("Only players can use exits.")
 this.move(player)
