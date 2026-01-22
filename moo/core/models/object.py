@@ -163,6 +163,15 @@ class Object(models.Model, AccessibleMixin):
                 return True
         return False
 
+    def is_a(self, obj: "Object") -> bool:
+        """
+        Check if this object is a child of the provided object.
+
+        :param obj: the potential parent object
+        :return: True if this object is a child of `obj`
+        """
+        return obj in self.get_ancestors()
+
     def get_ancestors(self) -> Generator["Object", None, None]:
         """
         Get the ancestor tree for this object.
@@ -455,6 +464,19 @@ class Object(models.Model, AccessibleMixin):
             if self.location and self.location.has_verb("enterfunc"):
                 invoke(self, verb=self.location.get_verb("enterfunc"))
 
+    # Django gets upset if this meddles with anything in RESERVED_NAMES
+    # but otherwise this seems to work, including in the admin interface
+    # TODO: See if there's any reason for the Accessible* aliases to exist now
+    def __getattr__(self, name):
+        if name in RESERVED_NAMES:
+            return super().__getattr__(name)  # pylint: disable=no-member
+        if self.has_verb(name, recurse=True):
+            return self.get_verb(name, recurse=True)
+        if self.has_property(name, recurse=True):
+            return self.get_property(name, recurse=True)
+        raise AttributeError(f"{self} has no attribute `{name}`")
+
+
 
 # these are the name that django relies on __getattr__ for, there may be others
 RESERVED_NAMES = [
@@ -469,16 +491,6 @@ RESERVED_NAMES = [
 class AccessibleObject(Object):
     class Meta:
         proxy = True
-
-    # this doesn't work because django uses __getattr__ so heavily
-    def __getattr__(self, name):
-        if name in RESERVED_NAMES:
-            return super().__getattr__(name)  # pylint: disable=no-member
-        if self.has_verb(name, recurse=True):
-            return self.get_verb(name, recurse=True)
-        if self.has_property(name, recurse=True):
-            return self.get_property(name, recurse=True)
-        raise AttributeError(f"{self} has no attribute `{name}`")
 
     def owns(self, subject: Object) -> bool:
         """
