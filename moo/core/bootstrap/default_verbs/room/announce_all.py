@@ -6,5 +6,5 @@ that we wish everyone to see, with no exceptions.
 """
 
 messages = args
-for obj in this.contents:
+for obj in this.contents.all():
     obj.tell(" ".join(messages))
