@@ -8,7 +8,7 @@ import warnings
 from typing import Union
 
 from .code import context
-from .exceptions import QuotaError
+from .exceptions import QuotaError, AmbiguousObjectError, UserError
 
 __all__ = ["lookup", "create", "write", "invoke", "set_task_perms", "api"]
 
