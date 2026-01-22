@@ -224,6 +224,7 @@ class _API:
     caller = descriptor("caller")  # The user object that invoked this code
     writer = descriptor("writer")  # A callable that will print to the caller's console
     parser = descriptor("parser")
+    task_id = descriptor("task_id")  # The current task ID
 
 
 api = _API()
