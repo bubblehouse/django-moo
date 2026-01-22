@@ -146,10 +146,11 @@ class AccessibleVerb(Verb):
         )
 
     def __call__(self, *args, **kwargs):
+        from .object import AccessibleObject
         this = None
         name = "__main__"
         if self.is_bound():
-            this = self.invoked_object
+            this = AccessibleObject.objects.get(pk=self.invoked_object.pk)
             name = self.invoked_name
         if self.filename is not None:
             kwargs['filename'] = self.filename
