@@ -147,6 +147,7 @@ def get_restricted_environment(name, writer):
 _active_user = contextvars.ContextVar("active_user", default=None)
 _active_writer = contextvars.ContextVar("active_writer", default=None)
 _active_parser = contextvars.ContextVar("active_parser", default=None)
+_active_task_id = contextvars.ContextVar("active_task_id", default=None)
 
 class context:
     """
@@ -167,9 +168,11 @@ class context:
             return _active_writer.get()
         if name == "parser":
             return _active_parser.get()
+        if name == "task_id":
+            return _active_task_id.get()
         raise NotImplementedError(f"Unknown context variable: {name}")
 
-    def __init__(self, caller, writer):
+    def __init__(self, caller, writer, task_id=None):
         from .models.object import AccessibleObject
 
         self.caller = AccessibleObject.objects.get(pk=caller.pk) if caller else None
@@ -178,6 +181,8 @@ class context:
         self.writer_token = None
         self.parser = None
         self.parser_token = None
+        self.task_id = task_id
+        self.task_id_token = None
 
     def set_parser(self, parser):
         self.parser = parser
@@ -186,6 +191,7 @@ class context:
     def __enter__(self):
         self.caller_token = _active_user.set(self.caller)
         self.writer_token = _active_writer.set(self.writer)
+        self.task_id_token = _active_task_id.set(self.task_id)
         return self
 
     def __exit__(self, cls, value, traceback):
@@ -195,3 +201,5 @@ class context:
             _active_writer.reset(self.writer_token)
         if self.parser_token:
             _active_parser.reset(self.parser_token)
+        if self.task_id_token:
+            _active_task_id.reset(self.task_id_token)

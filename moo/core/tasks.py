@@ -18,8 +18,8 @@ log = get_task_logger(__name__)
 background_log = logging.getLogger(f"{__name__}.background")
 
 
-@shared_task
-def parse_command(caller_id: int, line: str) -> list[Any]:
+@shared_task(bind=True)
+def parse_command(self, caller_id: int, line: str) -> list[Any]:
     """
     Parse a command-line and invoke the requested verb.
 
@@ -29,9 +29,10 @@ def parse_command(caller_id: int, line: str) -> list[Any]:
     :raises UserError: if a verb failure happens
     """
     output = []
+    task_id = self.request.id
     with transaction.atomic():
         caller = Object.objects.get(pk=caller_id)
-        with code.context(caller, output.append) as ctx:
+        with code.context(caller, output.append, task_id=task_id) as ctx:
             try:
                 log.info(f"{caller}: {line}")
                 parse.interpret(ctx, line)
@@ -41,8 +42,8 @@ def parse_command(caller_id: int, line: str) -> list[Any]:
     return output
 
 
-@shared_task
-def parse_code(caller_id: int, source: str, runtype: str = "exec") -> list[list[Any], Any]:
+@shared_task(bind=True)
+def parse_code(self, caller_id: int, source: str, runtype: str = "exec") -> list[list[Any], Any]:
     """
     Execute code in a task.
 
@@ -51,16 +52,17 @@ def parse_code(caller_id: int, source: str, runtype: str = "exec") -> list[list[
     :return: a list of output lines and the result value, if any
     """
     output = []
+    task_id = self.request.id
     with transaction.atomic():
         caller = Object.objects.get(pk=caller_id)
-        with code.context(caller, output.append):
+        with code.context(caller, output.append, task_id=task_id):
             result = code.interpret(source, "__main__", runtype=runtype)
     return output, result
 
 
-@shared_task
+@shared_task(bind=True)
 def invoke_verb(
-    *args, caller_id: int = None, verb_id: int = None, callback_verb_id: Optional[int] = None, **kwargs
+    self, *args, caller_id: int = None, verb_id: int = None, callback_verb_id: Optional[int] = None, **kwargs
 ) -> None:
     """
     Asynchronously execute a Verb, optionally returning the result to another Verb.
@@ -73,11 +75,12 @@ def invoke_verb(
     """
     from moo.core import api
 
+    task_id = self.request.id
     with transaction.atomic():
         caller = Object.objects.get(pk=caller_id)
         verb = Verb.objects.get(pk=verb_id)
-        with code.context(caller, background_log.info):
+        with code.context(caller, background_log.info, task_id=task_id):
             result = verb(*args, **kwargs)
             if callback_verb_id:
-                callback = Verb.objects.get(pk=callback_verb_id)
+                Verb.objects.get(pk=callback_verb_id) # validate the callback_verb_id, even if we don't use the result
                 invoke_verb.delay(result, caller_id=caller_id, verb_id=callback_verb_id)
