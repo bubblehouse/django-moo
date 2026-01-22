@@ -25,16 +25,21 @@ def test_creation(t_init: Object, t_wizard: Object):
 
     with code.context(t_wizard, _writer) as ctx:
         room, door = setup_doors(t_wizard)
-        parse.interpret(ctx, "dig north to Another Room through wooden door")
-        assert printed == ['[color yellow]Created an exit to the north to "Another Room".[/color yellow]']
+        parse.interpret(ctx, "@dig north to Another Room through wooden door")
+        assert printed == ['[color yellow]Dug an exit north to "Another Room".[/color yellow]']
         assert t_wizard.location == room
         assert room.has_property("exits")
-        assert room.exits["north"]["door"] == door
+        assert room.exits["north"] == door
 
         printed.clear()
-        parse.interpret(ctx, "go north")
+        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
+            parse.interpret(ctx, "go north")
+        assert [str(x.message) for x in warnings.list] == [
+            "ConnectionError(#3 (Wizard)): You leave #16 (Test Room).",
+            "ConnectionError(#3 (Wizard)): You arrive at #18 (Another Room)."
+        ]
         api.caller.refresh_from_db()
-        assert printed == ["You go north."]
+        assert printed == []
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -47,8 +52,8 @@ def test_locking(t_init: Object, t_wizard: Object):
 
     with code.context(t_wizard, _writer) as ctx:
         _, door = setup_doors(t_wizard)
-        parse.interpret(ctx, "dig north to Another Room through wooden door")
-        assert printed == ['[color yellow]Created an exit to the north to "Another Room".[/color yellow]']
+        parse.interpret(ctx, "@dig north to Another Room through wooden door")
+        assert printed == ['[color yellow]Dug an exit north to "Another Room".[/color yellow]']
         printed.clear()
         parse.interpret(ctx, "lock wooden door")
         assert printed == ["The door is locked."]
@@ -69,8 +74,8 @@ def test_open(t_init: Object, t_wizard: Object):
 
     with code.context(t_wizard, _writer) as ctx:
         _, door = setup_doors(t_wizard)
-        parse.interpret(ctx, "dig north to Another Room through wooden door")
-        assert printed == ['[color yellow]Created an exit to the north to "Another Room".[/color yellow]']
+        parse.interpret(ctx, "@dig north to Another Room through wooden door")
+        assert printed == ['[color yellow]Dug an exit north to "Another Room".[/color yellow]']
         printed.clear()
         parse.interpret(ctx, "open wooden door")
         assert printed == ["The door is open."]

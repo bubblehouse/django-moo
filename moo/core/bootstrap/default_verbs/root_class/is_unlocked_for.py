@@ -11,3 +11,4 @@ if not this.key:
     return True  # pylint: disable=return-outside-function. # type: ignore
 
 #TODO use lock_utils:eval_key() to evaluate the key against the thing
+return True

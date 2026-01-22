@@ -10,6 +10,6 @@ place.announce_all_but(this, "message");
 """
 
 skip, *messages = args
-for obj in this.contents:
+for obj in this.contents.all():
     if obj != skip:
         obj.tell(" ".join(messages))

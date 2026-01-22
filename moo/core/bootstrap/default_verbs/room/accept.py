@@ -8,11 +8,11 @@ property of an object.
 
 The `$room` class definition provides for a flexible scheme using various different criteria, as shown in the following code:
 
-what = args[0];
-return this:is_unlocked_for(what) &&
-       (this.free_entry ||
-       what.owner == this.owner ||
-       (typeof(this.residents) == LIST && what in this.residents));
+       what = args[0]
+       return this.is_unlocked_for(what) and (
+              this.free_entry or
+              what.owner == this.owner or
+              what in this.residents)
 
 Starting at the top of the conditional expression, we see the locking condition being checked. If the room lock
 forbids this object to enter the room, then the :accept verb returns zero.
@@ -26,7 +26,8 @@ Finally, if a `residents` list is defined in the room, and the object is in the 
 This complex set of conditions shows how an arbitrary set of criteria can be applied to the movement of objects into other objects.
 """
 
-# TODO: Implement room accept logic
-thing = args[0]
-
-return True
+what = args[0]
+return this.is_unlocked_for(what) and (
+       this.free_entry or
+       what.owner == this.owner or
+       what in this.residents)
