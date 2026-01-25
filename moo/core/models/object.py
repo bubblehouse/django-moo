@@ -466,7 +466,6 @@ class Object(models.Model, AccessibleMixin):
 
     # Django gets upset if this meddles with anything in RESERVED_NAMES
     # but otherwise this seems to work, including in the admin interface
-    # TODO: See if there's any reason for the Accessible* aliases to exist now
     def __getattr__(self, name):
         if name in RESERVED_NAMES:
             return super().__getattr__(name)  # pylint: disable=no-member
@@ -476,23 +475,7 @@ class Object(models.Model, AccessibleMixin):
             return self.get_property(name, recurse=True)
         raise AttributeError(f"{self} has no attribute `{name}`")
 
-
-
-# these are the name that django relies on __getattr__ for, there may be others
-RESERVED_NAMES = [
-    "resolve_expression",
-    "get_source_expressions",
-    "_prefetched_objects_cache",
-    "original_owner",
-    "original_location",
-]
-
-
-class AccessibleObject(Object):
-    class Meta:
-        proxy = True
-
-    def owns(self, subject: Object) -> bool:
+    def owns(self, subject) -> bool:
         """
         Convenience method to check if the `subject` is owned by `self`
         """
@@ -561,6 +544,22 @@ class AccessibleObject(Object):
             raise PermissionError(f"{self} is not allowed {permission} on {subject}")
         else:
             return False
+
+
+# these are the name that django relies on __getattr__ for, there may be others
+RESERVED_NAMES = [
+    "resolve_expression",
+    "get_source_expressions",
+    "_prefetched_objects_cache",
+    "original_owner",
+    "original_location",
+]
+
+
+class AccessibleObject(Object):
+    # TODO: See if there's any reason for the Accessible* aliases to exist now
+    class Meta:
+        proxy = True
 
 
 class Relationship(models.Model):
