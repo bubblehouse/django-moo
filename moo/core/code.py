@@ -172,6 +172,11 @@ class context:
             return _active_task_id.get()
         raise NotImplementedError(f"Unknown context variable: {name}")
 
+    @classmethod
+    def override_caller(cls, caller):
+        # we don't set the token, because we still want to reset to the previous caller on exit
+        _active_user.set(caller)
+
     def __init__(self, caller, writer, task_id=None):
         from .models.object import AccessibleObject
 
