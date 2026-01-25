@@ -203,7 +203,7 @@ def set_task_perms(who):
     :param who: the Object whose permissions to assume
     :type who: Object
     """
-    api.caller = who
+    context.override_caller(who)
 
 class _API:
     """
