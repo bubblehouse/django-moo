@@ -38,6 +38,8 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
         printed.clear()
 
     with code.context(t_wizard, _writer) as ctx:
+        t_wizard.location = avatar.location
+        t_wizard.save()
         parse.interpret(ctx, f"@tunnel south to {home_location.name}")
         assert printed == [
             f'[color yellow]Tunnelled an exit south to "{home_location.name}".[/color yellow]',
@@ -49,8 +51,8 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
             parse.interpret(ctx, "go south")
         assert [str(x.message) for x in warnings.list] == [
             "ConnectionError(#15 (Player)): You leave #17 (Another Room).",
-            "ConnectionError(#15 (Player)): You arrive at #14 (The Laboratory).",
-            "ConnectionError(#3 (Wizard)): #15 (Player) arrives in #14 (The Laboratory)."
+            "ConnectionError(#3 (Wizard)): #15 (Player) leaves #17 (Another Room).",
+            "ConnectionError(#15 (Player)): You arrive at #14 (The Laboratory)."
         ]
         avatar.refresh_from_db()
         assert avatar.location.name == home_location.name
