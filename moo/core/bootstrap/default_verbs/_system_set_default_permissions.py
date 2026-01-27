@@ -1,6 +1,7 @@
 from moo.core import api
 
 obj = args[0]  # pylint: disable=undefined-variable
+
 obj.allow("wizards", "anything")
 obj.allow("owners", "anything")
 obj.allow("everyone", "read")

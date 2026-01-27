@@ -11,17 +11,18 @@ prop_name = verb_name
 prop_value = this.get_property(prop_name)
 source = this.get_property("source")
 dest = this.get_property("dest")
+actor = api.player
 
 if prop_name == 'nogo_msg':
     return prop_value.format(actor="You")
 elif prop_name == 'onogo_msg':
-    return prop_value.format(actor=api.caller)
+    return prop_value.format(actor=actor)
 elif prop_name == 'arrive_msg':
     return prop_value.format(actor="You", subject=dest)
 elif prop_name == 'oarrive_msg':
-    return prop_value.format(actor=api.caller, subject=dest)
+    return prop_value.format(actor=actor, subject=dest)
 elif prop_name == 'oleave_msg':
-    return prop_value.format(actor=api.caller, subject=source)
+    return prop_value.format(actor=actor, subject=source)
 elif prop_name == 'leave_msg':
     return prop_value.format(actor="You", subject=source)
 else:

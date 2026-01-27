@@ -23,8 +23,8 @@ lint:
     - poetry run pylint --exit-zero --output-format=pylint_gitlab.GitlabCodeClimateReporter moo > codeclimate.json
     - poetry run pylint --exit-zero --output-format=pylint_gitlab.GitlabPagesHtmlReporter moo > public/lint/index.html
   after_script:
-    - poetry run anybadge --overwrite --label $CI_JOB_NAME --value=$(cat public/badges/$CI_JOB_NAME.score) --file=public/badges/$CI_JOB_NAME.svg 4=red 6=orange
-      8=yellow 10=green
+    - poetry run anybadge --overwrite --label $CI_JOB_NAME --value=$(cat public/badges/$CI_JOB_NAME.score) --file=public/badges/$CI_JOB_NAME.svg 4=red
+      6=orange 8=yellow 10=green
     - |
       echo "Your score is: $(cat public/badges/$CI_JOB_NAME.score)"
   artifacts:
@@ -82,7 +82,8 @@ release:
     - npm install
     - docker buildx install
     - docker buildx create --bootstrap --use --name=$CI_PROJECT_NAME --driver=kubernetes '--driver-opt="nodeselector=kubernetes.io/arch=amd64"'
-    - docker buildx create --bootstrap --append --name=$CI_PROJECT_NAME --driver=kubernetes '--driver-opt="nodeselector=kubernetes.io/arch=arm64","tolerations=key=kubernetes.io/arch,value=arm64,operator=Equal,effect=NoSchedule"'
+    - docker buildx create --bootstrap --append --name=$CI_PROJECT_NAME --driver=kubernetes 
+      '--driver-opt="nodeselector=kubernetes.io/arch=arm64","tolerations=key=kubernetes.io/arch,value=arm64,operator=Equal,effect=NoSchedule"'
     # semantic-release-pypi always uses `python3` but doing this anywhere else breaks the image
     - ln -sf python3.11 /usr/bin/python3
     - npx semantic-release
