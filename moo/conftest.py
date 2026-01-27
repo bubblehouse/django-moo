@@ -27,9 +27,6 @@ def t_init(request):
     ref = importlib.resources.files("moo.core.bootstrap") / f"{name}.py"
     with importlib.resources.as_file(ref) as path:
         load_python(path)
-    user = User.objects.create(username="phil")
-    avatar = Object.objects.get(name="Wizard")
-    Player.objects.create(user=user, avatar=avatar)
     yield Object.objects.get(id=1)
 
 

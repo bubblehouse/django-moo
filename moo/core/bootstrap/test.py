@@ -1,11 +1,14 @@
 import logging
 
 from moo.core import bootstrap, code, create, lookup
+from moo.core.models import Player, User
 
 log = logging.getLogger(__name__)
 
 repo = bootstrap.initialize_dataset("test")
 wizard = lookup("Wizard")
+user = User.objects.create(username="wizard")
+Player.objects.create(user=user, avatar=wizard, wizard=True)
 containers = lookup("container class")
 
 with code.context(wizard, log.info):
@@ -39,6 +42,13 @@ with code.context(wizard, log.info):
     wizard.location = lab
     wizard.save()
 
-    player = create(name="Player", unique_name=True, location=lab)
+    new_player = create(name="Player", unique_name=True, location=lab)
+    p = Player.objects.create()
+    p.avatar = new_player
+    p.save()
+
+    new_player.parents.add(players, containers)
+    new_player.owner = new_player
+    new_player.save()
 
     bootstrap.load_verbs(repo, "moo.core.bootstrap.test_verbs")
