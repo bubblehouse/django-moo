@@ -22,4 +22,3 @@ for x in this.contents.all():
             x.save()
     else:
         x.moveto(x.owner)
-
