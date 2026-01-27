@@ -144,7 +144,8 @@ def get_restricted_environment(name, writer):
     return env
 
 
-_active_user = contextvars.ContextVar("active_user", default=None)
+_active_caller = contextvars.ContextVar("active_caller", default=None)
+_active_player = contextvars.ContextVar("active_player", default=None)
 _active_writer = contextvars.ContextVar("active_writer", default=None)
 _active_parser = contextvars.ContextVar("active_parser", default=None)
 _active_task_id = contextvars.ContextVar("active_task_id", default=None)
@@ -163,7 +164,9 @@ class context:
     @classmethod
     def get(cls, name):
         if name == "caller":
-            return _active_user.get()
+            return _active_caller.get()
+        if name == "player":
+            return _active_player.get()
         if name == "writer":
             return _active_writer.get()
         if name == "parser":
@@ -175,13 +178,15 @@ class context:
     @classmethod
     def override_caller(cls, caller):
         # we don't set the token, because we still want to reset to the previous caller on exit
-        _active_user.set(caller)
+        _active_caller.set(caller)
 
     def __init__(self, caller, writer, task_id=None):
         from .models.object import AccessibleObject
 
         self.caller = AccessibleObject.objects.get(pk=caller.pk) if caller else None
         self.caller_token = None
+        self.player = self.caller
+        self.player_token = None
         self.writer = writer
         self.writer_token = None
         self.parser = None
@@ -194,14 +199,17 @@ class context:
         self.parser_token = _active_parser.set(self.parser)
 
     def __enter__(self):
-        self.caller_token = _active_user.set(self.caller)
+        self.caller_token = _active_caller.set(self.caller)
+        self.player_token = _active_player.set(self.player)
         self.writer_token = _active_writer.set(self.writer)
         self.task_id_token = _active_task_id.set(self.task_id)
         return self
 
     def __exit__(self, cls, value, traceback):
         if self.caller_token:
-            _active_user.reset(self.caller_token)
+            _active_caller.reset(self.caller_token)
+        if self.player_token:
+            _active_player.reset(self.player_token)
         if self.writer_token:
             _active_writer.reset(self.writer_token)
         if self.parser_token:

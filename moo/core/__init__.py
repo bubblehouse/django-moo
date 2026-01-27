@@ -221,8 +221,9 @@ class _API:
         def __get__(self, obj, objtype=None):
             return context.get(self.name)
 
-    caller = descriptor("caller")  # The user object that invoked this code
-    writer = descriptor("writer")  # A callable that will print to the caller's console
+    caller = descriptor("caller")  # Code runs with the permission of this object
+    player = descriptor("player")  # This object that originally invoked this session, defaults to original caller
+    writer = descriptor("writer")  # A callable that will print to the player's console
     parser = descriptor("parser")
     task_id = descriptor("task_id")  # The current task ID
 

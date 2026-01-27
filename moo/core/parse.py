@@ -29,9 +29,10 @@ def interpret(ctx, line):
     from . import api
 
     lex = Lexer(line)
-    parser = Parser(lex, api.caller)
+    parser = Parser(lex, api.player)
     ctx.set_parser(parser)
     verb = parser.get_verb()
+    ctx.override_caller(verb.owner)
     verb()
 
 
