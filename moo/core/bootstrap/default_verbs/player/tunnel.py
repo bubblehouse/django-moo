@@ -1,12 +1,5 @@
 #!moo verb @tunnel --on $programmer --dspec any
 
-
-
-
-
-
-
-
 from moo.core import api, lookup, create
 
 directions = ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest", "up", "down"]
