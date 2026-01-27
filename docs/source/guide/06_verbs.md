@@ -4,8 +4,6 @@
 >
 > As with properties, every verb has an owner and a set of permission bits. The owner of a verb can change its program, its permission bits, and its argument specifiers (discussed below). Only a wizard can change the owner of a verb. The owner of a verb also determines the permissions with which that verb runs; that is, the program in a verb can do whatever operations the owner of that verb is allowed to do and no others. Thus, for example, a verb owned by a wizard must be written very carefully, since wizards are allowed to do just about anything.
 
-**Remember, in DjangoMOO, verbs run with the permission of the _caller_, not the original author of the verb.**
-
 To add a new Verb to an object, users must have the `develop` permission on that object (owners and wizards get this by default). Verbs support the following permissions for any given object or object group:
 
 * `anything` - do anything with a verb
