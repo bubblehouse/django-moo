@@ -19,7 +19,6 @@ The `api` object has a couple of attributes that are useful in most verbs:
 3. `writer` - the Callable that prints text to the client connection
 4. `task_id` - the current Celery task ID, if applicable
 5. `parser` - the Parser object when run from the command-line, otherwise None
-6. `args`, `kwargs` - function arguments when run as a method, otherwise None
 
 Also present in the global namespace is `verb_name`, the specific name used when the current verb was invoked.
 
