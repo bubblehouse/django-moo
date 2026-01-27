@@ -21,6 +21,8 @@ The `api` object has a couple of attributes that are useful in most verbs:
 5. `parser` - the Parser object when run from the command-line, otherwise None
 6. `args`, `kwargs` - function arguments when run as a method, otherwise None
 
+Also present in the global namespace is `verb_name`, the specific name used when the current verb was invoked.
+
 ### Verb Arguments
 
 Since verb code is run in a function context, we always get a set of arguments that are available in verb code:
