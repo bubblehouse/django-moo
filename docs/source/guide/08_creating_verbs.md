@@ -14,10 +14,12 @@ As mentioned above, DjangoMOO uses Python as its in-game programming language. W
 
 The `api` object has a couple of attributes that are useful in most verbs:
 
-1. `caller` – the Object that represents the user who called the verb
-2. `writer` - the Callable that prints text to the client connection
-3. `parser` - the Parser object when run from the command-line, otherwise None
-4. `args`, `kwargs` - function arguments when run as a method, otherwise None
+1. `player` – the Object that represents the user who called the verb
+2. `caller` – the effective user that code is running with (usually the owner of the current executing verb)
+3. `writer` - the Callable that prints text to the client connection
+4. `task_id` - the current Celery task ID, if applicable
+5. `parser` - the Parser object when run from the command-line, otherwise None
+6. `args`, `kwargs` - function arguments when run as a method, otherwise None
 
 ### Verb Arguments
 
@@ -29,12 +31,14 @@ Since verb code is run in a function context, we always get a set of arguments t
 4. `args` - function arguments when run as a method, or an empty list
 5. `kwargs` - function arguments when run as a method, or an empty dict
 
+
+
 ### Getting and Setting the Values of Properties
 
 The Django ORM brings in a few changes to how we access properties. We could potentially use the direct ORM method, like in this example:
 
 ```python
- qs = api.caller.location.properties.filter(name="description")
+ qs = api.player.location.properties.filter(name="description")
  if qs:
      print(qs[0].value)
  else:
@@ -44,20 +48,20 @@ The Django ORM brings in a few changes to how we access properties. We could pot
 This doesn't honor inheritance, so you'll probably prefer to use `Object.get_property()`:
 
 ```python
- description = api.caller.location.get_property('description')
+ description = api.player.location.get_property('description')
  print(f"The description is: {description}")
 ```
 
 It's possible to use the direct ORM method to *set* a property. This method can be useful if you want to further modify the property object or its permissions.
 
 ```python
- property = api.caller.location.properties.create(name="description", value="A dark room.")
+ property = api.player.location.properties.create(name="description", value="A dark room.")
 ```
 
 But similarly, you should probably just use:
 
 ```python
-api.caller.location.set_property("description", "A dark room.")
+api.player.location.set_property("description", "A dark room.")
 ```
 
 So far these examples haven't required any calls to `obj.save()`; this is only required for changes to the intrinsic object properties like `name`, `unique_name`, `obvious`, and `owner`.
