@@ -26,4 +26,3 @@ The running of a task is kept reasonably secure and isolated in a few ways:
   to complete in order to commit the changes to the database.
 * Verbs are compiled and executed inside a restricted environment created by Zope's `RestrictedPython`
   library. Only selected imports and builtins are allowed, and access to `_` variables is restricted.
-
