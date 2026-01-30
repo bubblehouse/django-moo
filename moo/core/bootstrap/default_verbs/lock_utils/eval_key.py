@@ -38,8 +38,8 @@ key, who = args  # pylint: disable=undefined-variable. # type: ignore
 
 def eval_key_expression(expr, candidate):
     if isinstance(expr, int):
-        # Simple object number
-        return expr == candidate.id
+        subject = lookup(expr)
+        return subject == candidate or candidate.contains(subject)
     elif isinstance(expr, list):
         operator = expr[0]
         if operator == "&&":
