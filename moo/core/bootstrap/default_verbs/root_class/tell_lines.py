@@ -1,4 +1,4 @@
-#!moo verb tell_lines --on "Root Class"
+#!moo verb tell_lines --on $root_class
 
 """
 This outputs out the list of strings strings to the object, using the tell verb for this object. Each string in strings

@@ -1,4 +1,4 @@
-#!moo verb title --on "Root Class"
+#!moo verb title --on $root_class
 
 """
 This verb performs the same function as the `title` verb, but returns a capitalised version of the name property of the

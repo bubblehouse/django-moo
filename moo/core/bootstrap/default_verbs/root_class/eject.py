@@ -1,4 +1,4 @@
-#!moo verb eject --on "Root Class"
+#!moo verb eject --on $root_class
 
 """
 This verb is used to remove something from the contents of an object. The owner of an object, or a wizard, can use this

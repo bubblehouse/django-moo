@@ -1,4 +1,4 @@
-#!moo verb tell --on "Root Class"
+#!moo verb tell --on $root_class
 
 """
 This verb is used to send a message from one object to another. The `$root_class` definition of this verb tests to see
