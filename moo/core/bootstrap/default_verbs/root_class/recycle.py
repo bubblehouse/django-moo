@@ -1,4 +1,4 @@
-#!moo verb recycle --on "Root Class"
+#!moo verb recycle --on $root_class
 
 """
 This verb contains no code for the $root class. It is called by the obj.delete() primitive just before an object is

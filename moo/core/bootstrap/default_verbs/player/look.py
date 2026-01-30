@@ -1,4 +1,4 @@
-#!moo verb look inspect --on "Generic Player" --dspec either --ispec at:any
+#!moo verb look inspect --on $player --dspec either --ispec at:any
 
 from moo.core import api, lookup
 

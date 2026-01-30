@@ -1,4 +1,4 @@
-#!moo verb @desc*ribe --on "Generic Player" --dspec any --ispec as:any
+#!moo verb @desc*ribe --on $player --dspec any --ispec as:any
 
 """
 This is a player command used to set the description of an object. It takes the dobjstr and tries to match it with an
