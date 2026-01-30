@@ -1,5 +1,7 @@
 #!moo verb leave_msg oleave_msg arrive_msg oarrive_msg nogo_msg onogo_msg --on $exit
 
+# pylint: disable=return-outside-function,undefined-variable
+
 """
 These verbs return a pronoun substituted version of the corresponding properties stored on the exit object. They are
 used by `$exit.move`.

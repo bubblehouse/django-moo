@@ -1,5 +1,7 @@
 #!moo verb @tunnel --on $programmer --dspec any
 
+# pylint: disable=return-outside-function,undefined-variable
+
 from moo.core import api, lookup, create
 
 directions = ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest", "up", "down"]
@@ -12,13 +14,13 @@ else:
 
 if direction in exits:
     print("[color red]There is already an exit in that direction.[/red]")
-    return  # pylint: disable=return-outside-function  # type: ignore
+    return
 
 if api.parser.has_pobj("through"):
     door = api.parser.get_pobj("through")
     if not door.is_a(_.exit):
         print("[color red]The specified object is not an exit.[/color red]")
-        return  # pylint: disable=return-outside-function  # type: ignore
+        return
 else:
     door = create("{direction} exit", parents=[_.exit], location=None)
     door.set_property("source", api.caller.location)

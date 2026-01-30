@@ -1,5 +1,7 @@
 #!moo verb remove_entrance --on $room
 
+# pylint: disable=return-outside-function,undefined-variable
+
 """
 This verb performs the opposite function to the `add_entrance` verb. It removes `entrance` from the room's list of
 entrances. If it is not possible to remove `entrance` from the room's entrance list (normally because the object

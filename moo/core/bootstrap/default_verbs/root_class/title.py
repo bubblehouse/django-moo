@@ -1,5 +1,7 @@
 #!moo verb title --on $root_class
 
+# pylint: disable=return-outside-function,undefined-variable
+
 """
 This verb is used to get the name property of this object.
 
@@ -9,5 +11,5 @@ object.
 """
 
 if not this.name:
-    return str(this)  # pylint: disable=return-outside-function. # type: ignore
-return this.name  # pylint: disable=return-outside-function. # type: ignore
+    return str(this)
+return this.name

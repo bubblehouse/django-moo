@@ -1,5 +1,7 @@
 #!moo verb match --on $root_class
 
+# pylint: disable=return-outside-function,undefined-variable
+
 """
 This verb is used to find things that are located within this object.
 
