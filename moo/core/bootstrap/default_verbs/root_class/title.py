@@ -1,4 +1,4 @@
-#!moo verb title --on "Root Class"
+#!moo verb title --on $root_class
 
 """
 This verb is used to get the name property of this object.

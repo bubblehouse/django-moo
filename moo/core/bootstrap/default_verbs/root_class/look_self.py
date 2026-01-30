@@ -1,4 +1,4 @@
-#!moo verb look_self --on "Root Class"
+#!moo verb look_self --on $root_class
 
 """
 The `look_self` verb on any object is used to tell another object what this object looks like, in detail.

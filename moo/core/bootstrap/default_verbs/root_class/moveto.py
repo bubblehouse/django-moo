@@ -1,4 +1,4 @@
-#!moo verb moveto --on "Root Class"
+#!moo verb moveto --on $root_class
 
 """
 This verb is used to change the location of an object to be `where`. This verb is intended to be used by any other verbs
