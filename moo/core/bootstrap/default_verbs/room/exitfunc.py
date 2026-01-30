@@ -1,5 +1,7 @@
 #!moo verb exitfunc --on $room
 
+# pylint: disable=return-outside-function,undefined-variable
+
 """
 This verb is invoked by the LambdaMOO server when an object is moved out of a room, as part of the action of the `move`
 primitive. The action defined for the `$room` class is to do nothing.

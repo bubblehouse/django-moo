@@ -1,5 +1,7 @@
 #!moo verb announce_all_but --on $room
 
+# pylint: disable=return-outside-function,undefined-variable
+
 """
 This general purpose verb is used to send a message to everyone in the room except a particular object. This can be
 used in situations where we wish to present one view to the world in general, and another view to a particular object,

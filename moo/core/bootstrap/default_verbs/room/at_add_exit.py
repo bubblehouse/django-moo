@@ -1,5 +1,7 @@
 #!moo verb @add-exit --on $room --dspec any
 
+# pylint: disable=return-outside-function,undefined-variable
+
 """
 This is a player command used to add an exit to the current room. This is normally used when someone else has created
 an exit they want to lead out of a room you own. The verb matches the direct object string with an object in the room

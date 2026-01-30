@@ -1,5 +1,7 @@
 #!moo verb emote --on $room
 
+# pylint: disable=return-outside-function,undefined-variable
+
 """
 This verb is used for the pose type of interaction with other players. It functions in a similar way to the :say verb,
 but instead places the player's name at the front of the text. The actual output is done in two stages. The :emote verb

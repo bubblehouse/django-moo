@@ -1,16 +1,18 @@
 #!moo verb is_open is_locked --on $exit --dspec this
 
-door = this  # pylint: disable=undefined-variable. # type: ignore
+# pylint: disable=return-outside-function,undefined-variable
 
-if verb_name == "is_open":  # pylint: disable=undefined-variable. # type: ignore
+door = this
+
+if verb_name == "is_open":
     prop_name = "open"
-elif verb_name == "is_locked":  # pylint: disable=undefined-variable. # type: ignore
+elif verb_name == "is_locked":
     prop_name = "locked"
 else:
-    print("Unknown verb name for door state check: %s" % verb_name)  # pylint: disable=undefined-variable. # type: ignore
-    return False  # pylint: disable=return-outside-function  # type: ignore
+    print("Unknown verb name for door state check: %s" % verb_name)
+    return False
 
 if door.has_property(prop_name) and door.get_property(prop_name):
-    return True  # pylint: disable=return-outside-function  # type: ignore
+    return True
 else:
-    return False  # pylint: disable=return-outside-function  # type: ignore
+    return False

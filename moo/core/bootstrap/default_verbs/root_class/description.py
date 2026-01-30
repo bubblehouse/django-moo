@@ -1,5 +1,7 @@
 #!moo verb description --on $root_class
 
+# pylint: disable=return-outside-function,undefined-variable
+
 """
 The `description` verb on any object is supposed to return a string or list of strings describing the object in the detail
 someone would notice if they were specifically looking at it.
@@ -12,6 +14,6 @@ from moo.core import api
 
 if this.has_property("description"):
     description = this.get_property("description")
-    return f"[bright_yellow]{this.name}[/bright_yellow]\n[deep_sky_blue1]{description}[/deep_sky_blue1]"  # pylint: disable=return-outside-function  # type: ignore
+    return f"[bright_yellow]{this.name}[/bright_yellow]\n[deep_sky_blue1]{description}[/deep_sky_blue1]"
 else:
-    return "[deep_pink4 bold]Not much to see here.[/deep_pink4 bold]"  # pylint: disable=return-outside-function  # type: ignore
+    return "[deep_pink4 bold]Not much to see here.[/deep_pink4 bold]"

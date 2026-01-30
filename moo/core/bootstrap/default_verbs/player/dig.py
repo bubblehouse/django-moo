@@ -1,5 +1,7 @@
 #!moo verb @dig --on $programmer --dspec any --ispec "through:any"
 
+# pylint: disable=return-outside-function,undefined-variable
+
 """
 This is a player command used to create a room or exit, (that is, instances of the class `$room` or `$exit'. The verb
 parses the arguments to determine the type and number of objects that are to be created. It uses the `create()` primitive,
@@ -19,13 +21,13 @@ else:
 
 if direction in exits:
     print("[color red]There is already an exit in that direction.[/color red]")
-    return  # pylint: disable=return-outside-function  # type: ignore
+    return
 
 if api.parser.has_pobj("through"):
     door = api.parser.get_pobj("through")
     if not door.is_a(_.exit):
         print("[color red]The specified object is not an exit.[/color red]")
-        return  # pylint: disable=return-outside-function  # type: ignore
+        return
 else:
     door = create("{direction} exit", parents=[_.exit], location=None)
 

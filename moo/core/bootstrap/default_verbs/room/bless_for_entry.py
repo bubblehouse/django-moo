@@ -1,5 +1,7 @@
 #!moo verb bless_for_entry --on $room
 
+# pylint: disable=return-outside-function,undefined-variable
+
 """
 This verb is called by an exit to allow an object special permission to enter a room. Two properties on the room store
 thing and the task_id of the calling task. The idea behind blessed objects is to allow an object temporary permission

@@ -1,5 +1,7 @@
 #!moo verb match_exit --on $room
 
+# pylint: disable=return-outside-function,undefined-variable,redefined-builtin
+
 """
 This verb is used to determine if exit is the name of an exit leading out of the room. It performs a simple string
 match on the names and aliases of the objects in the exits list stored as a property of the room. The intent here
@@ -22,6 +24,6 @@ for direction, exit in exits.items():
 if len(matches) == 0:
     raise this.DoesNotExist(f"No exit named '{args[0]}' found.")
 elif len(matches) > 1:
-    raise AmbiguousObjectError(f"Multiple exits named '{args[0]}' found.")
+    raise AmbiguousObjectError(f"Multiple exits named '{args[0]}' found.", matches=matches)
 else:
     return matches[0]

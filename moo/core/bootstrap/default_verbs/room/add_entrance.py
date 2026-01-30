@@ -1,5 +1,7 @@
 #!moo verb add_entrance --on $room
 
+# pylint: disable=return-outside-function,undefined-variable
+
 """
 This verb functions similarly to the :add_exit verb, but applies to $exit objects that lead into the room. If we
 imagine an $exit object as a flexible tube connecting two rooms, then the concept of specifying both ends of the tube

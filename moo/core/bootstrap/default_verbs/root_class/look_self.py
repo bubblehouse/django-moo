@@ -1,5 +1,7 @@
 #!moo verb look_self --on $root_class
 
+# pylint: disable=return-outside-function,undefined-variable
+
 """
 The `look_self` verb on any object is used to tell another object what this object looks like, in detail.
 
@@ -12,4 +14,4 @@ objects that are in the room.
 
 from moo.core import api
 
-return this.description()  # pylint: disable=return-outside-function  # type: ignore
+return this.description()

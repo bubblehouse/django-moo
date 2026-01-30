@@ -1,5 +1,7 @@
 #!moo verb huh2 --on $room
 
+# pylint: disable=return-outside-function,undefined-variable
+
 """
 This verb is called by the `huh` verb to provide default handling of unrecognized commands given to players
 in this room. You can override this verb to provide custom handling of such commands. If you wish to

@@ -1,5 +1,7 @@
 #!moo verb describe --on $root_class
 
+# pylint: disable=return-outside-function,undefined-variable
+
 """
 The `describe` verb is used to set the description property of an object.
 

@@ -1,6 +1,8 @@
 #!moo verb describe --on $container --dspec this
 
-obj = kwargs['this']  # pylint: disable=undefined-variable  # type: ignore
+# pylint: disable=return-outside-function,undefined-variable
+
+obj = kwargs['this']
 
 response = f"[bright_yellow]{obj.name}[/bright_yellow]\n"
 if obj.has_property("description"):
@@ -14,4 +16,4 @@ if contents:
     for content in contents:
         response += f"{content.name}\n"
 
-return response  # pylint: disable=return-outside-function  # type: ignore
+return response

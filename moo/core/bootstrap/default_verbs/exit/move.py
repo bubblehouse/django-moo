@@ -1,5 +1,7 @@
 #!moo verb move --on $exit
 
+# pylint: disable=return-outside-function,undefined-variable
+
 """
 This verb is used to move `thing` through the exit. It provides a general mechanism for moving any sort of object
 through the exit, not necessarily just players. The code for this verb performs a number of actions. First, the lock on

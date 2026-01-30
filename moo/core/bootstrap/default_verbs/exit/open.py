@@ -1,12 +1,14 @@
 #!moo verb open close unlock lock --on $exit --dspec any
 
+# pylint: disable=return-outside-function,undefined-variable
+
 from moo.core import api
 
 door_description = api.parser.get_dobj_str()
 door = api.caller.location.match_exit(door_description)
 if not door:
     print(f"There is no door called {door_description} here.")
-    return  # pylint: disable=return-outside-function  # type: ignore
+    return
 
 # this is the simplest kind of door, where access control is
 # determined by the ownership of the corresponding properties

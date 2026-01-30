@@ -1,5 +1,7 @@
 #!moo verb look_self --on $room
 
+# pylint: disable=return-outside-function,undefined-variable
+
 """
 This verb overrides the $root_class definition of the verb `look_self` in order to provide a fuller description of a
 room than the `description` property gives. This verb prints the room name, followed by the room's `description` property,
@@ -11,4 +13,4 @@ The `description` property of the room is actually printed by using the passthro
 because of the way passthrough is used.
 """
 
-return passthrough()  # pylint: disable=undefined-variable
+return passthrough()

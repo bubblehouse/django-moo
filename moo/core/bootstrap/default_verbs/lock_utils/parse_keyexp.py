@@ -1,5 +1,7 @@
 #!moo verb parse_keyexp --on $lock_utils
 
+# pylint: disable=return-outside-function,undefined-variable
+
 """
 Objects are represented by their object numbers and all other kinds of key expressions are represented by lists. These
 lists have as their first element a string drawn from the following set:
@@ -24,7 +26,7 @@ This verb parses the string `keyexp` and returns the internal representation of 
 key expression to store on the `.key` property of an object.
 """
 
-keyexp = args[0]  # pylint: disable=undefined-variable. # type: ignore
+keyexp = args[0]
 
 # Example 1: from docs
 # keyexp = "#45 && ?#46 && (#47 || !#48)"
@@ -66,4 +68,4 @@ def parse_expression(expr):
     else:
         raise ValueError("Invalid key expression format: %s" % expr)
 
-return parse_expression(keyexp)  # pylint: disable=return-outside-function  # type: ignore
+return parse_expression(keyexp)
