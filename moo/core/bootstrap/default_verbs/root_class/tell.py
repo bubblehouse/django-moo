@@ -1,5 +1,7 @@
 #!moo verb tell --on $root_class
 
+# pylint: disable=return-outside-function,undefined-variable
+
 """
 This verb is used to send a message from one object to another. The `$root_class` definition of this verb tests to see
 if the object is a player, and if it is, uses the `write()` primitive to print the argument list on the player's screen,

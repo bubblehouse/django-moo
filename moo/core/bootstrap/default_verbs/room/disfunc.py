@@ -1,5 +1,7 @@
 #!moo verb disfunc --on $room
 
+# pylint: disable=return-outside-function,undefined-variable
+
 """
 This verb is called by the LambdaMOO server when a player disconnects from the game.
 

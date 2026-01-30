@@ -1,5 +1,7 @@
 #!moo verb huh --on $room
 
+# pylint: disable=return-outside-function,undefined-variable
+
 """
 This verb is a stub used to call the huh2 verb. It is called by the LambdaMOO server when it can't match a sentence
 given to it by a player. The server calls `huh` with verb equal to the actual verb in the erroneous command line.

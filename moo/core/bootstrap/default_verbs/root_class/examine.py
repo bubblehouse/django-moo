@@ -1,5 +1,7 @@
 #!moo verb exam*ine --on $root_class --dspec any
 
+# pylint: disable=return-outside-function,undefined-variable
+
 """
 This prints out some useful information about the object to the player. It is provided as a player command, to allow
 every player to determine basic information about any other objects they come across. For example:

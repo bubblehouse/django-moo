@@ -1,5 +1,7 @@
 #!moo verb eval_key --on $lock_utils
 
+# pylint: disable=return-outside-function,undefined-variable
+
 """
 This verb evaluates the key expression `key`, in the context of the candidate object `who`. It returns `True` if the
 key will allow who to pass, otherwise it returns `False`. The simple examples below are intended to show the ways in
@@ -34,7 +36,7 @@ would be represented as follows:
 
 from moo.core import lookup
 
-key, who = args  # pylint: disable=undefined-variable. # type: ignore
+key, who = args
 
 def eval_key_expression(expr, candidate):
     if isinstance(expr, int):
@@ -58,4 +60,4 @@ def eval_key_expression(expr, candidate):
             return eval_key_expression(obj.key, candidate)
     return False
 
-return eval_key_expression(key, who)  # pylint: disable=return-outside-function  # type: ignore
+return eval_key_expression(key, who)

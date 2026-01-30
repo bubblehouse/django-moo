@@ -1,5 +1,7 @@
 #!moo verb say --on "player class" --dspec any
 
+# pylint: disable=return-outside-function,undefined-variable
+
 from moo.core import api, write
 
 if not args and not api.parser.has_dobj_str():  # pylint: disable=undefined-variable  # type: ignore
