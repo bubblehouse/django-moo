@@ -16,6 +16,7 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
     with code.context(t_wizard, _writer) as ctx:
         home_location = t_wizard.location
         parse.interpret(ctx, "@dig north to Another Room")
+        another_room = lookup("Another Room")
         assert printed == [
             '[color yellow]Dug an exit north to "Another Room".[/color yellow]',
         ]
@@ -29,9 +30,9 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
         with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
             parse.interpret(ctx, "go north")
         assert [str(x.message) for x in warnings.list] == [
-            "ConnectionError(#15 (Player)): You leave #14 (The Laboratory).",
-            "ConnectionError(#3 (Wizard)): #15 (Player) leaves #14 (The Laboratory).",
-            "ConnectionError(#15 (Player)): You arrive at #17 (Another Room)."
+            f"ConnectionError(#{avatar.pk} (Player)): You leave #{home_location.pk} (The Laboratory).",
+            f"ConnectionError(#{t_wizard.pk} (Wizard)): #{avatar.pk} (Player) leaves #{home_location.pk} (The Laboratory).",
+            f"ConnectionError(#{avatar.pk} (Player)): You arrive at #{another_room.pk} (Another Room)."
         ]
         avatar.refresh_from_db()
         assert avatar.location.name == "Another Room"
@@ -50,9 +51,9 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
         with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
             parse.interpret(ctx, "go south")
         assert [str(x.message) for x in warnings.list] == [
-            "ConnectionError(#15 (Player)): You leave #17 (Another Room).",
-            "ConnectionError(#3 (Wizard)): #15 (Player) leaves #17 (Another Room).",
-            "ConnectionError(#15 (Player)): You arrive at #14 (The Laboratory)."
+            f"ConnectionError(#{avatar.pk} (Player)): You leave #{another_room.pk} (Another Room).",
+            f"ConnectionError(#{t_wizard.pk} (Wizard)): #{avatar.pk} (Player) leaves #{another_room.pk} (Another Room).",
+            f"ConnectionError(#{avatar.pk} (Player)): You arrive at #{home_location.pk} (The Laboratory)."
         ]
         avatar.refresh_from_db()
         assert avatar.location.name == home_location.name
