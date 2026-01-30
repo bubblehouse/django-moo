@@ -1,4 +1,4 @@
-#!moo verb description --on "Root Class"
+#!moo verb description --on $root_class
 
 """
 The `description` verb on any object is supposed to return a string or list of strings describing the object in the detail

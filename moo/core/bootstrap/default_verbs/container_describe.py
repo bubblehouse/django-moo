@@ -1,4 +1,4 @@
-#!moo verb describe --on "Generic Container" --dspec this
+#!moo verb describe --on $container --dspec this
 
 obj = kwargs['this']  # pylint: disable=undefined-variable  # type: ignore
 

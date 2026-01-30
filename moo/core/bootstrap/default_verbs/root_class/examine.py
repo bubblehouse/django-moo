@@ -1,4 +1,4 @@
-#!moo verb exam*ine --on "Root Class" --dspec any
+#!moo verb exam*ine --on $root_class --dspec any
 
 """
 This prints out some useful information about the object to the player. It is provided as a player command, to allow

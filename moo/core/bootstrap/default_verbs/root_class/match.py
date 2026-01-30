@@ -1,4 +1,4 @@
-#!moo verb match --on "Root Class"
+#!moo verb match --on $root_class
 
 """
 This verb is used to find things that are located within this object.

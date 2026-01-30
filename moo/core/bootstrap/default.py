@@ -18,6 +18,7 @@ containers.save()
 with code.context(wizard, log.info):
     sys = lookup(1)
     sys.set_property("player_start", None)
+    sys.set_property("container", containers)
 
     root = create("Root Class", location=None)
     sys.set_property("root_class", root)

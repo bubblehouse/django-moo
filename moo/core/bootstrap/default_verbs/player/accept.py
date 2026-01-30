@@ -1,4 +1,4 @@
-#!moo verb accept --on $root_class
+#!moo verb accept --on $player
 
 """
 This verb is used to control what objects are permitted to be placed inside other objects. If this verb returns
@@ -12,4 +12,7 @@ children of the `$root_class`.
 
 thing = args[0]
 
-return False
+if thing.is_player():
+    return False
+
+return True

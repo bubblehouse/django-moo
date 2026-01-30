@@ -1,4 +1,4 @@
-#!moo verb is_unlocked_for --on "Root Class"
+#!moo verb is_unlocked_for --on $root_class
 
 """
 Returns `True` if the object is unlocked for the argument. If the value of this.key is None, the object is unlocked. If

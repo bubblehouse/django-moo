@@ -1,4 +1,4 @@
-#!moo verb describe --on "Root Class"
+#!moo verb describe --on $root_class
 
 """
 The `describe` verb is used to set the description property of an object.
