@@ -32,6 +32,8 @@ would be represented as follows:
     ["&&", ["&&", #45, ["?", #46]], ["||", #47, ["!", #48]]]
 """
 
+from moo.core import lookup
+
 key, who = args  # pylint: disable=undefined-variable. # type: ignore
 
 def eval_key_expression(expr, candidate):
@@ -52,8 +54,8 @@ def eval_key_expression(expr, candidate):
             operand = eval_key_expression(expr[1], candidate)
             return not operand
         elif operator == "?":
-            obj_num = expr[1]
-            return obj_num == candidate.id
+            obj = lookup(expr[1])
+            return eval_key_expression(obj.key, candidate)
     return False
 
 return eval_key_expression(key, who)  # pylint: disable=return-outside-function  # type: ignore
