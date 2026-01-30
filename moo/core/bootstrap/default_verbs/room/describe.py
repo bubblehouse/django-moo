@@ -1,8 +1,10 @@
 #!moo verb describe --on $room --dspec this
 
+# pylint: disable=return-outside-function,undefined-variable
+
 from moo.core import lookup, api
 
-obj = this  # pylint: disable=undefined-variable  # type: ignore
+obj = this
 
 response = f"[bright_yellow]{obj.name}[/bright_yellow]\n"
 if obj.has_property("description"):
@@ -22,4 +24,4 @@ if exits:
     for direction, _ in exits.items():
         response += f"{direction}\n"
 
-return response  # pylint: disable=return-outside-function  # type: ignore
+return response

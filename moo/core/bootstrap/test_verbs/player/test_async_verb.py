@@ -1,5 +1,7 @@
 #!moo verb test-async-verb --on "player class" --dspec this
 
+# pylint: disable=return-outside-function,undefined-variable
+
 from moo.core import api, invoke
 
 counter = 1

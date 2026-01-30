@@ -1,4 +1,6 @@
-##!moo verb enterfunc --on $room
+#!moo verb enterfunc --on $room
+
+# pylint: disable=return-outside-function,undefined-variable
 
 """
 This verb is invoked by the LambdaMOO server when an object moves into a room, as part of action of the `move` primitive.

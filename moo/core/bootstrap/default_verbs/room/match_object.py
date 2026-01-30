@@ -1,5 +1,7 @@
 #!moo verb match_object --on $room
 
+# pylint: disable=return-outside-function,undefined-variable
+
 """
 This is the verb used to search the player's locale for an object that has the name or pseudonym name. This verb
 handles mapping of me to the player object, here to the player's location as well as the use of #<number> to refer to a

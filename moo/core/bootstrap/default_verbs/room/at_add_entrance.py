@@ -1,5 +1,7 @@
 #!moo verb @add-entrance --on $room --dspec any
 
+# pylint: disable=return-outside-function,undefined-variable
+
 """
 This is a player command used to add an entrance to the current room. This follows much the same sequence as for the
 `@add-exit`. An attempt is made to match the direct object supplied with an object in the room. If this fails, the verb
