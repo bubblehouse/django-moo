@@ -99,6 +99,9 @@ with code.context(wizard, log.info):
     letters = create("Generic Letter", parents=[notes], location=None)
     sys.set_property("letter", letters)
 
+    lock_utils = create("Lock Utilities", parents=[notes], location=None)
+    sys.set_property("lock_utils", lock_utils)
+
     lab = create("The Laboratory", parents=[rooms], location=None)
     lab.set_property(
         "description",

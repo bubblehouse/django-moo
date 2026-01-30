@@ -30,16 +30,17 @@ def test_creation(t_init: Object, t_wizard: Object):
         assert t_wizard.location == room
         assert room.has_property("exits")
         assert room.exits["north"] == door
+        another_room = room.exits["north"].dest
 
         printed.clear()
         with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
             parse.interpret(ctx, "go north")
         assert [str(x.message) for x in warnings.list] == [
-            "ConnectionError(#3 (Wizard)): You leave #16 (Test Room).",
-            "ConnectionError(#3 (Wizard)): You arrive at #18 (Another Room)."
+            f"ConnectionError(#{t_wizard.pk} (Wizard)): You leave #{room.pk} (Test Room).",
+            f"ConnectionError(#{t_wizard.pk} (Wizard)): You arrive at #{another_room.pk} (Another Room)."
         ]
         api.caller.refresh_from_db()
-        assert printed == []
+        assert not printed
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
