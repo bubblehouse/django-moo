@@ -1,7 +1,7 @@
 import pytest
 
-from moo.core import code, lookup, parse
-from moo.core.models import Object, Verb
+from moo.core import code, lookup
+from moo.core.models import Object
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -36,3 +36,20 @@ def test_parse_keyexp(t_init: Object, t_wizard: Object):
         keyexp = "#45 && ?#46 && (#47 || !#48)"
         key = lock_utils.parse_keyexp(keyexp)
         assert key == ["&&", ["&&", 45, ["?", 46]], ["||", 47, ["!", 48]]]
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_eval_key(t_init: Object, t_wizard: Object):
+    printed = []
+
+    def _writer(msg):
+        printed.append(msg)
+
+    with code.context(t_wizard, _writer):
+        system = lookup(1)
+        lock_utils = system.get_property("lock_utils")
+        assert lock_utils is not None
+
+        assert lock_utils.eval_key(15, lookup(15)) is True
+        assert lock_utils.eval_key(["!", 16], lookup(16)) is False
+        assert lock_utils.eval_key(["!", 16], lookup(15)) is True
