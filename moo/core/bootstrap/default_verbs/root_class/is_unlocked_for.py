@@ -10,5 +10,4 @@ thing = args[0]
 if not this.key:
     return True  # pylint: disable=return-outside-function. # type: ignore
 
-#TODO use lock_utils:eval_key() to evaluate the key against the thing
-return True
+return _.lock_utils.eval_key(this.key, thing)  # pylint: disable=return-outside-function. # type: ignore
