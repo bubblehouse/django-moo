@@ -1,6 +1,6 @@
 import pytest
 
-from moo.core import code, parse
+from moo.core import code, parse, lookup
 from moo.core.models import Object
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -14,7 +14,8 @@ def test_say(t_init: Object, t_wizard: Object):
     with code.context(t_wizard, _writer) as ctx:
         with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
             parse.interpret(ctx, "say Hello, world!")
+        player = lookup("Player")
         assert [str(x.message) for x in warnings.list] == [
-            "ConnectionError(#3 (Wizard)): You: Hello, world!",
-            "ConnectionError(#15 (Player)): Wizard: Hello, world!"
+            f"ConnectionError(#{t_wizard.pk} (Wizard)): You: Hello, world!",
+            f"ConnectionError(#{player.pk} (Player)): Wizard: Hello, world!"
         ]
