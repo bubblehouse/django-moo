@@ -4,5 +4,5 @@ obj.allow("owners", "anything")
 
 if obj.kind == "verb":
     obj.allow("everyone", "execute")
-else:
+elif obj.kind == "object":
     obj.allow("everyone", "read")
