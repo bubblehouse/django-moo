@@ -11,19 +11,15 @@ exit with the name exit leads from this room and is returned. If more than one m
 value AmbiguousObjectError is raised. If no match is found, the value NoSuchObject is raised.
 """
 
-from moo.core import AmbiguousObjectError
-
 what = args[0].lower()
 matches = []
 exits = this.get_property("exits")
-for direction, exit in exits.items():
-    if direction == what:
-        matches.append(exit)
-    elif exit.is_named(what):
+for exit in exits:
+    if exit.is_named(what):
         matches.append(exit)
 if len(matches) == 0:
-    raise this.DoesNotExist(f"No exit named '{args[0]}' found.")
+    return None
 elif len(matches) > 1:
-    raise AmbiguousObjectError(f"Multiple exits named '{args[0]}' found.", matches=matches)
+    return matches
 else:
     return matches[0]
