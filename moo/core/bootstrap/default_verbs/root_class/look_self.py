@@ -12,6 +12,4 @@ overriding function. The `$room` class overrides this verb with code to print th
 objects that are in the room.
 """
 
-from moo.core import api
-
 return this.description()

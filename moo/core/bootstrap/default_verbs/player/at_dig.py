@@ -1,4 +1,4 @@
-#!moo verb @dig --on $programmer --dspec any --ispec "through:any"
+#!moo verb @dig @tunnel --on $programmer --dspec any --ispec "through:any"
 
 # pylint: disable=return-outside-function,undefined-variable
 
@@ -9,17 +9,13 @@ with `$room` as a parent to create a room. Note that you can only use the `@dig`
 room.
 """
 
-from moo.core import api, create
+from moo.core import api, create, lookup
 
 directions = ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest", "up", "down"]
 direction = api.parser.get_dobj_str()
 
-if api.caller.location.has_property("exits"):
-    exits = api.caller.location.get_property("exits")
-else:
-    exits = {}
-
-if direction in exits:
+source = api.player.location
+if source.match_exit(direction):
     print("[color red]There is already an exit in that direction.[/color red]")
     return
 
@@ -28,15 +24,22 @@ if api.parser.has_pobj("through"):
     if not door.is_a(_.exit):
         print("[color red]The specified object is not an exit.[/color red]")
         return
+    if not door.aliases.filter(alias=direction):
+        door.aliases.create(alias=direction)
 else:
-    door = create("{direction} exit", parents=[_.exit], location=None)
+    door = create(f"{direction} from {source}", parents=[_.exit], location=source)
+    door.aliases.create(alias=direction)
 
-dest = api.parser.get_pobj_str("to")
-room = create(dest, parents=[_.room], location=None)
-door.set_property("source", api.caller.location)
-door.set_property("dest", room)
+if verb_name == "@dig":
+    action = "Dug"
+    dest = create(api.parser.get_pobj_str("to"), parents=[_.room], location=None)
+else:
+    action = "Tunnelled"
+    dest = lookup(api.parser.get_pobj_str("to"))
 
-exits[direction] = door
+door.set_property("source", source)
+door.set_property("dest", dest)
+source.add_exit(door)
+dest.add_entrance(door)
 
-api.caller.location.set_property("exits", exits)
-print(f'[color yellow]Dug an exit {direction} to "{room.name}".[/color yellow]')
+print(f'[color yellow]{action} an exit {direction} to "{dest.name}".[/color yellow]')

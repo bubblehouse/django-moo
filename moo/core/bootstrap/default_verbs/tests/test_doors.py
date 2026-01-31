@@ -29,8 +29,8 @@ def test_creation(t_init: Object, t_wizard: Object):
         assert printed == ['[color yellow]Dug an exit north to "Another Room".[/color yellow]']
         assert t_wizard.location == room
         assert room.has_property("exits")
-        assert room.exits["north"] == door
-        another_room = room.exits["north"].dest
+        assert door in room.exits
+        another_room = door.dest
 
         printed.clear()
         with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
