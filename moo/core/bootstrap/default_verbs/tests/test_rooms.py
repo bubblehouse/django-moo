@@ -64,6 +64,6 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
         parse.interpret(ctx, "@exits")
         assert printed == [
             "[color cyan]Exits defined for this room:[/color cyan]",
-            "- [color yellow]north from The Laboratory[/color yellow] (Aliases: north) to [color green]Another Room[/color green] (#{another_room.pk})"
+            f"- [color yellow]north from The Laboratory[/color yellow] (Aliases: north) to [color green]Another Room[/color green] (#{another_room.pk})"
         ]
         printed.clear()
