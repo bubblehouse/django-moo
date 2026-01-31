@@ -1,5 +1,3 @@
-from moo.core import api
-
 # pylint: disable=undefined-variable
 
 obj = args[0]
@@ -10,5 +8,5 @@ obj.allow("everyone", "read")
 
 if obj.kind == "verb":
     obj.allow("everyone", "execute")
-else:
+elif obj.kind == "object":
     obj.allow("everyone", "read")
