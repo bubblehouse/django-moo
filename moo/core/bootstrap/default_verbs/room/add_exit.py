@@ -8,3 +8,15 @@ the interface to the room exits list. The way in which exits are stored, removed
 the interface so that different implementations of the exits concept can be used in different sub classes of the $room
 class.
 """
+
+exit = args[0]
+
+if this.has_property("exits"):
+    exits = this.get_property("exits")
+else:
+    exits = []
+
+exits.append(exit)
+this.set_property("exits", exits)
+
+return True

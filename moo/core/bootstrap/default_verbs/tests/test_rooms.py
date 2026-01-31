@@ -1,6 +1,6 @@
 import pytest
 
-from moo.core import code, parse, lookup
+from moo.core import api, code, parse, lookup
 from moo.core.models import Object, Player
 
 
@@ -41,6 +41,7 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
     with code.context(t_wizard, _writer) as ctx:
         t_wizard.location = avatar.location
         t_wizard.save()
+        api.caller.refresh_from_db()
         parse.interpret(ctx, f"@tunnel south to {home_location.name}")
         assert printed == [
             f'[color yellow]Tunnelled an exit south to "{home_location.name}".[/color yellow]',
