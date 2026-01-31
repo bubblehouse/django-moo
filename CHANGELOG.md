@@ -1,3 +1,29 @@
+## [0.44.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.43.0...v0.44.0) (2026-01-31)
+
+
+### Features
+
+* added API descriptor value for the Celery task_id ([a1daf41](https://gitlab.com/bubblehouse/django-moo/commit/a1daf414c13d21219ba36ddf777558b337390722))
+* added key support and parsing, modify tests to use variable PKs ([6b6ecaf](https://gitlab.com/bubblehouse/django-moo/commit/6b6ecafbd7536d2546669de651b0f26e75361653))
+* implement add_entrance and add_exit, convert dig and tunnel to use those ([4f4d1ee](https://gitlab.com/bubblehouse/django-moo/commit/4f4d1ee6cf8afa1c26e0858691639a34d436d2bc))
+* implemented support verbs for exits ([adf7100](https://gitlab.com/bubblehouse/django-moo/commit/adf710073b3edcd12984334bd9e421814bb3e8ad))
+
+
+### Bug Fixes
+
+* almost removed AccessibleObject model ([9ac2304](https://gitlab.com/bubblehouse/django-moo/commit/9ac23046dc46b23d94cf7011ed7df6d32d9f170e))
+* create use objects by default so Wizard group rights work ([1cd9fb4](https://gitlab.com/bubblehouse/django-moo/commit/1cd9fb4a47c5f0aeb6ea2981b733d29ac89dcde5))
+* ensure we always get an accessible object here ([c1c1640](https://gitlab.com/bubblehouse/django-moo/commit/c1c16400ae601bd7a9d33bd1064a021a097f2817))
+* handle encoding consistently ([406a0d7](https://gitlab.com/bubblehouse/django-moo/commit/406a0d71e0493aa0fe39aaddde9ad3dcf72b0764))
+* major permissions fixes by adding player (which is static) vs caller (which can change) ([bad1836](https://gitlab.com/bubblehouse/django-moo/commit/bad1836fe04414d6525843e870344ddc4ee5402e))
+* make exceptions available through moo.core ([c055dcf](https://gitlab.com/bubblehouse/django-moo/commit/c055dcf242a77dde053a6a15f95c3cba5c45ddb3))
+* moved getattr override to main Object model ([09ec6c1](https://gitlab.com/bubblehouse/django-moo/commit/09ec6c1c4869ee64cf9e0f072ea2de5b3d9b5f66))
+* properly handle set_task_perms ([5967b94](https://gitlab.com/bubblehouse/django-moo/commit/5967b943d34a289f2f578949ef5386b00b49da2a))
+* properties are not readable by default ([d193084](https://gitlab.com/bubblehouse/django-moo/commit/d19308428c37a51102f1e26afa37c3b7e350cd63))
+* properties are not readable by default ([fb047d7](https://gitlab.com/bubblehouse/django-moo/commit/fb047d73da09c40063b7b696d67f7dc161e22706))
+* reimplementing exits ([626f06e](https://gitlab.com/bubblehouse/django-moo/commit/626f06e9a2401cd5ebb793353af01918576b3aa8))
+* reimplementing exits ([e5a25c9](https://gitlab.com/bubblehouse/django-moo/commit/e5a25c95d538a85ae23a92e4df6a1a930ffef7bf))
+
 ## [0.43.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.42.0...v0.43.0) (2026-01-19)
 
 
