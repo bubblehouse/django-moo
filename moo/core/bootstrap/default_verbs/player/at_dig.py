@@ -27,7 +27,7 @@ if api.parser.has_pobj("through"):
     if not door.aliases.filter(alias=direction):
         door.aliases.create(alias=direction)
 else:
-    door = create(f"{direction} from {source}", parents=[_.exit], location=source)
+    door = create(f"{direction} from {source.name}", parents=[_.exit], location=source)
     door.aliases.create(alias=direction)
 
 if verb_name == "@dig":

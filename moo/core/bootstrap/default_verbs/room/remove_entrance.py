@@ -8,3 +8,15 @@ entrances. If it is not possible to remove `entrance` from the room's entrance l
 that invoked the verb does not have the required permission) then the verb returns `False`. Otherwise, a successful
 addition returns `True`.
 """
+
+entrance = args[0]
+
+if this.has_property("entrances"):
+    entrances = this.get_property("entrances")
+else:
+    entrances = []
+
+entrances.remove(entrance)
+this.set_property("entrances", entrances)
+
+return True

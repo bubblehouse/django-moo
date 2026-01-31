@@ -7,3 +7,15 @@ This verb performs the opposite function to the `add_exit` verb. It removes `exi
 not possible to remove `exit` from the room's exit list (normally because the object that invoked the verb does not have
 the required permission) then the verb returns `False`. Otherwise, a successful addition returns `True`.
 """
+
+exit = args[0]
+
+if this.has_property("exits"):
+    exits = this.get_property("exits")
+else:
+    exits = []
+
+exits.remove(exit)
+this.set_property("exits", exits)
+
+return True
