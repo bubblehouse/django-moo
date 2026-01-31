@@ -11,3 +11,15 @@ concept of an entrance is included to cover unexpected cases.
 If it is not possible to add entrance to the room's entrance list (normally because the object that invoked the verb
 does not have the required permission) then the verb returns `0'. Otherwise, a successful addition returns `1'.
 """
+
+entrance = args[0]
+
+if this.has_property("entrances"):
+    entrances = this.get_property("entrances")
+else:
+    entrances = []
+
+entrances.append(entrance)
+this.set_property("entrances", entrances)
+
+return True
