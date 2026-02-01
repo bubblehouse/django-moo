@@ -1,3 +1,10 @@
+## [0.44.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.44.0...v0.44.1) (2026-02-01)
+
+
+### Bug Fixes
+
+* update trusted hostname ([2cddc00](https://gitlab.com/bubblehouse/django-moo/commit/2cddc005f60bb11dae145e9de275e08efc71c6be))
+
 ## [0.44.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.43.0...v0.44.0) (2026-01-31)
 
 
