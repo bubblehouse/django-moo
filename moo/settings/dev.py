@@ -7,8 +7,8 @@ SECRET_KEY = "django-insecure-06xo%2f39ohlfrgu&)%1lsrlx6jqy)s%#_-$rc5l_z1+p6w(=r
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["django-moo.dev.shacklyn.net", "probe.cluster.local"]
-CSRF_TRUSTED_ORIGINS = ["https://django-moo.dev.shacklyn.net", "https://probe.cluster.local"]
+ALLOWED_HOSTS = ["moo.dev.shacklyn.net", "probe.cluster.local"]
+CSRF_TRUSTED_ORIGINS = ["https://moo.dev.shacklyn.net", "https://probe.cluster.local"]
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
