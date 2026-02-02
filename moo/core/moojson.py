@@ -25,17 +25,17 @@ def loads(j):
 
 
 def dumps(obj):
-    from .models.object import Object, AccessibleObject
-    from .models.property import Property, AccessibleProperty
-    from .models.verb import Verb, AccessibleVerb
+    from .models.object import Object
+    from .models.property import Property
+    from .models.verb import Verb
 
     def from_entity(o):
-        if isinstance(o, (Object, AccessibleObject)):
-            return {"o#%d" % o.pk: str(o)}
-        elif isinstance(o, (Verb, AccessibleVerb)):
-            return {"v#%d" % o.pk: str(o)}
-        elif isinstance(o, (Property, AccessibleProperty)):
-            return {"p#%d" % o.pk: str(o)}
+        if isinstance(o, Object):
+            return {"o#%d" % o.pk: o.name}
+        elif isinstance(o, Verb):
+            return {"v#%d" % o.pk: o.name}
+        elif isinstance(o, Property):
+            return {"p#%d" % o.pk: o.name}
         else:
             raise TypeError(
                 "Unserializable object {} of type {}".format(obj, type(obj))

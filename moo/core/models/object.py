@@ -17,8 +17,8 @@ from .. import bootstrap, exceptions, invoke, utils
 from ..code import context
 from .acl import Access, AccessibleMixin, Permission
 from .auth import Player
-from .property import AccessibleProperty
-from .verb import AccessibleVerb, Preposition, PrepositionName, PrepositionSpecifier, VerbName
+from .property import Property
+from .verb import Verb, Preposition, PrepositionName, PrepositionSpecifier, VerbName
 
 log = logging.getLogger(__name__)
 
@@ -42,12 +42,12 @@ def relationship_changed(sender, instance, action, model, signal, reverse, pk_se
         # NOTE: `inherited` is confusing, it means "inherited owner"
         # by default, *all* properties when inherited should be owned by the child
         # only if this flag is set should the existing owner be preserved
-        for property in AccessibleProperty.objects.filter(origin=parent):
+        for property in Property.objects.filter(origin=parent):
             if property.inherited:
                 new_owner = property.owner
             else:
                 new_owner = child.owner
-            AccessibleProperty.objects.update_or_create(
+            Property.objects.update_or_create(
                 name=property.name,
                 origin=child,
                 defaults=dict(
@@ -153,8 +153,8 @@ class Object(models.Model, AccessibleMixin):
         :param name: the name or alias to search for, case-insensitive
         """
         self.can_caller("read", self)
-        qs = AccessibleObject.objects.filter(location=self, name__iexact=name)
-        aliases = AccessibleObject.objects.filter(location=self, aliases__alias__iexact=name)
+        qs = Object.objects.filter(location=self, name__iexact=name)
+        aliases = Object.objects.filter(location=self, aliases__alias__iexact=name)
         return qs.union(aliases)
 
     def contains(self, obj: "Object"):
@@ -227,7 +227,7 @@ class Object(models.Model, AccessibleMixin):
         owner = context.get("caller") or owner or self
         if filename and not code:
             code = bootstrap.get_source(filename, dataset=repo.slug)
-        verb = AccessibleVerb.objects.create(
+        verb = Verb.objects.create(
             origin=self,
             owner=owner,
             repo=repo,
@@ -279,7 +279,7 @@ class Object(models.Model, AccessibleMixin):
         self.can_caller("read", self)
         try:
             self._lookup_verb(name, recurse)
-        except AccessibleVerb.DoesNotExist:
+        except Verb.DoesNotExist:
             return False
         return True
 
@@ -336,10 +336,10 @@ class Object(models.Model, AccessibleMixin):
 
     def _lookup_verb(self, name, recurse=True, return_first=True):
         found = []
-        qs = AccessibleVerb.objects.filter(origin=self, names__name=name)
+        qs = Verb.objects.filter(origin=self, names__name=name)
         if not qs and recurse:
             for ancestor in reversed(list(self.get_ancestors())):
-                qs = AccessibleVerb.objects.filter(origin=ancestor, names__name=name)
+                qs = Verb.objects.filter(origin=ancestor, names__name=name)
                 if qs:
                     if return_first:
                         return qs
@@ -353,7 +353,7 @@ class Object(models.Model, AccessibleMixin):
         if found:
             return found
         else:
-            raise AccessibleVerb.DoesNotExist(f"No such verb `{name}`.")
+            raise Verb.DoesNotExist(f"No such verb `{name}`.")
 
     def set_property(self, name, value, inherited=False, owner=None):
         """
@@ -368,7 +368,7 @@ class Object(models.Model, AccessibleMixin):
 
         self.can_caller("write", self)
         owner = context.get("caller") or owner or self
-        AccessibleProperty.objects.update_or_create(
+        Property.objects.update_or_create(
             name=name,
             origin=self,
             defaults=dict(
@@ -390,26 +390,26 @@ class Object(models.Model, AccessibleMixin):
         from .. import moojson
 
         self.can_caller("read", self)
-        qs = AccessibleProperty.objects.filter(origin=self, name=name)
+        qs = Property.objects.filter(origin=self, name=name)
         if not qs and recurse:
             for ancestor in reversed(list(self.get_ancestors())):
-                qs = AccessibleProperty.objects.filter(origin=ancestor, name=name)
+                qs = Property.objects.filter(origin=ancestor, name=name)
                 if qs:
                     break
         if qs:
             return qs[0] if original else moojson.loads(qs[0].value)
         else:
-            raise AccessibleProperty.DoesNotExist(f"No such property `{name}`.")
+            raise Property.DoesNotExist(f"No such property `{name}`.")
 
     def has_property(self, name, recurse=True):
         """
         Check if a particular :class:`.Property` is defined on this object.
         """
         self.can_caller("read", self)
-        qs = AccessibleProperty.objects.filter(origin=self, name=name)
+        qs = Property.objects.filter(origin=self, name=name)
         if not qs and recurse:
             for ancestor in reversed(list(self.get_ancestors())):
-                qs = AccessibleProperty.objects.filter(origin=ancestor, name=name)
+                qs = Property.objects.filter(origin=ancestor, name=name)
                 if qs:
                     break
         return qs.exists()
@@ -421,7 +421,7 @@ class Object(models.Model, AccessibleMixin):
             quota = self.owner.get_property("ownership_quota", recurse=False)
             if quota is not None:
                 self.owner.set_property("ownership_quota", quota + 1)
-        except AccessibleProperty.DoesNotExist:
+        except Property.DoesNotExist:
             pass
         super().delete(*args, **kwargs)
 
@@ -554,12 +554,6 @@ RESERVED_NAMES = [
     "original_owner",
     "original_location",
 ]
-
-
-class AccessibleObject(Object):
-    # TODO: See if there's any reason for the Accessible* aliases to exist now
-    class Meta:
-        proxy = True
 
 
 class Relationship(models.Model):

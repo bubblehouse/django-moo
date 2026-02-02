@@ -44,7 +44,7 @@ class Property(models.Model, AccessibleMixin):
         super().save(*args, **kwargs)
         if self.inherited and not self.__original_inherited:
             for child in self.origin.get_descendents():  # pylint: disable=no-member
-                AccessibleProperty.objects.update_or_create(
+                Property.objects.update_or_create(
                     name=self.name,
                     origin=child,
                     defaults=dict(
@@ -61,8 +61,3 @@ class Property(models.Model, AccessibleMixin):
         if not needs_default_permissions:
             return
         utils.apply_default_permissions(self)
-
-
-class AccessibleProperty(Property):
-    class Meta:
-        proxy = True

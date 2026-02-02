@@ -67,7 +67,7 @@ def create(name, *a, **kw):
     :raises PermissionError: if the caller is not allowed to `derive` from the parent
     :raises QuotaError: if the caller has a quota and it has been exceeded
     """
-    from .models.object import AccessibleObject, AccessibleProperty
+    from .models.object import Object, Property
 
     if api.caller:
         try:
@@ -76,14 +76,14 @@ def create(name, *a, **kw):
                 api.caller.set_property("ownership_quota", quota - 1)
             else:
                 raise QuotaError(f"{api.caller} has run out of quota.")
-        except AccessibleProperty.DoesNotExist:
+        except Property.DoesNotExist:
             pass
         if "owner" not in kw:
             kw["owner"] = api.caller
     if "location" not in kw and "owner" in kw:
         kw["location"] = kw["owner"].location
     parents = kw.pop("parents", [])
-    obj = AccessibleObject.objects.create(name=name, *a, **kw)
+    obj = Object.objects.create(name=name, *a, **kw)
     if parents:
         obj.parents.add(*parents)
     if obj.has_verb("initialize"):
@@ -103,10 +103,7 @@ def write(obj, message):
     from redis.exceptions import ConnectionError  # pylint: disable=redefined-builtin
     from .models.auth import Player
 
-    try:
-        player = Player.objects.get(avatar=obj)
-    except Player.DoesNotExist:
-        return
+    player = Player.objects.get(avatar=obj)
     from kombu import Exchange, Queue
 
     from ..celery import app
