@@ -1,3 +1,10 @@
+## [0.45.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.45.0...v0.45.1) (2026-02-02)
+
+
+### Bug Fixes
+
+* use player, not caller ([63e2285](https://gitlab.com/bubblehouse/django-moo/commit/63e22855962c55503a7f1ecf20d8f1716251be4f))
+
 ## [0.45.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.44.3...v0.45.0) (2026-02-02)
 
 
