@@ -10,4 +10,4 @@ fall back to the default behavior, you can use `passthrough()` to call the paren
 
 from moo.core import api
 
-api.caller.tell("Huh? I don't understand that command.")
+api.player.tell("Huh? I don't understand that command.")
