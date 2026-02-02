@@ -8,9 +8,9 @@ import warnings
 
 def apply_default_permissions(instance):
     from .models import Object
-    from .models.verb import AccessibleVerb
+    from .models.verb import Verb
 
-    set_default_permissions = AccessibleVerb.objects.filter(
+    set_default_permissions = Verb.objects.filter(
         origin=Object.objects.get(pk=1), names__name="set_default_permissions"
     )
     if set_default_permissions:
