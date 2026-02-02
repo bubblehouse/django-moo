@@ -1,7 +1,7 @@
 FROM python:3.11.12-slim-bullseye AS builder
 LABEL Maintainer="Phil Christensen <phil@bubblehouse.org>"
 LABEL Name="django-moo"
-LABEL Version="0.45.0"
+LABEL Version="0.45.1"
 
 # Install builder dependencies
 RUN apt-get update \
