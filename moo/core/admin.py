@@ -96,3 +96,7 @@ class UserAdmin(BaseUserAdmin):
 
 
 admin.register(task.Task)
+
+@admin.register(auth.Player)
+class PlayerAdmin(admin.ModelAdmin):
+    model = auth.Player
