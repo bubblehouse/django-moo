@@ -1,3 +1,10 @@
+## [0.45.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.44.3...v0.45.0) (2026-02-02)
+
+
+### Features
+
+* removed Accessible- proxy objects ([1ad9f2d](https://gitlab.com/bubblehouse/django-moo/commit/1ad9f2d07c240dd50e96cfccc6e30a0053b84ed2))
+
 ## [0.44.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.44.2...v0.44.3) (2026-02-01)
 
 
