@@ -92,11 +92,6 @@ class Verb(models.Model, AccessibleMixin):
             return
         utils.apply_default_permissions(self)
 
-
-class AccessibleVerb(Verb):
-    class Meta:
-        proxy = True
-
     def is_bound(self):
         return hasattr(self, "invoked_object") and hasattr(self, "invoked_name")
 
@@ -146,11 +141,10 @@ class AccessibleVerb(Verb):
         )
 
     def __call__(self, *args, **kwargs):
-        from .object import AccessibleObject
         this = None
         name = "__main__"
         if self.is_bound():
-            this = AccessibleObject.objects.get(pk=self.invoked_object.pk)
+            this = self.invoked_object
             name = self.invoked_name
         if self.filename is not None:
             kwargs['filename'] = self.filename

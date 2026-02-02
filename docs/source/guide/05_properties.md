@@ -7,7 +7,7 @@ Since we're using "stock" Django model instances inside our custom code, the ini
     description = api.caller.location.properties.filter(name="description")
     print(description.value)
 
-Improvements to the `AccessibleObject` abstract class allow for direct access:
+Improvements to the `Object` abstract class allow for direct access:
 
     api.caller.location.description
 
