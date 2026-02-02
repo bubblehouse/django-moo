@@ -181,9 +181,9 @@ class context:
         _active_caller.set(caller)
 
     def __init__(self, caller, writer, task_id=None):
-        from .models.object import AccessibleObject
+        from .models.object import Object
 
-        self.caller = AccessibleObject.objects.get(pk=caller.pk) if caller else None
+        self.caller = caller
         self.caller_token = None
         self.player = self.caller
         self.player_token = None
