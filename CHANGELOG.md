@@ -1,3 +1,10 @@
+## [0.46.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.46.1...v0.46.2) (2026-02-10)
+
+
+### Bug Fixes
+
+* webapp port clobbered ([7ac881f](https://gitlab.com/bubblehouse/django-moo/commit/7ac881ff1fddcb26810a9cddef24d4dabe40bd9d))
+
 ## [0.46.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.46.0...v0.46.1) (2026-02-10)
 
 
