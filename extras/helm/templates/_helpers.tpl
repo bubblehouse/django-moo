@@ -51,6 +51,15 @@ app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
+{{- define "moo.websshLabels" -}}
+helm.sh/chart: {{ include "moo.chart" . }}
+{{ include "moo.websshSelectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
 {{/*
 Selector labels
 */}}
@@ -61,6 +70,11 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 
 {{- define "moo.shellSelectorLabels" -}}
 app.kubernetes.io/name: {{ include "moo.name" . }}-shell
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{- define "moo.websshSelectorLabels" -}}
+app.kubernetes.io/name: {{ include "moo.name" . }}-webssh
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 

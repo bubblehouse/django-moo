@@ -52,6 +52,10 @@ sshService:
   type: ClusterIP
   port: 8022
 
+websshService:
+  type: ClusterIP
+  port: 8422
+
 ingress:
   enabled: false
   className: ''
