@@ -44,8 +44,8 @@ spec:
             {{- toYaml . | nindent 10 }}
           {{- end }}
           ports:
-            - name: http
-              containerPort: {{ .Values.websshService.port }}
+            - name: https
+              containerPort: {{ .Values.service.port }}
               protocol: TCP
           livenessProbe:
             httpGet:
