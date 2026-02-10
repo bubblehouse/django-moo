@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "moo.fullname" . }}
+  name: {{ include "moo.fullname" . }}-webssh
   labels:
-    {{- include "moo.labels" . | nindent 4 }}
+    {{- include "moo.websshLabels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "moo.selectorLabels" . | nindent 6 }}
+      {{- include "moo.websshSelectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -18,7 +18,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "moo.selectorLabels" . | nindent 8 }}
+        {{- include "moo.websshSelectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -33,9 +33,8 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["webssh"]
           env:
-          - name: DJANGO_SETTINGS_MODULE
-            value: {{ .Values.moo.django.settings }}
           - name: AWS_DEFAULT_REGION
             value: {{ .Values.moo.aws.region }}
           - name: AWS_STS_REGIONAL_ENDPOINTS
@@ -50,19 +49,13 @@ spec:
           livenessProbe:
             httpGet:
               path: /
-              port: https
-              scheme: HTTPS
-              httpHeaders:
-              - name: Host
-                value: probe.cluster.local
+              port: http
+              scheme: HTTP
           readinessProbe:
             httpGet:
               path: /
-              port: https
-              scheme: HTTPS
-              httpHeaders:
-              - name: Host
-                value: probe.cluster.local
+              port: http
+              scheme: HTTP
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

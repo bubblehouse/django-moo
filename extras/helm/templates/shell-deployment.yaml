@@ -41,6 +41,9 @@ spec:
             value: {{ .Values.moo.aws.region }}
           - name: AWS_STS_REGIONAL_ENDPOINTS
             value: regional
+          {{- with .Values.env }}
+            {{- toYaml . | nindent 10 }}
+          {{- end }}
           ports:
             - name: ssh
               containerPort: {{ .Values.sshService.port }}
