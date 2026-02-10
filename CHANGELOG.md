@@ -1,3 +1,10 @@
+## [0.46.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.46.0...v0.46.1) (2026-02-10)
+
+
+### Bug Fixes
+
+* webssh deployment to helm chart ([aa68c03](https://gitlab.com/bubblehouse/django-moo/commit/aa68c034bb53fa577cbb72974afe1c00c42464ba))
+
 ## [0.46.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.45.1...v0.46.0) (2026-02-10)
 
 
