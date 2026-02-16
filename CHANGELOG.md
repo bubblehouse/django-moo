@@ -1,3 +1,18 @@
+## [0.47.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.46.2...v0.47.0) (2026-02-16)
+
+
+### Features
+
+* added remaining room functions ([5ffddba](https://gitlab.com/bubblehouse/django-moo/commit/5ffddba25cb5af7bb4393e7682ad44b030cc6e89))
+* added remaining root_class functions, ensure all objects use $root_class if it exists ([5b7af13](https://gitlab.com/bubblehouse/django-moo/commit/5b7af134d4b8811793bc56ff7eecb86807a86710))
+
+
+### Bug Fixes
+
+* prevent Verbs from being called by the admin template engine ([0f625a5](https://gitlab.com/bubblehouse/django-moo/commit/0f625a5b09041c77197be238456e8dec82795689))
+* update the webssh template directly in the container ([b8ae502](https://gitlab.com/bubblehouse/django-moo/commit/b8ae5023b215428c88071782a76342d65ed38634))
+* update the webssh template directly in the container ([0554075](https://gitlab.com/bubblehouse/django-moo/commit/0554075937e8280af73af74e2be06489cd8c126f))
+
 ## [0.46.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.46.1...v0.46.2) (2026-02-10)
 
 
