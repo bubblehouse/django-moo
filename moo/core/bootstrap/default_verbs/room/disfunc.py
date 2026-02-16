@@ -10,3 +10,8 @@ the player. One possible enhancement of this verb, already implemented in some M
 between disconnection and movement of the player to his/her home. This would allow some tolerance of disconnection
 due to network problems.
 """
+
+from moo.core import api
+
+if api.player.location != api.player.home:
+    api.player.moveto(api.player.home)
