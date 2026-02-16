@@ -58,6 +58,10 @@ class Verb(models.Model, AccessibleMixin):
     #: If the Verb can be called with an indirect obect
     indirect_objects = models.ManyToManyField(PrepositionSpecifier, related_name="+", blank=True)
 
+    do_not_call_in_templates = True
+    invoked_object = None
+    invoked_name = None
+
     def __str__(self):
         return "%s {#%s on %s}" % (self.annotated(), self.id, self.origin)
 
