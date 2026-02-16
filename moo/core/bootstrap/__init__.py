@@ -93,7 +93,7 @@ def initialize_dataset(dataset="default"):
     repo = models.Repository.objects.get(slug=dataset)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
-        system = create(name="System Object", unique_name=True)
+        system = models.Object.objects.create(name="System Object", unique_name=True)
         set_default_permissions = models.Verb.objects.create(
             origin=system,
             repo=repo,
@@ -104,7 +104,7 @@ def initialize_dataset(dataset="default"):
         )
         set_default_permissions(set_default_permissions)
         set_default_permissions(system)
-    containers = create(name="container class", unique_name=True)
+    containers = models.Object.objects.create(name="container class")
     containers.add_verb("accept", code="return True")
     # Create the first real user
     wizard = create(name="Wizard", unique_name=True)
