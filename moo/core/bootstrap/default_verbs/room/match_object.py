@@ -13,3 +13,12 @@ The verb :match_object is the one to use to map names of objects to object numbe
 player is able to see in his current location. This includes objects that the player might be carrying, but does not
 include objects that are contained in other objects.
 """
+
+from moo.core import api
+
+name = args[0]
+
+try:
+    return this.find(name)
+except:  # pylint: disable=bare-except
+    return api.player.find(name)
