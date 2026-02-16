@@ -35,8 +35,6 @@ services:
     command: [webssh]
     ports:
       - 8422:8422
-    volumes:
-      - ./extras/webssh/index.html:/usr/local/lib/python3.11/site-packages/webssh/templates/index.html
     links:
       - shell
   # The `webapp` container is where the Django front-end runs. So far this is only needed for access to the Django admin.
