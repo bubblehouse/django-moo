@@ -68,7 +68,8 @@ def create(name, *a, **kw):
     :raises QuotaError: if the caller has a quota and it has been exceeded
     """
     from .models.object import Object, Property
-
+    system = Object.objects.get(pk=1)
+    default_parents = [system.root_class] if system.has_property("root_class") else []
     if api.caller:
         try:
             quota = api.caller.get_property("ownership_quota", recurse=False)
@@ -82,7 +83,11 @@ def create(name, *a, **kw):
             kw["owner"] = api.caller
     if "location" not in kw and "owner" in kw:
         kw["location"] = kw["owner"].location
-    parents = kw.pop("parents", [])
+    if " to " in name:
+        print('its a door')
+    elif name == "Another Room":
+        print('its another room')
+    parents = kw.pop("parents", default_parents)
     obj = Object.objects.create(name=name, *a, **kw)
     if parents:
         obj.parents.add(*parents)
