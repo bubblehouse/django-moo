@@ -46,13 +46,13 @@ RUN chgrp www-data /etc/ssl/private/ \
     && chgrp www-data /etc/ssh/ssh_host_ecdsa_key.pub \
     && chmod ug+rw /etc/ssh/ssh_host_ecdsa_key.pub
 
-RUN echo "[shell]:8022 $(cat /etc/ssh/ssh_host_ecdsa_key.pub | cut -d ' ' -f 1,2)" > /etc/ssh/pregenerated_known_hosts
-RUN export SITE_PACKAGES=`python -c "import site; print(site.getsitepackages()[0])"` \
- && cp /usr/src/app/extras/webssh/index.html $SITE_PACKAGES/webssh/templates/index.html
-
 ADD . /usr/src/app
 ADD extras/entrypoint.sh /entrypoint.sh
 ADD extras/uwsgi/uwsgi.ini /etc/uwsgi.ini
+
+RUN echo "[shell]:8022 $(cat /etc/ssh/ssh_host_ecdsa_key.pub | cut -d ' ' -f 1,2)" > /etc/ssh/pregenerated_known_hosts
+RUN export SITE_PACKAGES=`python -c "import site; print(site.getsitepackages()[0])"` \
+ && cp /usr/src/app/extras/webssh/index.html $SITE_PACKAGES/webssh/templates/index.html
 
 # Custom entrypoint for improved ad-hoc command support
 ENTRYPOINT ["/entrypoint.sh"]
