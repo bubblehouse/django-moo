@@ -22,10 +22,34 @@ from moo.core import api
 obj = api.parser.get_dobj()
 
 print(f"{obj.name} (#{obj.id} ) is owned by {obj.owner.name} (#{obj.owner.id}).")
-if obj.aliases:
-    print("Aliases: ", end="")
+if obj.parents.exists():
+    print("Parents:")
+    for parent in obj.parents.all():
+        print(f"  {parent.name} (#{parent.id})")
+if obj.aliases.exists():
+    print("Aliases: ")
     print(", ".join(obj.aliases.values("alias")))
 print(obj.description())
-# TODO: display lock info if the player controls the object
-# TODO: display contents if there are any
-# TODO: display verbs if there are any and they are readable
+
+# display lock info if the player controls the object
+if api.player.owns(obj):
+    print("Key: ")
+    if obj.key:
+        print(obj.key)
+    else:
+        print("(no key)")
+
+# display contents if there are any
+if obj.contents.exists():
+    print("Contents:")
+    for item in obj.contents.all():
+        print(f"  {item.name} (#{item.id})")
+
+# display verbs if there are any and they are readable
+if obj.verbs.exists():
+    print("Verbs:")
+    for verb in obj.verbs.all():
+        if api.player.is_allowed('read', verb):
+            print(f"  {verb.name()}")
+        else:
+            print(f"  {verb.name()} (unreadable)")
