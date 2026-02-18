@@ -3,22 +3,26 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This is the verb used to search the player's locale for an object that has the name or pseudonym name. This verb
-handles mapping of me to the player object, here to the player's location as well as the use of #<number> to refer to a
-particular object. If none of these cases match, the verb searches the room contents and the players contents (or
-possessions) for a match. If a match is found, then the unique object number is returned. If name matches more than one
-object, then $ambiguous_match is returned. If no match is found, then $failed_match is returned.
+This is the verb used to search the player's locale for an object that has the name or pseudonym name. The verb
+searches the room contents and the players contents (or possessions) for a match. If a match is found, then the object
+is returned. If name matches more than one object, then AmbiguousObjectError is raised. If no match is found, then
+Object.DoesNotExist is raised.
 
-The verb :match_object is the one to use to map names of objects to object numbers, when referring to objects that the
+The verb `match_object` is the one to use to map names of objects to object references, when referring to objects that the
 player is able to see in his current location. This includes objects that the player might be carrying, but does not
 include objects that are contained in other objects.
 """
 
-from moo.core import api
+from moo.core import api, AmbiguousObjectError
 
 name = args[0]
 
-try:
-    return this.find(name)
-except:  # pylint: disable=bare-except
-    return api.player.find(name)
+qs = this.find(name)
+if not qs:
+    qs = api.player.find(name)
+if not qs:
+    raise this.DoesNotExist(name)
+elif len(qs) > 1:
+    raise AmbiguousObjectError(name, matches=qs.all())
+
+return qs[0]
