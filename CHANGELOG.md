@@ -1,3 +1,11 @@
+## [0.47.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.47.0...v0.47.1) (2026-02-18)
+
+
+### Bug Fixes
+
+* match_object improvements ([a435c9d](https://gitlab.com/bubblehouse/django-moo/commit/a435c9d1bbcce2733e818391ca5681e92947c053))
+* moved look to room, parser now calls huh on failure ([1aae1cf](https://gitlab.com/bubblehouse/django-moo/commit/1aae1cf459636e2da70e5afb06defb9060008549))
+
 ## [0.47.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.46.2...v0.47.0) (2026-02-16)
 
 
