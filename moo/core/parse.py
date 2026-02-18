@@ -31,7 +31,13 @@ def interpret(ctx, line):
     lex = Lexer(line)
     parser = Parser(lex, api.player)
     ctx.set_parser(parser)
-    verb = parser.get_verb()
+    try:
+        verb = parser.get_verb()
+    except Verb.DoesNotExist:
+        if api.player.location.has_verb("huh"):
+            verb = api.player.location.get_verb("huh")
+        else:
+            raise
     ctx.override_caller(verb.owner)
     verb()
 
