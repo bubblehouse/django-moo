@@ -1,3 +1,11 @@
+## [0.47.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.47.1...v0.47.2) (2026-02-20)
+
+
+### Bug Fixes
+
+* disable Redis in unit tests to avoid blocking issues ([383ed3c](https://gitlab.com/bubblehouse/django-moo/commit/383ed3c8fb69c82d932ea34f931a65caab1989f9))
+* optimize is_allowed ([4e7089b](https://gitlab.com/bubblehouse/django-moo/commit/4e7089b04177a9899caaaa5b952a99f10d1849b0))
+
 ## [0.47.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.47.0...v0.47.1) (2026-02-18)
 
 
