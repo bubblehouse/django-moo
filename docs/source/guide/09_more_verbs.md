@@ -33,7 +33,7 @@ if api.parser is not None:
     invoke(api.parser.verb, delay=30, periodic=True)
     return
 for obj in api.caller.location.filter(player__isnull=False):
-    write(obj, "A parrot squawks.")
+    api.writer(obj, "A parrot squawks.")
 ```
 
 Right now it's just repeating every thirty seconds, but we can make it slightly more intelligent
@@ -46,7 +46,7 @@ if api.parser is not None:
     return
 value = kwargs['value'] + 1
 for obj in api.caller.location.filter(player__isnull=False):
-    write(obj, f"A parrot squawks {value}.")
+    api.writer(obj, f"A parrot squawks {value}.")
 invoke(api.parser.verb, delay=30, value=value)
 ```
 
@@ -75,18 +75,39 @@ return f"A parrot squawks {value}."
 >
 > When it is executed, execution of the current verb is terminated immediately after evaluating the given expression, if any. The verb-call expression that started the execution of this verb then returns either the value of expression or the integer 0, if no expression was provided.
 
-This works basically the same in DjangoMOO verb code because all verbs are built with RestrictedPython's `compile_restricted_function` feature, and run inside a Python function definition that looks like this:
+This works basically the same in DjangoMOO verb code because all verbs are compiled with RestrictedPython's `compile_restricted_function` feature. The game engine automatically wraps your verb code with a function that provides these parameters:
+
+- `this`: The object where the current verb was found, often a child of the origin object
+- `passthrough`: A function that calls the current verb on the parent object, somewhat similar to `super()`
+- `_`: A reference to the #1 or "system" object
+- `args`: Function arguments when run as a method, or an empty list
+- `kwargs`: Keyword arguments when run as a method, or an empty dict
+
+One key advantage of RestrictedPython is that `return` can be used from anywhere in the verb code, not just at the end of functions:
 
 ```python
-    def verb(this, passthrough, _, *args, **kwargs):
-        """
-        :param this: the Object where the current verb was found, often a child of the origin object
-        :param passthrough: a function that calls the current function on the parent object, somewhat similar to super()
-        :param _: a reference to the #1 or "system" object
-        :param args: function arguments when run as a method, or an empty list
-        :param kwargs: function arguments when run as a method, or an empty dict
-        :return: Any
-        """
+#!moo verb check_object --on $room
+
+from moo.core import api
+
+# Early return for empty arguments
+if not args:
+    return "Syntax: check_object <object_name>"
+
+# Find the object
+obj_name = args[0]
+found_objs = this.contents.filter(name=obj_name)
+
+if not found_objs.exists():
+    return f"I don't see '{obj_name}' here."
+
+# Check permissions
+obj = found_objs.first()
+if not obj.can_caller("read"):
+    return "You don't have permission to examine that."
+
+# Return success information
+return f"Object: {obj.name}\nDescription: {obj.get_property('description')}"
 ```
 
 ### Handling Verb Errors
@@ -104,4 +125,87 @@ DjangoMOO defines a number of custom exceptions:
 .. autoclass:: NoSuchPrepositionError
 .. autoclass:: QuotaError
 .. autoclass:: RecursiveError
+```
+
+## Best Practices for Verb Development
+
+### 1. Always Check Permissions First
+
+```python
+from moo.core import api
+
+if not this.can_caller("write"):
+    return "Permission denied."
+```
+
+### 2. Validate Arguments Early
+
+```python
+if len(args) < 2:
+    return "Usage: verb_name <arg1> <arg2>"
+```
+
+### 3. Use the API Context
+
+```python
+from moo.core import api
+
+# api.caller is the effective caller (usually verb owner)
+# api.player is the player executing the command
+# api.writer sends output to the player
+# api.parser contains parsed command info
+```
+
+### 4. Return Meaningful Messages
+
+```python
+# GOOD: Descriptive error messages
+if not obj:
+    return "That object doesn't exist."
+
+# GOOD: Confirm success
+return "Object created successfully."
+
+# AVOID: Silent failures
+return None
+```
+
+### 5. Keep Verbs Focused
+
+Each verb should do one thing well. If you need complex logic:
+
+```python
+from moo.core import api, invoke
+
+# Split into multiple async operations
+invoke(verb=complex_verb, delay=0, context={...})
+return "Operation started in background."
+```
+
+### 6. Use Database Queries Efficiently
+
+```python
+# GOOD: Use select_related for foreign keys
+objs = Object.objects.select_related('owner', 'location')
+
+# GOOD: Use prefetch_related for backward relations
+objs = Object.objects.prefetch_related('properties', 'verbs')
+
+# AVOID: N+1 queries
+for obj in Object.objects.all():
+    print(obj.owner.name)  # Query per object
+```
+
+### 7. Handle Errors Gracefully
+
+```python
+try:
+    result = verb_operation()
+    return result
+except AttributeError:
+    return "Invalid object reference."
+except ValueError as e:
+    return f"Invalid value: {str(e)}"
+except Exception as e:
+    return f"An error occurred: {str(e)}"
 ```
