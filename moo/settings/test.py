@@ -11,5 +11,12 @@ DATABASES = {
 # All tests that move objects around while having enterfuncs and exitfuncs
 # need to run tasks eagerly to ensure that the enterfuncs and exitfuncs are
 # executed within the same test transaction.
+CELERY_BROKER_URL = "memory://"
 CELERY_TASK_ALWAYS_EAGER = True
 CELERY_TASK_STORE_EAGER_RESULT = True
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache"
+    }
+}

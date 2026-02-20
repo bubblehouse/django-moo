@@ -21,6 +21,9 @@ def test_simple_async_verb(t_init: Object, t_wizard: Object, caplog: pytest.LogC
     assert printed == [1]
     counter = 1
     for line in caplog.text.split("\n"):
+        # Celery just loves emitting this when using the in-memory test broker, so ignore it
+        if line.endswith("Reverting to default 'localhost'"):
+            continue
         if not line:
             continue
         if "succeeded in" in line:
@@ -39,6 +42,9 @@ def test_simple_async_verb_callback(t_init: Object, t_wizard: Object, caplog: py
             tasks.invoke_verb(caller_id=t_wizard.pk, verb_id=verb.pk, callback_verb_id=callback.pk, this_id=verb.origin.pk)
     counter = 0
     for line in caplog.text.split("\n"):
+        # Celery just loves emitting this when using the in-memory test broker, so ignore it
+        if line.endswith("Reverting to default 'localhost'"):
+            continue
         if not line:
             continue
         if "succeeded in" in line:
