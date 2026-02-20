@@ -6,6 +6,76 @@
 >
 > Having given you enough context to allow you to understand exactly what MOO code is doing, I now explain what MOO code looks like and what it means. I begin with the syntax and semantics of expressions, those pieces of code that have values. After that, I cover statements, the next level of structure up from expressions. Next, I discuss the concept of a task, the kind of running process initiated by players entering commands, among other causes. Finally, I list all of the built-in functions available to MOO code and describe what they do.
 
+## Verb Code Format
+
+When creating verbs for storage in the database or in bootstrap verb files, the code must follow RestrictedPython's conventions and use Python as the execution language.
+
+### Shebang Line (For Bootstrap Verbs)
+
+Verb files that are part of the bootstrap system must begin with a "shebang" line that defines metadata:
+
+```python
+#!moo verb accept --on $room
+```
+
+The full syntax is:
+
+```
+#!moo verb verb_name1 [verb_name2] ...
+    [--on object_name]
+    [--dspec this|any|none|either]
+    [--ispec PREP:SPEC [PREP:SPEC ...]]
+```
+
+**Parameters**:
+- `verb_name`: The name(s) of the verb (space-separated for aliases like `#!moo verb put give`)
+- `--on`: Object to attach the verb to. Supports the special `$property_name` syntax to refer to properties on the system object
+- `--dspec`: Direct object specifier (defaults to `none`)
+  - `this`: Requires a direct object from the player
+  - `any`: Optional direct object
+  - `none`: No direct object allowed
+  - `either`: Can work with or without a direct object
+- `--ispec`: Indirect object specifiers using prepositions
+  - Format: `PREP:SPEC` where PREP is from the configured prepositions (e.g., `on`, `in`, `with`)
+  - Example: `--ispec on:this in:this` allows "put X on Y" and "put X in Y"
+
+**Examples**:
+
+```python
+#!moo verb accept --on $room
+# A simple verb with no args, attached to the room object
+
+#!moo verb drop --on $thing --dspec this
+# A verb that requires a direct object
+
+#!moo verb put give --on $thing --dspec this --ispec on:this in:this
+# A verb with aliases, requiring direct and indirect objects
+```
+
+### RestrictedPython Execution
+
+All verb code is compiled and executed within RestrictedPython's sandboxed environment. This means:
+
+- Certain Python constructs are restricted for security reasons
+- Only whitelisted modules and built-in functions are accessible
+- Return statements can be used from anywhere (not just function end)
+- Warnings about undefined variables can be ignored for injected variables like `this`, `passthrough`, `_`, `args`, and `kwargs`
+
+**Whitelisted Modules**:
+- `moo.core` - Core game API
+- `hashlib` - Hashing functions
+- `string` - String constants and utilities
+
+**Whitelisted Built-ins**:
+- `dir()` - List attributes
+- `getattr()` - Get attributes dynamically
+- `hasattr()` - Check if attribute exists
+- `dict()` - Create dictionaries
+- `list()` - Create lists
+- `set()` - Create sets
+
+Attempting to import or use other modules will result in a security error.
+
 ## Python Implementation
 
 As mentioned above, DjangoMOO uses Python as its in-game programming language. We usually need to start by importing one essential variable:
