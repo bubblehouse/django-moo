@@ -105,20 +105,20 @@ def write(obj, message):
     :param message: any pickle-able object
     :type message: Any
     """
-    from redis.exceptions import ConnectionError  # pylint: disable=redefined-builtin
     from .models.auth import Player
 
     player = Player.objects.get(avatar=obj)
     from kombu import Exchange, Queue
 
     from ..celery import app
-
+    from django.conf import settings
+    # don't try to write to the message queue if we're using the in-memory test broker
+    # when running unit tests there's no Redis available
+    if settings.CELERY_BROKER_URL == "memory://":
+        warnings.warn(RuntimeWarning(f"ConnectionError({obj}): {message}"))
+        return
     with app.default_connection() as conn:
-        try:
-            channel = conn.channel()
-        except ConnectionError:
-            warnings.warn(RuntimeWarning(f"ConnectionError({obj}): {message}"))
-            return
+        channel = conn.channel()
         queue = Queue(
             "messages", Exchange("moo", type="direct", channel=channel), f"user-{player.user.pk}", channel=channel
         )
