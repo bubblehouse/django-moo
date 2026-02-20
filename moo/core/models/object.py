@@ -9,7 +9,7 @@ from typing import Generator
 
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
-from django.db.models.query import QuerySet
+from django.db.models.query import Q, QuerySet
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
 
@@ -491,50 +491,32 @@ class Object(models.Model, AccessibleMixin):
         :param fatal: if True, raise a :class:`.PermissionError` instead of returning False
         :raises PermissionError: if permission is denied and `fatal` is set to True
         """
-        permission = Permission.objects.get(name=permission)
-        anything = Permission.objects.get(name="anything")
-        rules = Access.objects.filter(
-            object=subject if subject.kind == "object" else None,
-            verb=subject if subject.kind == "verb" else None,
-            property=subject if subject.kind == "property" else None,
-            type="accessor",
-            accessor=self,
-            permission__in=(permission, anything),
+        # Get both permissions in a single query
+        perms = Permission.objects.filter(name__in=(permission, "anything")).values_list("id", flat=True)
+        if len(perms) < 2:
+            perms = list(perms) + [Permission.objects.get(name=permission).id]
+
+        # Build subject filter once
+        subject_filter = Q()
+        if subject.kind == "object":
+            subject_filter = Q(object=subject)
+        elif subject.kind == "verb":
+            subject_filter = Q(verb=subject)
+        elif subject.kind == "property":
+            subject_filter = Q(property=subject)
+
+        # Build OR conditions for all matching rules
+        query = subject_filter & Q(permission_id__in=perms) & (
+            Q(type="accessor", accessor=self) |
+            Q(type="group", group="everyone") |
+            (Q(type="group", group="owners") if self.owns(subject) else Q()) |
+            (Q(type="group", group="wizards") if Player.objects.filter(avatar=self, wizard=True).exists() else Q())
         )
-        rules = rules.union(
-            Access.objects.filter(
-                object=subject if subject.kind == "object" else None,
-                verb=subject if subject.kind == "verb" else None,
-                property=subject if subject.kind == "property" else None,
-                type="group",
-                group="everyone",
-                permission__in=(permission, anything),
-            )
-        )
-        if self.owns(subject):
-            rules = rules.union(
-                Access.objects.filter(
-                    object=subject if subject.kind == "object" else None,
-                    verb=subject if subject.kind == "verb" else None,
-                    property=subject if subject.kind == "property" else None,
-                    type="group",
-                    group="owners",
-                    permission__in=(permission, anything),
-                )
-            )
-        if Player.objects.filter(avatar=self, wizard=True):
-            rules = rules.union(
-                Access.objects.filter(
-                    object=subject if subject.kind == "object" else None,
-                    verb=subject if subject.kind == "verb" else None,
-                    property=subject if subject.kind == "property" else None,
-                    type="group",
-                    group="wizards",
-                    permission__in=(permission, anything),
-                )
-            )
+
+        rules = Access.objects.filter(query).order_by("rule", "type")
+
         if rules:
-            for rule in rules.order_by("rule", "type"):
+            for rule in rules:
                 if rule.rule == "deny":
                     if fatal:
                         raise PermissionError(f"{self} is explicitly denied {permission} on {subject}")
