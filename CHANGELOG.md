@@ -1,3 +1,11 @@
+## [0.47.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.47.2...v0.47.3) (2026-02-21)
+
+
+### Bug Fixes
+
+* --on is required in the moo shebang line ([00fa31e](https://gitlab.com/bubblehouse/django-moo/commit/00fa31e4b2da55b7fe8c45e3b1b751f7ecc71de9))
+* added migration to remove old proxy objects, renamed inherited to inherit_owner, other leftover ([f8e157d](https://gitlab.com/bubblehouse/django-moo/commit/f8e157dbe337d30061f8d54a03bd1d1b17127924))
+
 ## [0.47.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.47.1...v0.47.2) (2026-02-20)
 
 
