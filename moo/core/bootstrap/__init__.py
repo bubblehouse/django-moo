@@ -35,7 +35,7 @@ class ISpecAction(argparse.Action):
 parser = argparse.ArgumentParser("moo")
 parser.add_argument("subcommand", choices=["verb"])
 parser.add_argument("names", nargs="+")
-parser.add_argument("--on", help="The object to add or modify the verb on")
+parser.add_argument("--on", help="The object to add or modify the verb on", required=True)
 parser.add_argument("--dspec", choices=["this", "any", "none", "either"], default="none", help="The direct object specifier")
 parser.add_argument("--ispec", metavar="PREP:SPEC", nargs="+", help="Indirect object specifiers", action=ISpecAction)
 
