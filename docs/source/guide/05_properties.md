@@ -42,7 +42,7 @@ Every property has the following attributes:
 .. autoattribute:: Property.type
 .. autoattribute:: Property.owner
 .. autoattribute:: Property.origin
-.. autoattribute:: Property.inherited
+.. autoattribute:: Property.inherit_owner
 ```
 
 #### Property Inheritance
@@ -60,9 +60,9 @@ This section is complicated enough to call out in a separate heading. In LambdaM
 > As I explain later, programs run with the permissions of their author. So, in this case, Ford's nice verb for setting the channel ran with his permissions. But, since the `channel` property in the generic radio had the `c` permission bit set, the `channel` property on yduJ's radio was owned by her. Ford didn't have permission to change it! The fix was simple. Ford changed the permissions on the `channel` property of the generic radio to be just `r`, without the `c` bit, and yduJ made a new radio. This time, when yduJ's radio inherited the `channel` property, yduJ did not inherit ownership of it; Ford remained the owner. Now the radio worked properly, because Ford's verb had permission to change the channel.
 >
 
-DjangoMOO properties support an `inherited` attribute that works the same way as LambdaMOO's `c` bit. When `inherited=True`, children will inherit the property with the owner unchanged. Here's some pseudocode that creates a default room class that adds a fixed description to all its children, and ensures those children's owner cannot modify it:
+DjangoMOO properties support an `inherit_owner` attribute that works the same way as LambdaMOO's `c` bit. When `inherit_owner=True`, children will inherit the property with the owner unchanged. Here's some pseudocode that creates a default room class that adds a fixed description to all its children, and ensures those children's owner cannot modify it:
 
 ```python
 room = create('empty room')
-room.set_property("description", "There's not much to see here.", inherited=True)
+room.set_property("description", "There's not much to see here.", inherit_owner=True)
 ```

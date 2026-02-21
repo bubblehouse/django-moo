@@ -89,7 +89,7 @@ wizard = lookup("Wizard")
 
 # Create custom game objects
 library = create("Grand Library", location=None)
-library.set_property("description", "A vast library filled with books.", inherited=True)
+library.set_property("description", "A vast library filled with books.", inherit_owner=True)
 
 # Add a verb
 library.add_verb("browse", code="""
@@ -100,7 +100,7 @@ return "You browse the shelves..."
 ## Bootstrap Best Practices
 
 1. **Use `lookup()` to find objects**: Don't hardcode object IDs, use `lookup("object_name")` to find them
-2. **Set inherited=True for properties**: Child objects should inherit parent properties by default
+2. **When to set inherit_owner=True for properties**: Used to keep inherited properties usable by a verb that runs as the author
 3. **Grant appropriate permissions**: Use `allow()` to set permissions for wizards, owners, and everyone
 4. **Document the object hierarchy**: Include comments about which objects should be parents of others
 5. **Test bootstrap data**: Create tests that verify the bootstrap dataset loads correctly
