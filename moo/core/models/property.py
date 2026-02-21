@@ -24,13 +24,13 @@ class Property(models.Model, AccessibleMixin):
     #: The object on which this Property is defined
     origin = models.ForeignKey("Object", related_name="properties", on_delete=models.CASCADE)
     #: If True, this Property’s owner will be reassigned on child instances
-    inherited = models.BooleanField(default=False)
+    inherit_owner = models.BooleanField(default=False)
 
-    __original_inherited = None
+    __original_inherit_owner = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.__original_inherited = self.inherited
+        self.__original_inherit_owner = self.inherit_owner
 
     @property
     def kind(self):
@@ -42,18 +42,18 @@ class Property(models.Model, AccessibleMixin):
     def save(self, *args, **kwargs):
         needs_default_permissions = self.pk is None
         super().save(*args, **kwargs)
-        if self.inherited and not self.__original_inherited:
+        if self.inherit_owner and not self.__original_inherit_owner:
             for child in self.origin.get_descendents():  # pylint: disable=no-member
                 Property.objects.update_or_create(
                     name=self.name,
                     origin=child,
                     defaults=dict(
                         owner=child.owner,
-                        inherited=self.inherited,
+                        inherit_owner=self.inherit_owner,
                     ),
                     create_defaults=dict(
                         owner=child.owner,
-                        inherited=self.inherited,
+                        inherit_owner=self.inherit_owner,
                         value=self.value,
                         type=self.type,
                     ),
