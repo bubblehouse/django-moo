@@ -43,7 +43,7 @@
 .. autoattribute:: Property.type
 .. autoattribute:: Property.owner
 .. autoattribute:: Property.origin
-.. autoattribute:: Property.inherited
+.. autoattribute:: Property.inherit_owner
 ```
 
 ## Verb Attributes

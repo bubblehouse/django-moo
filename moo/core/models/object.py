@@ -39,11 +39,8 @@ def relationship_changed(sender, instance, action, model, signal, reverse, pk_se
     for pk in pk_set:
         parent = model.objects.get(pk=pk)
         # pylint: disable=redefined-builtin
-        # NOTE: `inherited` is confusing, it means "inherited owner"
-        # by default, *all* properties when inherited should be owned by the child
-        # only if this flag is set should the existing owner be preserved
         for property in Property.objects.filter(origin=parent):
-            if property.inherited:
+            if property.inherit_owner:
                 new_owner = property.owner
             else:
                 new_owner = child.owner
@@ -52,11 +49,11 @@ def relationship_changed(sender, instance, action, model, signal, reverse, pk_se
                 origin=child,
                 defaults=dict(
                     owner=new_owner,
-                    inherited=property.inherited,
+                    inherit_owner=property.inherit_owner,
                 ),
                 create_defaults=dict(
                     owner=new_owner,
-                    inherited=property.inherited,
+                    inherit_owner=property.inherit_owner,
                     value=property.value,
                     type=property.type,
                 ),
@@ -355,13 +352,13 @@ class Object(models.Model, AccessibleMixin):
         else:
             raise Verb.DoesNotExist(f"No such verb `{name}`.")
 
-    def set_property(self, name, value, inherited=False, owner=None):
+    def set_property(self, name, value, inherit_owner=False, owner=None):
         """
         Defines a new :class:`.Property` on the given object.
 
         :param names: a list of names for the new Property
         :param value: the value for the new Property
-        :param inherited: if True, this property's owner will be reassigned on child instances
+        :param inherit_owner: if True, this property's owner will be reassigned on child instances
         :param owner: the owner of the Property being created
         """
         from .. import moojson
@@ -375,7 +372,7 @@ class Object(models.Model, AccessibleMixin):
                 value=moojson.dumps(value),
                 owner=owner,
                 type="string",
-                inherited=inherited,
+                inherit_owner=inherit_owner,
             ),
         )
 
