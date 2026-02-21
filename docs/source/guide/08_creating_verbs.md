@@ -147,4 +147,4 @@ So far these examples haven't required any calls to `obj.save()`; this is only r
 >
 > Thus, for example, the value `$nothing` mentioned earlier is really `#-1`, the value of `#0.nothing`.
 
-To similate this feature, LambdaMOO python code uses the magical `_` variable as a reference to the System Object, e.g., `_.root` instead of `$root`.
+This syntax is supported in a few different places, but not in Python. To similate this feature, LambdaMOO Python code uses the magical `_` variable as a reference to the System Object, e.g., `_.root` instead of `$root`.
