@@ -6,7 +6,7 @@ Like LambdaMOO, only certain kinds of data can appear in a DjangoMOO database an
 
 Technically, a Verb can use any kind of Python value, but since all MOO code is run in a restricted Python environment, there are a number of limitations to consider:
 
-* the `print()` built-in function sends output to the caller of the verb
+* the `print()` built-in function sends output to the current player
 * access to attributes beginning with underscores is disabled
 * in-place variable modification is disabled
 * only the builtins in `ALLOWED_BUILTINS` are available

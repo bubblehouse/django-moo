@@ -21,7 +21,7 @@ The `transmute` bit specifies whether or not the subject can create new objects 
 
 ## Checking Permissions in Code
 
-In verbs and other Python code, always check permissions before allowing operations. The `can_caller()` method is your primary tool:
+In verbs and other Python code, always check permissions before allowing operations. The `can_caller()` method is an essential tool:
 
 ```python
 from moo.core import api
