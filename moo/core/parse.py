@@ -234,7 +234,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             if location:
                 search = location.find(person)
         else:
-            search = self.caller.location
+            search = self.caller
 
         if isinstance(search, QuerySet):
             if len(search) > 1:
@@ -242,6 +242,8 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             search = search[0]
         if name and search:
             result = search.find(name)
+            if not result:
+                result = self.caller.location.find(name)
 
         if len(result) == 1:
             return result[0]
