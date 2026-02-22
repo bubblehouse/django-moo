@@ -11,9 +11,15 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv, the build tool.
-RUN curl -L https://github.com/astral-sh/uv/releases/download/0.10.4/uv-aarch64-unknown-linux-gnu.tar.gz -o uv.tar.gz \
+ARG TARGETARCH
+RUN case "${TARGETARCH}" in \
+      amd64) UV_ARCH="x86_64" ;; \
+      arm64) UV_ARCH="aarch64" ;; \
+      *) echo "Unsupported architecture: ${TARGETARCH}" && exit 1 ;; \
+    esac \
+    && curl -L "https://github.com/astral-sh/uv/releases/download/0.10.4/uv-${UV_ARCH}-unknown-linux-gnu.tar.gz" -o uv.tar.gz \
     && tar -xzf uv.tar.gz \
-    && mv uv-aarch64-unknown-linux-gnu/uv /usr/local/bin/uv \
+    && mv "uv-${UV_ARCH}-unknown-linux-gnu/uv" /usr/local/bin/uv \
     && chmod 0755 /usr/local/bin/uv \
     && rm -rf uv.tar.gz
 
