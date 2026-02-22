@@ -8,6 +8,8 @@ it. This is intended to be the way other verbs pass messages to objects in a roo
 activated, it uses `announce` to inform the other players in the room of what has happened.
 """
 
+from moo.core import api
+
 if api.parser.words:
     message = " ".join(api.parser.words[1:])
 else:
