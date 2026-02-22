@@ -187,19 +187,19 @@ def test_permission_check():
 
 ```bash
 # Run all tests
-poetry run pytest
+uv run pytest
 
 # Run specific test file
-poetry run pytest moo/core/tests/test_invoke_verb.py
+uv run pytest moo/core/tests/test_invoke_verb.py
 
 # Run specific test function
-poetry run pytest moo/core/tests/test_invoke_verb.py::test_successful_verb_execution
+uv run pytest moo/core/tests/test_invoke_verb.py::test_successful_verb_execution
 
 # Run with verbose output
-poetry run pytest -vv
+uv run pytest -vv
 
 # Run with pdb on failure
-poetry run pytest --pdb
+uv run pytest --pdb
 ```
 
 ## Performance Considerations
