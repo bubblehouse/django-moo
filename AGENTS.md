@@ -34,7 +34,7 @@ This document provides essential context for AI models interacting with the Djan
   - Django Celery Results/Beat (task result storage and scheduling)
   - WebSSH (browser-based SSH client interface)
 * **Platforms:** Linux (primary), Docker/Kubernetes, cloud-agnostic via Docker Compose and Helm charts
-* **Package Manager:** Poetry (Python dependencies) with semantic versioning via `poetry-plugin-export`
+* **Package Manager:** uv (Python dependencies) with semantic versioning
 
 ## 3. Architectural Patterns
 
@@ -139,7 +139,7 @@ This document provides essential context for AI models interacting with the Djan
   - `moo/settings/dev.py` - Development overrides
   - `moo/settings/local.py` - Local/Docker environment overrides
   - `moo/settings/test.py` - Test environment (used by pytest)
-  - `pyproject.toml` - Poetry dependency and project configuration
+  - `pyproject.toml` - uv dependency and project configuration
   - `docker-compose.yml` - Multi-container orchestration for local development and simple deployments
   - `Dockerfile` - Container image definition for all services
   - `/extras/helm/Chart.yaml` - Kubernetes Helm chart for production deployments
@@ -161,7 +161,7 @@ This document provides essential context for AI models interacting with the Djan
      ```
   3. **Install Dependencies**:
      ```bash
-     poetry install
+     uv sync
      ```
   4. **Start Services**:
      ```bash
@@ -180,12 +180,12 @@ This document provides essential context for AI models interacting with the Djan
      - SSH Direct: `ssh localhost -p 8022`
 
 * **Task Configuration:**
-  - **Poetry Tasks**: Defined in `pyproject.toml`. Run `poetry run <command>`
+  - **uv**: Defined in `pyproject.toml`. Run `uv run <command>`
   - **Django Management Commands**: Run via `python manage.py <command>` or `docker compose run webapp manage.py <command>`
   - **Common Commands**:
-    - `poetry run pytest` - Run all tests
-    - `poetry run pylint moo` - Lint code
-    - `poetry run coverage report` - View coverage report
+    - `uv run pytest` - Run all tests
+    - `uv run pylint moo` - Lint code
+    - `uv run coverage report` - View coverage report
     - `python manage.py shell` - Django shell for debugging
     - `python manage.py moo_init` - Initialize default game world
     - `python manage.py moo_enableuser --wizard <username> Wizard` - Make a user a wizard
@@ -199,7 +199,7 @@ This document provides essential context for AI models interacting with the Djan
     - Game data defined in `moo/core/bootstrap/default.py`
   - **Running Tests**:
     ```bash
-    poetry run pytest -n auto --cov
+    uv run pytest -n auto --cov
     ```
   - **Test Coverage**: Must not decrease with new code. Target: >= 80% coverage
   - **New Features**: Every feature or bug fix must include corresponding unit tests
@@ -223,9 +223,9 @@ This document provides essential context for AI models interacting with the Djan
 
 * **Contribution Guidelines:**
   - **Code Review Checklist**:
-    - All tests must pass (`poetry run pytest`)
-    - PyLint score must not go down (`poetry run pylint moo`)
-    - Test coverage must not go down (`poetry run pytest --cov`)
+    - All tests must pass (`uv run pytest`)
+    - PyLint score must not go down (`uv run pylint moo`)
+    - Test coverage must not go down (`uv run pytest --cov`)
     - Add new tests for any feature or bug fix
     - Update documentation for user-facing changes
   - **Pull Request Requirements**:
@@ -262,12 +262,12 @@ This document provides essential context for AI models interacting with the Djan
 
 * **Dependencies:**
   - **Adding New Dependencies**:
-    1. Run `poetry add <package>` or `poetry add --group dev <package>` for dev dependencies
+    1. Run `uv add <package>` or `uv add --group dev <package>` for dev dependencies
     2. Verify the package doesn't conflict with existing dependencies
     3. Update documentation if the dependency is a significant addition
-    4. Poetry lock file is automatically updated
+    4. `uv.lock` is automatically updated
   - **Updating Dependencies**:
-    1. Run `poetry update` to update all dependencies to latest compatible versions
+    1. Run `uv lock --upgrade` to update all dependencies to latest compatible versions
     2. Test thoroughly after updates
     3. Be cautious with major version updates; review changelogs for breaking changes
   - **Dependency Rationale**: Document why a new dependency is needed in the PR description or code comments
@@ -323,22 +323,22 @@ This document provides essential context for AI models interacting with the Djan
 
 ```bash
 # Install dependencies
-poetry install
+uv sync
 
 # Run tests with coverage
-poetry run pytest -n auto --cov
+uv run pytest -n auto --cov
 
 # Run specific test file
-poetry run pytest -n auto moo/core/tests/test_parser.py
+uv run pytest -n auto moo/core/tests/test_parser.py
 
 # Run linting
-DJANGO_SETTINGS_MODULE=moo.settings.test poetry run pylint moo
+DJANGO_SETTINGS_MODULE=moo.settings.test uv run pylint moo
 
 # View coverage report
-poetry run coverage report
+uv run coverage report
 
 # Format code with Black
-poetry run black moo --line-length 120
+uv run black moo --line-length 120
 
 # Start development server
 docker compose up
@@ -364,8 +364,8 @@ docker compose run webapp manage.py moo_enableuser wizard Wizard
 1. Create a feature branch: `git checkout -b feat/my-feature`
 2. Make code changes following style guidelines
 3. Add tests for new functionality
-4. Run tests locally: `poetry run pytest -n auto --cov`
-5. Run linting: `DJANGO_SETTINGS_MODULE=moo.settings.test poetry run pylint moo`
+4. Run tests locally: `uv run pytest -n auto --cov`
+5. Run linting: `DJANGO_SETTINGS_MODULE=moo.settings.test uv run pylint moo`
 6. Fix any linting issues
 7. Commit with Conventional Commits: `git commit -m "feat(core): add new feature"`
 8. Push and create merge request targeting `main`
