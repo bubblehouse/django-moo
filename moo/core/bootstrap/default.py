@@ -78,7 +78,7 @@ with code.context(wizard, log.info):
 
     thing = create("Generic Thing", parents=[root], location=None)
     sys.set_property("thing", thing)
-    thing.set_property("take_succeeded_msg", "{actor} picks up {subject}.")
+    thing.set_property("otake_succeeded_msg", "{actor} picks up {subject}.")
     thing.set_property("otake_failed_msg", "")
     thing.set_property("take_succeeded_msg", "You take {subject}.")
     thing.set_property("take_failed_msg", "You can't pick that up.")
