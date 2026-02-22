@@ -1,3 +1,14 @@
+## [0.47.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.47.3...v0.47.4) (2026-02-22)
+
+
+### Bug Fixes
+
+* install uv ([4ac9052](https://gitlab.com/bubblehouse/django-moo/commit/4ac9052012ee60d69729a6155a906c22a27a80e5))
+* install uv ([fc55505](https://gitlab.com/bubblehouse/django-moo/commit/fc55505d6d6b6342af8713b93d8b2715bb432cb1))
+* run anybadge through uv ([96be7f9](https://gitlab.com/bubblehouse/django-moo/commit/96be7f9d42296e59ef892622e6be5f307a4fea8c))
+* updated Dockerfile and entrypoint after uv migration ([ef2a771](https://gitlab.com/bubblehouse/django-moo/commit/ef2a77176eb62ebcbf57eaf2a99e8b03eda1433c))
+* use correct arch when installing uv ([0ab45c7](https://gitlab.com/bubblehouse/django-moo/commit/0ab45c77eae925eecef72279d8c66f76fadf4725))
+
 ## [0.47.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.47.2...v0.47.3) (2026-02-21)
 
 
