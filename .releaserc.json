@@ -103,7 +103,7 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "poetry build"
+        "prepareCmd": "uv build && uv export --all-groups --no-hashes -o requirements.txt"
       }
     ],
     [

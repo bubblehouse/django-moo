@@ -12,13 +12,12 @@ RUN apt-get update \
 
 WORKDIR /usr/src/app
 
-ADD poetry.lock .
+ADD uv.lock .
 ADD pyproject.toml .
 
 # Install Python application dependencies
-RUN pip install --no-cache-dir -q -U poetry poetry-plugin-export pip \
-    && poetry export --with=dev -o requirements.txt \
-    && pip install --no-cache-dir -q -r requirements.txt
+RUN pip install --no-cache-dir -q uv \
+    && UV_SYSTEM_PYTHON=1 uv sync --frozen --all-groups --no-install-project
 
 FROM python:3.11.12-slim-bullseye
 

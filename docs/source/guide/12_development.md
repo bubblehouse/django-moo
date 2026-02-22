@@ -34,12 +34,12 @@ reopen the project as a Dev Container, if not, invoke "Dev Containers: Reopen in
 
 ## Environment Setup Details
 
-The project uses **Poetry** for dependency management and **pytest** for testing.
+The project uses **uv** for dependency management and **pytest** for testing.
 
 ### Install Dependencies
 
 ```bash
-poetry install
+uv sync
 ```
 
 This installs all dependencies including development tools like PyLint, pytest, and coverage analysis.
@@ -98,19 +98,19 @@ mode using the launch job on the "Run and Debug" tab.
 
 ```bash
 # Run all tests with coverage reporting
-poetry run pytest -n auto --cov
+uv run pytest -n auto --cov
 
 # Run a specific test file
-poetry run pytest -n auto moo/core/tests/test_invoke_verb.py
+uv run pytest -n auto moo/core/tests/test_invoke_verb.py
 
 # Run a specific test function
-poetry run pytest -n auto moo/core/tests/test_invoke_verb.py::test_successful_verb_execution
+uv run pytest -n auto moo/core/tests/test_invoke_verb.py::test_successful_verb_execution
 
 # Run with verbose output and stop on first failure
-poetry run pytest -vv -x
+uv run pytest -vv -x
 
 # Run with pdb debugger on failure
-poetry run pytest --pdb
+uv run pytest --pdb
 ```
 
 ### Test Organization
@@ -158,13 +158,13 @@ def test_permission_denial():
 
 ```bash
 # Run PyLint to check code quality
-DJANGO_SETTINGS_MODULE=moo.settings.test poetry run pylint moo
+DJANGO_SETTINGS_MODULE=moo.settings.test uv run pylint moo
 
 # View coverage report
-poetry run coverage report
+uv run coverage report
 
 # Format code with Black
-poetry run black moo --line-length 120
+uv run black moo --line-length 120
 ```
 
 ## Common Development Tasks
@@ -226,7 +226,7 @@ Use pytest-profiling to identify slow operations:
 
 ```bash
 # Run tests with profiling
-poetry run pytest --profile
+uv run pytest --profile
 
 # View the generated profile
 python -m pstats .prof
