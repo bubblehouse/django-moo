@@ -1,4 +1,4 @@
-#!moo verb title --on $root_class
+#!moo verb titlec --on $root_class
 
 # pylint: disable=return-outside-function,undefined-variable
 
