@@ -64,5 +64,5 @@ DjangoMOO properties support an `inherit_owner` attribute that works the same wa
 
 ```python
 room = create('empty room')
-room.set_property("description", "There's not much to see here.", inherit_owner=True)
+room.set_property("description", "There's not much to see here.")
 ```
