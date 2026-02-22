@@ -152,26 +152,80 @@ for obj in Object.objects.all():
 
 ### Testing Guidelines
 
-Use the test bootstrap dataset when possible:
+There are two distinct test types in this package:
+
+#### Core unit tests (`moo/core/tests/`)
+
+These test models and the verb execution engine directly, without a full bootstrap. Use `@pytest.mark.django_db` alone:
 
 ```python
 import pytest
-from moo.core.bootstrap.test import repo
-from moo.core import lookup
+from moo.core import create, lookup
+from moo.core.exceptions import PermissionDenied
 
 @pytest.mark.django_db
 def test_object_creation():
-    obj = lookup("root")  # Get object from test dataset
-    assert obj is not None
+    obj = create("Test Object")
+    assert obj.name == "Test Object"
+
+@pytest.mark.django_db
+def test_permission_check():
+    obj = create("Protected Object")
+    obj.owner = lookup("Wizard")
+    obj.save()
+    with pytest.raises(PermissionDenied):
+        obj.can_caller("write")
 ```
 
-Test both success and failure cases:
+#### Bootstrap integration tests (`moo/core/bootstrap/default_verbs/tests/`)
+
+These exercise verbs against a fully bootstrapped `default` world. They require two shared fixtures from `moo/conftest.py`:
+
+- **`t_init`**: Bootstraps `default.py`. Must be requested via `@pytest.mark.parametrize("t_init", ["default"], indirect=True)`.
+- **`t_wizard`**: Returns the Wizard player, who starts in The Laboratory.
+
+Capture player output with a `_writer` callback. Run commands through `parse.interpret`. Call `refresh_from_db()` before asserting database-backed state:
 
 ```python
-def test_permission_check():
-    obj = Object.objects.create(name="test")
-    with pytest.raises(PermissionDenied):
-        obj.can_caller("write")  # Should raise if caller lacks permission
+import pytest
+from moo.core import code, create, lookup, parse
+from moo.core.models import Object
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_drop_from_inventory(t_init: Object, t_wizard: Object):
+    printed = []
+
+    def _writer(msg):
+        printed.append(msg)
+
+    with code.context(t_wizard, _writer) as ctx:
+        system = lookup(1)
+        lab = t_wizard.location
+        widget = create("widget", parents=[system.thing], location=t_wizard)
+
+        parse.interpret(ctx, "drop widget")
+
+        widget.refresh_from_db()
+        assert widget.location == lab
+        assert not printed
+```
+
+Verbs can also be called as Python methods inside `code.context`, bypassing the parser — useful for testing helpers and message verbs:
+
+```python
+with code.context(t_wizard, _writer):
+    system = lookup(1)
+    widget = create("widget", parents=[system.thing], location=t_wizard)
+    assert widget.drop_succeeded_msg() == f"You drop {widget}."
+```
+
+For commands that send connection-level notifications (movement, `say`), wrap with `pytest.warns`:
+
+```python
+with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
+    parse.interpret(ctx, "go north")
+assert "You leave" in str(warnings.list[0].message)
 ```
 
 ## Common Tasks

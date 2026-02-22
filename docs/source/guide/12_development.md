@@ -115,18 +115,24 @@ uv run pytest --pdb
 
 ### Test Organization
 
-- **Core tests**: `moo/core/tests/` - Uses the `test` bootstrap dataset
-- **Bootstrap tests**: `moo/core/bootstrap/test_verbs/` - Tests for the default verb implementations
-- **Test data**: Defined in `moo/core/bootstrap/test.py`
+- **Core tests**: `moo/core/tests/` - Tests for models, permissions, verb execution engine
+- **Bootstrap integration tests**: `moo/core/bootstrap/default_verbs/tests/` - Tests for the default verb implementations
+- **Bootstrap verb sources**: `moo/core/bootstrap/test_verbs/` - MOO verb definitions for the `test` dataset (not pytest tests)
+- **Test bootstrap data**: Defined in `moo/core/bootstrap/test.py`
 - **Default game data**: Defined in `moo/core/bootstrap/default.py`
+
+Shared pytest fixtures live in `moo/conftest.py` and provide a pre-seeded game world for integration tests.
 
 ### Writing Tests
 
 All tests should:
 - Use `@pytest.mark.django_db` decorator to access the database
 - Test both success and failure cases
-- Include descriptive assertion messages
 - Follow PEP 8 naming conventions (test functions start with `test_`)
+
+#### Core unit tests
+
+Core tests exercise models and the verb execution engine without needing a full bootstrap. They typically use `@pytest.mark.django_db` alone:
 
 ```python
 import pytest
@@ -135,7 +141,6 @@ from moo.core.exceptions import PermissionDenied
 
 @pytest.mark.django_db
 def test_object_creation_and_properties():
-    """Verify that objects can be created with properties."""
     obj = create("Test Object")
     assert obj.name == "Test Object"
 
@@ -144,14 +149,84 @@ def test_object_creation_and_properties():
 
 @pytest.mark.django_db
 def test_permission_denial():
-    """Verify that permission checks work correctly."""
     obj = create("Protected Object")
     obj.owner = lookup("Wizard")
     obj.save()
 
-    # Should raise PermissionDenied when caller lacks write permission
     with pytest.raises(PermissionDenied):
         obj.can_caller("write")
+```
+
+#### Bootstrap integration tests
+
+Tests in `moo/core/bootstrap/default_verbs/tests/` exercise verbs against a fully bootstrapped world.
+They use two shared fixtures from `moo/conftest.py`:
+
+- **`t_init`**: Bootstraps the full game world by running `default.py`. Yields the system object (`#1`). Must be requested with `@pytest.mark.parametrize("t_init", ["default"], indirect=True)`.
+- **`t_wizard`**: Returns the Wizard player object, which starts in The Laboratory.
+
+Output sent to the player is captured via a `_writer` callback passed to `code.context`. Commands are executed with `parse.interpret`. After a verb modifies database state, call `refresh_from_db()` before asserting:
+
+```python
+import pytest
+from moo.core import code, create, lookup, parse
+from moo.core.models import Object
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_drop_from_inventory(t_init: Object, t_wizard: Object):
+    printed = []
+
+    def _writer(msg):
+        printed.append(msg)
+
+    with code.context(t_wizard, _writer) as ctx:
+        system = lookup(1)
+        lab = t_wizard.location
+        widget = create("widget", parents=[system.thing], location=t_wizard)
+
+        parse.interpret(ctx, "drop widget")
+
+        widget.refresh_from_db()
+        assert widget.location == lab
+        assert not printed
+```
+
+Verbs can also be called directly as Python methods inside a `code.context` block. This is useful for testing helper verbs (message formatters, lock checks, etc.) without going through the command parser:
+
+```python
+with code.context(t_wizard, _writer):
+    system = lookup(1)
+    widget = create("widget", parents=[system.thing], location=t_wizard)
+
+    # Call the verb directly — equivalent to the MOO expression widget:drop_succeeded_msg()
+    assert widget.drop_succeeded_msg() == f"You drop {widget}."
+
+    # Test moveto without the drop command
+    lab = t_wizard.location
+    widget.moveto(lab)
+    widget.refresh_from_db()
+    assert widget.location == lab
+```
+
+To test that a lock prevents movement, set a `key` property on the destination before calling `moveto`. The lock expression `["!", id]` blocks the object whose id matches:
+
+```python
+destination.set_property("key", ["!", widget.id])
+widget.moveto(destination)
+widget.refresh_from_db()
+assert widget.location != destination  # move was blocked
+```
+
+For commands that trigger connection-level notifications (movement between rooms, `say`, etc.), wrap the `parse.interpret` call with `pytest.warns`:
+
+```python
+with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
+    parse.interpret(ctx, "go north")
+assert [str(x.message) for x in warnings.list] == [
+    f"ConnectionError(#{t_wizard.pk} (Wizard)): You leave ...",
+]
 ```
 
 ### Code Quality Tools
