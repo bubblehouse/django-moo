@@ -53,7 +53,8 @@ This document provides essential context for AI models interacting with the Djan
     - `/moo/core`: Core game engine, models (Object, Verb, Player, Property, Permission/ACL), and code execution
     - `/moo/core/models`: Django ORM models defining the game object hierarchy, properties, verbs, permissions, and ACLs
     - `/moo/core/bootstrap`: Dataset initialization system with `default.py` (game world data) and `test.py` (for testing)
-    - `/moo/core/bootstrap/{default,test}_verbs`: Pre-written verb code for bootstrapping game objects
+    - `/moo/core/bootstrap/default_verbs`: Pre-written verb code installed on `default` game objects; `default_verbs/tests/` contains pytest integration tests for those verbs
+  - `/moo/core/bootstrap/test_verbs`: MOO verb definitions for the `test` bootstrap dataset (not pytest tests)
     - `/moo/core/management/commands`: Django management commands (moo_init, moo_enableuser, etc.)
     - `/moo/core/tests`: Unit and integration tests using pytest
     - `/moo/shell`: SSH server implementation and interactive prompt system
@@ -310,12 +311,12 @@ This document provides essential context for AI models interacting with the Djan
   - **Indexing**: Add database indexes to frequently queried fields (Django `db_index=True`)
 
 * **Testing Best Practices:**
-  - **Unit Tests**: Test individual functions and methods with mocked dependencies
-  - **Integration Tests**: Test object creation, property inheritance, permission checks, and verb execution
-  - **Test Data**: Use the `test.py` bootstrap dataset for consistent test conditions, and `default.py` for testing basic game functionality.
-  - **Fixtures**: Define pytest fixtures for commonly used test objects (rooms, players, verbs)
-  - **Edge Cases**: Test boundary conditions and error scenarios
-  - **Assertions**: Use descriptive assertion messages to aid debugging
+  - **Two test types**: Core unit tests (`moo/core/tests/`) test models and the verb execution engine without a full bootstrap. Bootstrap integration tests (`moo/core/bootstrap/default_verbs/tests/`) test verb behaviour against a fully initialised game world.
+  - **Bootstrap test fixtures**: Both `t_init` (bootstraps `default.py`) and `t_wizard` (returns the Wizard player) come from `moo/conftest.py`. `t_init` must be requested with `@pytest.mark.parametrize("t_init", ["default"], indirect=True)` and `@pytest.mark.django_db(transaction=True, reset_sequences=True)`.
+  - **Output capture**: Pass a `_writer` callback to `code.context` to capture everything `print()`ed to the player during a test.
+  - **State assertions**: Call `obj.refresh_from_db()` after `parse.interpret` or a direct verb call before asserting locations or other database-backed fields.
+  - **Direct verb calls**: Inside a `code.context` block, verbs are callable as Python methods — `widget.drop_succeeded_msg()` — useful for testing helpers without going through the command parser.
+  - **Lock testing**: Set `key = ["!", obj.id]` on a destination to block a specific object; `key = None` (the default) means unlocked.
 
 ## 8. Developer Quick Reference
 

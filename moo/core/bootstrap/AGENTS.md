@@ -14,7 +14,11 @@ The bootstrap system initializes the game database with default game objects, cl
 
 ### Datasets:
 - **default**: The production game world. Used when running the server normally.
-- **test**: A minimal dataset for testing. Used by all pytest tests.
+- **test**: A minimal dataset used by core pytest tests in `moo/core/tests/`.
+
+### Testing:
+- `default_verbs/tests/` — pytest integration tests for the verbs installed on the `default` dataset. These are the tests to write when adding or changing a `default_verbs/` verb.
+- `test_verbs/` — MOO verb source files for the `test` dataset. These are **not** pytest tests; they are verb definitions loaded during `test.py` bootstrap initialisation.
 
 ## Verb Code Format
 
@@ -215,62 +219,101 @@ Common imports:
 
 ## Testing Verbs
 
-### Unit Testing Verbs
+### Inline verbs (simple unit tests)
 
-Verbs are stored in the database and executed via `Object.invoke_verb()`:
+For quick tests of isolated logic, create a verb inline with `add_verb` and invoke it with `invoke_verb`:
 
 ```python
 import pytest
-from moo.core import create, code, lookup
-from moo.core.models import Verb
+from moo.core import code, create
+from moo.core.models import Object
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_my_verb(t_init: Object, t_wizard: Object):
     printed = []
 
     def _writer(msg):
         printed.append(msg)
 
-    # Running with the current player and caller set to `t_wizard`
-    with code.context(t_wizard, _writer) as ctx:
-        # Create an object and add a verb
+    with code.context(t_wizard, _writer):
         obj = create("Test Object")
         obj.add_verb("my_verb", code='return "Hello"')
-        # Invoke the verb
         result = obj.invoke_verb("my_verb")
         assert result == "Hello"
 ```
 
-### Testing with Arguments
+### Bootstrap integration tests (`default_verbs/tests/`)
+
+Tests for verbs in `default_verbs/` live in `default_verbs/tests/` and run against the fully bootstrapped `default` world. Two fixtures from `moo/conftest.py` are required:
+
+- **`t_init`**: Must be requested via `@pytest.mark.parametrize("t_init", ["default"], indirect=True)`. Bootstraps `default.py` and yields the system object (`#1`).
+- **`t_wizard`**: Returns the Wizard player object, which starts in The Laboratory.
+
+Capture output via a `_writer` callback; run player commands with `parse.interpret`; call `refresh_from_db()` before asserting database state:
 
 ```python
+import pytest
+from moo.core import code, create, lookup, parse
+from moo.core.models import Object
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
-def test_my_verb(t_init: Object, t_wizard: Object):
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_drop_from_inventory(t_init: Object, t_wizard: Object):
     printed = []
 
     def _writer(msg):
         printed.append(msg)
 
-    # Running with the current player and caller set to `t_wizard`
     with code.context(t_wizard, _writer) as ctx:
-      obj = create("Test")
-      obj.add_verb("greet", code='''
-name = args[0] if args else "Friend"
-return f"Hello, {name}!"
-''')
-      result = obj.invoke_verb("greet", args=["Alice"])
-      assert result == "Hello, Alice!"
+        system = lookup(1)
+        lab = t_wizard.location
+        widget = create("widget", parents=[system.thing], location=t_wizard)
+
+        parse.interpret(ctx, "drop widget")
+
+        widget.refresh_from_db()
+        assert widget.location == lab
 ```
 
-### Bootstrap Verbs
+Verbs can also be called directly as Python methods inside `code.context` — useful for testing helper/message verbs without going through the parser:
 
-Verbs in `default_verbs/` or `test_verbs/` are loadedd during `moo_init`:
+```python
+with code.context(t_wizard, _writer):
+    system = lookup(1)
+    widget = create("widget", parents=[system.thing], location=t_wizard)
 
-1. The shebang line is parsed
-2. The filename is read and processed
-3. The verb is attached to the appropriate object
+    # Equivalent to the MOO expression widget:drop_succeeded_msg()
+    assert widget.drop_succeeded_msg() == f"You drop {widget}."
+    assert widget.drop_failed_msg() == f"You can't seem to drop {widget} here."
+```
 
-Verb code is compiled via RestrictedPython the first time it's invoked.
+To test that a lock prevents a `moveto`, set a `key` property on the destination. The expression `["!", id]` blocks the object whose id matches:
+
+```python
+destination.set_property("key", ["!", widget.id])
+widget.moveto(destination)
+widget.refresh_from_db()
+assert widget.location != destination  # move was blocked by the lock
+```
+
+For commands that trigger connection-level notifications (movement between rooms, `say`, etc.), wrap the `parse.interpret` call with `pytest.warns`:
+
+```python
+with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
+    parse.interpret(ctx, "go north")
+assert [str(x.message) for x in warnings.list] == [
+    f"ConnectionError(#{t_wizard.pk} (Wizard)): You leave ...",
+]
+```
+
+### How bootstrap verbs are loaded
+
+Verbs in `default_verbs/` are loaded by `bootstrap.load_verbs()` at the end of `default.py`:
+
+1. The shebang line (`#!moo verb name --on $object`) is parsed for the verb name, target object, and argument specifiers.
+2. The verb source is compiled via RestrictedPython on first invocation.
+3. The verb is attached to the target object in the database.
 
 ## Best Practices for Verb Development
 
