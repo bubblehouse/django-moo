@@ -1,16 +1,16 @@
 #!/bin/bash
 
-export PATH="/bin:/usr/bin:/usr/sbin:/usr/local/bin"
+export PATH="/bin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/app/bin"
 
-cd /usr/src/app
+cd /usr/app/src
 
 if [ "$1" = '' ]; then
     exec uwsgi --ini /etc/uwsgi.ini
 elif [ "$1" = 'manage.py' ]; then
     if [ "$2" = 'moo_shell' ]; then
-        exec watchmedo auto-restart -p '.reload' -- python3.11 "$@"
+        exec watchmedo auto-restart -p '.reload' -- /usr/app/bin/python3.11 "$@"
     else
-        exec python3.11 "$@"
+        exec /usr/app/bin/python3.11 "$@"
     fi
 elif [ "$1" = 'webssh' ]; then
     exec wssh --port=8422 --hostfile=/etc/ssh/pregenerated_known_hosts --policy=reject

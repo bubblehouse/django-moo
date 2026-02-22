@@ -10,25 +10,46 @@ RUN apt-get update \
        python3-pip ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /usr/src/app
+# Install uv, the build tool.
+RUN curl -L https://github.com/astral-sh/uv/releases/download/0.10.4/uv-aarch64-unknown-linux-gnu.tar.gz -o uv.tar.gz \
+    && tar -xzf uv.tar.gz \
+    && mv uv-aarch64-unknown-linux-gnu/uv /usr/local/bin/uv \
+    && chmod 0755 /usr/local/bin/uv \
+    && rm -rf uv.tar.gz
 
-ADD uv.lock .
-ADD pyproject.toml .
+ENV UV_LINK_MODE=copy \
+    UV_COMPILE_BYTECODE=1 \
+    UV_PYTHON_DOWNLOADS=never \
+    UV_PYTHON=/usr/local/bin/python3.11 \
+    UV_PROJECT_ENVIRONMENT=/usr/app
 
-# Install Python application dependencies
-RUN pip install --no-cache-dir -q uv \
-    && UV_SYSTEM_PYTHON=1 uv sync --frozen --all-groups --no-install-project
+RUN --mount=type=cache,target=/root/.cache \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync \
+        --frozen \
+        --no-install-project
+
+COPY . /usr/app/src
+WORKDIR /usr/app/src
+RUN --mount=type=cache,target=/root/.cache \
+    uv sync \
+        --frozen \
+        --no-dev \
+        --no-editable
+
+RUN export SITE_PACKAGES=`../bin/python -c 'import sys; print(sys.path[-1])'` \
+    && cp /usr/app/src/extras/webssh/index.html $SITE_PACKAGES/webssh/templates/index.html
 
 FROM python:3.11.12-slim-bullseye
 
-# Install base dependencies
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
        git ssl-cert ssh net-tools \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-COPY --from=builder /usr/local/bin /usr/local/bin
-COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+RUN echo "[shell]:8022 $(cat /etc/ssh/ssh_host_ecdsa_key.pub | cut -d ' ' -f 1,2)" > /etc/ssh/pregenerated_known_hosts
 
 # Setup directories and permissions
 RUN chgrp www-data /etc/ssl/private/ \
@@ -45,13 +66,13 @@ RUN chgrp www-data /etc/ssl/private/ \
     && chgrp www-data /etc/ssh/ssh_host_ecdsa_key.pub \
     && chmod ug+rw /etc/ssh/ssh_host_ecdsa_key.pub
 
-ADD . /usr/src/app
+
 ADD extras/entrypoint.sh /entrypoint.sh
 ADD extras/uwsgi/uwsgi.ini /etc/uwsgi.ini
 
-RUN echo "[shell]:8022 $(cat /etc/ssh/ssh_host_ecdsa_key.pub | cut -d ' ' -f 1,2)" > /etc/ssh/pregenerated_known_hosts
-RUN export SITE_PACKAGES=`python -c "import site; print(site.getsitepackages()[0])"` \
- && cp /usr/src/app/extras/webssh/index.html $SITE_PACKAGES/webssh/templates/index.html
+COPY --from=builder /usr/app /usr/app
 
 # Custom entrypoint for improved ad-hoc command support
 ENTRYPOINT ["/entrypoint.sh"]
+# See <https://hynek.me/articles/docker-signals/>.
+STOPSIGNAL SIGINT
