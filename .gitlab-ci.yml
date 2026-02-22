@@ -23,8 +23,8 @@ lint:
     - uv run pylint --exit-zero --output-format=pylint_gitlab.GitlabCodeClimateReporter moo > codeclimate.json
     - uv run pylint --exit-zero --output-format=pylint_gitlab.GitlabPagesHtmlReporter moo > public/lint/index.html
   after_script:
-    - anybadge --overwrite --label $CI_JOB_NAME --value=$(cat public/badges/$CI_JOB_NAME.score) --file=public/badges/$CI_JOB_NAME.svg 4=red 6=orange 
-      8=yellow 10=green
+    - uv run anybadge --overwrite --label $CI_JOB_NAME --value=$(cat public/badges/$CI_JOB_NAME.score) --file=public/badges/$CI_JOB_NAME.svg 4=red 
+      6=orange 8=yellow 10=green
     - |
       echo "Your score is: $(cat public/badges/$CI_JOB_NAME.score)"
   artifacts:
