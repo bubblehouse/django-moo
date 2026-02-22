@@ -81,6 +81,7 @@ release:
     UV_CACHE_DIR: .cache/uv
     PYPI_TOKEN: ${TWINE_PASSWORD}
   script:
+    - pip install uv
     - npm install
     - docker buildx install
     - docker buildx create --bootstrap --use --name=$CI_PROJECT_NAME --driver=kubernetes '--driver-opt="nodeselector=kubernetes.io/arch=amd64"'
