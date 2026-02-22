@@ -8,5 +8,7 @@ obj.allow("everyone", "read")
 
 if obj.kind == "verb":
     obj.allow("everyone", "execute")
+elif obj.kind == "property":
+    obj.allow("everyone", "read")
 elif obj.kind == "object":
     obj.allow("everyone", "read")

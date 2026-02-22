@@ -40,15 +40,15 @@ def test_property_inheritance_can_change_after_save(t_init: Object, t_wizard: Ob
     player = Object.objects.get(name="Player")
     o = Object.objects.create(name="new object", owner=player)
     p = Object.objects.create(name="new parent", owner=t_wizard)
-    p.set_property("test_post_creation", "There's not much to see here.", owner=t_wizard, inherit_owner=True)
+    p.set_property("test_post_creation", "There's not much to see here.", owner=t_wizard)
     o.parents.add(p)
 
     description = o.get_property(name="test_post_creation", recurse=False, original=True)
-    assert description.owner == t_wizard
+    assert description.owner == player
 
     # You normally don't want to change the inheritence after creation, but it should be possible
     description = p.get_property(name="test_post_creation", recurse=False, original=True)
-    description.inherit_owner = False
+    description.inherit_owner = True
     description.save()
 
     # you just need to delete the inherited property and re-add the parent to re-inherit it with the correct owner
@@ -57,4 +57,4 @@ def test_property_inheritance_can_change_after_save(t_init: Object, t_wizard: Ob
     o.parents.add(p)
 
     description = o.get_property(name="test_post_creation", recurse=False, original=True)
-    assert description.owner == player
+    assert description.owner == t_wizard

@@ -89,7 +89,7 @@ wizard = lookup("Wizard")
 
 # Create custom game objects
 library = create("Grand Library", location=None)
-library.set_property("description", "A vast library filled with books.", inherit_owner=True)
+library.set_property("description", "A vast library filled with books.")
 
 # Add a verb
 library.add_verb("browse", code="""

@@ -319,7 +319,7 @@ from moo.core import create, lookup
 
 # Create a new room
 kitchen = create("Kitchen", parents=[rooms], location=None)
-kitchen.set_property("description", "A cozy kitchen.", inherit_owner=True)
+kitchen.set_property("description", "A cozy kitchen.")
 ```
 
 ### Adding Verbs to Bootstrap Datasets

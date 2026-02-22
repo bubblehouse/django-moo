@@ -1,8 +1,12 @@
-obj = args[0]  # pylint: disable=undefined-variable
+# pylint: disable=undefined-variable
+
+obj = args[0]
 obj.allow("wizards", "anything")
 obj.allow("owners", "anything")
 
 if obj.kind == "verb":
     obj.allow("everyone", "execute")
+elif obj.kind == "property":
+    obj.allow("everyone", "read")
 elif obj.kind == "object":
     obj.allow("everyone", "read")
