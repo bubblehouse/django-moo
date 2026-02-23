@@ -1,4 +1,4 @@
-#!moo verb get take remove --on $container --dspec this --ispec from:any
+#!moo verb get take remove --on $container --dspec any --ispec from:this
 
 # pylint: disable=return-outside-function,undefined-variable
 
