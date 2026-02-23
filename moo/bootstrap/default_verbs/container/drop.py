@@ -22,7 +22,7 @@ object = args[0] if args else api.parser.get_dobj()
 subject = api.parser.get_pobj("in", "on") if api.parser.has_pobj("in", "on") else api.player.location
 
 if not this.is_open():
-    print("{this.title()} is closed.")
+    print(f"{this.title()} is closed.")
     return
 
 this.move_to(subject)
