@@ -317,20 +317,21 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             raise Object.DoesNotExist(self.dobj_str)
         return self.dobj
 
-    def get_pobj(self, prep):
+    def get_pobj(self, *preps):
         """
-        Get the object for the given preposition. If there was no
-        object found, raise a NoSuchObjectError; if the preposition
+        Get the object(s) for the given preposition(s). If there was no
+        object found, raise a Object.DoesNotExist; if the preposition
         was not found, raise a NoSuchPrepositionError.
         """
-        if not (prep in self.prepositions):
-            raise NoSuchPrepositionError(prep)
         matches = []
-        for item in self.prepositions[prep]:
-            if item[2]:
-                matches.append(item[2])
+        for prep in preps:
+            if not (prep in self.prepositions):
+                raise NoSuchPrepositionError(prep)
+            for item in self.prepositions[prep]:
+                if item[2]:
+                    matches.append(item[2])
         if len(matches) > 1:
-            raise AmbiguousObjectError(matches[0][1], matches)
+            raise AmbiguousObjectError(','.join(preps), matches)
         if not (matches):
             raise Object.DoesNotExist(self.prepositions[prep][0][1])
         return self.prepositions[prep][0][2]
@@ -389,19 +390,21 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         """
         return self.dobj is not None
 
-    def has_pobj(self, prep):
+    def has_pobj(self, *preps):
         """
         Was an object for this preposition found?
         """
-        if prep not in self.prepositions:
-            return False
-
         found_prep = False
-
-        for item in self.prepositions[prep]:
-            if item[2]:
-                found_prep = True
-                break
+        for prep in preps:
+            if prep not in self.prepositions:
+                return False
+            for item in self.prepositions[prep]:
+                if item[2]:
+                    found_prep = True
+                    break
+            else:
+                continue
+            break
         return found_prep
 
     def has_dobj_str(self):
