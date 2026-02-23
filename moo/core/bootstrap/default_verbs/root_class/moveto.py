@@ -18,6 +18,6 @@ from moo.core import set_task_perms
 
 where = args[0]
 
-set_task_perms(this)
+set_task_perms(this.owner)
 this.location = where
 this.save()
