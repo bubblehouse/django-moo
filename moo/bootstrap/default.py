@@ -1,7 +1,8 @@
 import logging
 from time import time
 
-from moo.core import bootstrap, code, create, lookup
+from moo import bootstrap
+from moo.core import code, create, lookup
 from moo.core.models import Player, User
 
 log = logging.getLogger(__name__)
@@ -129,4 +130,4 @@ with code.context(wizard, log.info):
 
     root.get_verb("accept").delete()
 
-    bootstrap.load_verbs(repo, "moo.core.bootstrap.default_verbs")
+    bootstrap.load_verbs(repo, "moo.bootstrap.default_verbs")

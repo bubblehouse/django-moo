@@ -19,7 +19,6 @@ The `moo` package is organized as a Django project with the following main compo
   - `auth.py`: Authentication and player-related models
 - `code.py`: RestrictedPython code compilation and execution
 - `parse.py`: MOO language parser and lexer
-- `bootstrap/`: Database initialization and default datasets
 - `management/commands/`: Django CLI commands for administration
 - `tests/`: Comprehensive test suite for core functionality
 - `admin.py`: Django admin interface configuration
@@ -30,6 +29,16 @@ The `moo` package is organized as a Django project with the following main compo
 - Properties support inheritance; child objects inherit parent properties
 - Verbs are Python code compiled and sandboxed via RestrictedPython
 - All model access should use Django QuerySets, never raw SQL
+
+### `/moo/bootstrap` - Database Initialization
+
+**Purpose**: Contains bootstrap datasets and verb files that initialize the game database.
+
+**Key Components**:
+- `default.py`: Creates the production game world with rooms, players, and other game objects
+- `test.py`: Creates a minimal test dataset used by pytest
+- `default_verbs/`: Directory containing verb files for the default dataset
+- `test_verbs/`: Directory containing verb files for the test dataset
 
 ### `/moo/shell` - SSH Server & Terminal Interface
 
@@ -177,7 +186,7 @@ def test_permission_check():
         obj.can_caller("write")
 ```
 
-#### Bootstrap integration tests (`moo/core/bootstrap/default_verbs/tests/`)
+#### Bootstrap integration tests (`moo/bootstrap/default_verbs/tests/`)
 
 These exercise verbs against a fully bootstrapped `default` world. They require two shared fixtures from `moo/conftest.py`:
 

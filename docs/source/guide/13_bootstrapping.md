@@ -21,14 +21,14 @@ Every new environment needs a few things to be at all useable:
 * Must have an object named "Wizard" that is the admin account for the dataset
 * All these objects should be owned by Wizard
 
-These steps are handled by `moo.core.bootstrap.initialize_dataset()`:
+These steps are handled by `moo.bootstrap.initialize_dataset()`:
 
 ```{eval-rst}
-.. py:currentmodule:: moo.core.bootstrap
+.. py:currentmodule:: moo.bootstrap
 .. autofunction:: initialize_dataset
 ```
 
-Once all the objects are created and necessary properties created, the `moo.core.bootstrap.load_verbs()` function can load all the verb code
+Once all the objects are created and necessary properties created, the `moo.bootstrap.load_verbs()` function can load all the verb code
 
 ```{eval-rst}
 .. autofunction:: load_verbs

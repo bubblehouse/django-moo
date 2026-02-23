@@ -13,7 +13,8 @@ from django.db.models.query import Q, QuerySet
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
 
-from .. import bootstrap, exceptions, invoke, utils
+from moo import bootstrap
+from .. import exceptions, invoke, utils
 from ..code import context
 from .acl import Access, AccessibleMixin, Permission
 from .auth import Player

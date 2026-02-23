@@ -51,7 +51,7 @@ def get_source(filename, dataset="default"):
     :return: The source code for the verb.
     :rtype: str
     """
-    ref = importlib.resources.files("moo.core.bootstrap") / f"{dataset}_verbs/{filename}"
+    ref = importlib.resources.files("moo.bootstrap") / f"{dataset}_verbs/{filename}"
     with importlib.resources.as_file(ref) as path:
         with open(path, encoding="utf8") as f:
             return f.read()

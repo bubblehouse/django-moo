@@ -4,7 +4,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from moo.core.bootstrap import load_python
+from moo.bootstrap import load_python
 from moo.core.models import Repository
 
 builtin_templates = ["minimal", "default"]
@@ -29,11 +29,11 @@ class Command(BaseCommand):
             except Repository.DoesNotExist:
                 Repository.objects.create(
                     slug=bootstrap,
-                    prefix=f"moo/core/bootstrap/{bootstrap}_verbs",
+                    prefix=f"moo/bootstrap/{bootstrap}_verbs",
                     url=settings.DEFAULT_GIT_REPO_URL,
                 )
             if bootstrap in builtin_templates:
-                ref = importlib.resources.files("moo.core.bootstrap") / f"{bootstrap}.py"
+                ref = importlib.resources.files("moo.bootstrap") / f"{bootstrap}.py"
                 with importlib.resources.as_file(ref) as path:
                     bootstrap_path = path
             else:

@@ -10,7 +10,7 @@ import pytest
 from django.conf import settings
 from django.contrib.auth.models import User  # pylint: disable=imported-auth-user
 
-from moo.core.bootstrap import load_python
+from moo.bootstrap import load_python
 from moo.core.models import Object, Player, Repository
 
 log = logging.getLogger(__name__)
@@ -23,8 +23,8 @@ def t_init(request):
     """
     name = request.param if hasattr(request, "param") else "test"
     log.debug(f"t_init: {name}")
-    Repository.objects.create(slug=name, prefix=f"moo/core/bootstrap/{name}_verbs", url=settings.DEFAULT_GIT_REPO_URL)
-    ref = importlib.resources.files("moo.core.bootstrap") / f"{name}.py"
+    Repository.objects.create(slug=name, prefix=f"moo/bootstrap/{name}_verbs", url=settings.DEFAULT_GIT_REPO_URL)
+    ref = importlib.resources.files("moo.bootstrap") / f"{name}.py"
     with importlib.resources.as_file(ref) as path:
         load_python(path)
     yield Object.objects.get(id=1)

@@ -43,7 +43,6 @@ dev = [
     "pytest-pylint>=0.21.0,<1",
     "pylint-pytest>=1.1.7,<2",
     "pytest-django>=4.7.0,<5",
-    "pytest-spec>=3.2.0,<4",
     "coverage>=7.4.4,<8",
     "pytest-cov>=4.1.0,<5",
     "pylint-gitlab>=2.0.0,<3",
@@ -76,3 +75,8 @@ spec_test_format = "{result} {docstring_summary}"
 
 [tool.black]
 line-length = 120
+
+[tool.uv]
+dev-dependencies = [
+    "pytest-spec>=6.0.0",
+]
