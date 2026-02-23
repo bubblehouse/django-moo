@@ -21,7 +21,7 @@ def test_drop_from_inventory(t_init: Object, t_wizard: Object):
 
         widget.refresh_from_db()
         assert widget.location == lab
-        assert not printed
+        assert printed == ['You drop widget.']
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -98,10 +98,10 @@ def test_message_verbs(t_init: Object, t_wizard: Object):
         system = lookup(1)
         widget = create("widget", parents=[system.thing], location=t_wizard)
 
-        assert widget.take_succeeded_msg() == f"You take {widget}."
+        assert widget.take_succeeded_msg() == f"You take {widget.title()}."
         assert widget.take_failed_msg() == "You can't pick that up."
         assert widget.otake_failed_msg() == ""
-        assert widget.drop_succeeded_msg() == f"You drop {widget}."
-        assert widget.drop_failed_msg() == f"You can't seem to drop {widget} here."
-        assert widget.odrop_succeeded_msg() == f"{t_wizard} drops {widget}."
-        assert widget.odrop_failed_msg() == f"{t_wizard} tries to drop {widget} but fails!"
+        assert widget.drop_succeeded_msg() == f"You drop {widget.title()}."
+        assert widget.drop_failed_msg() == f"You can't seem to drop {widget.title()} here."
+        assert widget.odrop_succeeded_msg() == f"{t_wizard} drops {widget.title()}."
+        assert widget.odrop_failed_msg() == f"{t_wizard} tries to drop {widget.title()} but fails!"
