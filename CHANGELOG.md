@@ -1,3 +1,14 @@
+## [0.47.5](https://gitlab.com/bubblehouse/django-moo/compare/v0.47.4...v0.47.5) (2026-02-23)
+
+
+### Bug Fixes
+
+* fixes found during testing ([e5fb790](https://gitlab.com/bubblehouse/django-moo/commit/e5fb790e13bfde6eb6503be513be2a7ae7e562ac))
+* parser.find_object() searches the player inventory first, then the current location ([ff08ce5](https://gitlab.com/bubblehouse/django-moo/commit/ff08ce52828d668969d9f5a5f7d160fe4ee0fbc3))
+* remove unnecessary use of inherit_owner, will restore as needed ([b81f6cf](https://gitlab.com/bubblehouse/django-moo/commit/b81f6cff231dff2b8bc7982111888845c730eda8))
+* set correct owner when moving ([16259c6](https://gitlab.com/bubblehouse/django-moo/commit/16259c64fefe903919bf13f2325a6697b8592898))
+* set default messages for things ([fa3653b](https://gitlab.com/bubblehouse/django-moo/commit/fa3653b0fe7e46c525b174baa22f07a1f4546ee6))
+
 ## [0.47.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.47.3...v0.47.4) (2026-02-22)
 
 
