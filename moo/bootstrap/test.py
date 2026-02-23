@@ -1,6 +1,7 @@
 import logging
 
-from moo.core import bootstrap, code, create, lookup
+from moo import bootstrap
+from moo.core import code, create, lookup
 from moo.core.models import Player, User
 
 log = logging.getLogger(__name__)
@@ -51,4 +52,4 @@ with code.context(wizard, log.info):
     new_player.owner = new_player
     new_player.save()
 
-    bootstrap.load_verbs(repo, "moo.core.bootstrap.test_verbs")
+    bootstrap.load_verbs(repo, "moo.bootstrap.test_verbs")

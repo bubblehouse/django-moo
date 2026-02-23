@@ -116,10 +116,10 @@ uv run pytest --pdb
 ### Test Organization
 
 - **Core tests**: `moo/core/tests/` - Tests for models, permissions, verb execution engine
-- **Bootstrap integration tests**: `moo/core/bootstrap/default_verbs/tests/` - Tests for the default verb implementations
-- **Bootstrap verb sources**: `moo/core/bootstrap/test_verbs/` - MOO verb definitions for the `test` dataset (not pytest tests)
-- **Test bootstrap data**: Defined in `moo/core/bootstrap/test.py`
-- **Default game data**: Defined in `moo/core/bootstrap/default.py`
+- **Bootstrap integration tests**: `moo/bootstrap/default_verbs/tests/` - Tests for the default verb implementations
+- **Bootstrap verb sources**: `moo/bootstrap/test_verbs/` - MOO verb definitions for the `test` dataset (not pytest tests)
+- **Test bootstrap data**: Defined in `moo/bootstrap/test.py`
+- **Default game data**: Defined in `moo/bootstrap/default.py`
 
 Shared pytest fixtures live in `moo/conftest.py` and provide a pre-seeded game world for integration tests.
 
@@ -159,7 +159,7 @@ def test_permission_denial():
 
 #### Bootstrap integration tests
 
-Tests in `moo/core/bootstrap/default_verbs/tests/` exercise verbs against a fully bootstrapped world.
+Tests in `moo/bootstrap/default_verbs/tests/` exercise verbs against a fully bootstrapped world.
 They use two shared fixtures from `moo/conftest.py`:
 
 - **`t_init`**: Bootstraps the full game world by running `default.py`. Yields the system object (`#1`). Must be requested with `@pytest.mark.parametrize("t_init", ["default"], indirect=True)`.
