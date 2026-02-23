@@ -203,7 +203,7 @@ pytest-cov==4.1.0
 pytest-django==4.12.0
 pytest-profiling==1.8.1
 pytest-pylint==0.21.0
-pytest-spec==3.2.0
+pytest-spec==6.0.0
 pytest-xdist==3.8.0
 python-crontab==3.3.0
     # via django-celery-beat
@@ -224,7 +224,6 @@ rich==13.9.4
 six==1.17.0
     # via
     #   pytest-profiling
-    #   pytest-spec
     #   python-dateutil
 snowballstemmer==3.0.1
     # via sphinx
