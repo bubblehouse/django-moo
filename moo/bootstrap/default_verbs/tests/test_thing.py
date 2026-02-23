@@ -15,9 +15,14 @@ def test_drop_from_inventory(t_init: Object, t_wizard: Object):
     with code.context(t_wizard, _writer) as ctx:
         system = lookup(1)
         lab = t_wizard.location
+        player = lookup("Player")
         widget = create("widget", parents=[system.thing], location=t_wizard)
 
-        parse.interpret(ctx, "drop widget")
+        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
+            parse.interpret(ctx, "drop widget")
+        assert [str(x.message) for x in warnings.list] == [
+            f"ConnectionError(#{player.pk} (Player)): #{t_wizard.pk} (Wizard) drops widget."
+        ]
 
         widget.refresh_from_db()
         assert widget.location == lab
