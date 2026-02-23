@@ -51,3 +51,10 @@ objects do not appear in the printed contents of a room, even if they appear in 
 hide objects, for example, as part of a puzzle, or to vary how objects are seen, for example if you are looking through
 water at something.
 """
+
+if this.contents.exists():
+    print("Contents:")
+    for item in this.contents.all():
+        print("  " + item.title())
+else:
+    print("It is empty.")
