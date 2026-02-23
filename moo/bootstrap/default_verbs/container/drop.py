@@ -1,4 +1,4 @@
-#!moo verb drop insert put --on $container --dspec this --ispec in:any --ispec on:any
+#!moo verb drop insert put --on $container --dspec any --ispec in:this --ispec on:this
 
 # pylint: disable=return-outside-function,undefined-variable
 
