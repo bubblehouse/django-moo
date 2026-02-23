@@ -72,7 +72,7 @@ PREPOSITIONS = [
     ["behind", "past"],
     ["beside", "by", "near", "next to", "along"],
     ["for", "about"],
-    # ['is'],
+    ['is'],
     ["as"],
     ["off", "off of"],
 ]
