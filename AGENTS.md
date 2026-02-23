@@ -52,9 +52,9 @@ This document provides essential context for AI models interacting with the Djan
   - `/moo`: Main DjangoMOO package
     - `/moo/core`: Core game engine, models (Object, Verb, Player, Property, Permission/ACL), and code execution
     - `/moo/core/models`: Django ORM models defining the game object hierarchy, properties, verbs, permissions, and ACLs
-    - `/moo/core/bootstrap`: Dataset initialization system with `default.py` (game world data) and `test.py` (for testing)
-    - `/moo/core/bootstrap/default_verbs`: Pre-written verb code installed on `default` game objects; `default_verbs/tests/` contains pytest integration tests for those verbs
-  - `/moo/core/bootstrap/test_verbs`: MOO verb definitions for the `test` bootstrap dataset (not pytest tests)
+    - `/moo/bootstrap`: Dataset initialization system with `default.py` (game world data) and `test.py` (for testing)
+    - `/moo/bootstrap/default_verbs`: Pre-written verb code installed on `default` game objects; `default_verbs/tests/` contains pytest integration tests for those verbs
+  - `/moo/bootstrap/test_verbs`: MOO verb definitions for the `test` bootstrap dataset (not pytest tests)
     - `/moo/core/management/commands`: Django management commands (moo_init, moo_enableuser, etc.)
     - `/moo/core/tests`: Unit and integration tests using pytest
     - `/moo/shell`: SSH server implementation and interactive prompt system
@@ -77,7 +77,7 @@ This document provides essential context for AI models interacting with the Djan
     - **Admin** (`moo.core.admin`): Django admin interface for wizards
     - **Shell/REPL** (`moo.shell.prompt`): Interactive command line interface for players
     - **SSH Server** (`moo.shell.server`): AsyncSSH server implementation
-    - **Bootstrap** (`moo.core.bootstrap`): Database initialization and default object creation
+    - **Bootstrap** (`moo.bootstrap`): Database initialization and default object creation
   - Modules follow Django conventions with `models.py`, `admin.py`, `apps.py` for each app
 
 ## 4. Coding Conventions & Style Guide
@@ -195,9 +195,9 @@ This document provides essential context for AI models interacting with the Djan
   - **Framework**: pytest with pytest-django, pytest-xdist (parallel execution), pytest-cov (coverage)
   - **Test Organization**:
     - Core tests in `moo/core/tests/` operate on the `test` dataset
-    - Bootstrap-related tests in `moo/core/bootstrap/default_verbs/tests/`
-    - Test data defined in `moo/core/bootstrap/test.py`
-    - Game data defined in `moo/core/bootstrap/default.py`
+    - Bootstrap-related tests in `moo/bootstrap/default_verbs/tests/`
+    - Test data defined in `moo/bootstrap/test.py`
+    - Game data defined in `moo/bootstrap/default.py`
   - **Running Tests**:
     ```bash
     uv run pytest -n auto --cov
@@ -274,7 +274,7 @@ This document provides essential context for AI models interacting with the Djan
   - **Dependency Rationale**: Document why a new dependency is needed in the PR description or code comments
 
 * **MOO Verb Code Development:**
-  - **File Organization**: Verbs are organized in `moo/core/bootstrap/{default,test}_verbs/` directories
+  - **File Organization**: Verbs are organized in `moo/bootstrap/{default,test}_verbs/` directories
   - **Shebang Line**: Every verb file starts with `#!moo verb <names> --on <object>` and optional flags. Example:
     ```python
     #!moo verb accept --on $room
@@ -311,7 +311,7 @@ This document provides essential context for AI models interacting with the Djan
   - **Indexing**: Add database indexes to frequently queried fields (Django `db_index=True`)
 
 * **Testing Best Practices:**
-  - **Two test types**: Core unit tests (`moo/core/tests/`) test models and the verb execution engine without a full bootstrap. Bootstrap integration tests (`moo/core/bootstrap/default_verbs/tests/`) test verb behaviour against a fully initialised game world.
+  - **Two test types**: Core unit tests (`moo/core/tests/`) test models and the verb execution engine without a full bootstrap. Bootstrap integration tests (`moo/bootstrap/default_verbs/tests/`) test verb behaviour against a fully initialised game world.
   - **Bootstrap test fixtures**: Both `t_init` (bootstraps `default.py`) and `t_wizard` (returns the Wizard player) come from `moo/conftest.py`. `t_init` must be requested with `@pytest.mark.parametrize("t_init", ["default"], indirect=True)` and `@pytest.mark.django_db(transaction=True, reset_sequences=True)`.
   - **Output capture**: Pass a `_writer` callback to `code.context` to capture everything `print()`ed to the player during a test.
   - **State assertions**: Call `obj.refresh_from_db()` after `parse.interpret` or a direct verb call before asserting locations or other database-backed fields.
@@ -379,6 +379,6 @@ docker compose run webapp manage.py moo_enableuser wizard Wizard
 - **SSH/Interactive**: `moo/shell/`
 - **Testing**: `moo/core/tests/`
 - **Configuration**: `moo/settings/`
-- **Game Data**: `moo/core/bootstrap/`
+- **Game Data**: `moo/bootstrap/`
 - **Django Admin**: `moo/core/admin.py`
 - **Documentation**: `docs/source/`
