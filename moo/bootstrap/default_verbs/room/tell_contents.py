@@ -62,15 +62,24 @@ for item in this.contents.all():
 
 ctype = this.content_list_type
 if ctype == 3:
-    to_be = ('is', 'are')[int(len(players))]
+    to_be = ('is', 'are')[int(len(players) > 1)]
     if items:
-        print("You see {} and {} here.".format(", ".join(items[:-1]),  items[-1]))
+        if len(items) == 1:
+            print("You see {} here.".format(items[0]))
+        else:
+            print("You see {} and {} here.".format(", ".join(items[:-1]),  items[-1]))
     if players:
-        print("{} and {} {} here.".format(", ".join(players[:-1]),  players[-1], to_be))
+        if len(players) == 1:
+            print("You see {} here.".format(players[0]))
+        else:
+            print("{} and {} {} here.".format(", ".join(players[:-1]),  players[-1], to_be))
 elif ctype == 2:
     items = players + items
     if items:
-        print("You see {} and {} here.".format(", ".join(items[:-1]),  items[-1]))
+        if len(items) == 1:
+            print("You see {} here.".format(items[0]))
+        else:
+            print("You see {} and {} here.".format(", ".join(items[:-1]),  items[-1]))
 elif ctype == 1:
     for item in players:
         print(f"{item} is here")
