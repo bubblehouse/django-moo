@@ -10,11 +10,6 @@ activated, it uses `announce` to inform the other players in the room of what ha
 
 from moo.core import api
 
-if api.parser.words:
-    message = " ".join(api.parser.words[1:])
-else:
-    message = " ".join(args)
-
 for obj in this.contents.all():
     if obj != api.caller:
         obj.tell(" ".join(args))
