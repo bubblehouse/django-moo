@@ -54,7 +54,7 @@ ALLOWED_MODULES = (
     "string",
 )
 
-ALLOWED_BUILTINS = ("dir", "getattr", "hasattr", "dict", "list", "set")
+ALLOWED_BUILTINS = ("dir", "getattr", "hasattr", "dict", "list", "set", "type")
 
 # Here are all our supported prepositions
 PREPOSITIONS = [
