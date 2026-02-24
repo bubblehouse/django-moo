@@ -15,8 +15,7 @@ When you look at pipe now you should see:
 
 from moo.core import api
 
-object = args[0] if args else api.parser.get_dobj()
-subject = api.parser.get_pobj("from") if api.parser.has_pobj("from") else api.player.location
+object = args[0] if args else this.find(api.parser.get_dobj_str()).first()
 
 if not this.is_open():
     print(f"{this.title()} is closed.")
@@ -26,5 +25,5 @@ if object.location != this:
     print(f"{object.name} is not in {this.name}.")
     return
 
-this.move_to(subject)
+object.moveto(api.player)
 print(f"You took {object.name} from {this.name}")
