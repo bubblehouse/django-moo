@@ -276,7 +276,8 @@ def test_look_through_exit(t_init: Object, t_wizard: Object):
         printed.clear()
         parse.interpret(ctx, "look through wooden door")
         assert printed == [
-            "[bright_yellow]Destination Room[/bright_yellow]\n[deep_sky_blue1]There's not much to see here.[/deep_sky_blue1]"
+            "[color bright_yellow]Destination Room[/color bright_yellow]",
+            "[color deep_sky_blue1]There's not much to see here.[/color deep_sky_blue1]"
         ]
 
 

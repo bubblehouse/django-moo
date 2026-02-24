@@ -13,4 +13,6 @@ The `description` property of the room is actually printed by using the passthro
 because of the way passthrough is used.
 """
 
-return passthrough()
+print(f"[color bright_yellow]{this.title()}[/color bright_yellow]")
+passthrough()
+this.tell_contents()

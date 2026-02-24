@@ -12,4 +12,4 @@ overriding function. The `$room` class overrides this verb with code to print th
 objects that are in the room.
 """
 
-return this.description()
+print(this.description())

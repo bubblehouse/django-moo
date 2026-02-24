@@ -69,5 +69,5 @@ def test_description(t_init: Object, t_wizard: Object):
         print(printed)
         assert printed == [
             f"[color yellow]Description set for #{thingy.id} (thingy)[/color yellow]",
-            "[bright_yellow]thingy[/bright_yellow]\n[deep_sky_blue1]a dusty old widget[/deep_sky_blue1]",
+            "[color deep_sky_blue1]a dusty old widget[/color deep_sky_blue1]",
         ]

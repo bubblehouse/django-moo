@@ -12,4 +12,4 @@ if not obj:
     print(f"There is no door called {door_description} here.")
     return
 
-print(obj.look_self())
+obj.look_self()

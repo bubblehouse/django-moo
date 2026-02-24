@@ -14,4 +14,4 @@ else:
     msg = args[0]  # pylint: disable=undefined-variable  # type: ignore
 
 for obj in api.caller.location.contents.all():
-    write(obj, f"[bright_yellow]{api.caller.name}[/bright_yellow]: {msg}")
+    write(obj, f"[color bright_yellow]{api.caller.name}[/color bright_yellow]: {msg}")
