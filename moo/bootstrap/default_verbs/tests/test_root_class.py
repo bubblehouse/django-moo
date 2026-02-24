@@ -36,14 +36,11 @@ def test_titlec_capitalizes_name(t_init: Object, t_wizard: Object):
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_description_with_property(t_init: Object, t_wizard: Object):
-    """description() returns a rich-formatted name+description string."""
+    """description() returns a rich-formatted description string."""
     with code.context(t_wizard, lambda msg: None):
         obj = setup_obj(t_wizard)
         obj.describe("A shiny golden coin.")
-        assert obj.description() == (
-            "[bright_yellow]test object[/bright_yellow]\n"
-            "[deep_sky_blue1]A shiny golden coin.[/deep_sky_blue1]"
-        )
+        assert obj.description() == "[color deep_sky_blue1]A shiny golden coin.[/color deep_sky_blue1]"
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -53,17 +50,19 @@ def test_description_without_property(t_init: Object, t_wizard: Object):
     with code.context(t_wizard, lambda msg: None):
         obj = setup_obj(t_wizard)
         Property.objects.filter(origin=obj, name="description").delete()
-        assert obj.description() == "[deep_pink4 bold]Not much to see here.[/deep_pink4 bold]"
+        assert obj.description() == "[color deep_pink4 bold]Not much to see here.[/color deep_pink4 bold]"
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_look_self_delegates_to_description(t_init: Object, t_wizard: Object):
-    """look_self() returns the same output as description()."""
-    with code.context(t_wizard, lambda msg: None):
+    """look_self() prints the same output as description()."""
+    printed = []
+    with code.context(t_wizard, printed.append):
         obj = setup_obj(t_wizard)
         obj.describe("A view from the top.")
-        assert obj.look_self() == obj.description()
+        obj.look_self()
+        assert printed == [obj.description()]
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -120,7 +119,7 @@ def test_tell_non_player_does_nothing(t_init: Object, t_wizard: Object):
     with code.context(t_wizard, printed.append):
         obj = setup_obj(t_wizard)
         obj.tell("This message should be dropped.")
-    assert printed == []
+    assert not printed
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -286,4 +285,4 @@ def test_recycle_does_nothing(t_init: Object, t_wizard: Object):
         obj.recycle()
         obj.refresh_from_db()
         assert obj.name == "test object"
-        assert printed == []
+        assert not printed

@@ -44,7 +44,7 @@ with code.context(wizard, log.info):
     rooms.set_property("free_entry", True)
     rooms.set_property("entrances", [])
     rooms.set_property("dark", False)
-    rooms.set_property("content_list_type", 0)
+    rooms.set_property("content_list_type", 3)
 
     mail_room = create("Mail Distribution Center", parents=[rooms], location=None)
 

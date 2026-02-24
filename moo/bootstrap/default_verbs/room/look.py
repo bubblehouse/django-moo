@@ -55,4 +55,4 @@ elif api.parser.has_pobj_str("at"):
 else:
     obj = api.player.location
 
-print(obj.look_self())
+obj.look_self()
