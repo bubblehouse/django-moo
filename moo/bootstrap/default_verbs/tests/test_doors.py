@@ -84,7 +84,10 @@ def test_open(t_init: Object, t_wizard: Object):
         assert door.is_open()
         printed.clear()
         parse.interpret(ctx, "look through wooden door")
-        assert printed == ["[bright_yellow]Another Room[/bright_yellow]\n[deep_sky_blue1]There's not much to see here.[/deep_sky_blue1]"]
+        assert printed == [
+            "[color bright_yellow]Another Room[/color bright_yellow]",
+            "[color deep_sky_blue1]There's not much to see here.[/color deep_sky_blue1]"
+        ]
         printed.clear()
         parse.interpret(ctx, "close wooden door")
         assert printed == ["The door is closed."]
