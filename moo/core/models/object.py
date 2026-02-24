@@ -466,7 +466,7 @@ class Object(models.Model, AccessibleMixin):
     # but otherwise this seems to work, including in the admin interface
     def __getattr__(self, name):
         if name in RESERVED_NAMES:
-            return super().__getattr__(name)  # pylint: disable=no-member
+            raise AttributeError(name)
         if self.has_verb(name, recurse=True):
             return self.get_verb(name, recurse=True)
         if self.has_property(name, recurse=True):
