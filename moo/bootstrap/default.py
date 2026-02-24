@@ -28,7 +28,7 @@ with code.context(wizard, log.info):
     root = create("Root Class", location=None)
     sys.set_property("root_class", root)
     root.add_verb("accept", code="return True")
-    root.set_property("description", "The root class from which all objects inherit.")
+    root.set_property("description", "")
     root.set_property("key", None)
 
     rooms = create("Generic Room", parents=[root], location=None)
