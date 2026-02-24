@@ -15,15 +15,20 @@ When you look at pipe now you should see:
 
 from moo.core import api
 
-object = args[0] if args else this.find(api.parser.get_dobj_str()).first()
+if args:
+    object = args[0]
+    name = object.title()
+else:
+    name = api.parser.get_dobj_str()
+    object = this.find(name).first()
 
 if not this.is_open():
     print(f"{this.title()} is closed.")
     return
 
-if object.location != this:
-    print(f"{object.name} is not in {this.name}.")
+if not object or object.location != this:
+    print(f"{name} is not in {this.title()}.")
     return
 
 object.moveto(api.player)
-print(f"You took {object.name} from {this.name}")
+print(f"You took {name} from {this.title()}")
