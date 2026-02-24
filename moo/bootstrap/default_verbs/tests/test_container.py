@@ -175,7 +175,7 @@ def test_take_from_open_container(t_init: Object, t_wizard: Object):
         printed.clear()
         parse.interpret(ctx, "take tobacco from wooden box")
         tobacco.refresh_from_db()
-        assert tobacco.location == lab
+        assert tobacco.location == t_wizard
         assert printed == ["You took tobacco from wooden box"]
 
 

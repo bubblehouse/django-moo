@@ -6,4 +6,5 @@
 This verb checks if the container is open. It returns `True` if the container is open, and `False` otherwise.
 """
 
-return this.open
+result = this.get_property("open")
+return result

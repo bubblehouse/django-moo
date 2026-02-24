@@ -9,4 +9,7 @@ return `True` if the player has permission to open the container, and `False` ot
 
 player = args[0]
 
+if not this.open_key:
+    return True
+
 return _.lock_utils.eval_key(this.open_key, player)

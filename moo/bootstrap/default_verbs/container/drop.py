@@ -19,13 +19,12 @@ If pipe is open, then tobacco will be put into the pipe. If you look at pipe you
 from moo.core import api
 
 object = args[0] if args else api.parser.get_dobj()
-subject = api.parser.get_pobj("in", "on") if api.parser.has_pobj("in", "on") else api.player.location
 
 if not this.is_open():
     print(f"{this.title()} is closed.")
     return
 
-this.move_to(subject)
+object.moveto(this)
 
 chosen_prep = "in" if "in" in api.parser.prepositions else "on"
-print(f"You placed {object.name} {chosen_prep} {subject.name}")
+print(f"You placed {object.name} {chosen_prep} {this.name}")
