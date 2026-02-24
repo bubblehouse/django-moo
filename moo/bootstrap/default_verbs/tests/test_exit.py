@@ -290,11 +290,19 @@ def test_move_through_exit(t_init: Object, t_wizard: Object):
         printed.append(msg)
 
     with code.context(t_wizard, _writer) as ctx:
-        setup_exit(t_wizard)
+        source, _ = setup_exit(t_wizard)
+        player = lookup("Player")
+        player.location = source
+        player.save()
         parse.interpret(ctx, "@dig north to Destination Room through wooden door")
         dest = lookup("Destination Room")
-        with pytest.warns(RuntimeWarning, match=r"ConnectionError"):
+        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
             parse.interpret(ctx, "go north")
+        assert [str(x.message) for x in warnings.list] == [
+            f"ConnectionError(#{t_wizard.pk} (Wizard)): You leave {source}.",
+            f"ConnectionError(#{player.pk} (Player)): {t_wizard} leaves {source}.",
+            f"ConnectionError(#{t_wizard.pk} (Wizard)): You arrive at {dest}.",
+        ]
         api.caller.refresh_from_db()
         assert api.caller.location == dest
 
@@ -348,8 +356,16 @@ def test_invoke_moves_player(t_init: Object, t_wizard: Object):
         source, _ = setup_exit(t_wizard)
         parse.interpret(ctx, "@dig north to Destination Room through wooden door")
         dest = lookup("Destination Room")
+        player = lookup("Player")
+        player.location = dest
+        player.save()
         door = source.match_exit("north")
-        with pytest.warns(RuntimeWarning, match=r"ConnectionError"):
+        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
             door.invoke(t_wizard)
+        assert [str(x.message) for x in warnings.list] == [
+            f"ConnectionError(#{t_wizard.pk} (Wizard)): You leave {source}.",
+            f"ConnectionError(#{t_wizard.pk} (Wizard)): You arrive at {dest}.",
+            f"ConnectionError(#{player.pk} (Player)): {t_wizard} arrives at {dest}.",
+        ]
         api.caller.refresh_from_db()
         assert api.caller.location == dest

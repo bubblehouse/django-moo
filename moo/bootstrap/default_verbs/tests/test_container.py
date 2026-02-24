@@ -193,7 +193,7 @@ def test_take_from_closed_container(t_init: Object, t_wizard: Object):
         tobacco = create("tobacco", parents=[system.thing], location=box)
         parse.interpret(ctx, "take tobacco from wooden box")
         tobacco.refresh_from_db()
-        assert tobacco.location == t_wizard
+        assert tobacco.location == box
         assert printed == [f"{box.title()} is closed."]
 
 
