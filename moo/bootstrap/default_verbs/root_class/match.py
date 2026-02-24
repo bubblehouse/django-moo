@@ -15,7 +15,7 @@ from moo.core import exceptions
 
 qs = this.find(args[0])
 if qs.count() == 0:
-    raise this.objects.NoSuchObjectError(args[0])
+    raise type(this).DoesNotExist(args[0])
 elif qs.count() > 1:
     raise exceptions.AmbiguousObjectError(args[0], qs)
 else:
