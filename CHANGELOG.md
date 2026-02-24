@@ -1,3 +1,18 @@
+## [0.48.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.47.5...v0.48.0) (2026-02-24)
+
+
+### Features
+
+* added improved handling of multple prepositions ([de58915](https://gitlab.com/bubblehouse/django-moo/commit/de58915e2161fa7f8e43e2adf96bc6b8dcfb920d))
+* implementing container support ([8116fc2](https://gitlab.com/bubblehouse/django-moo/commit/8116fc258f2a9646aed1721e0bee24f2009bea18))
+
+
+### Bug Fixes
+
+* added trivial implementation of $room.tell_contents for now ([6077ce6](https://gitlab.com/bubblehouse/django-moo/commit/6077ce6f46581863bb3788a459717874dfcb8203))
+* fixed remaining test issues ([89a74c5](https://gitlab.com/bubblehouse/django-moo/commit/89a74c570977e37cc23ea348be9d6b723d6758d1))
+* missing f-string prefix ([66ae8ff](https://gitlab.com/bubblehouse/django-moo/commit/66ae8ffec6eec50b709c86c9d0533bc6e351eb1d))
+
 ## [0.47.5](https://gitlab.com/bubblehouse/django-moo/compare/v0.47.4...v0.47.5) (2026-02-23)
 
 
