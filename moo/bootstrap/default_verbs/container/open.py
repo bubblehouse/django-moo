@@ -9,7 +9,7 @@ This verb sets the property `opened` to `True`.
 
 from moo.core import api
 
-if this.opened:
+if this.is_open():
     print("Container is already open.")
 elif this.is_openable_by(api.player):
     this.set_opened(True)

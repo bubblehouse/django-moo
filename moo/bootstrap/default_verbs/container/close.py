@@ -8,7 +8,7 @@ This is the opposite of open. If the pipe is already close, an error message is 
 
 from moo.core import api
 
-if not this.opened:
+if not this.is_open():
     print("Container is already closed.")
 elif this.is_openable_by(api.player):
     this.set_opened(False)
