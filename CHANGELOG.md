@@ -1,3 +1,13 @@
+## [0.48.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.48.0...v0.48.1) (2026-02-24)
+
+
+### Bug Fixes
+
+* allow use of the type() builtin ([951cb7f](https://gitlab.com/bubblehouse/django-moo/commit/951cb7ff00bc6fa8f6067ddfa9c60bfd9a522e52))
+* handle RESERVED_NAMES properly ([9dc3acc](https://gitlab.com/bubblehouse/django-moo/commit/9dc3accb1fd8c5adc9d157d856a6d082ab028229))
+* moveto has no underscore ([3dcdc58](https://gitlab.com/bubblehouse/django-moo/commit/3dcdc5872c3b1a0944bde4b8295a54381b615de9))
+* the default description for an object should be the empty string ([75f9f3e](https://gitlab.com/bubblehouse/django-moo/commit/75f9f3edab5abb0faf3b4733f97cdc3de609a30d))
+
 ## [0.48.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.47.5...v0.48.0) (2026-02-24)
 
 
