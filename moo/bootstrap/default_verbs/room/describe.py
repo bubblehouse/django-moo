@@ -6,6 +6,8 @@ from moo.core import lookup, api
 
 obj = this
 
+response = ""
+
 if obj.has_property("description"):
     response += obj.get_property('description')
 else:
