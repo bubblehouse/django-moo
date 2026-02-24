@@ -11,8 +11,8 @@ this verb to eject a victim from inside the object. The victim is sent to `None`
 something = args[0]
 if this.contains(something):
     if something.is_player():
-        something.move_to(_.player_start)
+        something.moveto(_.player_start)
     else:
-        something.move_to(None)
+        something.moveto(None)
 else:
     print(f"{this.name} does not contain {something.name}.")
