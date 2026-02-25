@@ -1,4 +1,4 @@
-#!moo verb @dig @tunnel --on $programmer --dspec any --ispec "through:any"
+#!moo verb @dig @tunnel --on $programmer --dspec any --ispec "through:any" --ispec "to:any"
 
 # pylint: disable=return-outside-function,undefined-variable
 
