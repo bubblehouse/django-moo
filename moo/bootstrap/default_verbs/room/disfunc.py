@@ -13,5 +13,7 @@ due to network problems.
 
 from moo.core import api
 
-if api.player.location != api.player.home:
+home = api.player.home or _.player_start
+if api.player.location != home:
     api.player.moveto(api.player.home)
+this.announce(f"{api.player} has disconnected.")
