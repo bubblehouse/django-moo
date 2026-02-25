@@ -1,4 +1,4 @@
-#!moo verb emote --on $room
+#!moo verb emote --on $room --dspec any
 
 # pylint: disable=return-outside-function,undefined-variable
 

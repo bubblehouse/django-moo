@@ -18,7 +18,6 @@ containers.save()
 
 with code.context(wizard, log.info):
     sys = lookup(1)
-    sys.set_property("player_start", None)
 
     sys.set_property("container", containers)
     containers.set_property("open_key", None)
@@ -119,6 +118,7 @@ with code.context(wizard, log.info):
     this seems like a dumping ground for every piece of dusty forgotten
     equipment a mad scientist might require.""",
     )
+    sys.set_property("player_start", lab)
 
     wizard.location = lab
     wizard.save()
