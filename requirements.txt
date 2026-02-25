@@ -32,7 +32,7 @@ celery==5.6.2
     #   django-celery-beat
     #   django-celery-results
     #   django-moo
-certifi==2026.1.4
+certifi==2026.2.25
     # via requests
 cffi==2.0.0 ; platform_python_implementation != 'PyPy'
     # via

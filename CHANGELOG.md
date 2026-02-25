@@ -1,3 +1,10 @@
+## [0.48.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.48.2...v0.48.3) (2026-02-25)
+
+
+### Bug Fixes
+
+* issues found while unit testing, merge old room integration test into new file ([2e134b9](https://gitlab.com/bubblehouse/django-moo/commit/2e134b9b46e12a9ec2e05c0052e3561aeb23d353))
+
 ## [0.48.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.48.1...v0.48.2) (2026-02-24)
 
 
