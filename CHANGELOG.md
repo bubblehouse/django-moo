@@ -1,3 +1,15 @@
+## [0.51.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.50.0...v0.51.0) (2026-02-26)
+
+
+### Features
+
+* added $gender_utils and tests ([4ef8f8f](https://gitlab.com/bubblehouse/django-moo/commit/4ef8f8f7bf010a08c2b25fe73833e03e96777783))
+
+
+### Bug Fixes
+
+* propertly handle "dark" rooms ([3c227e2](https://gitlab.com/bubblehouse/django-moo/commit/3c227e275ceb061d88d2b9e5c8058c6fda8e8157))
+
 ## [0.50.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.49.0...v0.50.0) (2026-02-26)
 
 
