@@ -6,7 +6,9 @@ import json
 
 
 def loads(j):
-    from .models import Object, Property, Verb
+    from .models.object import Object
+    from .models.property import Property
+    from .models.verb import Verb
 
     def to_entity(d):
         if len(d) != 1:
@@ -33,7 +35,7 @@ def dumps(obj):
         if isinstance(o, Object):
             return {"o#%d" % o.pk: o.name}
         elif isinstance(o, Verb):
-            return {"v#%d" % o.pk: o.name}
+            return {"v#%d" % o.pk: o.name()}
         elif isinstance(o, Property):
             return {"p#%d" % o.pk: o.name}
         else:

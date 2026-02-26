@@ -57,33 +57,29 @@ for match in re.finditer(r'%(\w|%)(\((\w+)\))?', text):
     arg = match.group(3)
     if vartype == '%':
         result = '%'
+    elif vartype.lower() == 't':
+        if parser and parser.this:
+            name = parser.this.title()
+            result = name.capitalize() if vartype.isupper() else name
     elif vartype.lower() == 'd':
         if parser and parser.has_dobj():
             name = parser.get_dobj().title()
             result = name.capitalize() if vartype.isupper() else name
-        else:
-            result = f"%{vartype}"
     elif vartype.lower() == 'i' and arg:
         if parser and parser.has_pobj(arg):
             name = parser.get_pobj(arg).title()
             result = name.capitalize() if vartype.isupper() else name
-        else:
-            result = f"%{vartype}({arg})"
     elif vartype.lower() == 'x' and arg:
         if who.has_property(arg):
             value = who.get_property(arg)
             result = value.capitalize() if vartype.isupper() else value
-        else:
-            result = f"%{vartype}({arg})"
     elif vartype in substitutions:
         prop = substitutions[vartype]
         if who.has_property(prop):
             result = who.get_property(prop)
         elif prop == 'name':
             result = who.name
-        else:
-            result = f"%{vartype}"
-    else:
+    if not result:
         result = f"%{vartype}"
     text = text.replace(match.group(0), result)
 

@@ -155,3 +155,4 @@ with code.ContextManager(wizard, log.info):
 
     bootstrap.load_verbs(repo, "moo.bootstrap.default_verbs")
     sys.gender_utils.set(player, "plural")
+    sys.set_property("sprintf", sys.string_utils.pronoun_sub)
