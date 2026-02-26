@@ -11,7 +11,7 @@ def test_percent_escape(t_init: Object, t_wizard: Object):
     """'%%' is replaced with a literal '%'."""
     with code.ContextManager(t_wizard, lambda msg: None):
         system = lookup(1)
-        result = system.string_utils.pronoun_sub("100%% done")
+        result = system.sprintf("100%% done")
     assert result == "100% done"
 
 
@@ -21,7 +21,7 @@ def test_subjective_pronouns(t_init: Object, t_wizard: Object):
     """'%s' and '%S' are replaced with the plural subjective pronouns."""
     with code.ContextManager(t_wizard, lambda msg: None):
         system = lookup(1)
-        result = system.string_utils.pronoun_sub("%s said hello. %S left.")
+        result = system.sprintf("%s said hello. %S left.")
     assert result == "they said hello. They left."
 
 
@@ -31,7 +31,7 @@ def test_objective_pronouns(t_init: Object, t_wizard: Object):
     """'%o' and '%O' are replaced with the plural objective pronouns."""
     with code.ContextManager(t_wizard, lambda msg: None):
         system = lookup(1)
-        result = system.string_utils.pronoun_sub("You see %o. You greet %O.")
+        result = system.sprintf("You see %o. You greet %O.")
     assert result == "You see them. You greet Them."
 
 
@@ -41,7 +41,7 @@ def test_possessive_pronouns(t_init: Object, t_wizard: Object):
     """'%p' and '%P' are replaced with the plural possessive pronouns."""
     with code.ContextManager(t_wizard, lambda msg: None):
         system = lookup(1)
-        result = system.string_utils.pronoun_sub("%p hat. %P coat.")
+        result = system.sprintf("%p hat. %P coat.")
     assert result == "their hat. Their coat."
 
 
@@ -51,7 +51,7 @@ def test_reflexive_pronouns(t_init: Object, t_wizard: Object):
     """'%r' and '%R' are replaced with the plural reflexive pronouns."""
     with code.ContextManager(t_wizard, lambda msg: None):
         system = lookup(1)
-        result = system.string_utils.pronoun_sub("%s hurt %r. %S hurt %R.")
+        result = system.sprintf("%s hurt %r. %S hurt %R.")
     assert result == "they hurt themselves. They hurt Themselves."
 
 
@@ -62,7 +62,7 @@ def test_name_substitution(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, lambda msg: None):
         system = lookup(1)
         player = lookup("Player")
-        result = system.string_utils.pronoun_sub("Hello, %n!", player)
+        result = system.sprintf("Hello, %n!", player)
     assert result == "Hello, Player!"
 
 
@@ -73,7 +73,7 @@ def test_name_capitalized_substitution(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, lambda msg: None):
         system = lookup(1)
         player = lookup("Player")
-        result = system.string_utils.pronoun_sub("%N arrives.", player)
+        result = system.sprintf("%N arrives.", player)
     assert result == "Player arrives."
 
 
@@ -83,7 +83,7 @@ def test_dobj_no_parser(t_init: Object, t_wizard: Object):
     """'%d' passes through unchanged when there is no parser."""
     with code.ContextManager(t_wizard, lambda msg: None):
         system = lookup(1)
-        result = system.string_utils.pronoun_sub("You pick up %d.")
+        result = system.sprintf("You pick up %d.")
     assert result == "You pick up %d."
 
 
@@ -93,7 +93,7 @@ def test_dobj_capitalized_no_parser(t_init: Object, t_wizard: Object):
     """'%D' passes through unchanged when there is no parser."""
     with code.ContextManager(t_wizard, lambda msg: None):
         system = lookup(1)
-        result = system.string_utils.pronoun_sub("You drop %D.")
+        result = system.sprintf("You drop %D.")
     assert result == "You drop %D."
 
 
@@ -103,7 +103,7 @@ def test_pobj_no_parser(t_init: Object, t_wizard: Object):
     """'%i(prep)' passes through unchanged when there is no parser."""
     with code.ContextManager(t_wizard, lambda msg: None):
         system = lookup(1)
-        result = system.string_utils.pronoun_sub("You put it %i(in).")
+        result = system.sprintf("You put it %i(in).")
     assert result == "You put it %i(in)."
 
 
@@ -116,7 +116,7 @@ def test_custom_property(t_init: Object, t_wizard: Object):
         player = lookup("Player")
         player.set_property("title", "the adventurer")
         player.save()
-        result = system.string_utils.pronoun_sub("%s is known as %x(title).", player)
+        result = system.sprintf("%s is known as %x(title).", player)
     assert result == "they is known as the adventurer."
 
 
@@ -129,7 +129,7 @@ def test_custom_property_capitalized(t_init: Object, t_wizard: Object):
         player = lookup("Player")
         player.set_property("title", "the adventurer")
         player.save()
-        result = system.string_utils.pronoun_sub("%X(title) arrives.", player)
+        result = system.sprintf("%X(title) arrives.", player)
     assert result == "The adventurer arrives."
 
 
@@ -139,7 +139,7 @@ def test_custom_property_missing(t_init: Object, t_wizard: Object):
     """'%x(prop)' passes through when the property does not exist."""
     with code.ContextManager(t_wizard, lambda msg: None):
         system = lookup(1)
-        result = system.string_utils.pronoun_sub("Has %x(nonexistent).")
+        result = system.sprintf("Has %x(nonexistent).")
     assert result == "Has %x(nonexistent)."
 
 
@@ -149,7 +149,7 @@ def test_unknown_code_passthrough(t_init: Object, t_wizard: Object):
     """An unrecognised '%' code is left unchanged."""
     with code.ContextManager(t_wizard, lambda msg: None):
         system = lookup(1)
-        result = system.string_utils.pronoun_sub("Hello %z world.")
+        result = system.sprintf("Hello %z world.")
     assert result == "Hello %z world."
 
 
@@ -163,7 +163,7 @@ def test_explicit_who_argument(t_init: Object, t_wizard: Object):
         player.set_property("ps", "they")
         player.set_property("po", "them")
         player.save()
-        result = system.string_utils.pronoun_sub("You see %s. You greet %o.", player)
+        result = system.sprintf("You see %s. You greet %o.", player)
     assert result == "You see they. You greet them."
 
 
@@ -173,7 +173,7 @@ def test_no_substitution_codes(t_init: Object, t_wizard: Object):
     """Text with no substitution codes is returned unchanged."""
     with code.ContextManager(t_wizard, lambda msg: None):
         system = lookup(1)
-        result = system.string_utils.pronoun_sub("Nothing to see here.")
+        result = system.sprintf("Nothing to see here.")
     assert result == "Nothing to see here."
 
 
@@ -183,7 +183,7 @@ def test_multiple_substitutions(t_init: Object, t_wizard: Object):
     """Multiple codes in the same string are all substituted correctly."""
     with code.ContextManager(t_wizard, lambda msg: None):
         system = lookup(1)
-        result = system.string_utils.pronoun_sub("%S picks up the ball and throws %o at %r.")
+        result = system.sprintf("%S picks up the ball and throws %o at %r.")
     assert result == "They picks up the ball and throws them at themselves."
 
 
@@ -196,7 +196,7 @@ def test_dobj_with_parser(t_init: Object, t_wizard: Object):
         widget = create("widget", parents=[system.thing], location=t_wizard.location)
         parser = Parser(Lexer("take widget"), t_wizard)
         ctx.set_parser(parser)
-        result = system.string_utils.pronoun_sub("You pick up %d.")
+        result = system.sprintf("You pick up %d.")
     assert result == f"You pick up {widget.title()}."
 
 
@@ -209,7 +209,7 @@ def test_dobj_capitalized_with_parser(t_init: Object, t_wizard: Object):
         widget = create("widget", parents=[system.thing], location=t_wizard.location)
         parser = Parser(Lexer("take widget"), t_wizard)
         ctx.set_parser(parser)
-        result = system.string_utils.pronoun_sub("%D lands in your pack.")
+        result = system.sprintf("%D lands in your pack.")
     assert result == f"{widget.title().capitalize()} lands in your pack."
 
 
@@ -222,7 +222,7 @@ def test_pobj_with_parser(t_init: Object, t_wizard: Object):
         box = create("box", parents=[system.thing], location=t_wizard.location)
         parser = Parser(Lexer("look in box"), t_wizard)
         ctx.set_parser(parser)
-        result = system.string_utils.pronoun_sub("You peer %i(in).")
+        result = system.sprintf("You peer %i(in).")
     assert result == f"You peer {box.title()}."
 
 
@@ -235,5 +235,53 @@ def test_pobj_capitalized_with_parser(t_init: Object, t_wizard: Object):
         box = create("box", parents=[system.thing], location=t_wizard.location)
         parser = Parser(Lexer("look in box"), t_wizard)
         ctx.set_parser(parser)
-        result = system.string_utils.pronoun_sub("%I(in) looms before you.")
+        result = system.sprintf("%I(in) looms before you.")
     assert result == f"{box.title().capitalize()} looms before you."
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_this_no_parser(t_init: Object, t_wizard: Object):
+    """'%t' passes through unchanged when there is no parser."""
+    with code.ContextManager(t_wizard, lambda msg: None):
+        system = lookup(1)
+        result = system.sprintf("You see %t.")
+    assert result == "You see %t."
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_this_capitalized_no_parser(t_init: Object, t_wizard: Object):
+    """'%T' passes through unchanged when there is no parser."""
+    with code.ContextManager(t_wizard, lambda msg: None):
+        system = lookup(1)
+        result = system.sprintf("%T glows faintly.")
+    assert result == "%T glows faintly."
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_this_with_parser(t_init: Object, t_wizard: Object):
+    """'%t' is replaced with this object's name when a parser is active."""
+    with code.ContextManager(t_wizard, lambda msg: None) as ctx:
+        system = lookup(1)
+        torch = create("torch", parents=[system.thing], location=t_wizard.location)
+        parser = Parser(Lexer("take torch"), t_wizard)
+        parser.this = torch
+        ctx.set_parser(parser)
+        result = system.sprintf("You pick up %t.")
+    assert result == f"You pick up {torch.title()}."
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_this_capitalized_with_parser(t_init: Object, t_wizard: Object):
+    """'%T' is replaced with this object's name, capitalized."""
+    with code.ContextManager(t_wizard, lambda msg: None) as ctx:
+        system = lookup(1)
+        torch = create("torch", parents=[system.thing], location=t_wizard.location)
+        parser = Parser(Lexer("take torch"), t_wizard)
+        parser.this = torch
+        ctx.set_parser(parser)
+        result = system.sprintf("%T illuminates the room.")
+    assert result == f"{torch.title().capitalize()} illuminates the room."

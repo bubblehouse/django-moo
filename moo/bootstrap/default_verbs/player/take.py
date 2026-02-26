@@ -12,4 +12,4 @@ from moo.core import context
 
 player = context.player
 print("You can't take a player!")
-player.tell("{this.title()} tried unsucessfully to take you.")
+player.tell(_.sprintf("%N tried unsucessfully to take you."))
