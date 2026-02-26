@@ -52,6 +52,7 @@ ALLOWED_MODULES = (
     "moo.core",
     "hashlib",
     "string",
+    "re"
 )
 
 ALLOWED_BUILTINS = ("dir", "getattr", "hasattr", "dict", "list", "set", "type")
