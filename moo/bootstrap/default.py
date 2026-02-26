@@ -51,17 +51,16 @@ with code.ContextManager(wizard, log.info):
     sys.set_property("player", player)
     player.set_property("last_connect_time", time())
     player.set_property("ownership_quota", 1000)
-    player.set_property("gender", "neuter")
-    player.set_property("ps", "it")
-    player.set_property("po", "it")
-    player.set_property("pp", "its")
-    player.set_property("pr", "itself")
-    player.set_property("pq", "its")
-    player.set_property("psc", "It")
-    player.set_property("poc", "It")
-    player.set_property("ppc", "Its")
-    player.set_property("prc", "Itself")
-    player.set_property("pqc", "Its")
+    player.set_property("ps", "they", inherit_owner=True)
+    player.set_property("po", "them", inherit_owner=True)
+    player.set_property("pp", "their", inherit_owner=True)
+    player.set_property("pr", "themselves", inherit_owner=True)
+    player.set_property("pq", "theirs", inherit_owner=True)
+    player.set_property("psc", "They", inherit_owner=True)
+    player.set_property("poc", "Them", inherit_owner=True)
+    player.set_property("ppc", "Their", inherit_owner=True)
+    player.set_property("prc", "Themselves", inherit_owner=True)
+    player.set_property("pqc", "Theirs", inherit_owner=True)
     player.set_property("home", None)
     player.set_property("gaglist", [])
     player.set_property("paranoid", False)
@@ -111,6 +110,25 @@ with code.ContextManager(wizard, log.info):
     lock_utils = create("Lock Utilities", location=None)
     sys.set_property("lock_utils", lock_utils)
 
+    string_utils = create("String Utilities", location=None)
+    sys.set_property("string_utils", string_utils)
+
+    gender_utils = create("Gender Utilities", location=None)
+    sys.set_property("gender_utils", gender_utils)
+    gender_utils.set_property("pronouns", [
+        "ps", "po", "pp", "pr", "pq", "psc", "poc", "ppc", "prc", "pqc"
+    ])
+    gender_utils.set_property("genders", ["neuter", "male", "female", "plural"])
+    gender_utils.set_property("ps", ["it", "he", "she", "they"])
+    gender_utils.set_property("po", ["it", "him", "her", "them"])
+    gender_utils.set_property("pp", ["its", "his", "her", "their"])
+    gender_utils.set_property("pr", ["itself", "himself", "herself", "themselves"])
+    gender_utils.set_property("pq", ["its", "his", "hers", "theirs"])
+    gender_utils.set_property("psc", ["It", "He", "She", "They"])
+    gender_utils.set_property("poc", ["It", "Him", "Her", "Them"])
+    gender_utils.set_property("ppc", ["Its", "His", "Hers", "Their"])
+    gender_utils.set_property("prc", ["Itself", "Himself", "Herself", "Themselves"])
+    gender_utils.set_property("pqc", ["Its", "His", "Hers", "Theirs"])
 
     lab = create("The Laboratory", parents=[rooms], location=None)
     lab.set_property(
@@ -135,7 +153,5 @@ with code.ContextManager(wizard, log.info):
 
     root.get_verb("accept").delete()
 
-    string_utils = create("String Utilities", location=None)
-    sys.set_property("string_utils", string_utils)
-
     bootstrap.load_verbs(repo, "moo.bootstrap.default_verbs")
+    sys.gender_utils.set(player, "plural")
