@@ -1,3 +1,15 @@
+## [0.50.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.49.0...v0.50.0) (2026-02-26)
+
+
+### Features
+
+* added $string_utils and tests ([8df685a](https://gitlab.com/bubblehouse/django-moo/commit/8df685a2052291da81fa3dcf2aafac62bd607bfc))
+
+
+### Bug Fixes
+
+* parser token should be set to none in every context ([e51a0f7](https://gitlab.com/bubblehouse/django-moo/commit/e51a0f7ffd1b32fbb0efdbc274298ec1b70f8d45))
+
 ## [0.49.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.48.3...v0.49.0) (2026-02-26)
 
 
