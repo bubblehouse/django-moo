@@ -159,19 +159,19 @@ Additionally, verbs can use the `return` keyword from anywhere, not just inside 
 
 # pylint: disable=return-outside-function,undefined-variable
 
-from moo.core import api, write
+from moo.core import context, write
 
-if not args and not api.parser.has_dobj_str():  # pylint: disable=undefined-variable  # type: ignore
+if not args and not context.parser.has_dobj_str():  # pylint: disable=undefined-variable  # type: ignore
     print("What do you want to say?")
     return  # pylint: disable=return-outside-function  # type: ignore
 
-if api.parser and api.parser.has_dobj_str():
-    msg = api.parser.get_dobj_str()
+if context.parser and context.parser.has_dobj_str():
+    msg = context.parser.get_dobj_str()
 else:
     msg = args[0]  # pylint: disable=undefined-variable  # type: ignore
 
-for obj in api.caller.location.contents.all():
-    write(obj, f"[bright_yellow]{api.caller.name}[/bright_yellow]: {msg}")
+for obj in context.caller.location.contents.all():
+    write(obj, f"[bright_yellow]{context.caller.name}[/bright_yellow]: {msg}")
 ```
 
 ### Early Return Pattern
@@ -200,13 +200,13 @@ Import and use the game API within verbs:
 #!moo verb create_item --on $player
 
 """Create a new object."""
-from moo.core import api, create
+from moo.core import context, create
 
 if not args:
     print("Usage: create_item <name>")
     return
 
-name = api.parser.get_dobj_str()
+name = context.parser.get_dobj_str()
 new_obj = create(name, location=this.location)
 
 print(f"Created {new_obj.name}")
@@ -215,7 +215,7 @@ print(f"Created {new_obj.name}")
 Common imports:
 - `from moo.core import create, lookup` - Create/find objects
 - `from moo.core.models import Object, Verb, Property` - Models
-- `from moo.core import api` - Access the caller and other context
+- `from moo.core import context` - Access the caller and other context
 
 ## Testing Verbs
 
@@ -236,7 +236,7 @@ def test_my_verb(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer):
+    with code.ContextManager(t_wizard, _writer):
         obj = create("Test Object")
         obj.add_verb("my_verb", code='return "Hello"')
         result = obj.invoke_verb("my_verb")
@@ -265,7 +265,7 @@ def test_drop_from_inventory(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         system = lookup(1)
         lab = t_wizard.location
         widget = create("widget", parents=[system.thing], location=t_wizard)
@@ -276,10 +276,10 @@ def test_drop_from_inventory(t_init: Object, t_wizard: Object):
         assert widget.location == lab
 ```
 
-Verbs can also be called directly as Python methods inside `code.context` — useful for testing helper/message verbs without going through the parser:
+Verbs can also be called directly as Python methods inside `code.ContextManager` — useful for testing helper/message verbs without going through the parser:
 
 ```python
-with code.context(t_wizard, _writer):
+with code.ContextManager(t_wizard, _writer):
     system = lookup(1)
     widget = create("widget", parents=[system.thing], location=t_wizard)
 
@@ -347,9 +347,9 @@ except ValueError:
 If a verb needs to do something time-consuming:
 
 ```python
-from moo.core import api, invoke
+from moo.core import context, invoke
 
-invoke("Hello, finally.", verb=api.player.tell, delay=10, periodic=False)
+invoke("Hello, finally.", verb=context.player.tell, delay=10, periodic=False)
 return "Task started in background."
 ```
 

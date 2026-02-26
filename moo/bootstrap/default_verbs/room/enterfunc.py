@@ -10,13 +10,13 @@ has moved into using the `$room.look_self` verb on the room. If the object is th
 description of `$room.bless_for_entry`.
 """
 
-from moo.core import api
+from moo.core import context
 
 thing = args[0]
 if thing.is_player():
     thing.tell(this.look_self())
 
-if thing == this.blessed_object and api.task_id == this.blessed_task_id:
+if thing == this.blessed_object and context.task_id == this.blessed_task_id:
     this.blessed_object = None
     this.blessed_task_id = None
     this.save()

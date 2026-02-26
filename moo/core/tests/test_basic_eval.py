@@ -10,8 +10,8 @@ def test_eval_simple_command(t_init: Object, t_wizard: Object):
     def _writer(msg):
         raise RuntimeError("print was called unexpectedly")
 
-    with code.context(t_wizard, _writer):
-        writer = code.context.get("writer")
+    with code.ContextManager(t_wizard, _writer):
+        writer = code.ContextManager.get("writer")
         globals = code.get_default_globals()  # pylint: disable=redefined-builtin
         globals.update(code.get_restricted_environment("__main__", writer))
         result = code.do_eval("dir()", {}, globals)
@@ -25,8 +25,8 @@ def test_trivial_printing(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer):
-        writer = code.context.get("writer")
+    with code.ContextManager(t_wizard, _writer):
+        writer = code.ContextManager.get("writer")
         globals = code.get_default_globals()  # pylint: disable=redefined-builtin
         globals.update(code.get_restricted_environment("__main__", writer))
         result = code.do_eval("print('test')", {}, globals)
@@ -41,10 +41,10 @@ def test_printing_imported_caller(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer):
-        writer = code.context.get("writer")
+    with code.ContextManager(t_wizard, _writer):
+        writer = code.ContextManager.get("writer")
         globals = code.get_default_globals()  # pylint: disable=redefined-builtin
         globals.update(code.get_restricted_environment("__main__", writer))
-        src = "from moo.core import api\nprint(api.caller)"
+        src = "from moo.core import context\nprint(context.caller)"
         code.r_exec(src, {}, globals)
         assert printed == [t_wizard]

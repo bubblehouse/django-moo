@@ -12,16 +12,16 @@ contents list of the player's location. Suitable messages are printed to inform 
 and to tell other people in the room that the object has just been dropped.
 """
 
-from moo.core import api
+from moo.core import context
 
-if this.location != api.player:
+if this.location != context.player:
     print("You check your pockets, but can't find {}.".format(this.title()))
 elif this.location.accept(this):
-    this.moveto(api.player.location)
+    this.moveto(context.player.location)
     print(this.drop_succeeded_msg().format(actor="You", subject=this))
     if msg := this.odrop_succeeded_msg():
-        this.location.announce(msg.format(actor=api.player, subject=this))
+        this.location.announce(msg.format(actor=context.player, subject=this))
 else:
     print(this.drop_failed_msg().format(actor="You", subject=this))
     if msg := this.odrop_failed_msg():
-        this.location.announce(msg.format(actor=api.player, subject=this))
+        this.location.announce(msg.format(actor=context.player, subject=this))

@@ -2,10 +2,10 @@
 
 # pylint: disable=return-outside-function,undefined-variable
 
-from moo.core import api
+from moo.core import context
 
-door_description = api.parser.get_dobj_str()
-door = api.caller.location.match_exit(door_description)
+door_description = context.parser.get_dobj_str()
+door = context.caller.location.match_exit(door_description)
 if not door:
     print(f"There is no door called {door_description} here.")
     return

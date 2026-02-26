@@ -1,6 +1,6 @@
 import pytest
 
-from moo.core import api, code, create, lookup, parse
+from moo.core import context, code, create, lookup, parse
 from moo.core.models import Object
 
 
@@ -12,7 +12,7 @@ def setup_exit(t_wizard: Object):
     door = create("wooden door", parents=[exits], location=source)
     t_wizard.location = source
     t_wizard.save()
-    api.caller.refresh_from_db()
+    context.caller.refresh_from_db()
     return source, door
 
 
@@ -25,7 +25,7 @@ def test_is_open_default(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         _, door = setup_exit(t_wizard)
         parse.interpret(ctx, "@dig north to Destination Room through wooden door")
         assert not door.is_open()
@@ -40,7 +40,7 @@ def test_is_locked_default(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         _, door = setup_exit(t_wizard)
         parse.interpret(ctx, "@dig north to Destination Room through wooden door")
         assert not door.is_locked()
@@ -55,7 +55,7 @@ def test_open_exit(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         _, door = setup_exit(t_wizard)
         parse.interpret(ctx, "@dig north to Destination Room through wooden door")
         printed.clear()
@@ -73,7 +73,7 @@ def test_open_already_open(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         setup_exit(t_wizard)
         parse.interpret(ctx, "@dig north to Destination Room through wooden door")
         parse.interpret(ctx, "open wooden door")
@@ -91,7 +91,7 @@ def test_open_locked_exit(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         _, door = setup_exit(t_wizard)
         parse.interpret(ctx, "@dig north to Destination Room through wooden door")
         parse.interpret(ctx, "lock wooden door")
@@ -110,7 +110,7 @@ def test_close_exit(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         _, door = setup_exit(t_wizard)
         parse.interpret(ctx, "@dig north to Destination Room through wooden door")
         parse.interpret(ctx, "open wooden door")
@@ -129,7 +129,7 @@ def test_close_already_closed(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         setup_exit(t_wizard)
         parse.interpret(ctx, "@dig north to Destination Room through wooden door")
         printed.clear()
@@ -146,7 +146,7 @@ def test_close_door_with_autolock(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         _, door = setup_exit(t_wizard)
         parse.interpret(ctx, "@dig north to Destination Room through wooden door")
         door.set_property("autolock", True)
@@ -166,7 +166,7 @@ def test_lock_exit(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         _, door = setup_exit(t_wizard)
         parse.interpret(ctx, "@dig north to Destination Room through wooden door")
         printed.clear()
@@ -184,7 +184,7 @@ def test_lock_already_locked(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         setup_exit(t_wizard)
         parse.interpret(ctx, "@dig north to Destination Room through wooden door")
         parse.interpret(ctx, "lock wooden door")
@@ -202,7 +202,7 @@ def test_unlock_exit(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         _, door = setup_exit(t_wizard)
         parse.interpret(ctx, "@dig north to Destination Room through wooden door")
         parse.interpret(ctx, "lock wooden door")
@@ -221,7 +221,7 @@ def test_unlock_not_locked(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         setup_exit(t_wizard)
         parse.interpret(ctx, "@dig north to Destination Room through wooden door")
         printed.clear()
@@ -238,7 +238,7 @@ def test_open_door_not_in_exits(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         # setup_exit places the door in the room but does NOT @dig,
         # so match_exit won't find it in the room's exits property
         setup_exit(t_wizard)
@@ -255,7 +255,7 @@ def test_lock_door_not_in_exits(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         setup_exit(t_wizard)
         parse.interpret(ctx, "lock wooden door")
         assert printed == ["There is no door called wooden door here."]
@@ -270,7 +270,7 @@ def test_look_through_exit(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         setup_exit(t_wizard)
         parse.interpret(ctx, "@dig north to Destination Room through wooden door")
         printed.clear()
@@ -290,7 +290,7 @@ def test_move_through_exit(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         source, _ = setup_exit(t_wizard)
         player = lookup("Player")
         player.location = source
@@ -304,8 +304,8 @@ def test_move_through_exit(t_init: Object, t_wizard: Object):
             f"ConnectionError(#{player.pk} (Player)): {t_wizard} leaves {source}.",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): You arrive at {dest}.",
         ]
-        api.caller.refresh_from_db()
-        assert api.caller.location == dest
+        context.caller.refresh_from_db()
+        assert context.caller.location == dest
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -317,7 +317,7 @@ def test_move_nonexistent_direction(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         parse.interpret(ctx, "go nowhere")
         assert printed == ["Go where?"]
 
@@ -331,7 +331,7 @@ def test_message_verbs(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         source, _ = setup_exit(t_wizard)
         parse.interpret(ctx, "@dig north to Destination Room through wooden door")
         dest = lookup("Destination Room")
@@ -353,7 +353,7 @@ def test_invoke_moves_player(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         source, _ = setup_exit(t_wizard)
         parse.interpret(ctx, "@dig north to Destination Room through wooden door")
         dest = lookup("Destination Room")
@@ -368,5 +368,5 @@ def test_invoke_moves_player(t_init: Object, t_wizard: Object):
             f"ConnectionError(#{t_wizard.pk} (Wizard)): You arrive at {dest}.",
             f"ConnectionError(#{player.pk} (Player)): {t_wizard} arrives at {dest}.",
         ]
-        api.caller.refresh_from_db()
-        assert api.caller.location == dest
+        context.caller.refresh_from_db()
+        assert context.caller.location == dest

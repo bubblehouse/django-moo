@@ -6,10 +6,10 @@
 This is the opposite of open. If the pipe is already close, an error message is printed.
 """
 
-from moo.core import api
+from moo.core import context
 
 if not this.is_open():
     print("Container is already closed.")
-elif this.is_openable_by(api.player):
+elif this.is_openable_by(context.player):
     this.set_opened(False)
     print("You close the container.")

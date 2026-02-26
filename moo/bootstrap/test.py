@@ -12,7 +12,7 @@ user = User.objects.create(username="wizard")
 Player.objects.create(user=user, avatar=wizard, wizard=True)
 containers = lookup("container class")
 
-with code.context(wizard, log.info):
+with code.ContextManager(wizard, log.info):
     bag = create("bag of holding", parents=[containers], location=wizard)
     hammer = create("wizard hammer", location=bag)
     book = create("class book", parents=[containers], location=bag)

@@ -10,12 +10,12 @@ other objects in the room of the pose action. This provides a two stage mechanis
 overridden to provide special effects.
 """
 
-from moo.core import api
+from moo.core import context
 
-if api.parser.words:
-    message = " ".join(api.parser.words[1:])
+if context.parser.words:
+    message = " ".join(context.parser.words[1:])
 else:
     message = " ".join(args)
 
-api.caller.tell("You " + message)
+context.caller.tell("You " + message)
 this.emote1(message)

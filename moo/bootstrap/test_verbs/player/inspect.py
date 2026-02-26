@@ -2,9 +2,9 @@
 
 # pylint: disable=return-outside-function,undefined-variable
 
-from moo.core import api
+from moo.core import context
 
-qs = api.caller.location.properties.filter(name="description")
+qs = context.caller.location.properties.filter(name="description")
 if qs:
     print(qs[0].value)
 else:

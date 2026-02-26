@@ -19,7 +19,7 @@ def test_is_open_default(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer):
+    with code.ContextManager(t_wizard, _writer):
         box = setup_container(t_wizard)
         assert not box.is_open()
 
@@ -32,7 +32,7 @@ def test_open_container(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         box = setup_container(t_wizard)
         parse.interpret(ctx, "open wooden box")
         box.refresh_from_db()
@@ -48,7 +48,7 @@ def test_open_already_open(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         box = setup_container(t_wizard)
         parse.interpret(ctx, "open wooden box")
         printed.clear()
@@ -64,7 +64,7 @@ def test_close_container(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         box = setup_container(t_wizard)
         assert not box.is_open()
         parse.interpret(ctx, "open wooden box")
@@ -84,7 +84,7 @@ def test_close_already_closed(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         box = setup_container(t_wizard)
         parse.interpret(ctx, "close wooden box")
         assert printed == ["Container is already closed."]
@@ -98,7 +98,7 @@ def test_tell_contents_empty(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer):
+    with code.ContextManager(t_wizard, _writer):
         box = setup_container(t_wizard)
         box.tell_contents()
         assert printed == ["It is empty."]
@@ -112,7 +112,7 @@ def test_tell_contents_with_items(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer):
+    with code.ContextManager(t_wizard, _writer):
         system = lookup(1)
         box = setup_container(t_wizard)
         tobacco = create("tobacco", parents=[system.thing], location=box)
@@ -128,7 +128,7 @@ def test_put_in_open_container(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         system = lookup(1)
         box = setup_container(t_wizard)
         tobacco = create("tobacco", parents=[system.thing], location=t_wizard.location)
@@ -148,7 +148,7 @@ def test_put_in_closed_container(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         system = lookup(1)
         box = setup_container(t_wizard)
         tobacco = create("tobacco", parents=[system.thing], location=t_wizard.location)
@@ -166,7 +166,7 @@ def test_take_from_open_container(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         system = lookup(1)
         lab = t_wizard.location
         box = setup_container(t_wizard)
@@ -187,7 +187,7 @@ def test_take_from_closed_container(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         system = lookup(1)
         box = setup_container(t_wizard)
         tobacco = create("tobacco", parents=[system.thing], location=box)
@@ -205,7 +205,7 @@ def test_take_item_not_in_container(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         system = lookup(1)
         box = setup_container(t_wizard)
         tobacco = create("tobacco", parents=[system.thing], location=t_wizard.location)
@@ -224,7 +224,7 @@ def test_is_openable_by_no_key(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer):
+    with code.ContextManager(t_wizard, _writer):
         box = setup_container(t_wizard)
         assert box.is_openable_by(t_wizard)
 
@@ -237,7 +237,7 @@ def test_lock_for_open(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         system = lookup(1)
         box = setup_container(t_wizard)
         key = create("brass key", parents=[system.thing], location=t_wizard.location)
@@ -253,7 +253,7 @@ def test_unlock_for_open(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         system = lookup(1)
         box = setup_container(t_wizard)
         key = create("brass key", parents=[system.thing], location=t_wizard.location)

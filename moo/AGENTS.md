@@ -96,14 +96,14 @@ Verbs are stored as `Verb` model instances with code compiled by RestrictedPytho
 
 # pylint: disable=return-outside-function,undefined-variable
 
-from moo.core import api
+from moo.core import context
 
-if api.parser.words:
-    message = " ".join(api.parser.words[1:])
+if context.parser.words:
+    message = " ".join(context.parser.words[1:])
 else:
     message = " ".join(args)
 
-api.caller.tell("You " + message)
+context.caller.tell("You " + message)
 this.emote1(message)
 ```
 
@@ -115,7 +115,7 @@ When executing a verb:
   - `args` - if the verb is invoked as a function, this contains any positional arguments
   - `kwargs` - if the verb is invoked as a function, this contains any named arguments
   - `verb_name` - a verb can have multiple names; this is the particular name used to invoke this verb.
-- Many verbs include `from moo.core import api`; the `api` object has a number of helpful properties:
+- Many verbs include `from moo.core import context`; the `context` object has a number of helpful properties:
   - `caller` - When a verb begins to execute, `caller` is set to the owner of the verb; calls to `set_task_perms` can change this.
   - `player` - This is always a reference to the current player who should receive all output from the running verb.
   - `writer()` - This callable is used to write directly to an object's player terminal, if connected.
@@ -208,7 +208,7 @@ def test_drop_from_inventory(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         system = lookup(1)
         lab = t_wizard.location
         widget = create("widget", parents=[system.thing], location=t_wizard)
@@ -220,10 +220,10 @@ def test_drop_from_inventory(t_init: Object, t_wizard: Object):
         assert not printed
 ```
 
-Verbs can also be called as Python methods inside `code.context`, bypassing the parser — useful for testing helpers and message verbs:
+Verbs can also be called as Python methods inside `code.ContextManager`, bypassing the parser — useful for testing helpers and message verbs:
 
 ```python
-with code.context(t_wizard, _writer):
+with code.ContextManager(t_wizard, _writer):
     system = lookup(1)
     widget = create("widget", parents=[system.thing], location=t_wizard)
     assert widget.drop_succeeded_msg() == f"You drop {widget}."
