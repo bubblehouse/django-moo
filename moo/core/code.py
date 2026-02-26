@@ -16,10 +16,10 @@ log = logging.getLogger(__name__)
 
 
 def interpret(source, name, *args, runtype="exec", **kwargs):
-    from . import api
+    from . import context
 
     globals = get_default_globals()  # pylint: disable=redefined-builtin
-    globals.update(get_restricted_environment(name, api.writer))
+    globals.update(get_restricted_environment(name, context.writer))
     if runtype == "exec":
         return r_exec(source, {}, globals, *args, **kwargs)
     else:
@@ -150,9 +150,9 @@ _active_writer = contextvars.ContextVar("active_writer", default=None)
 _active_parser = contextvars.ContextVar("active_parser", default=None)
 _active_task_id = contextvars.ContextVar("active_task_id", default=None)
 
-class context:
+class ContextManager:
     """
-    The context class is what holds critical per-execution information such as
+    The ContextManager class is what holds critical per-execution information such as
     the active user and writer.  It uses contextvars to maintain this information across
     asynchronous calls.
 
@@ -173,7 +173,7 @@ class context:
             return _active_parser.get()
         if name == "task_id":
             return _active_task_id.get()
-        raise NotImplementedError(f"Unknown context variable: {name}")
+        raise NotImplementedError(f"Unknown ContextManager variable: {name}")
 
     @classmethod
     def override_caller(cls, caller):

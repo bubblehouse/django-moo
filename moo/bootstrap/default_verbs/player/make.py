@@ -2,18 +2,18 @@
 
 # pylint: disable=return-outside-function,undefined-variable
 
-from moo.core import api, create, lookup
+from moo.core import context, create, lookup
 
-if not (api.parser.has_dobj_str()):
+if not (context.parser.has_dobj_str()):
     print("[color yellow]What do you want to make?[/color yellow]")
     return
 
-name = api.parser.get_dobj_str()
+name = context.parser.get_dobj_str()
 new_obj = create(name)
 print("[color yellow]Created %s[/color yellow]" % new_obj)
 
-if api.parser.has_pobj_str("from"):
-    parent_name = api.parser.get_pobj_str("from")
+if context.parser.has_pobj_str("from"):
+    parent_name = context.parser.get_pobj_str("from")
     try:
         parent = lookup(parent_name)
         new_obj.parents.add(parent)

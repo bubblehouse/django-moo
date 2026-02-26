@@ -14,15 +14,15 @@ may place a notion of strength onto a player, and add weight to objects. If an o
 then the object cannot be taken by the player. This sort of condition should be added to the `take` verb for the object
 """
 
-from moo.core import api
+from moo.core import context
 
-if this.location == api.player:
+if this.location == context.player:
     print("You already have {} in your inventory.".format(this.title()))
-elif this.moveto(api.player):
+elif this.moveto(context.player):
     print(this.take_succeeded_msg().format(actor="You", subject=this))
     if msg := this.otake_succeeded_msg():
-        this.location.announce(msg.format(actor=api.player, subject=this))
+        this.location.announce(msg.format(actor=context.player, subject=this))
 else:
     print(this.take_failed_msg().format(actor="You", subject=this))
     if msg := this.otake_failed_msg():
-        this.location.announce(msg.format(actor=api.player, subject=this))
+        this.location.announce(msg.format(actor=context.player, subject=this))

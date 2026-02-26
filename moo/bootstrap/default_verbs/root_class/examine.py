@@ -18,8 +18,8 @@ contents list is printed out, too. If the object has verbs defined on it, then t
 they are readable.
 """
 
-from moo.core import api
-obj = api.parser.get_dobj()
+from moo.core import context
+obj = context.parser.get_dobj()
 
 print(f"{obj.name} (#{obj.id} ) is owned by {obj.owner.name} (#{obj.owner.id}).")
 if obj.parents.exists():
@@ -32,7 +32,7 @@ if obj.aliases.exists():
 print(obj.description())
 
 # display lock info if the player controls the object
-if api.player.owns(obj):
+if context.player.owns(obj):
     print("Key: ")
     if obj.key:
         print(obj.key)
@@ -49,7 +49,7 @@ if obj.contents.exists():
 if obj.verbs.exists():
     print("Verbs:")
     for verb in obj.verbs.all():
-        if api.player.is_allowed('read', verb):
+        if context.player.is_allowed('read', verb):
             print(f"  {verb.name()}")
         else:
             print(f"  {verb.name()} (unreadable)")

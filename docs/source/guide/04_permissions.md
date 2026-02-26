@@ -24,11 +24,11 @@ The `transmute` bit specifies whether or not the subject can create new objects 
 In verbs and other Python code, always check permissions before allowing operations. The `can_caller()` method is an essential tool:
 
 ```python
-from moo.core import api
+from moo.core import context
 
-obj = api.player.location
+obj = context.player.location
 if not obj.can_caller("write"):
-    api.writer("Permission denied.")
+    context.writer("Permission denied.")
     return False
 
 # Safe to modify the object
@@ -65,9 +65,9 @@ if obj.can_caller("entrust"):
 Whenever a new object is created, DjangoMOO invokes the `set_default_permission(new_obj)` verb on the "System Object", the Object with `pk=1`. The default version of this verb sets the initial permissions for the new object:
 
 ```python
-from moo.core import api
+from moo.core import context
 
-obj = api.args[0]
+obj = context.args[0]
 obj.allow('wizards', 'anything')
 obj.allow('owners', 'anything')
 obj.allow('everyone', 'read')

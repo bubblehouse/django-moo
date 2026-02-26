@@ -7,8 +7,8 @@ This verb will lock the container with `object`. The container can only be opene
 the `object` is the player trying to open the container. The container will remained locked until it is unlocked.
 """
 
-from moo.core import api
+from moo.core import context
 
-object = args[0] if args else api.parser.get_pobj("with")
+object = args[0] if args else context.parser.get_pobj("with")
 
 this.set_property("open_key", object)

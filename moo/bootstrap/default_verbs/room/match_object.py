@@ -13,13 +13,13 @@ player is able to see in his current location. This includes objects that the pl
 include objects that are contained in other objects.
 """
 
-from moo.core import api, AmbiguousObjectError
+from moo.core import context, AmbiguousObjectError
 
 name = args[0]
 
 qs = this.find(name)
 if not qs:
-    qs = api.player.find(name)
+    qs = context.player.find(name)
 if not qs:
     raise this.DoesNotExist(name)
 elif len(qs) > 1:

@@ -7,10 +7,10 @@ import logging
 import warnings
 from typing import Union
 
-from .code import context
+from .code import ContextManager
 from .exceptions import QuotaError, AmbiguousObjectError, UserError
 
-__all__ = ["lookup", "create", "write", "invoke", "set_task_perms", "api"]
+__all__ = ["lookup", "create", "write", "invoke", "set_task_perms", "context"]
 
 log = logging.getLogger(__name__)
 
@@ -70,17 +70,17 @@ def create(name, *a, **kw):
     from .models.object import Object, Property
     system = Object.objects.get(pk=1)
     default_parents = [system.root_class] if system.has_property("root_class") else []
-    if api.caller:
+    if context.caller:
         try:
-            quota = api.caller.get_property("ownership_quota", recurse=False)
+            quota = context.caller.get_property("ownership_quota", recurse=False)
             if quota > 0:
-                api.caller.set_property("ownership_quota", quota - 1)
+                context.caller.set_property("ownership_quota", quota - 1)
             else:
-                raise QuotaError(f"{api.caller} has run out of quota.")
+                raise QuotaError(f"{context.caller} has run out of quota.")
         except Property.DoesNotExist:
             pass
         if "owner" not in kw:
-            kw["owner"] = api.caller
+            kw["owner"] = context.caller
     if "location" not in kw and "owner" in kw:
         kw["location"] = kw["owner"].location
     if " to " in name:
@@ -124,7 +124,7 @@ def write(obj, message):
         )
         with app.producer_or_acquire() as producer:
             producer.publish(
-                dict(message=message, caller=context.get("caller")),
+                dict(message=message, caller=ContextManager.get("caller")),
                 serializer="pickle",
                 exchange=queue.exchange,
                 routing_key=f"user-{player.user.pk}",
@@ -162,7 +162,7 @@ def invoke(*args, verb=None, callback=None, delay: int = 0, periodic: bool = Fal
         kwargs["this_id"] = verb.invoked_object.pk
     kwargs.update(
         dict(
-            caller_id=api.caller.pk,
+            caller_id=context.caller.pk,
             verb_id=verb.pk,
             callback_verb_id=callback.pk if callback else None,
         )
@@ -174,7 +174,7 @@ def invoke(*args, verb=None, callback=None, delay: int = 0, periodic: bool = Fal
         )
         return PeriodicTask.objects.create(
             interval=schedule,
-            description=f"{api.caller.pk}:{verb}",
+            description=f"{context.caller.pk}:{verb}",
             task="moo.core.tasks.invoke_verb",
             args=args,
             kwargs=kwargs,
@@ -190,7 +190,7 @@ def invoke(*args, verb=None, callback=None, delay: int = 0, periodic: bool = Fal
         )
         return PeriodicTask.objects.create(
             interval=schedule,
-            description=f"{api.caller.pk}:{verb}",
+            description=f"{context.caller.pk}:{verb}",
             task="moo.core.tasks.invoke_verb",
             args=args,
             kwargs=kwargs,
@@ -205,9 +205,9 @@ def set_task_perms(who):
     :param who: the Object whose permissions to assume
     :type who: Object
     """
-    context.override_caller(who)
+    ContextManager.override_caller(who)
 
-class _API:
+class _Context:
     """
     This wrapper class makes it easy to use a number of contextvars.
     """
@@ -221,7 +221,7 @@ class _API:
             self.name = name
 
         def __get__(self, obj, objtype=None):
-            return context.get(self.name)
+            return ContextManager.get(self.name)
 
     caller = descriptor("caller")  # Code runs with the permission of this object
     player = descriptor("player")  # This object that originally invoked this session, defaults to original caller
@@ -230,4 +230,4 @@ class _API:
     task_id = descriptor("task_id")  # The current task ID
 
 
-api = _API()
+context = _Context()

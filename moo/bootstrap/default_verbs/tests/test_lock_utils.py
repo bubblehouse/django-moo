@@ -12,7 +12,7 @@ def test_parse_keyexp(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer):
+    with code.ContextManager(t_wizard, _writer):
         system = lookup(1)
         lock_utils = system.get_property("lock_utils")
         assert lock_utils is not None
@@ -45,7 +45,7 @@ def test_eval_key(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer):
+    with code.ContextManager(t_wizard, _writer):
         system = lookup(1)
         lock_utils = system.get_property("lock_utils")
         assert lock_utils is not None

@@ -11,9 +11,9 @@ between disconnection and movement of the player to his/her home. This would all
 due to network problems.
 """
 
-from moo.core import api
+from moo.core import context
 
-home = api.player.home or _.player_start
-if api.player.location != home:
-    api.player.moveto(api.player.home)
-this.announce(f"{api.player} has disconnected.")
+home = context.player.home or _.player_start
+if context.player.location != home:
+    context.player.moveto(context.player.home)
+this.announce(f"{context.player} has disconnected.")

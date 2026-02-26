@@ -2,7 +2,7 @@
 
 # pylint: disable=return-outside-function,undefined-variable
 
-from moo.core import api
+from moo.core import context
 
 print(1)
-api.caller.invoke_verb("test-nested-verbs-method", 1)
+context.caller.invoke_verb("test-nested-verbs-method", 1)

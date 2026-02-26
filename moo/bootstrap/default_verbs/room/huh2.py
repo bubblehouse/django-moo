@@ -8,6 +8,6 @@ in this room. You can override this verb to provide custom handling of such comm
 fall back to the default behavior, you can use `passthrough()` to call the parent room's `huh2` verb.
 """
 
-from moo.core import api
+from moo.core import context
 
-api.player.tell("Huh? I don't understand that command.")
+context.player.tell("Huh? I don't understand that command.")

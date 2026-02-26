@@ -12,7 +12,7 @@ def test_drop_from_inventory(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         system = lookup(1)
         lab = t_wizard.location
         player = lookup("Player")
@@ -37,7 +37,7 @@ def test_drop_not_in_inventory(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         system = lookup(1)
         lab = t_wizard.location
         widget = create("widget", parents=[system.thing], location=lab)
@@ -57,7 +57,7 @@ def test_moveto(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer):
+    with code.ContextManager(t_wizard, _writer):
         system = lookup(1)
         lab = t_wizard.location
         widget = create("widget", parents=[system.thing], location=t_wizard)
@@ -76,7 +76,7 @@ def test_moveto_locked(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer):
+    with code.ContextManager(t_wizard, _writer):
         system = lookup(1)
         rooms = lookup("Generic Room")
         lab = t_wizard.location
@@ -99,7 +99,7 @@ def test_message_verbs(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer):
+    with code.ContextManager(t_wizard, _writer):
         system = lookup(1)
         widget = create("widget", parents=[system.thing], location=t_wizard)
 

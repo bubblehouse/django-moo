@@ -15,7 +15,7 @@ from django.dispatch import receiver
 
 from moo import bootstrap
 from .. import exceptions, invoke, utils
-from ..code import context
+from ..code import ContextManager
 from .acl import Access, AccessibleMixin, Permission
 from .auth import Player
 from .property import Property
@@ -82,11 +82,11 @@ class Object(models.Model, AccessibleMixin):
 
     .. code-block:: Python
 
-        from moo.core import api, lookup
+        from moo.core import context, lookup
         # in the default DB, all wizards inherit from this Object
         wizard_class = lookup("wizard class")
         # Changes to ManyToMany fields like this are automatically saved
-        api.caller.parents.add(wizard_class)
+        context.caller.parents.add(wizard_class)
     """
     location = models.ForeignKey(
         "self",
@@ -222,7 +222,7 @@ class Object(models.Model, AccessibleMixin):
         :param indirect_objects: a list of indirect object specifiers for the verb
         """
         self.can_caller("write", self)
-        owner = context.get("caller") or owner or self
+        owner = ContextManager.get("caller") or owner or self
         if filename and not code:
             code = bootstrap.get_source(filename, dataset=repo.slug)
         verb = Verb.objects.create(
@@ -365,7 +365,7 @@ class Object(models.Model, AccessibleMixin):
         from .. import moojson
 
         self.can_caller("write", self)
-        owner = context.get("caller") or owner or self
+        owner = ContextManager.get("caller") or owner or self
         Property.objects.update_or_create(
             name=name,
             origin=self,
@@ -427,7 +427,7 @@ class Object(models.Model, AccessibleMixin):
         unsaved = self.pk is None
         if unsaved:
             # there's no permissions yet, so we can't check for `entrust`
-            caller = context.get("caller")
+            caller = ContextManager.get("caller")
             if caller and self.owner != caller:
                 raise PermissionError("Can't change owner at creation time.")
         super().save(*args, **kwargs)

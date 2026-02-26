@@ -28,36 +28,36 @@ into multiple Verb calls, which you can invoke asynchronously using the `invoke(
 Using `invoke()` let's create a bad example of a talking parrot:
 
 ```python
-from moo.core import api, invoke
-if api.parser is not None:
-    invoke(api.parser.verb, delay=30, periodic=True)
+from moo.core import context, invoke
+if context.parser is not None:
+    invoke(context.parser.verb, delay=30, periodic=True)
     return
-for obj in api.caller.location.filter(player__isnull=False):
-    api.writer(obj, "A parrot squawks.")
+for obj in context.caller.location.filter(player__isnull=False):
+    context.writer(obj, "A parrot squawks.")
 ```
 
 Right now it's just repeating every thirty seconds, but we can make it slightly more intelligent
 by handling our own repeating Verbs:
 
 ```python
-from moo.core import api, invoke
-if api.parser is not None:
-    invoke(api.parser.verb, delay=30, value=0)
+from moo.core import context, invoke
+if context.parser is not None:
+    invoke(context.parser.verb, delay=30, value=0)
     return
 value = kwargs['value'] + 1
-for obj in api.caller.location.filter(player__isnull=False):
-    api.writer(obj, f"A parrot squawks {value}.")
-invoke(api.parser.verb, delay=30, value=value)
+for obj in context.caller.location.filter(player__isnull=False):
+    context.writer(obj, f"A parrot squawks {value}.")
+invoke(context.parser.verb, delay=30, value=value)
 ```
 
 Let's say we didn't want to handle writing ourselves (we shouldn't) and wanted instead
 to re-use the `say` Verb.
 
 ```python
-from moo.core import api, invoke
-if api.parser is not None:
-    say = api.caller.get_verb('say', recurse=True)
-    invoke(verb=api.parser.verb, callback=say, delay=30, value=0)
+from moo.core import context, invoke
+if context.parser is not None:
+    say = context.caller.get_verb('say', recurse=True)
+    invoke(verb=context.parser.verb, callback=say, delay=30, value=0)
     return
 value = kwargs['value'] + 1
 return f"A parrot squawks {value}."
@@ -88,7 +88,7 @@ One key advantage of RestrictedPython is that `return` can be used from anywhere
 ```python
 #!moo verb check_object --on $room
 
-from moo.core import api
+from moo.core import context
 
 # Early return for empty arguments
 if not args:
@@ -132,7 +132,7 @@ DjangoMOO defines a number of custom exceptions:
 ### 1. Always Check Permissions First
 
 ```python
-from moo.core import api
+from moo.core import context
 
 if not this.can_caller("write"):
     return "Permission denied."
@@ -148,12 +148,12 @@ if len(args) < 2:
 ### 3. Use the API Context
 
 ```python
-from moo.core import api
+from moo.core import context
 
-# api.caller is the effective caller (usually verb owner)
-# api.player is the player executing the command
-# api.writer sends output to the player
-# api.parser contains parsed command info
+# context.caller is the effective caller (usually verb owner)
+# context.player is the player executing the command
+# context.writer sends output to the player
+# context.parser contains parsed command info
 ```
 
 ### 4. Return Meaningful Messages
@@ -175,10 +175,10 @@ return None
 Each verb should do one thing well. If you need complex logic:
 
 ```python
-from moo.core import api, invoke
+from moo.core import context, invoke
 
 # Split into multiple async operations
-invoke(verb=complex_verb, delay=0, context={...})
+invoke(verb=complex_verb, delay=0)
 return "Operation started in background."
 ```
 

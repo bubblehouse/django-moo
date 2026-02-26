@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb evaluates the key expression `key`, in the context of the candidate object `who`. It returns `True` if the
+This verb evaluates the key expression `key`, in the ContextManager of the candidate object `who`. It returns `True` if the
 key will allow who to pass, otherwise it returns `False`. The simple examples below are intended to show the ways in
 which this verb can be invoked:
 

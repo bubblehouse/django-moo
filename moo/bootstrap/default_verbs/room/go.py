@@ -2,10 +2,10 @@
 
 # pylint: disable=return-outside-function,undefined-variable,redefined-builtin
 
-from moo.core import api
+from moo.core import context
 
-player = api.player
-for dir in api.parser.words[1:]:
+player = context.player
+for dir in context.parser.words[1:]:
     if exit := player.location.match_exit(dir):
         exit.invoke(player)
     else:

@@ -11,15 +11,15 @@ By overriding this verb, it is possible to provide all sorts of effects that wor
 example, you could redirect messages to other rooms, or repeat messages to provide cavernous echoes.
 """
 
-from moo.core import api, lookup
+from moo.core import context, lookup
 
-if api.parser.words:
-    message = " ".join(api.parser.words[1:])
+if context.parser.words:
+    message = " ".join(context.parser.words[1:])
 else:
     message = " ".join(args)
 
-api.caller.tell("You: " + message)
+context.caller.tell("You: " + message)
 for obj in this.contents.all():
-    if obj != api.caller:
+    if obj != context.caller:
         obj = lookup(obj.id)
-        obj.tell(api.caller.name + ": " + message)
+        obj.tell(context.caller.name + ": " + message)

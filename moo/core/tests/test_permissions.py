@@ -81,7 +81,7 @@ def test_cant_create_child_of_an_object_that_isnt_yours(t_init: Object, t_wizard
 
     user = Object.objects.get(name__iexact="player")
     parent_thing = Object.objects.create(name="parent thing", owner=t_wizard)
-    with code.context(user, _writer):
+    with code.ContextManager(user, _writer):
         child_thing = Object.objects.create(name="child thing", owner=user)
         with pytest.raises(PermissionError) as excinfo:
             child_thing.parents.add(parent_thing)
@@ -97,7 +97,7 @@ def test_cant_create_parent_of_an_object_that_isnt_yours(t_init: Object, t_wizar
 
     user = Object.objects.get(name__iexact="player")
     child_thing = Object.objects.create(name="child thing", owner=t_wizard)
-    with code.context(user, _writer):
+    with code.ContextManager(user, _writer):
         parent_thing = Object.objects.create(name="parent thing", owner=user)
         with pytest.raises(PermissionError) as excinfo:
             child_thing.parents.add(parent_thing)
@@ -112,7 +112,7 @@ def test_cant_change_owner_unless_allowed_to_entrust(t_init: Object, t_wizard: O
         printed.append(msg)
 
     user = Object.objects.get(name__iexact="player")
-    with code.context(user, _writer):
+    with code.ContextManager(user, _writer):
         with pytest.raises(PermissionError) as excinfo:
             create("thing", owner=t_wizard)
         assert str(excinfo.value) == "Can't change owner at creation time."
@@ -121,11 +121,11 @@ def test_cant_change_owner_unless_allowed_to_entrust(t_init: Object, t_wizard: O
             obj.owner = t_wizard
             obj.save()
         assert str(excinfo.value) == f"#{user.pk} (Player) is not allowed entrust on #{obj.pk} (thing)"
-    with code.context(t_wizard, _writer):
+    with code.ContextManager(t_wizard, _writer):
         obj = lookup("thing")
         obj.allow(user, "entrust")
         obj.allow(user, "write")
-    with code.context(user, _writer):
+    with code.ContextManager(user, _writer):
         obj = lookup("thing")
         obj.owner = t_wizard
         obj.save()
@@ -138,20 +138,20 @@ def test_cant_change_location_unless_allowed_to_move(t_init: Object, t_wizard: O
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer):
+    with code.ContextManager(t_wizard, _writer):
         obj = create("thing")
     user = Object.objects.get(name__iexact="player")
-    with code.context(user, _writer):
+    with code.ContextManager(user, _writer):
         obj = lookup("thing")
         obj.location = user
         with pytest.raises(PermissionError) as excinfo:
             obj.save()
         assert str(excinfo.value) == f"#{user.pk} (Player) is not allowed write on #{obj.pk} (thing)"
-    with code.context(t_wizard, _writer):
+    with code.ContextManager(t_wizard, _writer):
         obj = lookup("thing")
         obj.allow(user, "move")
         obj.allow(user, "write")
-    with code.context(user, _writer):
+    with code.ContextManager(user, _writer):
         obj = lookup("thing")
         obj.location = user
         obj.save()
@@ -165,7 +165,7 @@ def test_change_location_calls_enterfunc(t_init: Object, t_wizard: Object, caplo
         printed.append(msg)
 
     with caplog.at_level(logging.INFO, "moo.core.tasks.background"):
-        with code.context(t_wizard, _writer):
+        with code.ContextManager(t_wizard, _writer):
             containers = lookup("container class")
             box = create("box", parents=[containers])
             box.add_verb("enterfunc", code="print(args[0])")
@@ -183,13 +183,13 @@ def test_change_location_calls_exitfunc(t_init: Object, t_wizard: Object, caplog
         printed.append(msg)
 
     with caplog.at_level(logging.INFO, "moo.core.tasks.background"):
-        with code.context(t_wizard, _writer):
+        with code.ContextManager(t_wizard, _writer):
             containers = lookup("container class")
             box = create("box", parents=[containers])
             box.add_verb("exitfunc", code="print(args[0])")
             thing = create("thing", location=box)
             assert thing.location == box
-        with code.context(t_wizard, _writer):
+        with code.ContextManager(t_wizard, _writer):
             thing = lookup("thing")
             thing.location = t_wizard.location
             thing.save()
@@ -205,7 +205,7 @@ def test_change_location_calls_accept(t_init: Object, t_wizard: Object):
         printed.append(msg)
 
     user = Object.objects.get(name__iexact="player")
-    with code.context(user, _writer):
+    with code.ContextManager(user, _writer):
         box = create("box")
         box.add_verb("accept", code="return False")
         with pytest.raises(PermissionError) as excinfo:
@@ -221,7 +221,7 @@ def test_change_location_checks_recursion(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer):
+    with code.ContextManager(t_wizard, _writer):
         containers = lookup("container class")
         box = create("box", parents=[containers])
         envelope = create("envelope", parents=[containers], location=box)

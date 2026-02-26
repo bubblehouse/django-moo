@@ -103,7 +103,7 @@ for query in queries:
 
 ```python
 """Show what's in your inventory."""
-player = api.player
+player = context.player
 
 # Optimize: fetch all items with owners in 2 queries instead of N+1
 items = Object.objects.filter(
@@ -123,7 +123,7 @@ return result
 
 ```python
 """Get detailed contents of the current room."""
-room = api.player.location
+room = context.player.location
 
 # Optimize: fetch objects with owner and properties
 contents = Object.objects.filter(
@@ -141,7 +141,7 @@ return result
 
 ```python
 """Find all objects the player can modify."""
-player = api.player
+player = context.player
 
 # Optimize: fetch objects with readers/writers permissions
 modifiable = Object.objects.filter(

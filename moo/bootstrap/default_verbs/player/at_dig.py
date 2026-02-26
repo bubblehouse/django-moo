@@ -9,18 +9,18 @@ with `$room` as a parent to create a room. Note that you can only use the `@dig`
 room.
 """
 
-from moo.core import api, create, lookup
+from moo.core import context, create, lookup
 
 directions = ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest", "up", "down"]
-direction = api.parser.get_dobj_str()
+direction = context.parser.get_dobj_str()
 
-source = api.player.location
+source = context.player.location
 if source.match_exit(direction):
     print("[color red]There is already an exit in that direction.[/color red]")
     return
 
-if api.parser.has_pobj("through"):
-    door = api.parser.get_pobj("through")
+if context.parser.has_pobj("through"):
+    door = context.parser.get_pobj("through")
     if not door.is_a(_.exit):
         print("[color red]The specified object is not an exit.[/color red]")
         return
@@ -32,10 +32,10 @@ else:
 
 if verb_name == "@dig":
     action = "Dug"
-    dest = create(api.parser.get_pobj_str("to"), parents=[_.room], location=None)
+    dest = create(context.parser.get_pobj_str("to"), parents=[_.room], location=None)
 else:
     action = "Tunnelled"
-    dest = lookup(api.parser.get_pobj_str("to"))
+    dest = lookup(context.parser.get_pobj_str("to"))
 
 door.set_property("source", source)
 door.set_property("dest", dest)

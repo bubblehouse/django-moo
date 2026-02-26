@@ -13,13 +13,13 @@ When you look at pipe now you should see:
     It is empty.
 """
 
-from moo.core import api
+from moo.core import context
 
 if args:
     object = args[0]
     name = object.title()
 else:
-    name = api.parser.get_dobj_str()
+    name = context.parser.get_dobj_str()
     object = this.find(name).first()
 
 if not this.is_open():
@@ -30,5 +30,5 @@ if not object or object.location != this:
     print(f"{name} is not in {this.title()}.")
     return
 
-object.moveto(api.player)
+object.moveto(context.player)
 print(f"You took {name} from {this.title()}")

@@ -2,7 +2,7 @@
 
 # pylint: disable=return-outside-function,undefined-variable
 
-from moo.core import api
+from moo.core import context
 
-if api.parser is not None:
+if context.parser is not None:
     print("PARSER")

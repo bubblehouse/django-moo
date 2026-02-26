@@ -10,7 +10,7 @@ The default implementation of the `look` command (defined on the $room class), p
 verb on the object. `look_self` uses `description` to obtain the text to display.
 """
 
-from moo.core import api
+from moo.core import context
 
 description = ""
 if this.has_property("description"):

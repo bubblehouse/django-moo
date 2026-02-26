@@ -32,7 +32,7 @@ def parse_command(self, caller_id: int, line: str) -> list[Any]:
     task_id = self.request.id
     with transaction.atomic():
         caller = Object.objects.get(pk=caller_id)
-        with code.context(caller, output.append, task_id=task_id) as ctx:
+        with code.ContextManager(caller, output.append, task_id=task_id) as ctx:
             try:
                 log.info(f"{caller}: {line}")
                 parse.interpret(ctx, line)
@@ -55,7 +55,7 @@ def parse_code(self, caller_id: int, source: str, runtype: str = "exec") -> list
     task_id = self.request.id
     with transaction.atomic():
         caller = Object.objects.get(pk=caller_id)
-        with code.context(caller, output.append, task_id=task_id):
+        with code.ContextManager(caller, output.append, task_id=task_id):
             result = code.interpret(source, "__main__", runtype=runtype)
     return output, result
 
@@ -73,13 +73,13 @@ def invoke_verb(
     :param verb_id: the PK of the Verb to execute
     :param callback_verb_id: the PK of the verb to send the result to
     """
-    from moo.core import api
+    from moo.core import context
 
     task_id = self.request.id
     with transaction.atomic():
         caller = Object.objects.get(pk=caller_id)
         verb = Verb.objects.get(pk=verb_id)
-        with code.context(caller, background_log.info, task_id=task_id):
+        with code.ContextManager(caller, background_log.info, task_id=task_id):
             result = verb(*args, **kwargs)
             if callback_verb_id:
                 Verb.objects.get(pk=callback_verb_id) # validate the callback_verb_id, even if we don't use the result

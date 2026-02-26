@@ -11,6 +11,6 @@ representation of an object description. This is done invisibly to anyone outsid
 as long as you adhere to the same interface to `description` and `describe`.
 """
 
-from moo.core import api
+from moo.core import context
 
 this.set_property("description", args[0])
