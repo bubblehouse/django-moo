@@ -708,7 +708,7 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
         assert [str(x.message) for x in warnings.list] == [
             f"ConnectionError(#{t_wizard.pk} (Wizard)): You leave #{home_location.pk} (The Laboratory).",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): You arrive at #{another_room.pk} (Another Room).",
-            f"ConnectionError(#{t_player.pk} (Player)): #{t_wizard.pk} (Wizard) arrives at #18 (Another Room)."
+            f"ConnectionError(#{t_player.pk} (Player)): #{t_wizard.pk} (Wizard) arrives at #{another_room.pk} (Another Room)."
         ]
         context.caller.refresh_from_db()
         context.player.refresh_from_db()
