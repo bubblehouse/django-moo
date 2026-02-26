@@ -1,3 +1,10 @@
+## [0.49.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.48.3...v0.49.0) (2026-02-26)
+
+
+### Features
+
+* renamed the `api` context variable to just `context` for clarity ([e946aaf](https://gitlab.com/bubblehouse/django-moo/commit/e946aafcca6c9b0fcfd47a82108c9ef40d6f5823))
+
 ## [0.48.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.48.2...v0.48.3) (2026-02-25)
 
 
