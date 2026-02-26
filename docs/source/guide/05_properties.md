@@ -2,14 +2,14 @@
 
 Since we're using "stock" Django model instances inside our custom code, the initial implementation of custom object properties are distinct from the `getattr()`-accessible attributes described above, e.g.:
 
-    from moo.core import api
+    from moo.core import context
 
-    description = api.caller.location.properties.filter(name="description")
+    description = context.caller.location.properties.filter(name="description")
     print(description.value)
 
 Improvements to the `Object` abstract class allow for direct access:
 
-    api.caller.location.description
+    context.caller.location.description
 
 But note that verbs are searched first, so this would instead return a verb with an identical name, if it exists.
 

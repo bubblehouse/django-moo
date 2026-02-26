@@ -23,36 +23,36 @@ If the direct object is the empty string, `""`, then the container's `look_self`
 Any ambiguous or failed matches produce suitable error messages.
 """
 
-from moo.core import api
+from moo.core import context
 
-if api.parser.has_pobj_str("in"):
-    container = api.parser.get_pobj("in")
+if context.parser.has_pobj_str("in"):
+    container = context.parser.get_pobj("in")
 else:
     container = None
 
-if api.parser.has_dobj() and container is None:
-    obj = api.parser.get_dobj()
-elif api.parser.has_dobj_str():
-    dobj_str = api.parser.get_dobj_str()
+if context.parser.has_dobj() and container is None:
+    obj = context.parser.get_dobj()
+elif context.parser.has_dobj_str():
+    dobj_str = context.parser.get_dobj_str()
     if container:
         qs = container.find(dobj_str)
     else:
-        qs = api.player.find(dobj_str) or api.player.location.find(dobj_str)
+        qs = context.player.find(dobj_str) or context.player.location.find(dobj_str)
     if not qs:
         print(f"There is no '{dobj_str}' here.")
         return
     obj = qs[0]
-elif api.parser.has_pobj_str("at"):
-    pobj_str = api.parser.get_pobj_str("at")
+elif context.parser.has_pobj_str("at"):
+    pobj_str = context.parser.get_pobj_str("at")
     if container:
         qs = container.find(pobj_str)
     else:
-        qs = api.player.find(pobj_str) or api.player.location.find(pobj_str)
+        qs = context.player.find(pobj_str) or context.player.location.find(pobj_str)
     if not qs:
         print(f"There is no '{pobj_str}' here.")
         return
     obj = qs[0]
 else:
-    obj = api.player.location
+    obj = context.player.location
 
 obj.look_self()

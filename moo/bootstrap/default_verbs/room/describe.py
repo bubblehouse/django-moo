@@ -2,7 +2,7 @@
 
 # pylint: disable=return-outside-function,undefined-variable
 
-from moo.core import lookup, api
+from moo.core import lookup, context
 
 obj = this
 

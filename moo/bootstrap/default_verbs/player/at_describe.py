@@ -7,15 +7,15 @@ This is a player command used to set the description of an object. It takes the 
 object. If a match is found, then the object's `describe` verb is invoked, with the iobjstr as an argument.
 """
 
-from moo.core import api
+from moo.core import context
 
-if not (api.parser.has_dobj_str()):
+if not (context.parser.has_dobj_str()):
     print("[red]What do you want to describe?[/red]")
     return
-if not (api.parser.has_pobj_str("as")):
+if not (context.parser.has_pobj_str("as")):
     print("[red]What do you want to describe that as?[/red]")
     return
 
-subject = api.parser.get_dobj()
-subject.describe(api.parser.get_pobj_str("as"))
+subject = context.parser.get_dobj()
+subject.describe(context.parser.get_pobj_str("as"))
 print("[color yellow]Description set for %s[/color yellow]" % subject)

@@ -7,11 +7,11 @@ These verbs return a pronoun substituted version of the corresponding properties
 used by `$thing.take` and `$thing.drop`.
 """
 
-from moo.core import api
+from moo.core import context
 
 prop_name = verb_name
 prop_value = this.get_property(prop_name)
-actor = api.player
+actor = context.player
 
 if prop_name == 'take_succeeded_msg':
     return prop_value.format(actor="You", subject=this.title())

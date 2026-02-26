@@ -12,9 +12,9 @@ Otherwise, if the destination of the exit is readable and leads to a valid room,
 using the room's `add_exit` verb. If this fails, a suitable error message is sent to the user.
 """
 
-from moo.core import api
+from moo.core import context
 
-door = api.parser.get_dobj()
+door = context.parser.get_dobj()
 if not door.is_a(_.exit):
     print("[color red]The specified object is not an exit.[/color red]")
     return

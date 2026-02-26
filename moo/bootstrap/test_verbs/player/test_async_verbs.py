@@ -2,7 +2,7 @@
 
 # pylint: disable=return-outside-function,undefined-variable
 
-from moo.core import api, invoke
+from moo.core import context, invoke
 
 counter = 1
 if args and len(args):  # pylint: disable=undefined-variable  # type: ignore
@@ -11,5 +11,5 @@ if args and len(args):  # pylint: disable=undefined-variable  # type: ignore
 print(counter)
 
 if counter < 10:
-    verb = api.caller.get_verb("test-async-verbs")
+    verb = context.caller.get_verb("test-async-verbs")
     invoke(counter, verb=verb)

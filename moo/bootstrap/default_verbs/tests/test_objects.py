@@ -12,7 +12,7 @@ def test_creation(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         parse.interpret(ctx, "make a widget")
         widget = lookup("widget")
         assert widget.location == t_wizard.location
@@ -29,7 +29,7 @@ def test_transmutation(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         parse.interpret(ctx, "make a jar from Generic Container")
         jar = lookup("jar")
         container = lookup("Generic Container")
@@ -47,7 +47,7 @@ def test_description(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         parse.interpret(ctx, "make a thingy from Root Class")
         thingy = lookup("thingy")
         root = lookup("Root Class")

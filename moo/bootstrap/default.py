@@ -16,7 +16,7 @@ containers = lookup("container class")
 containers.name = "Generic Container"
 containers.save()
 
-with code.context(wizard, log.info):
+with code.ContextManager(wizard, log.info):
     sys = lookup(1)
 
     sys.set_property("container", containers)

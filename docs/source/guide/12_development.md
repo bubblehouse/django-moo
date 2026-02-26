@@ -165,7 +165,7 @@ They use two shared fixtures from `moo/conftest.py`:
 - **`t_init`**: Bootstraps the full game world by running `default.py`. Yields the system object (`#1`). Must be requested with `@pytest.mark.parametrize("t_init", ["default"], indirect=True)`.
 - **`t_wizard`**: Returns the Wizard player object, which starts in The Laboratory.
 
-Output sent to the player is captured via a `_writer` callback passed to `code.context`. Commands are executed with `parse.interpret`. After a verb modifies database state, call `refresh_from_db()` before asserting:
+Output sent to the player is captured via a `_writer` callback passed to `code.ContextManager`. Commands are executed with `parse.interpret`. After a verb modifies database state, call `refresh_from_db()` before asserting:
 
 ```python
 import pytest
@@ -181,7 +181,7 @@ def test_drop_from_inventory(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    with code.context(t_wizard, _writer) as ctx:
+    with code.ContextManager(t_wizard, _writer) as ctx:
         system = lookup(1)
         lab = t_wizard.location
         widget = create("widget", parents=[system.thing], location=t_wizard)
@@ -193,10 +193,10 @@ def test_drop_from_inventory(t_init: Object, t_wizard: Object):
         assert not printed
 ```
 
-Verbs can also be called directly as Python methods inside a `code.context` block. This is useful for testing helper verbs (message formatters, lock checks, etc.) without going through the command parser:
+Verbs can also be called directly as Python methods inside a `code.ContextManager` block. This is useful for testing helper verbs (message formatters, lock checks, etc.) without going through the command parser:
 
 ```python
-with code.context(t_wizard, _writer):
+with code.ContextManager(t_wizard, _writer):
     system = lookup(1)
     widget = create("widget", parents=[system.thing], location=t_wizard)
 
@@ -332,7 +332,7 @@ Always include docstrings on:
 3. Follow Conventional Commits for commit messages:
    - `feat(core): add new feature`
    - `fix(shell): handle disconnect`
-   - `docs(api): update docstring`
+   - `docs(context): update docstring`
 4. Push and create a merge request targeting `main`
 5. Address review feedback and ensure CI passes
 

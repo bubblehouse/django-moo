@@ -2,7 +2,7 @@
 
 # pylint: disable=return-outside-function,undefined-variable
 
-from moo.core import api, invoke
+from moo.core import context, invoke
 
 counter = 1
 if args and len(args):  # pylint: disable=undefined-variable  # type: ignore

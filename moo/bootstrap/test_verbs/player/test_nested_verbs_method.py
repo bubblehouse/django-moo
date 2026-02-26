@@ -2,7 +2,7 @@
 
 # pylint: disable=return-outside-function,undefined-variable
 
-from moo.core import api
+from moo.core import context
 
 counter = 1
 if len(args):  # pylint: disable=undefined-variable
@@ -11,4 +11,4 @@ if len(args):  # pylint: disable=undefined-variable
 print(counter)
 
 if counter < 10:
-    api.caller.invoke_verb("test-nested-verbs-method", counter)
+    context.caller.invoke_verb("test-nested-verbs-method", counter)
