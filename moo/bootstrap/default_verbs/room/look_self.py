@@ -14,5 +14,8 @@ because of the way passthrough is used.
 """
 
 print(f"[color bright_yellow]{this.title()}[/color bright_yellow]")
+if this.get_property("dark"):
+    print("It's too dark to see anything.")
+    return
 passthrough()
 this.tell_contents()

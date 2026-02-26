@@ -48,6 +48,22 @@ def test_look_self_prints_description(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_look_self_dark_room(t_init: Object, t_wizard: Object):
+    """look_self() on a dark room prints the name then the darkness message, skipping description and contents."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append):
+        room = setup_room(t_wizard, description="A secret underground vault.")
+        room.set_property("dark", True)
+        setup_item(room, "golden key")
+        room.look_self()
+    assert f"[color bright_yellow]{room.name}[/color bright_yellow]" in printed
+    assert "It's too dark to see anything." in printed
+    assert not any("vault" in line for line in printed)
+    assert not any("golden key" in line for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_look_self_includes_contents(t_init: Object, t_wizard: Object):
     """look_self() calls tell_contents so room items appear in output."""
     printed = []
