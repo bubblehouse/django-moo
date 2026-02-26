@@ -201,6 +201,7 @@ class ContextManager:
         self.player_token = _active_player.set(self.player)
         self.writer_token = _active_writer.set(self.writer)
         self.task_id_token = _active_task_id.set(self.task_id)
+        self.parser_token = _active_parser.set(self.parser)
         return self
 
     def __exit__(self, cls, value, traceback):
