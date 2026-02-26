@@ -82,7 +82,6 @@ for match in re.finditer(r'%(\w|%)(\((\w+)\))?', text):
         elif prop == 'name':
             result = who.name
         else:
-            # TODO: add gender_utils to handle more genders and pronouns
             result = f"%{vartype}"
     else:
         result = f"%{vartype}"
