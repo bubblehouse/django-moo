@@ -102,7 +102,7 @@ This document provides essential context for AI models interacting with the Djan
   - **Style:** Primarily object-oriented with some procedural patterns. The game API exposes through:
     - Django ORM for database operations (query sets, model instantiation)
     - Verb code execution via `code.interpret()` and `code.compile_verb_code()`
-    - Access to current user context (current player and current verb caller) through the public `moo.core.api` module
+    - Access to current user context (current player and current verb caller) through the public `moo.core.context` module
   - **Abstraction:** The API abstracts away database details through Django models. Verb code execution is sandboxed through RestrictedPython.
   - **Extensibility:**
     - New verbs can be added to objects dynamically via the Verb model
@@ -313,9 +313,9 @@ This document provides essential context for AI models interacting with the Djan
 * **Testing Best Practices:**
   - **Two test types**: Core unit tests (`moo/core/tests/`) test models and the verb execution engine without a full bootstrap. Bootstrap integration tests (`moo/bootstrap/default_verbs/tests/`) test verb behaviour against a fully initialised game world.
   - **Bootstrap test fixtures**: Both `t_init` (bootstraps `default.py`) and `t_wizard` (returns the Wizard player) come from `moo/conftest.py`. `t_init` must be requested with `@pytest.mark.parametrize("t_init", ["default"], indirect=True)` and `@pytest.mark.django_db(transaction=True, reset_sequences=True)`.
-  - **Output capture**: Pass a `_writer` callback to `code.context` to capture everything `print()`ed to the player during a test.
+  - **Output capture**: Pass a `_writer` callback to `code.ContextManager` to capture everything `print()`ed to the player during a test.
   - **State assertions**: Call `obj.refresh_from_db()` after `parse.interpret` or a direct verb call before asserting locations or other database-backed fields.
-  - **Direct verb calls**: Inside a `code.context` block, verbs are callable as Python methods — `widget.drop_succeeded_msg()` — useful for testing helpers without going through the command parser.
+  - **Direct verb calls**: Inside a `code.ContextManager` block, verbs are callable as Python methods — `widget.drop_succeeded_msg()` — useful for testing helpers without going through the command parser.
   - **Lock testing**: Set `key = ["!", obj.id]` on a destination to block a specific object; `key = None` (the default) means unlocked.
 
 ## 8. Developer Quick Reference

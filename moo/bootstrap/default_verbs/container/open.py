@@ -7,10 +7,10 @@ This verb will open the container and allow objects to be put into it (via the p
 This verb sets the property `opened` to `True`.
 """
 
-from moo.core import api
+from moo.core import context
 
 if this.is_open():
     print("Container is already open.")
-elif this.is_openable_by(api.player):
+elif this.is_openable_by(context.player):
     this.set_opened(True)
     print("You open the container.")

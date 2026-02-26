@@ -19,7 +19,7 @@ destination of the exit. Once this has been done, the arrive messages for the ex
 destination room's occupants.
 """
 
-from moo.core import api
+from moo.core import context
 
 thing = args[0]
 source = this.get_property("source")
@@ -27,7 +27,7 @@ dest = this.get_property("dest")
 
 #TODO: check lock on exit to see if thing can use it
 
-dest.bless_for_entry(api.caller)
+dest.bless_for_entry(context.caller)
 if this.dest.accept(thing):
     thing.tell(this.leave_msg())
     source.announce_all_but(thing, this.oleave_msg())

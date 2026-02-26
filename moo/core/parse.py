@@ -26,16 +26,16 @@ def interpret(ctx, line):
     """
     For a given user, execute a command.
     """
-    from . import api
+    from . import context
 
     lex = Lexer(line)
-    parser = Parser(lex, api.player)
+    parser = Parser(lex, context.player)
     ctx.set_parser(parser)
     try:
         verb = parser.get_verb()
     except Verb.DoesNotExist:
-        if api.player.location.has_verb("huh"):
-            verb = api.player.location.get_verb("huh")
+        if context.player.location.has_verb("huh"):
+            verb = context.player.location.get_verb("huh")
         else:
             raise
     ctx.override_caller(verb.owner)

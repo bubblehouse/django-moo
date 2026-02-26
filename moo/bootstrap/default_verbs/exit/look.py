@@ -2,9 +2,9 @@
 
 # pylint: disable=return-outside-function,undefined-variable,redefined-builtin
 
-from moo.core import api, lookup
+from moo.core import context, lookup
 
-door_description = api.parser.get_pobj_str("through")
+door_description = context.parser.get_pobj_str("through")
 exit = this
 
 obj = exit.get_property("dest")

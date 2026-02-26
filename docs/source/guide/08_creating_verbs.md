@@ -80,9 +80,9 @@ Attempting to import or use other modules will result in a security error.
 
 As mentioned above, DjangoMOO uses Python as its in-game programming language. We usually need to start by importing one essential variable:
 
-    from moo.core import api
+    from moo.core import context
 
-The `api` object has a couple of attributes that are useful in most verbs:
+The `context` object has a couple of attributes that are useful in most verbs:
 
 1. `player` – the Object that represents the user who called the verb
 2. `caller` – the effective user that code is running with (usually the owner of the current executing verb)
@@ -109,7 +109,7 @@ Since verb code is run in a function context, we always get a set of arguments t
 The Django ORM brings in a few changes to how we access properties. We could potentially use the direct ORM method, like in this example:
 
 ```python
- qs = api.player.location.properties.filter(name="description")
+ qs = context.player.location.properties.filter(name="description")
  if qs:
      print(qs[0].value)
  else:
@@ -119,20 +119,20 @@ The Django ORM brings in a few changes to how we access properties. We could pot
 This doesn't honor inheritance, so you'll probably prefer to use `Object.get_property()`:
 
 ```python
- description = api.player.location.get_property('description')
+ description = context.player.location.get_property('description')
  print(f"The description is: {description}")
 ```
 
 It's possible to use the direct ORM method to *set* a property. This method can be useful if you want to further modify the property object or its permissions.
 
 ```python
- property = api.player.location.properties.create(name="description", value="A dark room.")
+ property = context.player.location.properties.create(name="description", value="A dark room.")
 ```
 
 But similarly, you should probably just use:
 
 ```python
-api.player.location.set_property("description", "A dark room.")
+context.player.location.set_property("description", "A dark room.")
 ```
 
 So far these examples haven't required any calls to `obj.save()`; this is only required for changes to the intrinsic object properties like `name`, `unique_name`, `obvious`, and `owner`.

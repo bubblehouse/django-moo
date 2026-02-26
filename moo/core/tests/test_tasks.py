@@ -16,7 +16,7 @@ def test_simple_async_verb(t_init: Object, t_wizard: Object, caplog: pytest.LogC
 
     verb = Verb.objects.get(names__name="test-async-verbs")
     with caplog.at_level(logging.INFO, "moo.core.tasks.background"):
-        with code.context(t_wizard, _writer):
+        with code.ContextManager(t_wizard, _writer):
             verb()
     assert printed == [1]
     counter = 1
