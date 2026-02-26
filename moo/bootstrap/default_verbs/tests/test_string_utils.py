@@ -18,41 +18,41 @@ def test_percent_escape(t_init: Object, t_wizard: Object):
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_subjective_pronouns(t_init: Object, t_wizard: Object):
-    """'%s' and '%S' are replaced with the neuter subjective pronouns."""
+    """'%s' and '%S' are replaced with the plural subjective pronouns."""
     with code.ContextManager(t_wizard, lambda msg: None):
         system = lookup(1)
         result = system.string_utils.pronoun_sub("%s said hello. %S left.")
-    assert result == "it said hello. It left."
+    assert result == "they said hello. They left."
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_objective_pronouns(t_init: Object, t_wizard: Object):
-    """'%o' and '%O' are replaced with the neuter objective pronouns."""
+    """'%o' and '%O' are replaced with the plural objective pronouns."""
     with code.ContextManager(t_wizard, lambda msg: None):
         system = lookup(1)
         result = system.string_utils.pronoun_sub("You see %o. You greet %O.")
-    assert result == "You see it. You greet It."
+    assert result == "You see them. You greet Them."
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_possessive_pronouns(t_init: Object, t_wizard: Object):
-    """'%p' and '%P' are replaced with the neuter possessive pronouns."""
+    """'%p' and '%P' are replaced with the plural possessive pronouns."""
     with code.ContextManager(t_wizard, lambda msg: None):
         system = lookup(1)
         result = system.string_utils.pronoun_sub("%p hat. %P coat.")
-    assert result == "its hat. Its coat."
+    assert result == "their hat. Their coat."
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_reflexive_pronouns(t_init: Object, t_wizard: Object):
-    """'%r' and '%R' are replaced with the neuter reflexive pronouns."""
+    """'%r' and '%R' are replaced with the plural reflexive pronouns."""
     with code.ContextManager(t_wizard, lambda msg: None):
         system = lookup(1)
         result = system.string_utils.pronoun_sub("%s hurt %r. %S hurt %R.")
-    assert result == "it hurt itself. It hurt Itself."
+    assert result == "they hurt themselves. They hurt Themselves."
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -117,7 +117,7 @@ def test_custom_property(t_init: Object, t_wizard: Object):
         player.set_property("title", "the adventurer")
         player.save()
         result = system.string_utils.pronoun_sub("%s is known as %x(title).", player)
-    assert result == "it is known as the adventurer."
+    assert result == "they is known as the adventurer."
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -184,7 +184,7 @@ def test_multiple_substitutions(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, lambda msg: None):
         system = lookup(1)
         result = system.string_utils.pronoun_sub("%S picks up the ball and throws %o at %r.")
-    assert result == "It picks up the ball and throws it at itself."
+    assert result == "They picks up the ball and throws them at themselves."
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
