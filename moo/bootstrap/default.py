@@ -111,8 +111,6 @@ with code.ContextManager(wizard, log.info):
     lock_utils = create("Lock Utilities", location=None)
     sys.set_property("lock_utils", lock_utils)
 
-    string_utils = create("String Utilities", location=None)
-    sys.set_property("string_utils", string_utils)
 
     lab = create("The Laboratory", parents=[rooms], location=None)
     lab.set_property(
@@ -136,5 +134,8 @@ with code.ContextManager(wizard, log.info):
     new_player.save()
 
     root.get_verb("accept").delete()
+
+    string_utils = create("String Utilities", location=None)
+    sys.set_property("string_utils", string_utils)
 
     bootstrap.load_verbs(repo, "moo.bootstrap.default_verbs")
