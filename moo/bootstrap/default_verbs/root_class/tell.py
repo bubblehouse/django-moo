@@ -28,7 +28,7 @@ prefaced with the name of the originating object. The pass primitive is used to 
 class to send the message after it has been modified.
 """
 
-from moo.core import context, write
+from moo.core import write
 
 if this.is_player():
     for arg in args:
