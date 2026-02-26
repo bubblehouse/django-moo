@@ -22,7 +22,7 @@ Some valid commands include:
 You might notice this adds a few capabilities that do not exist in the LambdaMOO parser:
 
 * **object references can be prefixed with a specifier** - This can either be an article like `the` or a detail that helps the parser find the object, like `my` or a possessive string.
-* **multiple prepositions may be used in one command** - Since [verbs are not currently fixed to a specific preposition](#5), a verb is able to parse out any of the prepositions used in a particular invocation, and raise sensible errors without additional handling.
+* **multiple prepositions may be used in one command** - A verb is able to parse out any of the prepositions used in a particular invocation, and raise sensible errors without additional handling.
 * **intelligent tokenization** - more on this below
 
 This area of DjangoMOO was most inspired by the parser in Twisted Reality, the MUD-like game created by Glyph and co a million years ago.
@@ -77,14 +77,15 @@ The final step is to find the verb specified as the first word of the command st
 
 One of the most common tasks of the Parser is to find an object in the context of the `caller`, aka the user who has entered the command. All `Object` instances define `obj.find(name)` and that will be the main function used to resolve strings.
 
-1. If `spec` is "my", search the user's inventory for the name
+1. If `spec` is "my", search the player's inventory for the name
 2. If `spec` is a possessive, search the target's contents for the name
-3. Otherwise `Object.find()` to search the caller's location
+3. Otherwise `Object.find()` to search the player's location
   1. uses a case-insensitive match of the object name
   2. also searches for case-insensitive Aliases
+  3. if nothing is found, `Object.find()` to search the player's inventory
 4. If no object was found,
   1. ...but the string is "here", return the location.
-  2. ...but the string is "me", return the caller.
+  2. ...but the string is "me", return the player.
   3. ...but the string is a number starting with '#', return that Object by ID
 
 ### Finding a Verb
