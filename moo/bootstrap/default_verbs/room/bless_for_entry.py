@@ -14,8 +14,9 @@ blessing. Once the object has moved into the room, it's blessed status is remove
 property in the room to $nothing.
 """
 
-from moo.core import context
+from moo.core import context, set_task_perms
 
 thing = args[0]
-this.set_property("blessed_object", thing)
-this.set_property("blessed_task_id", context.task_id)
+with set_task_perms(this.owner):
+    this.set_property("blessed_object", thing)
+    this.set_property("blessed_task_id", context.task_id)
