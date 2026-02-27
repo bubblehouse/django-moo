@@ -5,6 +5,7 @@ Core MOO functionality, object model, verbs.
 
 import logging
 import warnings
+from contextlib import contextmanager
 from typing import Union
 
 from .code import ContextManager
@@ -195,13 +196,21 @@ def invoke(*args, verb=None, callback=None, delay: int = 0, periodic: bool = Fal
         tasks.invoke_verb.apply_async(args, kwargs, countdown=delay)
         return None
 
+@contextmanager
 def set_task_perms(who):
     """
-    Set the task permissions to those of `who`.
+    Set the task permissions to those of `who` for the duration of the with-block.
     :param who: the Object whose permissions to assume
     :type who: Object
     """
+    if not ContextManager.is_active() or who is None:
+        yield
+        return
     ContextManager.override_caller(who)
+    try:
+        yield
+    finally:
+        ContextManager.pop_caller()
 
 class _Context:
     """

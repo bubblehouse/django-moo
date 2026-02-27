@@ -193,28 +193,16 @@ class ContextManager:
         return _active_caller_stack.get() is not _UNSET
 
     @classmethod
-    def override_caller(cls, caller, this=None, verb_name=None, origin=None, player=None, update_active=True):
+    def override_caller(cls, caller, this=None, verb_name=None, origin=None, player=None):
         attributes = {
             "this": this,
             "verb_name": verb_name,
             "caller": caller,
             "origin": origin,
             "player": player,
+            "previous_caller": _active_caller.get(),
         }
-        if update_active:
-            # Save the current caller so pop_caller can restore it precisely.
-            # This is intentionally only done when update_active=True (e.g. set_task_perms),
-            # NOT for normal Verb.__call__ pushes (update_active=False).
-            #
-            # Why: verbs like set_default_permissions call allow() internally, which
-            # checks if the caller owns the subject. If we always set _active_caller to
-            # verb.owner, a wizard-owned system verb running inside a user session would
-            # suddenly become the caller — wizard wouldn't own the user's new object,
-            # so the grant check would fail (chicken-and-egg: can't set permissions
-            # because permissions aren't set yet). Keeping _active_caller as the session
-            # caller (user) lets ownership checks pass correctly.
-            attributes["previous_caller"] = _active_caller.get()
-            _active_caller.set(caller)
+        _active_caller.set(caller)
         caller_stack = _active_caller_stack.get()
         caller_stack.append(attributes)
         _active_caller_stack.set(caller_stack)
@@ -226,12 +214,7 @@ class ContextManager:
             raise RuntimeError("Caller stack is empty.")
         frame = caller_stack.pop()
         _active_caller_stack.set(caller_stack)
-        if "previous_caller" in frame:
-            # Only restore _active_caller if this frame actually changed it
-            # (i.e. update_active=True was used when pushing). Frames pushed by
-            # Verb.__call__ (update_active=False) have no previous_caller key,
-            # so _active_caller is left untouched — the session caller stays stable.
-            _active_caller.set(frame["previous_caller"])
+        _active_caller.set(frame["previous_caller"])
 
     def __init__(self, caller, writer, task_id=None):
         self.caller = caller
