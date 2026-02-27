@@ -48,3 +48,17 @@ def test_printing_imported_caller(t_init: Object, t_wizard: Object):
         src = "from moo.core import context\nprint(context.caller)"
         code.r_exec(src, {}, globals)
         assert printed == [t_wizard]
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_caller_stack(t_init: Object, t_wizard: Object):
+    printed = []
+
+    def _writer(msg):
+        printed.append(msg)
+
+    with code.ContextManager(t_wizard, _writer) as ctx:
+        from moo.core import context, lookup
+        player = lookup("Player")
+        player.test_args()
+        player.test_nested_verbs()
+        assert context.caller_stack == []
