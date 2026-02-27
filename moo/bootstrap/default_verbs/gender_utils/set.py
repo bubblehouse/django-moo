@@ -12,20 +12,20 @@ is returned. `None` is returned if `gender` does not match any recognized gender
 likewise rasied and the object's pronoun properties are left unaltered.
 """
 
-object = args[0]
+obj = args[0]
 gender = args[1]
 
 try:
     index = _.gender_utils.genders.index(gender)
-    object.set_property("gender", gender, inherit_owner=True)
-except:
+except:  # pylint: disable=bare-except
     return None
+obj.set_property("gender", gender, inherit_owner=True)
 
 for pronoun in _.gender_utils.pronouns:
     try:
         value = _.gender_utils.get_property(pronoun)[index]
-        object.set_property(pronoun, value, inherit_owner=True)
-    except:
+        obj.set_property(pronoun, value, inherit_owner=True)
+    except:  # pylint: disable=bare-except
         return None
 
 return gender

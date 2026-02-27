@@ -68,9 +68,9 @@ with code.ContextManager(wizard, log.info):
     player.set_property("lines", 10)
     player.set_property("object_gaglist", [])
     player.set_property("page_absent_msg", "%n is not currently logged in.")
-    player.set_property("page_origin_msg", "You sense that %s is looking for you in %s.")
+    player.set_property("page_origin_msg", "You sense that %n is looking for you in %l.")
     player.set_property("page_echo_msg", "Your message has been sent.")
-    player.set_property("whereis_location_msg", "%s is in %s.")
+    player.set_property("whereis_location_msg", "%N (%#) is in %l (%[#l]).")
     player.set_property("who_location_msg", "%l")
 
     programmers = create("Generic Programmer", parents=[player], location=None)
@@ -153,6 +153,7 @@ with code.ContextManager(wizard, log.info):
 
     root.get_verb("accept").delete()
 
+    containers.get_verb("accept").delete()
     bootstrap.load_verbs(repo, "moo.bootstrap.default_verbs")
     sys.gender_utils.set(player, "plural")
     sys.set_property("sprintf", sys.string_utils.pronoun_sub)

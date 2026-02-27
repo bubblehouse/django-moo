@@ -171,7 +171,12 @@ def load_verbs(repo, verb_package):
                 return
             if first.startswith("#!moo "):
                 log.debug(f"Loading verb source `{ref.name}`...")
-                args = parser.parse_args(shlex.split(first[6:]))
+                shebang = first[6:]
+                try:
+                    args = parser.parse_args(shlex.split(shebang))
+                except SystemExit:
+                    log.error(f"Invalid shebang in verb source `{ref.name}`: {shebang}")
+                    return
                 if args.on.startswith("$"):
                     obj = system.get_property(name=args.on[1:])
                 else:
