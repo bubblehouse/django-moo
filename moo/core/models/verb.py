@@ -11,7 +11,7 @@ from django.core import validators
 from django.db import models
 
 from .. import utils, lookup
-from ..code import interpret
+from ..code import interpret, ContextManager
 from .acl import AccessibleMixin
 
 log = logging.getLogger(__name__)
@@ -153,7 +153,12 @@ class Verb(models.Model, AccessibleMixin):
         if self.filename is not None:
             kwargs['filename'] = self.filename
         system = lookup(1)
+        active = ContextManager.is_active()
+        if active:
+            ContextManager.override_caller(self.owner, this=this, verb_name=name, origin=self.origin, player=ContextManager.get("player"), update_active=False)
         result = interpret(self.code, name, this, self.passthrough, system, *args, **kwargs)
+        if active:
+            ContextManager.pop_caller()
         return result
 
 

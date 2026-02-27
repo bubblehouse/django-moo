@@ -38,7 +38,6 @@ def interpret(ctx, line):
             verb = context.player.location.get_verb("huh")
         else:
             raise
-    ctx.override_caller(verb.owner)
     verb()
 
 
