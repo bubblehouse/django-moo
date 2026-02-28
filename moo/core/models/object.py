@@ -135,6 +135,12 @@ class Object(models.Model, AccessibleMixin):
         """
         return Player.objects.filter(avatar=self).exists()
 
+    def is_wizard(self) -> bool:
+        """
+        Check if this object is a player avatar.
+        """
+        return Player.objects.filter(avatar=self, wizard=True).exists()
+
     def is_named(self, name: str) -> bool:
         """
         Check if this object has a name or alias that matches the given name.
