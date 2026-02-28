@@ -1,4 +1,4 @@
-#!moo verb gi*ve ha*nd --on $player  any --ispec to:any
+#!moo verb gi*ve ha*nd --on $player --dspec any --ispec to:any
 
 # pylint: disable=return-outside-function,undefined-variable
 

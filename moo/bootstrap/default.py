@@ -68,10 +68,10 @@ with code.ContextManager(wizard, log.info):
     player.set_property("lines", 10)
     player.set_property("object_gaglist", [])
     player.set_property("page_absent_msg", "%n is not currently logged in.")
-    player.set_property("page_origin_msg", "You sense that %n is looking for you in %l.")
+    player.set_property("page_origin_msg", "You sense that %n is looking for you in %x(location).")
     player.set_property("page_echo_msg", "Your message has been sent.")
-    player.set_property("whereis_location_msg", "%N (%#) is in %l (%[#l]).")
-    player.set_property("who_location_msg", "%l")
+    player.set_property("whereis_location_msg", "%N is in %x(location).")
+    player.set_property("who_location_msg", "%x(location)")
 
     programmers = create("Generic Programmer", parents=[player], location=None)
     sys.set_property("programmer", programmers)
@@ -147,7 +147,7 @@ with code.ContextManager(wizard, log.info):
     p.avatar = new_player
     p.save()
 
-    new_player.parents.add(player, containers)
+    new_player.parents.add(player)
     new_player.owner = new_player
     new_player.save()
 

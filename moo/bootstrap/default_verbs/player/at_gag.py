@@ -1,4 +1,4 @@
-#!moo verb @gag --on $player
+#!moo verb @gag at_gag --on $player
 
 # pylint: disable=return-outside-function,undefined-variable
 
@@ -22,13 +22,14 @@ if player != this:
     player.tell("Permission denied.")
     return
 
-victims = [lookup(arg) for arg in args]
+victims = [lookup(arg) for arg in args] if args else [lookup(parser.get_dobj_str())]
 
 if not victims:
     print("Usage:  @gag <player or object> [<player or object>...]")
     return
 
-gagplayers = gagobjs = []
+gagplayers = []
+gagobjs = []
 for i, victim in enumerate(victims):
     if victim.is_player():
         gagplayers.append(victim)
