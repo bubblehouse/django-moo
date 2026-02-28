@@ -73,6 +73,13 @@ for match in re.finditer(r'%(\w|%)(\((\w+)\))?', text):
         if who.has_property(arg):
             value = who.get_property(arg)
             result = value.capitalize() if vartype.isupper() else value
+        elif hasattr(who, arg):
+            try:
+                value = getattr(who, arg).title()
+            except AttributeError:
+                pass
+            else:
+                result = value.capitalize() if vartype.isupper() else value
     elif vartype in substitutions:
         prop = substitutions[vartype]
         if who.has_property(prop):
