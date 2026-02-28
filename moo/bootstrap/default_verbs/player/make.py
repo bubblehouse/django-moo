@@ -17,7 +17,7 @@ if context.parser.has_pobj_str("from"):
     try:
         parent = lookup(parent_name)
         new_obj.parents.add(parent)
-    except new_obj.DoesNotExist:
+    except type(new_obj).DoesNotExist:
         print(f"[color red]No such object: {parent_name}[/color red]")
         return
     print("[color yellow]Transmuted %s to %s[/color yellow]" % (new_obj, parent))
