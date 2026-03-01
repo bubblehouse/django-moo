@@ -81,7 +81,8 @@ def test_take_player_blocked(t_init: Object, t_wizard: Object):
     """Trying to take a player prints an error to the caller."""
     printed = []
     with code.ContextManager(t_wizard, printed.append) as ctx:
-        parse.interpret(ctx, "get Player")
+        with pytest.warns(RuntimeWarning, match="tried unsucessfully to take you"):
+            parse.interpret(ctx, "get Player")
     assert "You can't take a player!" in printed
 
 
@@ -274,7 +275,8 @@ def test_tell_paranoid_1_stores_responsible(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, lambda _: None):
         player_obj = lookup("Player")
         player_obj.paranoid = 1
-        player_obj.tell("track me")
+        with pytest.warns(RuntimeWarning, match="track me"):
+            player_obj.tell("track me")
         player_obj.refresh_from_db()
     assert len(player_obj.responsible) > 0
 
