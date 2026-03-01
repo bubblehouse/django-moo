@@ -117,8 +117,59 @@ def test_gag_p_player_not_gagged(t_init: Object, t_wizard: Object):
         assert player_obj.gag_p() is False
 
 
-# --- @gag --- (skipped: parser dispatch for no-dspec multi-arg verb needs further work)
-# test_gag_player, test_gag_object, test_gag_already_gagged, test_gag_no_args
+# --- @gag ---
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_gag_player(t_init: Object, t_wizard: Object):
+    """@gag <player> adds the player to the caller's gaglist."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        player_obj = lookup("Player")
+        parse.interpret(ctx, "@gag Player")
+        t_wizard.refresh_from_db()
+    assert player_obj in t_wizard.gaglist
+    assert "Gag list updated." in printed
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_gag_object(t_init: Object, t_wizard: Object):
+    """@gag <object> adds a non-player object to the caller's object_gaglist."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        widget = setup_item(t_wizard.location, "widget")
+        parse.interpret(ctx, "@gag widget")
+        t_wizard.refresh_from_db()
+    assert widget in t_wizard.object_gaglist
+    assert "Gag list updated." in printed
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_gag_already_gagged_player(t_init: Object, t_wizard: Object):
+    """@gag on an already-gagged player prints a duplicate message."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        player_obj = lookup("Player")
+        t_wizard.gaglist = [player_obj]
+        parse.interpret(ctx, "@gag Player")
+    assert "You are already gagging Player." in printed
+    assert "No changes made to gag list." in printed
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_gag_already_gagged_object(t_init: Object, t_wizard: Object):
+    """@gag on an already-gagged object prints a duplicate message."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        widget = setup_item(t_wizard.location, "widget")
+        t_wizard.object_gaglist = [widget]
+        parse.interpret(ctx, "@gag widget")
+    assert "You are already gagging widget." in printed
+    assert "No changes made to gag list." in printed
 
 
 # --- @ungag ---
@@ -363,3 +414,75 @@ def test_look_self_shows_sleeping(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, printed.append):
         t_wizard.look_self()
     assert any("sleeping" in line for line in printed)
+
+
+# --- @password ---
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_password_not_implemented(t_init: Object, t_wizard: Object):
+    """@password prints a not-yet-implemented message."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, "@password")
+    assert "@password is not yet implemented." in printed
+
+
+# --- confunc / disfunc ---
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_confunc_runs_without_error(t_init: Object, t_wizard: Object):
+    """confunc() runs without raising an exception."""
+    with code.ContextManager(t_wizard, lambda _: None):
+        result = t_wizard.confunc()
+    assert result is None
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_disfunc_runs_without_error(t_init: Object, t_wizard: Object):
+    """disfunc() runs without raising an exception."""
+    with code.ContextManager(t_wizard, lambda _: None):
+        result = t_wizard.disfunc()
+    assert result is None
+
+
+# --- page ---
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_page_sends_origin_msg(t_init: Object, t_wizard: Object):
+    """page <player> sends the page_origin_msg to the recipient via tell."""
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        with pytest.warns(RuntimeWarning) as w:
+            parse.interpret(ctx, "page Player")
+    messages = [str(x.message) for x in w.list]
+    assert any("Wizard" in m and "The Laboratory" in m for m in messages)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_page_with_message(t_init: Object, t_wizard: Object):
+    """page <player> with <message> sends the origin msg and the message to the recipient."""
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        with pytest.warns(RuntimeWarning) as w:
+            parse.interpret(ctx, "page Player with Hello there")
+    messages = [str(x.message) for x in w.list]
+    assert any("Wizard" in m for m in messages)
+    assert any('pages, "Hello there"' in m for m in messages)
+
+
+# --- whisper ---
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_whisper_sends_message(t_init: Object, t_wizard: Object):
+    """whisper <message> to <player> delivers the whisper to the recipient via write()."""
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        with pytest.warns(RuntimeWarning, match="whispers to you"):
+            parse.interpret(ctx, "whisper Hello to Player")
