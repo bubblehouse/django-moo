@@ -11,5 +11,6 @@ the player object.
 from moo.core import context
 
 player = context.player
+target = context.parser.get_dobj()
 print("You can't take a player!")
-player.tell(_.sprintf("%N tried unsucessfully to take you."))
+target.tell(_.sprintf("%N tried unsucessfully to take you."))
