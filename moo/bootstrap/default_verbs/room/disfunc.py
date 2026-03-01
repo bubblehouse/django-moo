@@ -13,7 +13,7 @@ due to network problems.
 
 from moo.core import context
 
-home = context.player.home or _.player_start
+home = context.player.get_property("home") or _.player_start
 if context.player.location != home:
-    context.player.moveto(context.player.home)
+    context.player.moveto(home)
 this.announce(f"{context.player} has disconnected.")
