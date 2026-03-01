@@ -11,5 +11,5 @@ from moo.core import context
 
 source = context.player.title()
 target = context.parser.get_pobj('to')
-message = context.parser.get_dobj()
-target.write(f"{source} whispers to you: {message}")
+message = context.parser.get_dobj_str()
+target.tell(f"{source} whispers to you: {message}")

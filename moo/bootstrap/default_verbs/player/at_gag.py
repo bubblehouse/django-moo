@@ -1,4 +1,4 @@
-#!moo verb @gag at_gag --on $player
+#!moo verb @gag at_gag --on $player --dspec any
 
 # pylint: disable=return-outside-function,undefined-variable
 
@@ -16,11 +16,13 @@ a player command to add objects to the gag lists.
 
 from moo.core import context, lookup
 
+parser = context.parser
 player = context.player
 
-if player != this:
-    player.tell("Permission denied.")
-    return
+# # this doesn't appear to be necessary
+# if player != this:
+#     player.tell("Permission denied.")
+#     return
 
 victims = [lookup(arg) for arg in args] if args else [lookup(parser.get_dobj_str())]
 
