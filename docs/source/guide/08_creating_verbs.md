@@ -102,7 +102,41 @@ Since verb code is run in a function context, we always get a set of arguments t
 4. `args` - function arguments when run as a method, or an empty list
 5. `kwargs` - function arguments when run as a method, or an empty dict
 
+> **`this` is not the same as the caller.** Because the verb search uses "last match wins" (see [The Built-In Command Parser](07_parser.md)), `this` is set to the object on which the verb was *finally found* — typically the direct object when a `dspec` is set. Use `context.player` to identify who typed the command. Only use `this` when the verb is specifically designed to operate on the object it was dispatched on (e.g., a room's `accept` verb or an exit's `go` verb).
 
+### Parser Method Reference
+
+When a verb is invoked via the command parser, `context.parser` provides these methods to extract parsed arguments:
+
+| Method | Returns | Notes |
+|--------|---------|-------|
+| `get_dobj()` | Direct object as an **Object** (DB lookup) | Raises `Object.DoesNotExist` if string is not a real object |
+| `get_dobj_str()` | Direct object as a **raw string** | Safe for plain text arguments (names, messages, etc.) |
+| `has_dobj()` | `True` if dobj resolved to an Object | — |
+| `has_dobj_str()` | `True` if dobj string is present | — |
+| `get_pobj(prep)` | Indirect object as an **Object** for given prep | Raises `Object.DoesNotExist`, `NoSuchPrepositionError` |
+| `get_pobj_str(prep)` | Indirect object as a **raw string** for given prep | Raises `NoSuchPrepositionError` if prep not in command |
+| `has_pobj(prep)` | `True` if iobj resolved to an Object | — |
+| `has_pobj_str(prep)` | `True` if iobj string is present | — |
+
+**Important naming note**: Methods use the `_str` suffix, **not** `_string`. There are no `get_dobj_string()` or `has_pobj_string()` variants — those names will raise `AttributeError`.
+
+Use `get_dobj_str()` / `get_pobj_str()` when the argument is plain text (a message, a name to create, etc.). Use `get_dobj()` / `get_pobj()` only when you expect the argument to be a reference to an existing game object.
+
+### Sending Messages to Players
+
+Two mechanisms exist for writing output to a player connection:
+
+- **`obj.tell(msg)`** — Goes through `$player.tell`, which applies gag-list filtering and paranoia tracking before calling `write()`. Use this for normal in-game messages so that player preferences are respected.
+- **`write(obj, msg)`** (imported from `moo.core`) — Low-level connection write; bypasses all filtering. Use sparingly, only when filtering must be skipped (e.g., system notifications).
+
+In tests (where `CELERY_BROKER_URL = "memory://"`), both paths ultimately call `write()`, which emits `RuntimeWarning(f"ConnectionError({obj}): {msg}")` instead of sending to a real connection. Wrap test commands that trigger either path with `pytest.warns(RuntimeWarning)`:
+
+```python
+with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
+    parse.interpret(ctx, "say Hello")
+assert "Hello" in str(warnings.list[0].message)
+```
 
 ### Getting and Setting the Values of Properties
 
