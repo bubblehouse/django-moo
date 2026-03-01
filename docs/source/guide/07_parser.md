@@ -111,3 +111,21 @@ For each of these objects in turn, it tests if all of the the following are true
 > If the name contains a single star, however, then the name matches any prefix of itself that is at least as long as the part before the star. For example, the verb-name `foo*bar` matches any of the strings `foo`, `foob`, `fooba`, or `foobar`; note that the star itself is not considered part of the name.
 >
 > If the verb name ends in a star, then it matches any string that begins with the part before the star. For example, the verb-name `foo*` matches any of the strings `foo`, `foobar`, `food`, or `foogleman`, among many others. As a special case, if the verb-name is `*` (i.e., a single star all by itself), then it matches anything at all.
+
+#### Last Match Wins
+
+The search iterates through all candidate objects in the order listed above and **overwrites** `parser.this` on each match. The final match in the search order is the one that executes. This is the "last match wins" rule.
+
+**Consequence for `--dspec any` or `--dspec this` verbs on `$player`**: if both the caller (the player who typed the command) and the direct object are `$player` instances — or both inherit the same verb from a common ancestor — then the direct object wins, because it appears later in the search order. Inside the executing verb:
+
+- `this` = the **direct object** (not the caller)
+- `context.player` = the **caller** (the player who typed the command)
+
+```
+@gag Player   →   this = Player (dobj), context.player = Wizard (caller)
+page Player   →   this = Player (dobj), context.player = Wizard (caller)
+```
+
+Always use `context.player` to identify who initiated a command. Only use `this` when the verb is specifically designed to act on the object it was dispatched on (e.g., a room's `accept` verb or an exit's `go` verb).
+
+**The LambdaMOO permission antipattern**: the classic guard `if player != this: return "Permission denied."` is broken whenever a `dspec` is set, because `this` will be the direct object rather than the caller — the check will fire on every normal invocation. Use `context.player` directly for all initiator-based logic.

@@ -47,6 +47,30 @@ All verb files must start with a "shebang" line that defines metadata:
 - `--ispec`: Indirect object specifiers using prepositions
   - Format: `PREP:SPEC` where SPEC is `this`, `any`, `none`, or `either` and PREP is an item from `settings.PREPOSITIONS`
 
+### Verb Dispatch and `this`
+
+Understanding what `this` refers to is critical when writing verbs that take arguments.
+
+**Search order** (`moo/core/parse.py`): For any command, the parser searches for a matching verb in this order:
+1. The caller (player who typed the command)
+2. Contents of the caller's inventory
+3. The caller's location (room)
+4. The direct object (`dobj`)
+5. The indirect object (`pobj`)
+
+**Last match wins.** The verb found *latest* in the search order is used, and `this` is set to the object it was found on.
+
+**Consequence for `--dspec any` verbs on `$player`**: If both the caller *and* the dobj inherit the same verb (e.g., both are `$player` children), the dobj wins — `this` will be the dobj, not the caller.
+
+```
+@gag Player   →   this = Player (dobj), context.player = Wizard (caller)
+page Player   →   this = Player (dobj), context.player = Wizard (caller)
+```
+
+**Use `context.player` for sender/initiator logic**, not `this`, whenever the verb is a player command that acts on behalf of the player who typed it. Use `this` only when the verb is specifically designed to be dispatched on another object (e.g., a room, container, or exit).
+
+**Permission check antipattern**: The LambdaMOO idiom `if player != this: return "Permission denied."` is broken whenever a dspec is set, because `this` will be the dobj rather than the caller. Use `context.player` directly to identify the initiator.
+
 ### Examples
 
 ```python
@@ -217,6 +241,25 @@ Common imports:
 - `from moo.core.models import Object, Verb, Property` - Models
 - `from moo.core import context` - Access the caller and other context
 
+### Parser Method Reference
+
+When a verb is invoked via the command parser, `context.parser` is a `moo.core.parse.Parser` instance. Use these methods to extract arguments:
+
+| Method | Returns | Raises if missing |
+|--------|---------|-------------------|
+| `get_dobj()` | The direct object as an **Object** (DB lookup) | `Object.DoesNotExist` |
+| `get_dobj_str()` | The direct object as a **raw string** | `Object.DoesNotExist` |
+| `has_dobj()` | `True` if dobj resolved to an Object | — |
+| `has_dobj_str()` | `True` if dobj string is present | — |
+| `get_pobj(prep)` | Indirect object as an **Object** for given prep | `Object.DoesNotExist`, `NoSuchPrepositionError` |
+| `get_pobj_str(prep)` | Indirect object as a **raw string** for given prep | `Object.DoesNotExist`, `NoSuchPrepositionError` |
+| `has_pobj(prep)` | `True` if iobj resolved to an Object | — |
+| `has_pobj_str(prep)` | `True` if iobj string is present | — |
+
+**Key distinction**: `get_dobj()` / `get_pobj()` attempt a database lookup and raise `DoesNotExist` if the string doesn't match a real object. Use the `_str` variants when the argument is a plain string (a message, a name to create, etc.), not a reference to an existing game object.
+
+**Note on naming**: The methods are `get_dobj_str` and `has_pobj_str` — there are no `…_string` variants.
+
 ## Testing Verbs
 
 ### Inline verbs (simple unit tests)
@@ -384,8 +427,13 @@ obj.add_verb("my_verb", code='return "verb result"')
 - Hardcode object IDs (use `lookup("name")` or properties instead)
 - Create objects in loops without considering performance
 - Modify `args` or `kwargs` directly (they're read-only)
+- Use `if player != this:` as a permission guard — `this` is the *last matched object* in dispatch order (often the dobj), not the caller. This check will incorrectly fire on every normal invocation of a verb with `--dspec any`.
+- Call `context.parser.get_dobj()` when you want a string message — it performs a DB lookup and raises `Object.DoesNotExist` if the string isn't a real object. Use `get_dobj_str()` for plain strings.
+- Use `get_pobj_string()` / `has_pobj_string()` — these methods do not exist; the correct names are `get_pobj_str()` / `has_pobj_str()`.
 
 ### ✓ Do:
+- Use `context.player` to identify who initiated a command (the sender/initiator)
+- Use `this` only when the verb genuinely needs the object it was dispatched on (e.g., a room's `accept` or an exit's `go`)
 - Use `lookup()` or properties to find objects
 - Return meaningful error messages to players
 - Use permission checks (`can_caller()`)
