@@ -11,5 +11,5 @@ activated, it uses `announce` to inform the other players in the room of what ha
 from moo.core import context
 
 for obj in this.contents.all():
-    if obj != context.caller:
+    if obj != context.player:
         obj.tell(" ".join(args))

@@ -106,6 +106,9 @@ def write(obj, message):
     :param message: any pickle-able object
     :type message: Any
     """
+    if context.caller and not context.caller.is_wizard():
+        raise UserError("Only verbs owned by wizards can write to the console.")
+
     from .models.auth import Player
 
     player = Player.objects.get(avatar=obj)
@@ -203,6 +206,9 @@ def set_task_perms(who):
     :param who: the Object whose permissions to assume
     :type who: Object
     """
+    if context.caller and not context.caller.is_wizard():
+        raise UserError("Only verbs owned by wizards can modify the task permissions..")
+
     if not ContextManager.is_active() or who is None:
         yield
         return
