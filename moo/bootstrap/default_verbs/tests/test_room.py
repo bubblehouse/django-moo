@@ -297,7 +297,8 @@ def test_disfunc_moves_player_to_home(t_init: Object, t_wizard: Object):
         t_wizard.refresh_from_db()
     messages = [str(w.message) for w in warnings.list]
     assert any(f"(Player)): #{t_wizard.pk} (Wizard) has disconnected." in m for m in messages)
-    assert t_wizard.location == t_wizard.home
+    system = lookup(1)
+    assert t_wizard.location == system.player_start
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
