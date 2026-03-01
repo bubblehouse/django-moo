@@ -117,12 +117,21 @@ When executing a verb:
   - `verb_name` - a verb can have multiple names; this is the particular name used to invoke this verb.
 - Many verbs include `from moo.core import context`; the `context` object has a number of helpful properties:
   - `caller` - When a verb begins to execute, `caller` is set to the owner of the verb; calls to `set_task_perms` can change this.
-  - `player` - This is always a reference to the current player who should receive all output from the running verb.
+  - `player` - This is always a reference to the current player who should receive all output from the running verb. Use this (not `this`) to identify who initiated a command.
   - `writer()` - This callable is used to write directly to an object's player terminal, if connected.
   - `parser` - If a verb was invoked by the command parser, the `moo.core.parse.Parser` instance can be retreived here.
   - `task_id` - The current executing Celery task ID, for informational purposes
 - The verb has access only to whitelisted modules and builtins (see settings)
 - Errors in verb execution are caught and reported to the player
+
+### Sending Messages to Players
+
+Two mechanisms exist for sending messages; they behave differently:
+
+- **`obj.tell(msg)`** — Goes through `$player.tell`, which applies gag-list filtering and paranoia tracking before calling `write()`. Use this for normal in-game messages so that player preferences are respected.
+- **`write(obj, msg)`** (from `moo.core`) — Low-level connection write; bypasses all filtering. Use sparingly, only when filtering must be skipped.
+
+In tests (where `CELERY_BROKER_URL = "memory://"`), both paths ultimately call `write()`, which emits `RuntimeWarning(f"ConnectionError({obj}): {msg}")` instead of sending to a real connection. Wrap test commands that trigger either path with `pytest.warns(RuntimeWarning)`.
 
 ### Working with Permissions
 
