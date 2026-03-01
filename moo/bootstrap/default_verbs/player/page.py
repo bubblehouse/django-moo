@@ -51,12 +51,12 @@ from moo.core import context
 
 player = context.player
 who = context.parser.get_dobj()
-if context.parser.has_pobj_string("with"):
-    message = context.parser.get_pobj_string("with")
+if context.parser.has_pobj_str("with"):
+    message = context.parser.get_pobj_str("with")
 else:
     message = None
 
-pagemsg = this.page_origin_msg()
+pagemsg = player.page_origin_msg()
 who.tell(pagemsg)
 if message:
     who.tell(player.psc if player.name in message else player.name, " pages, \"", message, "\"")
