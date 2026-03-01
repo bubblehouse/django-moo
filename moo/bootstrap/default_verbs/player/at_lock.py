@@ -1,0 +1,23 @@
+#!moo verb @lock --on $player --dspec any --ispec with:any
+
+# pylint: disable=return-outside-function,undefined-variable
+
+"""
+This verb is a player command used to lock an object with a specified key. It first matches the direct object to get an
+object reference number. If that succeeds, the `$lock_utils:parse_keyexp()` verb is called to parse the key expression
+given for the lock. If that fails, a suitable error message is printed. Otherwise, the `key` property of the object
+being locked is set to the returned value from the parsing verb. Again, any errors are reported to the invoking player.
+"""
+
+from moo.core import context
+
+parser = context.parser
+
+obj = parser.get_dobj()
+expr = parser.get_pobj("with")
+
+key = _.lock_utils.parse_keyexp(expr)
+if key is None:
+    print("That doesn't look like a valid key expression.")
+    return
+obj.key = key

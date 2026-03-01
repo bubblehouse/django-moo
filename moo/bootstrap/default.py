@@ -72,6 +72,7 @@ with code.ContextManager(wizard, log.info):
     player.set_property("page_echo_msg", "Your message has been sent.")
     player.set_property("whereis_location_msg", "%N is in %x(location).")
     player.set_property("who_location_msg", "%x(location)")
+    player.set_property("victim_ejection_msg", "You have been ejected from %s by %s.")
 
     programmers = create("Generic Programmer", parents=[player], location=None)
     sys.set_property("programmer", programmers)
