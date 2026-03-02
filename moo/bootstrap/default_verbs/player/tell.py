@@ -30,7 +30,7 @@ if not this.gag_p():
     else:
         passthrough(*args)
         if this.paranoid == 1:
-            res = this.responsible + [callers, args]
+            res = this.responsible + [[callers, args]]
             while len(res) > this.lines:
                 res.pop(0)
             this.responsible = res

@@ -149,12 +149,45 @@ def test_sweep_secure_room(t_init: Object, t_wizard: Object):
 # --- @check ---
 
 
-@pytest.mark.skip(reason="at_check.py bug: linecount must be cast to int(); player.responsible setup unclear")
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_check_scans_responsible(t_init: Object, t_wizard: Object):
     """@check scans the responsible log and reports non-wizard message sources."""
-    pass
+    printed = []
+    player_npc = lookup("Player")
+    callers_frame = [{"caller": player_npc, "verb_name": "tell", "this": player_npc}]
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        t_wizard.set_property("responsible", [[callers_frame, ("suspicious message",)]])
+        parse.interpret(ctx, "@check 5 !Player")
+    assert any("sent message" in line for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_check_tracks_multiple_senders(t_init: Object, t_wizard: Object):
+    """@check identifies all 3 non-wizard senders tracked via tell() with paranoid=1."""
+    system = lookup(1)
+    player_npc = lookup("Player")
+    with code.ContextManager(t_wizard, lambda _: None):
+        alice = create("Alice", parents=[system.player], location=t_wizard.location)
+        bob = create("Bob", parents=[system.player], location=t_wizard.location)
+
+    t_wizard.set_property("paranoid", 1)
+
+    for sender, msg in [
+        (player_npc, "msg from player"),
+        (alice,      "msg from alice"),
+        (bob,        "msg from bob"),
+    ]:
+        with code.ContextManager(sender, lambda _: None):
+            with pytest.warns(RuntimeWarning):
+                t_wizard.tell(msg)
+
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        t_wizard.refresh_from_db()
+        parse.interpret(ctx, "@check 10 !Player !Alice !Bob")
+    assert sum(1 for line in printed if "sent message" in line) == 3
 
 
 # --- @show ---
