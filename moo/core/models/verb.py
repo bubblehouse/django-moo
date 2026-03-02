@@ -150,8 +150,13 @@ class Verb(models.Model, AccessibleMixin):
         if self.is_bound():
             this = self.invoked_object
             name = self.invoked_name
+        else:
+            this = self.origin
+            name = self.name()
         if self.filename is not None:
             kwargs['filename'] = self.filename
+        if this is None:
+            raise RuntimeError(f"Cannot call {self} without a non-null 'this' context.")
         system = lookup(1)
         active = ContextManager.is_active()
         if active:
