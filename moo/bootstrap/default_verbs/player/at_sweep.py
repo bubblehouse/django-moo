@@ -35,7 +35,8 @@ from moo.core import context
 buggable_verbs = ["announce", "announce_all", "announce_all_but", "say", "emote", "huh", "huh2", "whisper"]
 
 player = context.player
-room = player
+room = player.location
+secure = True
 for obj in room.contents.all():
     if obj.is_player():
         print(f"{obj} is listening.")
@@ -44,13 +45,17 @@ for obj in room.contents.all():
     if obj.has_verb("tell"):
         tell = obj.get_verb("tell")
         if tell.owner != player and not tell.owner.is_wizard():
+            secure = False
             print(f"{obj} has been taught to listen by {tell.owner}.")
-    printed = {}
-    for verb in buggable_verbs:
-        if room.has_verb(verb):
-            v = room.get_verb(verb)
-            if v.owner != player and not v.owner.is_wizard():
-                msg = f"{room} may have been bugged by {v.owner}."
-                if msg not in printed:
-                    printed[msg] = True
-                    print(msg)
+already_printed = {}
+for verb in buggable_verbs:
+    if room.has_verb(verb):
+        v = room.get_verb(verb)
+        if v.owner != player and not v.owner.is_wizard():
+            msg = f"{room} may have been bugged by {v.owner}."
+            if msg not in already_printed:
+                already_printed[msg] = True
+                secure = False
+                print(msg)
+if secure:
+    print("Communications are secure.")

@@ -12,4 +12,4 @@ from moo.core import context
 parser = context.parser
 
 obj = parser.get_dobj()
-obj.key = None
+obj.set_property("key", None)

@@ -1,4 +1,4 @@
-#!moo verb @recycle --on $player --dspec any
+#!moo verb @recycle --on $player --dspec either
 
 # pylint: disable=return-outside-function,undefined-variable
 
@@ -10,13 +10,14 @@ a suitable success message is sent.
 
 from moo.core import context
 
-if not (context.parser.has_dobj_str()):
+if not context.parser.has_dobj_str():
     print("[color yellow]What do you want to recycle?[/color yellow]")
     return
 
 obj = context.parser.get_dobj()
+name = obj.title()
 try:
     obj.delete()
-    print(_.string_utils.pronoun_sub("[color yellow]Recycled %d[/color yellow]"))
-except:
-    print(_.string_utils.pronoun_sub("[color red]Error recycling %d[/color red]"))
+    print(f"[color yellow]Recycled {name}.[/color yellow]")
+except Exception:
+    print(f"[color red]Error recycling {name}.[/color red]")

@@ -1,4 +1,4 @@
-#!moo verb at_sethome --on $player --dspec any
+#!moo verb @sethome --on $player
 
 # pylint: disable=return-outside-function,undefined-variable
 
@@ -14,6 +14,7 @@ from moo.core import context
 
 player = context.player
 if not player.location.accept(player):
-    return "You cannot set your home to this location. It is not allowing you to enter."
+    print("You cannot set your home to this location. It is not allowing you to enter.")
+    return
 player.set_property("home", player.location)
-return "Your home has been set to your current location."
+print("Your home has been set to your current location.")
