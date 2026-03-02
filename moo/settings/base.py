@@ -55,7 +55,17 @@ ALLOWED_MODULES = (
     "re"
 )
 
-ALLOWED_BUILTINS = ("dir", "enumerate", "getattr", "hasattr", "dict", "list", "set", "type")
+ALLOWED_BUILTINS = (
+    "dict",
+    "dir",
+    "enumerate",
+    "getattr",
+    "hasattr",
+    "list",
+    "set",
+    "sorted",
+    "type",
+)
 
 # Here are all our supported prepositions
 PREPOSITIONS = [
