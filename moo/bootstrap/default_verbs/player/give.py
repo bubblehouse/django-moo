@@ -30,6 +30,6 @@ gift = context.parser.get_dobj()
 
 gift.moveto(recipient)
 if gift.location != recipient:
-    print(_.sprintf("%I doesn't want %d."))
+    print(_.string_utils.pronoun_sub("%I doesn't want %d."))
 else:
-    print(_.sprintf("You give %d to %i."))
+    print(_.string_utils.pronoun_sub("You give %d to %i."))

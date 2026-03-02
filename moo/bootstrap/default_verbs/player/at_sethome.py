@@ -15,5 +15,5 @@ from moo.core import context
 player = context.player
 if not player.location.accept(player):
     return "You cannot set your home to this location. It is not allowing you to enter."
-player.home = player.location
+player.set_property("home", player.location)
 return "Your home has been set to your current location."
