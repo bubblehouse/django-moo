@@ -11,6 +11,8 @@ from celery import shared_task
 from celery.utils.log import get_task_logger
 from django.db import transaction
 
+from moo.core.models import verb
+
 from . import code, exceptions, parse
 from .models import Object, Verb
 
@@ -62,7 +64,7 @@ def parse_code(self, caller_id: int, source: str, runtype: str = "exec") -> list
 
 @shared_task(bind=True)
 def invoke_verb(
-    self, *args, caller_id: int = None, verb_id: int = None, callback_verb_id: Optional[int] = None, **kwargs
+    self, *args, caller_id: int = None, this_id: int = None, verb_name: int = None, callback_this_id: Optional[int] = None, callback_verb_name: Optional[int] = None, **kwargs
 ) -> None:
     """
     Asynchronously execute a Verb, optionally returning the result to another Verb.
@@ -78,9 +80,9 @@ def invoke_verb(
     task_id = self.request.id
     with transaction.atomic():
         caller = Object.objects.get(pk=caller_id)
-        verb = Verb.objects.get(pk=verb_id)
+        this = Object.objects.get(pk=this_id)
+        verb = this.get_verb(verb_name)
         with code.ContextManager(caller, background_log.info, task_id=task_id):
             result = verb(*args, **kwargs)
-            if callback_verb_id:
-                Verb.objects.get(pk=callback_verb_id) # validate the callback_verb_id, even if we don't use the result
-                invoke_verb.delay(result, caller_id=caller_id, verb_id=callback_verb_id)
+            if callback_verb_name and callback_this_id:
+                invoke_verb.delay(result, caller_id=caller_id, this_id=callback_this_id, verb_name=callback_verb_name)

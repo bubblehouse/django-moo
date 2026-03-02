@@ -158,13 +158,13 @@ def invoke(*args, verb=None, callback=None, delay: int = 0, periodic: bool = Fal
     from django_celery_beat.models import CrontabSchedule, IntervalSchedule, PeriodicTask
 
     from moo.core import tasks
-    if hasattr(verb, "invoked_object"):
-        kwargs["this_id"] = verb.invoked_object.pk
     kwargs.update(
         dict(
             caller_id=context.caller.pk,
-            verb_id=verb.pk,
-            callback_verb_id=callback.pk if callback else None,
+            this_id=verb.invoked_object.pk,
+            verb_name=verb.invoked_name,
+            callback_this_id=callback.invoked_object.pk if callback else None,
+            callback_verb_name=callback.invoked_name if callback else None,
         )
     )
     if delay and periodic:

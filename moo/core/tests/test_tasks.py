@@ -15,6 +15,8 @@ def test_simple_async_verb(t_init: Object, t_wizard: Object, caplog: pytest.LogC
         printed.append(msg)
 
     verb = Verb.objects.get(names__name="test-async-verbs")
+    verb.invoked_name = "test-async-verbs"
+    verb.invoked_object = verb.origin
     with caplog.at_level(logging.INFO, "moo.core.tasks.background"):
         with code.ContextManager(t_wizard, _writer):
             verb()
@@ -39,7 +41,7 @@ def test_simple_async_verb_callback(t_init: Object, t_wizard: Object, caplog: py
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
         with caplog.at_level(logging.INFO, "moo.core.tasks.background"):
-            tasks.invoke_verb(caller_id=t_wizard.pk, verb_id=verb.pk, callback_verb_id=callback.pk, this_id=verb.origin.pk)
+            tasks.invoke_verb(caller_id=t_wizard.pk, this_id=verb.origin.pk, verb_name=verb.name(), callback_verb_name=callback.name(), callback_this_id=callback.origin.pk)
     counter = 0
     for line in caplog.text.split("\n"):
         # Celery just loves emitting this when using the in-memory test broker, so ignore it
