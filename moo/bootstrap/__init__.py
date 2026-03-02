@@ -102,6 +102,8 @@ def initialize_dataset(dataset="default"):
         set_default_permissions.names.add(
             models.VerbName.objects.create(verb=set_default_permissions, name="set_default_permissions")
         )
+        set_default_permissions.invoked_name = "set_default_permissions"
+        set_default_permissions.invoked_object = system
         set_default_permissions(set_default_permissions)
         set_default_permissions(system)
     containers = models.Object.objects.create(name="container class")
