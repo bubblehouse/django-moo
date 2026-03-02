@@ -1,3 +1,26 @@
+## [0.52.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.51.0...v0.52.0) (2026-03-02)
+
+
+### Features
+
+* added $sprintf alias for easy access to the `pronoun_sub` verb ([497b2ed](https://gitlab.com/bubblehouse/django-moo/commit/497b2ed574382db447da229081bf1cbc86686544))
+* added many verbs for $player ([f09eacd](https://gitlab.com/bubblehouse/django-moo/commit/f09eacd120690ac796fc80aafa5d3ae531385d18))
+* added more verbs for $player ([0f375e0](https://gitlab.com/bubblehouse/django-moo/commit/0f375e095a9d4c898874b0e515a2b62b21740d32))
+* added more verbs for $player ([4f85f79](https://gitlab.com/bubblehouse/django-moo/commit/4f85f79accd551e33a4026662b1885030c9d0bb4))
+* added more verbs for $player ([44130f8](https://gitlab.com/bubblehouse/django-moo/commit/44130f8fc1a8418513952568292391ca31690b8c))
+* implemented context.caller_stack to see the list of callers ([7ad7be4](https://gitlab.com/bubblehouse/django-moo/commit/7ad7be4556aa30af60667c7e0ca0f6e145d6dc58))
+* write() and set_task_perms() can ony be called by Wizard-owned code ([36f7db9](https://gitlab.com/bubblehouse/django-moo/commit/36f7db9ea254a2454555be0814432d4621fa5cc3))
+
+
+### Bug Fixes
+
+* ensure all verbs will be bound before execution, raise exception otherwise ([4bfe898](https://gitlab.com/bubblehouse/django-moo/commit/4bfe898b2256ce798852dc1d32be326dab1262d2))
+* fixed remaining caller_stack issues ([78d35e9](https://gitlab.com/bubblehouse/django-moo/commit/78d35e9351d512a2f92537a5cc8e66dec00e81e4))
+* issues in take/get for player ([361d924](https://gitlab.com/bubblehouse/django-moo/commit/361d92485d4299ea0b675107fda0788d43388e57))
+* many fixes for player commands ([ceb6442](https://gitlab.com/bubblehouse/django-moo/commit/ceb6442c9cb08cbc31404dc603cc40cc1aedd08d))
+* remove use of sprintf because of missing `this` ([aab6a83](https://gitlab.com/bubblehouse/django-moo/commit/aab6a83fa69cfe194f3d1edda0a139734e50dafd))
+* unit test errors ([3fbeff3](https://gitlab.com/bubblehouse/django-moo/commit/3fbeff3cfc0a70055547e7836c91bd27694ad74a))
+
 ## [0.51.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.50.0...v0.51.0) (2026-02-26)
 
 
