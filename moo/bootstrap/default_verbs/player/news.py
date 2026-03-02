@@ -1,4 +1,4 @@
-#!moo verb news --on $player --dspec any
+#!moo verb news --on $player
 
 # pylint: disable=return-outside-function,undefined-variable
 

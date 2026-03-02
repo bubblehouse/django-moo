@@ -14,10 +14,10 @@ from moo.core import context
 parser = context.parser
 
 obj = parser.get_dobj()
-expr = parser.get_pobj("with")
+expr = parser.get_pobj_str("with")
 
 key = _.lock_utils.parse_keyexp(expr)
 if key is None:
     print("That doesn't look like a valid key expression.")
     return
-obj.key = key
+obj.set_property("key", key)

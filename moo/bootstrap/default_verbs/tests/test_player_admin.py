@@ -1,7 +1,8 @@
 import pytest
 
-from moo.core import code, lookup, parse
+from moo.core import code, create, lookup, parse
 from moo.core.models import Object
+from moo.core.models.verb import Verb, VerbName
 
 
 # --- whodunnit ---
@@ -33,12 +34,15 @@ def test_whodunnit_finds_non_wizard(t_init: Object, t_wizard: Object):
 # --- @lock ---
 
 
-@pytest.mark.skip(reason="depends on _.lock_utils.parse_keyexp() being implemented")
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_lock_object_with_key(t_init: Object, t_wizard: Object):
+def test_lock_object_with_key(t_init: Object, t_wizard: Object, setup_item):
     """@lock <obj> with <key> sets the key property on the object."""
-    pass
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        widget = setup_item(t_wizard.location, "widget")
+        parse.interpret(ctx, f"@lock widget with #{widget.id}")
+        widget.refresh_from_db()
+    assert widget.get_property("key") is not None
 
 
 # --- @unlock ---
@@ -59,12 +63,27 @@ def test_unlock_clears_key(t_init: Object, t_wizard: Object, setup_item):
 # --- @eject ---
 
 
-@pytest.mark.skip(reason="requires container with victim_ejection_msg / ejection_msg / eject verbs")
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_eject_victim_from_container(t_init: Object, t_wizard: Object):
     """@eject <victim> from <container> removes the victim and sends ejection messages."""
-    pass
+    system = lookup(1)
+    player_npc = lookup("Player")
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        container = create("Vault", parents=[system.room], location=t_wizard.location)
+        player_npc.location = container
+        player_npc.save()
+        for name, code_str in [
+            ("victim_ejection_msg", 'return "You have been ejected!"'),
+            ("ejection_msg",        'return "You ejected them."'),
+            ("oejection_msg",       'return "They were ejected."'),
+            ("eject",               'victim = args[0]; victim.location = this.location; victim.save()'),
+        ]:
+            v = Verb.objects.create(origin=container, owner=t_wizard, code=code_str)
+            VerbName.objects.create(verb=v, name=name)
+        parse.interpret(ctx, "@eject Player from Vault")
+        player_npc.refresh_from_db()
+    assert player_npc.location != container
 
 
 # --- @quota ---
@@ -93,37 +112,44 @@ def test_quota_other_wizard(t_init: Object, t_wizard: Object):
 # --- @whereis ---
 
 
-@pytest.mark.skip(reason="requires player.whereis_location_msg() verb to be defined on $player")
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_whereis_finds_player(t_init: Object, t_wizard: Object):
     """@whereis <player> prints the player's current location."""
-    pass
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, "@whereis Player")
+    assert any("Player" in line for line in printed)
+    assert any("in" in line for line in printed)
 
 
 # --- @sweep ---
 
 
-@pytest.mark.skip(reason="verb has a bug: `room = player` should be `room = player.location`")
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_sweep_finds_listener(t_init: Object, t_wizard: Object):
     """@sweep reports connected players in the room as listeners."""
-    pass
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, "@sweep")
+    assert any("is listening" in line for line in printed)
 
 
-@pytest.mark.skip(reason="verb has a bug: `room = player` should be `room = player.location`")
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_sweep_secure_room(t_init: Object, t_wizard: Object):
-    """@sweep reports 'Communications are secure.' when no listeners are found."""
-    pass
+    """@sweep reports 'Communications are secure.' when no suspicious verbs are found."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, "@sweep")
+    assert any("Communications are secure." in line for line in printed)
 
 
 # --- @check ---
 
 
-@pytest.mark.skip(reason="complex args parsing from parser.words; whodunnit() is tested separately")
+@pytest.mark.skip(reason="at_check.py bug: linecount must be cast to int(); player.responsible setup unclear")
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_check_scans_responsible(t_init: Object, t_wizard: Object):
