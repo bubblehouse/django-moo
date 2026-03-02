@@ -141,7 +141,8 @@ def test_recycle_object(t_init: Object, t_wizard: Object, setup_item):
     with code.ContextManager(t_wizard, lambda _: None) as ctx:
         setup_item(t_wizard.location, "widget")
         parse.interpret(ctx, "@recycle widget")
-    assert lookup("widget") is None
+    with pytest.raises(Object.DoesNotExist):
+        lookup("widget")
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)

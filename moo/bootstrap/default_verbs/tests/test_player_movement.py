@@ -1,6 +1,6 @@
 import pytest
 
-from moo.core import code, lookup, parse
+from moo.core import code, create, lookup, parse
 from moo.core.models import Object
 
 
@@ -20,13 +20,20 @@ def test_sethome_sets_home(t_init: Object, t_wizard: Object):
     assert any("home has been set" in line for line in printed)
 
 
-@pytest.mark.skip(reason="requires creating a room whose accept() returns False")
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_sethome_rejects_non_accepting_room(t_init: Object, t_wizard: Object):
     """@sethome prints an error when the current room does not accept the player."""
+    system = lookup(1)
+    player_npc = lookup("Player")
     printed = []
     with code.ContextManager(t_wizard, printed.append) as ctx:
+        locked_room = create("Restricted Room", parents=[system.room], location=None)
+        locked_room.owner = player_npc
+        locked_room.save()
+        locked_room.set_property("free_entry", False)
+        Object.objects.filter(pk=t_wizard.pk).update(location=locked_room)
+        t_wizard.refresh_from_db()
         parse.interpret(ctx, "@sethome")
     assert any("not allowing you to enter" in line for line in printed)
 
@@ -45,20 +52,30 @@ def test_home_already_there(t_init: Object, t_wizard: Object):
     assert any("already at home" in line for line in printed)
 
 
-@pytest.mark.skip(reason="depends on player.moveto() verb being callable from Python")
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_home_moves_player(t_init: Object, t_wizard: Object):
     """home teleports the player to their home location."""
-    pass
+    system = lookup(1)
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        second_room = create("Home Room", parents=[system.room], location=None)
+        t_wizard.set_property("home", second_room)
+        parse.interpret(ctx, "home")
+        t_wizard.refresh_from_db()
+    assert t_wizard.location == second_room
 
 
-@pytest.mark.skip(reason="depends on player.moveto() verb being callable from Python")
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_home_not_set(t_init: Object, t_wizard: Object):
     """home sets the player's home to $player_start when none is configured."""
-    pass
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, "home")
+        t_wizard.refresh_from_db()
+    system = lookup(1)
+    assert t_wizard.get_property("home") == system.player_start
+    assert any("home was not set" in line for line in printed)
 
 
 # --- @move ---
@@ -75,12 +92,16 @@ def test_move_item_to_location(t_init: Object, t_wizard: Object, setup_item):
     assert widget.location.name == "The Laboratory"
 
 
-@pytest.mark.skip(reason="moving a player uses _.string_utils.pronoun_sub() for arrival/departure messages; not yet verified")
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_move_player_teleport(t_init: Object, t_wizard: Object):
     """@move <player> to <location> teleports the player and prints arrival/departure messages."""
-    pass
+    system = lookup(1)
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        second_room = create("Destination", parents=[system.room], location=None)
+        parse.interpret(ctx, "@move Wizard to Destination")
+        t_wizard.refresh_from_db()
+    assert t_wizard.location.name == "Destination"
 
 
 # --- @dig ---
@@ -97,9 +118,14 @@ def test_dig_creates_room_and_exit(t_init: Object, t_wizard: Object):
     assert t_wizard.location.match_exit("north") is not None
 
 
-@pytest.mark.skip(reason="@tunnel requires multi-step setup and _.string_utils.pronoun_sub usage not yet verified")
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_tunnel_to_existing_room(t_init: Object, t_wizard: Object):
     """@tunnel <direction> to <existing room> creates an exit without creating a new room."""
-    pass
+    system = lookup(1)
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        existing_room = create("Far Away", parents=[system.room], location=None)
+        parse.interpret(ctx, "@tunnel east to Far Away")
+        t_wizard.refresh_from_db()
+    assert t_wizard.location.match_exit("east") is not None
+    assert lookup("Far Away").id == existing_room.id

@@ -21,12 +21,14 @@ from moo.core import context
 
 player = context.player
 if player.get_property("home") == player.location:
-    return "You are already at home."
+    print("You are already at home.")
+    return
 if not player.get_property("home"):
     player.set_property("home", _.player_start)
-    return "Your home was not set. It has been set to the default location."
+    print("Your home was not set. It has been set to the default location.")
+    return
 
 player.moveto(player.get_property("home"))
 
 if player.get_property("home") != player.location:
-    return "You cannot go home. Your home location is not allowing you to enter."
+    print("You cannot go home. Your home location is not allowing you to enter.")

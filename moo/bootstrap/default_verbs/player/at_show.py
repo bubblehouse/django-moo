@@ -17,7 +17,7 @@ obj = parser.get_dobj()
 print(f"Details for {obj}:")
 print(f"  Owner: {obj.owner}")
 print(f"  Location: {obj.location}")
-print(f"  Parents: {', '.join(str(p) for p in obj.parents)}")
+print(f"  Parents: {', '.join(str(p) for p in obj.parents.all())}")
 print("  Verbs:")
 for verb in obj.verbs.all():
     if player.is_allowed("execute", verb):

@@ -14,7 +14,7 @@ found, and the user is a wizard, then the value of that player's `ownership_quot
 `permission denied' message is returned.
 """
 
-from moo.core import context
+from moo.core import context, lookup
 
 if args:
     player_name = args[0]
@@ -27,8 +27,8 @@ if player_name:
     if context.player.is_wizard():
         player_obj = lookup(player_name)
         if player_obj and player_obj.is_player():
-            return f"{player_obj.name}'s quota is {player_obj.ownership_quota}."
+            print(f"{player_obj.name}'s quota is {player_obj.ownership_quota}.")
         else:
-            return f"No player named '{player_name}' found."
+            print(f"No player named '{player_name}' found.")
 else:
-    return f"Your quota is {context.player.ownership_quota}."
+    print(f"Your quota is {context.player.ownership_quota}.")
