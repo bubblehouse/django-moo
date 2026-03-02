@@ -8,14 +8,14 @@ They are used by the `page` verb, and the `whereis` and `who` commands.
 """
 
 if verb_name == "page_absent_msg":
-    return _.sprintf(this.get_property("page_absent_msg"))
+    return _.string_utils.pronoun_sub(this.get_property("page_absent_msg"))
 elif verb_name == "page_origin_msg":
-    return _.sprintf(this.get_property("page_origin_msg"))
+    return _.string_utils.pronoun_sub(this.get_property("page_origin_msg"))
 elif verb_name == "page_echo_msg":
-    return _.sprintf(this.get_property("page_echo_msg"))
+    return _.string_utils.pronoun_sub(this.get_property("page_echo_msg"))
 elif verb_name == "whereis_location_msg":
-    return _.sprintf(this.get_property("whereis_location_msg"))
+    return _.string_utils.pronoun_sub(this.get_property("whereis_location_msg"))
 elif verb_name == "who_location_msg":
-    return _.sprintf(this.get_property("who_location_msg"))
+    return _.string_utils.pronoun_sub(this.get_property("who_location_msg"))
 else:
     raise ValueError(f"Unknown verb name: {verb_name}")

@@ -17,6 +17,6 @@ if not (context.parser.has_dobj_str()):
 obj = context.parser.get_dobj()
 try:
     obj.delete()
-    print(_.sprintf("[color yellow]Recycled %d[/color yellow]"))
+    print(_.string_utils.pronoun_sub("[color yellow]Recycled %d[/color yellow]"))
 except:
-    print(_.sprintf("[color red]Error recycling %d[/color red]"))
+    print(_.string_utils.pronoun_sub("[color red]Error recycling %d[/color red]"))
