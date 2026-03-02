@@ -21,7 +21,7 @@ player = context.player
 args = context.parser.words[1:] if context.parser else args
 trust = []
 mistrust = []
-linecount = args.pop(0)
+linecount = int(args.pop(0))
 for name in args:
     if name.startswith('!'):
         mistrust.append(lookup(name[1:]))

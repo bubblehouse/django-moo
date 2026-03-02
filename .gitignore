@@ -2,6 +2,7 @@
 *.egg
 *.pyc
 *.sqlite
+*.sqlite3
 *.key
 *.pem
 *.sql
