@@ -48,7 +48,7 @@ test:
   script:
     - pip install uv
     - uv sync
-    - uv run pytest --junitxml=junit.xml --cov-report term --cov-report xml
+    - uv run pytest -n auto --junitxml=junit.xml --cov-report term --cov-report xml
   coverage: /(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/
   artifacts:
     when: always
