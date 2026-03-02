@@ -1,6 +1,6 @@
 import pytest
 
-from moo.core import code, parse
+from moo.core import code, lookup, parse
 from moo.core.models import Object
 
 
@@ -76,9 +76,15 @@ def test_whisper_sends_message(t_init: Object, t_wizard: Object):
 # --- announce ---
 
 
-@pytest.mark.skip(reason="requires the player's location to have an announce verb defined")
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_announce_delegates_to_room(t_init: Object, t_wizard: Object):
     """announce() delegates to the location's announce verb when it exists."""
-    pass
+    player_npc = lookup("Player")
+    player_npc.location = t_wizard.location
+    player_npc.save()
+    with code.ContextManager(t_wizard, lambda _: None):
+        with pytest.warns(RuntimeWarning) as w:
+            t_wizard.announce("hello from wizard")
+    messages = [str(x.message) for x in w.list]
+    assert any("hello from wizard" in m for m in messages)
