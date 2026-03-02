@@ -24,7 +24,7 @@ If the player is carrying any objects, a simple list of these is printed.
 """
 
 passthrough()
-print(_.sprintf("%S is sleeping."))
+print(_.string_utils.pronoun_sub("%S is sleeping."))
 
 # # TODO: implement this
 # if this not in connected_players():
