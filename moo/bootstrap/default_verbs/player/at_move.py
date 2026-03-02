@@ -23,7 +23,7 @@ parser = context.parser
 obj = parser.get_dobj()
 destination = lookup(parser.get_pobj_str("to"))
 if obj.is_player():
-    obj.announce(_.sprintf("%D disappears suddenly for parts %i(to)."))
+    obj.announce(_.string_utils.pronoun_sub("%D disappears suddenly for parts %i(to)."))
 obj.moveto(destination)
 if obj.is_player():
-    destination.announce(_.sprintf("%D materializes out of thin air in %i(to)."))
+    destination.announce(_.string_utils.pronoun_sub("%D materializes out of thin air in %i(to)."))

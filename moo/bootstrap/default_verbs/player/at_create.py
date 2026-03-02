@@ -29,4 +29,4 @@ if context.parser.has_pobj_str("from"):
         return
     print("[color yellow]Transmuted %s to %s[/color yellow]" % (new_obj, parent))
 
-new_obj.move(context.player)
+new_obj.moveto(context.player)
