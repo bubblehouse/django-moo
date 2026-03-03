@@ -98,7 +98,7 @@ gprof2dot==2025.4.14
     # via pytest-profiling
 idna==3.11
     # via requests
-imagesize==1.4.1
+imagesize==2.0.0
     # via sphinx
 importlib-metadata==8.7.1
     # via pylint-gitlab
