@@ -25,7 +25,10 @@ thing = args[0]
 source = this.get_property("source")
 dest = this.get_property("dest")
 
-#TODO: check lock on exit to see if thing can use it
+if this.is_locked():
+    thing.tell(this.nogo_msg())
+    source.announce_all_but(thing, this.onogo_msg())
+    return
 
 dest.bless_for_entry(context.caller)
 if this.dest.accept(thing):

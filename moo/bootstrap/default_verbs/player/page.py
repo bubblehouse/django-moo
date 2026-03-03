@@ -56,7 +56,12 @@ if context.parser.has_pobj_str("with"):
 else:
     message = None
 
+if not who.is_connected():
+    print(who.page_absent_msg())
+    return
+
 pagemsg = player.page_origin_msg()
 who.tell(pagemsg)
 if message:
     who.tell(player.psc if player.name in message else player.name, " pages, \"", message, "\"")
+print(player.page_echo_msg())
