@@ -346,6 +346,37 @@ def test_message_verbs(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_close_door_without_autolock_stays_unlocked(t_init: Object, t_wizard: Object):
+    """Closing a door without autolock set does not lock the door."""
+    printed = []
+
+    def _writer(msg):
+        printed.append(msg)
+
+    with code.ContextManager(t_wizard, _writer) as ctx:
+        _, door = setup_exit(t_wizard)
+        parse.interpret(ctx, "@dig north to Destination Room through wooden door")
+        parse.interpret(ctx, "open wooden door")
+        parse.interpret(ctx, "close wooden door")
+    assert not door.is_locked()
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_move_through_locked_exit(t_init: Object, t_wizard: Object):
+    """Going in a direction through a locked exit is blocked and prints the nogo message."""
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        source, _ = setup_exit(t_wizard)
+        parse.interpret(ctx, "@dig north to Destination Room through wooden door")
+        parse.interpret(ctx, "lock wooden door")
+        with pytest.warns(RuntimeWarning, match="can't go that way"):
+            parse.interpret(ctx, "go north")
+        t_wizard.refresh_from_db()
+        assert t_wizard.location == source
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_invoke_moves_player(t_init: Object, t_wizard: Object):
     """Directly invoking an exit moves the player to the destination."""
     printed = []
