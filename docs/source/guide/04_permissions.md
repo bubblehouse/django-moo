@@ -21,7 +21,7 @@ The `transmute` bit specifies whether or not the subject can create new objects 
 
 ## Checking Permissions in Code
 
-In verbs and other Python code, always check permissions before allowing operations. The `can_caller()` method is an essential tool:
+To improve the player experience, it's helpful to check permissions before allowing operations. The `can_caller()` method is one:
 
 ```python
 from moo.core import context
@@ -37,6 +37,14 @@ return True
 ```
 
 The `can_caller()` method checks if the current task's caller has the specified permission on the object. It returns `True` if the permission is granted, `False` otherwise.
+
+The `caller` is usually the correct object to check for permissions, but very rarely you actually want to know if the current `player` is able to do something. In those cases, you can emulate `can_caller()` with:
+
+```python
+from moo.core import context
+# can the player object edit the room object?
+context.player.is_allowed("write", context.player.location)
+```
 
 ### Common Permission Checks
 
@@ -65,17 +73,19 @@ if obj.can_caller("entrust"):
 Whenever a new object is created, DjangoMOO invokes the `set_default_permission(new_obj)` verb on the "System Object", the Object with `pk=1`. The default version of this verb sets the initial permissions for the new object:
 
 ```python
-from moo.core import context
+from moo.core import context, set_task_perms
 
-obj = context.args[0]
-obj.allow('wizards', 'anything')
-obj.allow('owners', 'anything')
-obj.allow('everyone', 'read')
+obj = args[0]
+with set_task_perms(context.player):
+    obj.allow("wizards", "anything")
+    obj.allow("owners", "anything")
 
-if obj.kind == 'verb':
-    obj.allow('everyone', 'execute')
-else:
-    obj.allow('everyone', 'read')
+    if obj.kind == "verb":
+        obj.allow("everyone", "execute")
+    elif obj.kind == "property":
+        obj.allow("everyone", "read")
+    elif obj.kind == "object":
+        obj.allow("everyone", "read")
 ```
 
 The `allow()` method grants a permission to a recipient:
@@ -108,8 +118,8 @@ The 3 existing object groups the permission structure is currently aware of are:
 
 ## Best Practices
 
-1. **Always check permissions**: Never assume a caller has permission for an operation
-2. **Fail safely**: Return meaningful error messages when permission is denied
-3. **Use permission groups**: Leverage `owners`, `wizards`, and `everyone` rather than creating individual ACLs
-4. **Grant minimal permissions**: Only grant permissions that are absolutely necessary
+1. **Always check permissions**: Every object operation is ruled by the permission system, so it's important to write verbs that handle failure gracefully.
+2. **Fail helpfully**: Return meaningful error messages when permission is denied
+3. **Use permission groups**: For common code, leverage `owners`, `wizards`, and `everyone` rather than creating individual ACLs
+4. **Grant minimal permissions**: Only grant permissions that are absolutely necessary; complex ACLs can be difficult to debug
 5. **Document permission requirements**: Make it clear in verb/property documentation what permissions are required
