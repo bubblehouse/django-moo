@@ -35,7 +35,7 @@ There are several fundamental attributes to every object, defined by `moo.core.m
 ```
 
 A bigger change to the DjangoMOO architecture starts to emerge here, around how permissions are specified.
-* Player information is kept in a separate table, and `Player.avatar` is set to the player Object as needed.
+* Player information is kept in a separate table, and `Player.avatar` is set to the Object the player controls.
 * This Player instance also includes a reference to the Django `user` object and the `wizard` `Boolean` field.
 
 > The parent/child hierarchy is used for classifying objects into general classes and then sharing behavior among all members of that class. For example, the LambdaCore database contains an object representing a sort of "generic" room. All other rooms are descendants (i.e., children or children's children, or ...) of that one. The generic room defines those pieces of behavior that are common to all rooms; other rooms specialize that behavior for their own purposes. The notion of classes and specialization is the very essence of what is meant by object-oriented programming.
