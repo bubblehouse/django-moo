@@ -260,3 +260,43 @@ def test_unlock_for_open(t_init: Object, t_wizard: Object):
         parse.interpret(ctx, "lock_for_open wooden box with brass key")
         parse.interpret(ctx, "unlock_for_open wooden box")
         assert box.get_property("open_key") is None
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_open_locked_container_without_key(t_init: Object, t_wizard: Object):
+    """Opening a locked container when the player does not hold the key is silently blocked."""
+    printed = []
+
+    def _writer(msg):
+        printed.append(msg)
+
+    with code.ContextManager(t_wizard, _writer) as ctx:
+        system = lookup(1)
+        box = setup_container(t_wizard)
+        key = create("brass key", parents=[system.thing], location=t_wizard.location)
+        box.set_property("open_key", key.id)
+        parse.interpret(ctx, "open wooden box")
+        box.refresh_from_db()
+    assert not box.is_open()
+    assert printed == []
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_open_locked_container_with_key(t_init: Object, t_wizard: Object):
+    """Opening a locked container while holding the required key succeeds."""
+    printed = []
+
+    def _writer(msg):
+        printed.append(msg)
+
+    with code.ContextManager(t_wizard, _writer) as ctx:
+        system = lookup(1)
+        box = setup_container(t_wizard)
+        key = create("brass key", parents=[system.thing], location=t_wizard)
+        box.set_property("open_key", key.id)
+        parse.interpret(ctx, "open wooden box")
+        box.refresh_from_db()
+    assert box.is_open()
+    assert printed == ["You open the container."]
