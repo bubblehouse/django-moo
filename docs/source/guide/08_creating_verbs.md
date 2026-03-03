@@ -48,7 +48,7 @@ The full syntax is:
 #!moo verb drop --on $thing --dspec this
 # A verb that requires a direct object
 
-#!moo verb put give --on $thing --dspec this --ispec on:this in:this
+#!moo verb put give --on $thing --dspec this --ispec on:this --ispec in:this
 # A verb with aliases, requiring direct and indirect objects
 ```
 
@@ -73,6 +73,8 @@ All verb code is compiled and executed within RestrictedPython's sandboxed envir
 - `dict()` - Create dictionaries
 - `list()` - Create lists
 - `set()` - Create sets
+- `sorted()` - Sort lists
+- `type()` - Largely used to get access to the DoesNotExist exceptions
 
 Attempting to import or use other modules will result in a security error.
 
@@ -82,7 +84,7 @@ As mentioned above, DjangoMOO uses Python as its in-game programming language. W
 
     from moo.core import context
 
-The `context` object has a couple of attributes that are useful in most verbs:
+The `context` object has a variety of attributes that are useful in verbs:
 
 1. `player` – the Object that represents the user who called the verb
 2. `caller` – the effective user that code is running with (usually the owner of the current executing verb)
@@ -119,8 +121,6 @@ When a verb is invoked via the command parser, `context.parser` provides these m
 | `has_pobj(prep)` | `True` if iobj resolved to an Object | — |
 | `has_pobj_str(prep)` | `True` if iobj string is present | — |
 
-**Important naming note**: Methods use the `_str` suffix, **not** `_string`. There are no `get_dobj_string()` or `has_pobj_string()` variants — those names will raise `AttributeError`.
-
 Use `get_dobj_str()` / `get_pobj_str()` when the argument is plain text (a message, a name to create, etc.). Use `get_dobj()` / `get_pobj()` only when you expect the argument to be a reference to an existing game object.
 
 ### Sending Messages to Players
@@ -128,7 +128,7 @@ Use `get_dobj_str()` / `get_pobj_str()` when the argument is plain text (a messa
 Two mechanisms exist for writing output to a player connection:
 
 - **`obj.tell(msg)`** — Goes through `$player.tell`, which applies gag-list filtering and paranoia tracking before calling `write()`. Use this for normal in-game messages so that player preferences are respected.
-- **`write(obj, msg)`** (imported from `moo.core`) — Low-level connection write; bypasses all filtering. Use sparingly, only when filtering must be skipped (e.g., system notifications).
+- **`write(obj, msg)`** (imported from `moo.core`) — Only usable by Wizard-owned code. Low-level connection write; bypasses all filtering. Use sparingly, only when filtering must be skipped (e.g., system notifications).
 
 In tests (where `CELERY_BROKER_URL = "memory://"`), both paths ultimately call `write()`, which emits `RuntimeWarning(f"ConnectionError({obj}): {msg}")` instead of sending to a real connection. Wrap test commands that trigger either path with `pytest.warns(RuntimeWarning)`:
 

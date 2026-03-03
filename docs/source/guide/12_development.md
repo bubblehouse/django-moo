@@ -65,17 +65,6 @@ python manage.py moo_init
 python manage.py shell
 ```
 
-### Environment Variables
-
-Configure these via `docker-compose.override.yml` or `.env`:
-
-- `DJANGO_SETTINGS_MODULE`: Which settings to use (`moo.settings.local` for Docker, `moo.settings.dev` for local)
-- `DEBUG`: Enable Django debug mode
-- `ALLOWED_HOSTS`: Hosts allowed to connect to the server
-- `SECRET_KEY`: Django secret key
-- `DATABASE_URL`: PostgreSQL connection string
-- `REDIS_URL`: Redis connection string
-
 ## Using VSCode with django-moo
 
 The first thing to do with your development environment is to make sure you can run the unit tests:
@@ -115,11 +104,12 @@ uv run pytest --pdb
 
 ### Test Organization
 
+- **Core bootstrap data**: Defined in `moo/bootstrap/test.py`, used by the Core tests
+- **Core verb sources**: `moo/bootstrap/test_verbs/` - MOO verb definitions for the `test` dataset, used by the Core tests
 - **Core tests**: `moo/core/tests/` - Tests for models, permissions, verb execution engine
-- **Bootstrap integration tests**: `moo/bootstrap/default_verbs/tests/` - Tests for the default verb implementations
-- **Bootstrap verb sources**: `moo/bootstrap/test_verbs/` - MOO verb definitions for the `test` dataset (not pytest tests)
-- **Test bootstrap data**: Defined in `moo/bootstrap/test.py`
-- **Default game data**: Defined in `moo/bootstrap/default.py`
+- **Default bootstrap data**: Defined in `moo/bootstrap/default.py`, used to create playable databases
+- **Default verb sources**: `moo/bootstrap/default_verbs/` - MOO verb definitions for the `default` dataset
+- **Default tests**: `moo/bootstrap/default_verbs/tests/` - Tests for the default objects and their verbs
 
 Shared pytest fixtures live in `moo/conftest.py` and provide a pre-seeded game world for integration tests.
 
@@ -130,7 +120,7 @@ All tests should:
 - Test both success and failure cases
 - Follow PEP 8 naming conventions (test functions start with `test_`)
 
-#### Core unit tests
+#### Core tests
 
 Core tests exercise models and the verb execution engine without needing a full bootstrap. They typically use `@pytest.mark.django_db` alone:
 
@@ -157,9 +147,10 @@ def test_permission_denial():
         obj.can_caller("write")
 ```
 
-#### Bootstrap integration tests
+#### Default tests
 
 Tests in `moo/bootstrap/default_verbs/tests/` exercise verbs against a fully bootstrapped world.
+
 They use two shared fixtures from `moo/conftest.py`:
 
 - **`t_init`**: Bootstraps the full game world by running `default.py`. Yields the system object (`#1`). Must be requested with `@pytest.mark.parametrize("t_init", ["default"], indirect=True)`.
@@ -169,28 +160,35 @@ Output sent to the player is captured via a `_writer` callback passed to `code.C
 
 ```python
 import pytest
+
 from moo.core import code, create, lookup, parse
 from moo.core.models import Object
-
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_drop_from_inventory(t_init: Object, t_wizard: Object):
     printed = []
 
-    def _writer(msg):
+    def _writer(msg):  # This is what `print()` ends up calling
         printed.append(msg)
 
+    # set up a context with Wizard as the player
     with code.ContextManager(t_wizard, _writer) as ctx:
         system = lookup(1)
         lab = t_wizard.location
+        player = lookup("Player")
         widget = create("widget", parents=[system.thing], location=t_wizard)
 
-        parse.interpret(ctx, "drop widget")
+        # other calls to write() (besides print()) can be caught here
+        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
+            parse.interpret(ctx, "drop widget")
+        assert [str(x.message) for x in warnings.list] == [
+            f"ConnectionError(#{player.pk} (Player)): #{t_wizard.pk} (Wizard) drops widget."
+        ]
 
         widget.refresh_from_db()
         assert widget.location == lab
-        assert not printed
+        assert printed == ['You drop widget.']
 ```
 
 Verbs can also be called directly as Python methods inside a `code.ContextManager` block. This is useful for testing helper verbs (message formatters, lock checks, etc.) without going through the command parser:
@@ -210,7 +208,7 @@ with code.ContextManager(t_wizard, _writer):
     assert widget.location == lab
 ```
 
-To test that a lock prevents movement, set a `key` property on the destination before calling `moveto`. The lock expression `["!", id]` blocks the object whose id matches:
+Testing lack of results is important too; for example, to test that a lock prevents movement, set a `key` property on the destination before calling `moveto`. The lock expression `["!", id]` blocks the object whose id matches:
 
 ```python
 destination.set_property("key", ["!", widget.id])
@@ -219,7 +217,7 @@ widget.refresh_from_db()
 assert widget.location != destination  # move was blocked
 ```
 
-For commands that trigger connection-level notifications (movement between rooms, `say`, etc.), wrap the `parse.interpret` call with `pytest.warns`:
+For commands that call write() on other objects (as opposed to those that just use `print()`), wrap the `parse.interpret` call with `pytest.warns`:
 
 ```python
 with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
@@ -257,29 +255,6 @@ python manage.py shell
 <QuerySet [...]>
 >>> obj.verbs.all()
 <QuerySet [...]>
-```
-
-### Testing a Verb
-
-```python
-from moo.core import lookup
-
-obj = lookup("some_object")
-result = obj.invoke_verb("verb_name", args=["arg1", "arg2"])
-print(result)
-```
-
-### Adding a New Verb
-
-```python
-from moo.core import lookup
-
-obj = lookup("some_object")
-obj.add_verb("my_verb", code="""
-return "Hello from verb"
-""")
-
-result = obj.invoke_verb("my_verb")
 ```
 
 ### Resetting the Database

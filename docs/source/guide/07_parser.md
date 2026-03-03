@@ -127,5 +127,3 @@ page Player   →   this = Player (dobj), context.player = Wizard (caller)
 ```
 
 Always use `context.player` to identify who initiated a command. Only use `this` when the verb is specifically designed to act on the object it was dispatched on (e.g., a room's `accept` verb or an exit's `go` verb).
-
-**The LambdaMOO permission antipattern**: the classic guard `if player != this: return "Permission denied."` is broken whenever a `dspec` is set, because `this` will be the direct object rather than the caller — the check will fire on every normal invocation. Use `context.player` directly for all initiator-based logic.

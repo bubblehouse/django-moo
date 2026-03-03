@@ -63,8 +63,12 @@ After the shebang line, the verb code follows (without a function wrapper - Rest
 ```python
 #!moo verb accept --on $room
 
-"""Accept an object being moved into this verb's location."""
-# Verb code here
+# pylint: disable=return-outside-function,undefined-variable
+
+"""
+Accept an object being moved into this verb's location.
+"""
+
 return True
 ```
 

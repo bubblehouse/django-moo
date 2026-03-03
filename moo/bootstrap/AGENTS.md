@@ -17,8 +17,9 @@ The bootstrap system initializes the game database with default game objects, cl
 - **test**: A minimal dataset used by core pytest tests in `moo/core/tests/`.
 
 ### Testing:
-- `default_verbs/tests/` — pytest integration tests for the verbs installed on the `default` dataset. These are the tests to write when adding or changing a `default_verbs/` verb.
-- `test_verbs/` — MOO verb source files for the `test` dataset. These are **not** pytest tests; they are verb definitions loaded during `test.py` bootstrap initialisation.
+- `moo/core/tests` – The core pytest tests for basic functionality shared by all MOO universes
+- `moo/bootstrap/default_verbs/tests/` — pytest integration tests for the verbs installed on the `default` dataset. These are the tests to write when adding or changing a `default_verbs/` verb.
+- `moo/boostrap/test_verbs/` — These are **not** pytest tests; they are verb definitions loaded during `test.py` bootstrap initialisation.
 
 ## Verb Code Format
 
@@ -40,12 +41,12 @@ All verb files must start with a "shebang" line that defines metadata:
 - `verb_name`: The name(s) of the verb (space-separated for aliases)
 - `--on`: Object ID to attach verb to. Supports the `$<name>` syntax to refer to properties on the system object
 - `--dspec`: Direct object specifier
-  - `this`: Requires a direct object
-  - `any`: Optional direct object
-  - `none`: No direct object
-  - `either`: Can work either way (least common)
+  - `this`: Requires direct object to be where the verb was found
+  - `any`: Accepts any string, but requires that something is specified
+  - `none`: Will not match if a direct object is specified
+  - `either`: Used for optional direct objects
 - `--ispec`: Indirect object specifiers using prepositions
-  - Format: `PREP:SPEC` where SPEC is `this`, `any`, `none`, or `either` and PREP is an item from `settings.PREPOSITIONS`
+  - Format: `PREP:SPEC` where SPEC is `this`, `any`, or `none` and PREP is an item from `settings.PREPOSITIONS`
 
 ### Verb Dispatch and `this`
 
@@ -69,7 +70,7 @@ page Player   →   this = Player (dobj), context.player = Wizard (caller)
 
 **Use `context.player` for sender/initiator logic**, not `this`, whenever the verb is a player command that acts on behalf of the player who typed it. Use `this` only when the verb is specifically designed to be dispatched on another object (e.g., a room, container, or exit).
 
-**Permission check antipattern**: The LambdaMOO idiom `if player != this: return "Permission denied."` is broken whenever a dspec is set, because `this` will be the dobj rather than the caller. Use `context.player` directly to identify the initiator.
+**Permission check antipattern**: Attempting to use the LambdaMOO idiom `if player != this: return "Permission denied."` will break whenever a dspec is set, because `this` will be the dobj rather than the caller. Use `context.player` directly to identify the initiator.
 
 ### Examples
 
@@ -135,7 +136,7 @@ Access is limited to (from settings):
 
 ### Important Restrictions
 
-Verbs **cannot**:
+Verbs **must not**:
 - Import arbitrary modules (security restriction)
 - Access filesystem directly
 - Open network connections
@@ -153,21 +154,27 @@ Verbs **should not**:
 ### Basic Verb Structure
 
 ```python
-#!moo verb my_verb --on $player
+#!moo verb emote --on $room --dspec any
+
+# pylint: disable=return-outside-function,undefined-variable
 
 """
-Documentation for this verb.
-
-this: The object this verb was found on
-passthrough: Call to invoke on parent objects
-_: System object reference
-args: Function arguments (usually empty in interactive verbs)
-kwargs: Keyword arguments (usually empty in interactive verbs)
-
-Returns: Typically True/False or a string for output
+This verb is used for the pose type of interaction with other players. It functions in a similar way to the :say verb,
+but instead places the player's name at the front of the text. The actual output is done in two stages. The :emote verb
+is responsible for telling the player the action s/he has just performed. The emote1 verb is then called to tell the
+other objects in the room of the pose action. This provides a two stage mechanism; either or both of the verbs can be
+overridden to provide special effects.
 """
-# Your verb code here
-return True
+
+from moo.core import context
+
+if context.parser.words:
+    message = " ".join(context.parser.words[1:])
+else:
+    message = " ".join(args)
+
+context.caller.tell("You " + message)
+this.emote1(message)
 ```
 
 ### RestrictedPython Syntax Differences
@@ -216,9 +223,9 @@ if not args:
 return "Permission okay."
 ```
 
-## Working with the Game API
+## Working with the MOO Context
 
-Import and use the game API within verbs:
+Import and use the game context within verbs:
 
 ```python
 #!moo verb create_item --on $player
