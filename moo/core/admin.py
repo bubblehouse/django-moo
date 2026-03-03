@@ -38,7 +38,7 @@ class ObjectAdmin(admin.ModelAdmin):
 
 @admin.register(verb.Verb)
 class VerbAdmin(admin.ModelAdmin):
-    list_display = ("__str__", "repo", "ref", "filename")
+    list_display = ("__str__", "owner", "repo", "ref", "filename")
     form = VerbAdminForm
     raw_id_fields = ("owner", "origin")
 
