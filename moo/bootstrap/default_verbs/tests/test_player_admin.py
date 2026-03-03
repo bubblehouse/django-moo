@@ -69,7 +69,8 @@ def test_eject_victim_from_container(t_init: Object, t_wizard: Object):
     """@eject <victim> from <container> removes the victim and sends ejection messages."""
     system = lookup(1)
     player_npc = lookup("Player")
-    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
         container = create("Vault", parents=[system.room], location=t_wizard.location)
         player_npc.location = container
         player_npc.save()
@@ -81,8 +82,13 @@ def test_eject_victim_from_container(t_init: Object, t_wizard: Object):
         ]:
             v = Verb.objects.create(origin=container, owner=t_wizard, code=code_str)
             VerbName.objects.create(verb=v, name=name)
-        parse.interpret(ctx, "@eject Player from Vault")
+        with pytest.warns(RuntimeWarning) as warnings:
+            parse.interpret(ctx, "@eject Player from Vault")
         player_npc.refresh_from_db()
+    messages = [str(w.message) for w in warnings.list]
+    assert any("You have been ejected!" in m for m in messages)
+    assert any("They were ejected." in m for m in messages)
+    assert "You ejected them." in printed
     assert player_npc.location != container
 
 
@@ -107,6 +113,17 @@ def test_quota_other_wizard(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, printed.append) as ctx:
         parse.interpret(ctx, "@quota Player")
     assert any("Player's quota is" in line for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_quota_other_non_wizard_denied(t_init: Object, t_wizard: Object):
+    """@quota <player> produces no output for a non-wizard querying another player's quota."""
+    printed = []
+    player_npc = lookup("Player")
+    with code.ContextManager(player_npc, printed.append) as ctx:
+        parse.interpret(ctx, "@quota Wizard")
+    assert not any("Wizard's quota is" in line for line in printed)
 
 
 # --- @whereis ---

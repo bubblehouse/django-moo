@@ -73,6 +73,31 @@ def test_whisper_sends_message(t_init: Object, t_wizard: Object):
             parse.interpret(ctx, "whisper Hello to Player")
 
 
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_whisper_no_caller_echo(t_init: Object, t_wizard: Object):
+    """whisper delivers to the recipient but sends no echo to the caller."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        with pytest.warns(RuntimeWarning, match="whispers to you"):
+            parse.interpret(ctx, "whisper Hello to Player")
+    assert printed == []
+
+
+# --- page ---
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_page_sends_caller_echo(t_init: Object, t_wizard: Object):
+    """page sends the page_echo_msg confirmation back to the caller via print()."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        with pytest.warns(RuntimeWarning):
+            parse.interpret(ctx, "page Player")
+    assert "Your message has been sent." in printed
+
+
 # --- announce ---
 
 

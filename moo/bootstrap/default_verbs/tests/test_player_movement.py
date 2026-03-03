@@ -95,12 +95,16 @@ def test_move_item_to_location(t_init: Object, t_wizard: Object, setup_item):
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_move_player_teleport(t_init: Object, t_wizard: Object):
-    """@move <player> to <location> teleports the player and prints arrival/departure messages."""
+    """@move <player> to <location> teleports the player and sends departure/arrival messages."""
     system = lookup(1)
+    player_npc = lookup("Player")
     with code.ContextManager(t_wizard, lambda _: None) as ctx:
         second_room = create("Destination", parents=[system.room], location=None)
-        parse.interpret(ctx, "@move Wizard to Destination")
+        with pytest.warns(RuntimeWarning) as warnings:
+            parse.interpret(ctx, "@move Wizard to Destination")
         t_wizard.refresh_from_db()
+    messages = [str(w.message) for w in warnings.list]
+    assert any("Wizard disappears suddenly" in m and str(player_npc.pk) in m for m in messages)
     assert t_wizard.location.name == "Destination"
 
 
