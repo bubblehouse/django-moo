@@ -220,3 +220,24 @@ def test_paranoid_invalid_level(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, printed.append) as ctx:
         parse.interpret(ctx, "@paranoid 5")
     assert "Paranoid level must be 0, 1, or 2." in printed
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_paranoid_level_2(t_init: Object, t_wizard: Object):
+    """@paranoid 2 sets the paranoid property to 2."""
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        parse.interpret(ctx, "@paranoid 2")
+        t_wizard.refresh_from_db()
+    assert t_wizard.paranoid == 2
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_paranoid_reset_to_0(t_init: Object, t_wizard: Object):
+    """@paranoid 0 resets the paranoid property to 0 (disabling tracking)."""
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        parse.interpret(ctx, "@paranoid 1")
+        parse.interpret(ctx, "@paranoid 0")
+        t_wizard.refresh_from_db()
+    assert t_wizard.paranoid == 0
