@@ -1,3 +1,11 @@
+## [0.52.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.52.0...v0.52.1) (2026-03-03)
+
+
+### Bug Fixes
+
+* added stub obj.is_connected() for later implementation ([343232e](https://gitlab.com/bubblehouse/django-moo/commit/343232ea322858707c083b09f6b0c345b5817e89))
+* small verb fixes from testing ([9aac98a](https://gitlab.com/bubblehouse/django-moo/commit/9aac98a55a958bdfe3abe2255f3d29d1bf395384))
+
 ## [0.52.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.51.0...v0.52.0) (2026-03-02)
 
 
