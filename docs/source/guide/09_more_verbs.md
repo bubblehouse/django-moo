@@ -5,7 +5,7 @@ Like properties, the default Django ORM doesn't honor inheritance, so there's a 
 The simplest way to invoke another verb (as a method) from a running verb is with:
 
 ```python
-obj.invoke_verb(name, *args, **kwargs)
+obj.invoke_verb("announce", *args, **kwargs)
 ```
 
 or using the getattr override:
@@ -17,7 +17,7 @@ obj.announce(*args, **kwargs)
 This works for many convenience functions, but whatever time these functions use will count against the default
 verb timeout of 3 seconds.
 
-But if you're limited to 3 seconds in a Verb, how do you create longer tasks? The key is to compose your function
+If you're limited to 3 seconds in a Verb, how do you create longer tasks? The key is to compose your function
 into multiple Verb calls, which you can invoke asynchronously using the `invoke()` function:
 
 ```{eval-rst}
@@ -83,7 +83,7 @@ This works basically the same in DjangoMOO verb code because all verbs are compi
 - `args`: Function arguments when run as a method, or an empty list
 - `kwargs`: Keyword arguments when run as a method, or an empty dict
 
-One key advantage of RestrictedPython is that `return` can be used from anywhere in the verb code, not just at the end of functions:
+One key difference in this approach is that `return` can be used from anywhere in the verb code, not just at the end of functions:
 
 ```python
 #!moo verb check_object --on $room
@@ -112,7 +112,8 @@ return f"Object: {obj.name}\nDescription: {obj.get_property('description')}"
 
 ### Handling Verb Errors
 
-DjangoMOO defines a number of custom exceptions:
+DjangoMOO defines a number of custom exceptions, but there's still a lot of inconsistency where they're used. At this
+time raising any of them from verb code will rollback the transaction as if the verb never executed.
 
 ```{eval-rst}
 .. py:currentmodule:: moo.core.exceptions
@@ -145,7 +146,7 @@ if len(args) < 2:
     return "Usage: verb_name <arg1> <arg2>"
 ```
 
-### 3. Use the API Context
+### 3. Use the MOO Context
 
 ```python
 from moo.core import context
@@ -170,42 +171,15 @@ return "Object created successfully."
 return None
 ```
 
-### 5. Keep Verbs Focused
+### 5. Respect the Verb Time Limit
 
-Each verb should do one thing well. If you need complex logic:
+Each verb execution (including synchronous calls to other verbs) should complete in less than 3 seconds, or Celery will terminate the task. If you need complex logic:
 
 ```python
 from moo.core import context, invoke
 
-# Split into multiple async operations
-invoke(verb=complex_verb, delay=0)
+player = context.player
+# Invoke async verb operations
+invoke(verb=player.complex_verb, delay=0)
 return "Operation started in background."
-```
-
-### 6. Use Database Queries Efficiently
-
-```python
-# GOOD: Use select_related for foreign keys
-objs = Object.objects.select_related('owner', 'location')
-
-# GOOD: Use prefetch_related for backward relations
-objs = Object.objects.prefetch_related('properties', 'verbs')
-
-# AVOID: N+1 queries
-for obj in Object.objects.all():
-    print(obj.owner.name)  # Query per object
-```
-
-### 7. Handle Errors Gracefully
-
-```python
-try:
-    result = verb_operation()
-    return result
-except AttributeError:
-    return "Invalid object reference."
-except ValueError as e:
-    return f"Invalid value: {str(e)}"
-except Exception as e:
-    return f"An error occurred: {str(e)}"
 ```

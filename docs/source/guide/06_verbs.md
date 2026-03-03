@@ -4,6 +4,29 @@
 >
 > As with properties, every verb has an owner and a set of permission bits. The owner of a verb can change its program, its permission bits, and its argument specifiers (discussed below). Only a wizard can change the owner of a verb. The owner of a verb also determines the permissions with which that verb runs; that is, the program in a verb can do whatever operations the owner of that verb is allowed to do and no others. Thus, for example, a verb owned by a wizard must be written very carefully, since wizards are allowed to do just about anything.
 
+Just like properties, verb instances are largely normal Django ORM objects:
+
+    from moo.core import context
+
+    obj = context.caller
+    for verb in obj.verbs.all():
+        print("* " + ", ".join([n.name for n in verb.names.all()]))
+
+This wouldn't work for verbs inherited from parents, so `Object` defines a number of helper methods, including `get_verb()`:
+
+    from moo.core import context
+
+    obj = context.caller
+    title = obj.get_verb('title')
+    print(title())
+
+`Object` also supports `__getattr__` for direct verb access:
+
+    from moo.core import context
+
+    obj = context.caller
+    print(obj.title())
+
 To add a new Verb to an object, users must have the `develop` permission on that object (owners and wizards get this by default). Verbs support the following permissions for any given object or object group:
 
 * `anything` - do anything with a verb
@@ -12,6 +35,7 @@ To add a new Verb to an object, users must have the `develop` permission on that
 * `entrust` - can change the owner of a verb
 * `grant` - can set permissions on a verb
 * `execute` - can run a verb
+
 
 Verbs also have some attributes of their own:
 

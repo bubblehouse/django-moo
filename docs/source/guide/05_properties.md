@@ -1,17 +1,31 @@
 # Properties on Objects
 
-Since we're using "stock" Django model instances inside our custom code, the initial implementation of custom object properties are distinct from the `getattr()`-accessible attributes described above, e.g.:
+While there's been lots of syntactic sugar added to reduce this kind of boilerplate, it's notable that DjangoMOO instances are largely normal Django ORM objects:
 
     from moo.core import context
 
-    description = context.caller.location.properties.filter(name="description")
-    print(description.value)
+    obj = context.caller.location
+    description = obj.properties.filter(name="description")
+    if description.exists():
+        print(description[0].value)
 
-Improvements to the `Object` abstract class allow for direct access:
+It's usually better to make use of the various helper methods, e.g.:
 
-    context.caller.location.description
+    from moo.core import context
 
-But note that verbs are searched first, so this would instead return a verb with an identical name, if it exists.
+    obj = context.caller.location
+    if obj.has_property('description'):
+        print(obj.get_property('description'))
+
+`Object` has a number of helper methods for using properties, so you don't necessarily have to use the `Property` class directly. For example, it supports `__getattr__` for direct property access:
+
+    from moo.core import context
+
+    obj = context.caller.location
+    if obj.has_property('description'):
+        print(obj.description)
+
+The only caveat here is that __getattr__ will first search for the named verb, and only if no verb by that name is found will it search the properties. More on verbs in the next section...
 
 > First, an object has a property corresponding to every property in its parent object. To use the jargon of object-oriented programming, this is a kind of inheritance. If some object has a property named `foo`, then so will all of its children and thus its children's children, and so on.
 >
@@ -64,5 +78,5 @@ DjangoMOO properties support an `inherit_owner` attribute that works the same wa
 
 ```python
 room = create('empty room')
-room.set_property("description", "There's not much to see here.")
+room.set_property("description", "There's not much to see here.", inherit_owner=True)
 ```

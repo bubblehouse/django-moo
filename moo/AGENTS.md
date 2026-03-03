@@ -126,31 +126,13 @@ When executing a verb:
 
 ### Sending Messages to Players
 
-Two mechanisms exist for sending messages; they behave differently:
+Three mechanisms exist for sending messages; they behave differently:
 
+- **`print()`** – Print a message directly to (and only to) the player who executed this verb
 - **`obj.tell(msg)`** — Goes through `$player.tell`, which applies gag-list filtering and paranoia tracking before calling `write()`. Use this for normal in-game messages so that player preferences are respected.
-- **`write(obj, msg)`** (from `moo.core`) — Low-level connection write; bypasses all filtering. Use sparingly, only when filtering must be skipped.
+- **`write(obj, msg)`** (from `moo.core`) — Low-level connection write, can only be used by Wizard-owned verbs; bypasses all filtering. Use sparingly, if at all.
 
-In tests (where `CELERY_BROKER_URL = "memory://"`), both paths ultimately call `write()`, which emits `RuntimeWarning(f"ConnectionError({obj}): {msg}")` instead of sending to a real connection. Wrap test commands that trigger either path with `pytest.warns(RuntimeWarning)`.
-
-### Working with Permissions
-
-The permission system uses permission strings:
-- `"read"`: Can read properties
-- `"write"`: Can modify properties
-- `"execute"`: Can execute verbs
-- `"move"`: Can move objects
-- `"transmute"`: Can change object's class
-- `"derive"`: Can inherit from object
-- etc.
-
-Always check permissions before allowing operations:
-
-```python
-obj = args[0]
-if not obj.can_caller("write"):
-    print("You don't have write permission")
-```
+In tests (where `CELERY_BROKER_URL = "memory://"`), the second two paths ultimately call `write()`, which emits `RuntimeWarning(f"ConnectionError({obj}): {msg}")` instead of sending to a real connection. Wrap test commands that trigger `write()` with `pytest.warns(RuntimeWarning)`.
 
 ### Database Query Best Practices
 
