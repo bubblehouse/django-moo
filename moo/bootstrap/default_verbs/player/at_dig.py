@@ -41,5 +41,7 @@ door.set_property("source", source)
 door.set_property("dest", dest)
 source.add_exit(door)
 dest.add_entrance(door)
+door.location = None
+door.save()
 
 print(f'[color yellow]{action} an exit {direction} to "{dest.name}".[/color yellow]')
