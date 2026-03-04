@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from typing import Union
 
 from .code import ContextManager
-from .exceptions import QuotaError, AmbiguousObjectError, UserError
+from .exceptions import QuotaError, UserError
 
 __all__ = ["lookup", "create", "write", "invoke", "set_task_perms", "context"]
 
@@ -30,6 +30,9 @@ def lookup(x: Union[int, str]):
     if isinstance(x, int):
         return Object.objects.get(pk=x)
     elif isinstance(x, str):
+        if x.startswith("$"):
+            system = lookup(1)
+            return system.get_property(name=x[1:])
         qs = Object.objects.filter(name__iexact=x)
         aliases = Object.objects.filter(aliases__alias__iexact=x)
         qs = qs.union(aliases)
