@@ -121,6 +121,9 @@ def write(obj, message):
     if settings.CELERY_BROKER_URL == "memory://":
         warnings.warn(RuntimeWarning(f"ConnectionError({obj}): {message}"))
         return
+    # this is an uncommon scenario, but applies to the stock Player object if it hasn't been configured for login
+    if not player.user:
+        return
     with app.default_connection() as conn:
         channel = conn.channel()
         queue = Queue(
