@@ -1,3 +1,11 @@
+## [0.52.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.52.1...v0.52.2) (2026-03-04)
+
+
+### Bug Fixes
+
+* exits shouldn't be literally inside the rooms they connect to ([630bb05](https://gitlab.com/bubblehouse/django-moo/commit/630bb051fdcf1c4965d5472228980a728650477e))
+* only generic exits should be in location None, objects used as doors should not be moved ([cfb473b](https://gitlab.com/bubblehouse/django-moo/commit/cfb473ba1b7759ed59ea62b1b944606d851ed9ea))
+
 ## [0.52.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.52.0...v0.52.1) (2026-03-03)
 
 
