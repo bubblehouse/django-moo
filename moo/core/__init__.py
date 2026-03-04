@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from typing import Union
 
 from .code import ContextManager
-from .exceptions import QuotaError, UserError
+from .exceptions import QuotaError, AmbiguousObjectError, UserError
 
 __all__ = ["lookup", "create", "write", "invoke", "set_task_perms", "context"]
 
