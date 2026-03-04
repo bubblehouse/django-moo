@@ -26,10 +26,9 @@ class Command(BaseCommand):
     ):  # pylint: disable=arguments-differ
         avatar = Object.objects.get(name=avatar, unique_name=True)
         user = User.objects.get(username=username)
-        if not getattr(user, "player", None):
-            player = Player()
-            player.save()
-            user.player = player
-        user.player.avatar = avatar
-        user.player.wizard = wizard
-        user.player.save()
+        player = Player.objects.get(avatar=avatar)
+        if not player:
+            player = Player(avatar=avatar)
+        player.user = user
+        player.wizard = wizard
+        player.save()
