@@ -1,7 +1,7 @@
 import pytest
 
 from moo.core import context, code, create, exceptions, lookup, parse
-from moo.core.models import Object
+from moo.core.models import Object, Player
 
 
 def setup_room(t_wizard: Object, name: str = "Test Room", description: str = "A plain test room."):
@@ -115,8 +115,11 @@ def test_tell_contents_ctype3_single_player(t_init: Object, t_wizard: Object):
         t_wizard.location = room
         t_wizard.save()
         context.caller.refresh_from_db()
+        player = lookup("Player")
+        player.location = room
+        player.save()
         room.tell_contents()
-    assert printed == ["You see Wizard here."]
+    assert printed == ["You see Player here."]
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -134,8 +137,10 @@ def test_tell_contents_ctype3_multiple_players(t_init: Object, t_wizard: Object)
         player = lookup("Player")
         player.location = room
         player.save()
+        bob = create("Bob", location=room)
+        Player.objects.create(avatar=bob)
         room.tell_contents()
-    assert printed == ["Wizard and Player are here."]
+    assert printed == ["Player and Bob are here."]
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -151,8 +156,11 @@ def test_tell_contents_ctype3_mixed(t_init: Object, t_wizard: Object):
         t_wizard.save()
         context.caller.refresh_from_db()
         setup_item(room, "red ball")
+        player = lookup("Player")
+        player.location = room
+        player.save()
         room.tell_contents()
-    assert printed == ["You see red ball here.", "You see Wizard here."]
+    assert printed == ["You see red ball here.", "You see Player here."]
 
 
 # --- tell_contents: ctype 2 ---
@@ -184,9 +192,12 @@ def test_tell_contents_ctype2_mixed(t_init: Object, t_wizard: Object):
         t_wizard.location = room
         t_wizard.save()
         context.caller.refresh_from_db()
+        player = lookup("Player")
+        player.location = room
+        player.save()
         setup_item(room, "red ball")
         room.tell_contents()
-    assert printed == ["You see Wizard and red ball here."]
+    assert printed == ["You see Player and red ball here."]
 
 
 # --- tell_contents: ctype 1 ---
@@ -204,9 +215,12 @@ def test_tell_contents_ctype1(t_init: Object, t_wizard: Object):
         t_wizard.location = room
         t_wizard.save()
         context.caller.refresh_from_db()
+        player = lookup("Player")
+        player.location = room
+        player.save()
         setup_item(room, "red ball")
         room.tell_contents()
-    assert printed == ["Wizard is here", "You see red ball here"]
+    assert printed == ["Player is here", "You see red ball here"]
 
 
 # --- tell_contents: ctype 0 ---
@@ -226,7 +240,7 @@ def test_tell_contents_ctype0(t_init: Object, t_wizard: Object):
         context.caller.refresh_from_db()
         setup_item(room, "red ball")
         room.tell_contents()
-    assert printed == ["Contents:", "Wizard", "red ball"]
+    assert printed == ["Contents:", "red ball"]
 
 
 # --- tell_contents: out-of-range ctype ---
