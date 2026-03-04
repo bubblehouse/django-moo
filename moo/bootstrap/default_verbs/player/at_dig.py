@@ -27,7 +27,7 @@ if context.parser.has_pobj("through"):
     if not door.aliases.filter(alias=direction):
         door.aliases.create(alias=direction)
 else:
-    door = create(f"{direction} from {source.name}", parents=[_.exit], location=source)
+    door = create(f"{direction} from {source.name}", parents=[_.exit], location=None)
     door.aliases.create(alias=direction)
 
 if verb_name == "@dig":
@@ -41,7 +41,5 @@ door.set_property("source", source)
 door.set_property("dest", dest)
 source.add_exit(door)
 dest.add_entrance(door)
-door.location = None
-door.save()
 
 print(f'[color yellow]{action} an exit {direction} to "{dest.name}".[/color yellow]')
