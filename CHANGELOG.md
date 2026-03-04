@@ -1,3 +1,17 @@
+## [0.53.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.52.2...v0.53.0) (2026-03-04)
+
+
+### Features
+
+* lookup support $var syntax ([59c0619](https://gitlab.com/bubblehouse/django-moo/commit/59c061927fe7bb6f5f559cea47147d2beade50de))
+
+
+### Bug Fixes
+
+* dont include self in tell_contents() ([82b216e](https://gitlab.com/bubblehouse/django-moo/commit/82b216e45f858d08c6141230625e45f6190c0fcf))
+* handle unallocated users in write() ([b8c8257](https://gitlab.com/bubblehouse/django-moo/commit/b8c82579eef4f6e3b4c38fdd050a882781a53f1d))
+* update existing player objects properly when using moo_enableuser ([a15f76b](https://gitlab.com/bubblehouse/django-moo/commit/a15f76b5596803ff9962bb515363997314eed99e))
+
 ## [0.52.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.52.1...v0.52.2) (2026-03-04)
 
 
