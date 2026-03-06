@@ -125,7 +125,7 @@ def initialize_dataset(dataset="default"):
     return repo
 
 
-def load_verb_source(path, system, repo):
+def load_verb_source(path, system, repo, replace=False):
     from moo.core.models.object import Object
     with open(path, encoding="utf8") as f:
         contents = f.read()
@@ -152,6 +152,7 @@ def load_verb_source(path, system, repo):
                 repo=repo,
                 direct_object=args.dspec,
                 indirect_objects=args.ispec,
+                replace=replace,
             )
         else:
             log.debug(f"Skipping verb source `{path.name}`...")
