@@ -16,6 +16,16 @@ from moo.core.models import Object, Player, Repository
 log = logging.getLogger(__name__)
 
 
+@pytest.fixture(autouse=True, scope="session")
+def configure_celery_for_tests():
+    from moo.celery import app
+    app.conf.update(
+        broker_url="memory://",
+        task_always_eager=True,
+        task_store_eager_result=True,
+    )
+
+
 @pytest.fixture()
 def t_init(request):
     """

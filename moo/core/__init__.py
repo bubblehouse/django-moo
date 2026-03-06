@@ -118,10 +118,9 @@ def write(obj, message):
     from kombu import Exchange, Queue
 
     from ..celery import app
-    from django.conf import settings
     # don't try to write to the message queue if we're using the in-memory test broker
     # when running unit tests there's no Redis available
-    if settings.CELERY_BROKER_URL == "memory://":
+    if app.conf.broker_url == "memory://":
         warnings.warn(RuntimeWarning(f"ConnectionError({obj}): {message}"))
         return
     # this is an uncommon scenario, but applies to the stock Player object if it hasn't been configured for login
