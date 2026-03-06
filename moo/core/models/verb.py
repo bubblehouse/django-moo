@@ -10,6 +10,7 @@ from django.conf import settings
 from django.core import validators
 from django.db import models
 
+from moo import bootstrap
 from .. import utils, lookup
 from ..code import interpret, ContextManager
 from .acl import AccessibleMixin
@@ -95,6 +96,12 @@ class Verb(models.Model, AccessibleMixin):
         if not needs_default_permissions:
             return
         utils.apply_default_permissions(self)
+
+    def reload(self):
+        if self.repo is None or self.filename is None:
+            raise RuntimeError("Cannot reload a verb without an associated repo and filename.")
+        import pathlib
+        bootstrap.load_verb_source(pathlib.Path(self.filename), lookup(1), self.repo, replace=True)
 
     def is_bound(self):
         return hasattr(self, "invoked_object") and hasattr(self, "invoked_name")
