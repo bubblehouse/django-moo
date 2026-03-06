@@ -11,7 +11,7 @@ parser = context.parser
 if parser.has_dobj():
     obj = parser.get_dobj()
 else:
-    obj = lookup(parser.get_dobj_str())
+    obj = parser.get_dobj(lookup=True)
 
 for prop in obj.properties.all():
     if prop.name.endswith('_msg'):
