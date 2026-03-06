@@ -125,6 +125,38 @@ def initialize_dataset(dataset="default"):
     return repo
 
 
+def load_verb_source(path, system, repo):
+    from moo.core.models.object import Object
+    with open(path, encoding="utf8") as f:
+        contents = f.read()
+        try:
+            first, _ = contents.split("\n", maxsplit=1)
+        except ValueError:
+            return
+        if first.startswith("#!moo "):
+            log.debug(f"Loading verb source `{path.name}`...")
+            shebang = first[6:]
+            try:
+                args = parser.parse_args(shlex.split(shebang))
+            except SystemExit:
+                log.error(f"Invalid shebang in verb source `{path.name}`: {shebang}")
+                return
+            if args.on.startswith("$"):
+                obj = system.get_property(name=args.on[1:])
+            else:
+                obj = Object.objects.get(name=args.on)
+            obj.add_verb(
+                *args.names,
+                code=contents,
+                filename=str(path.resolve()),
+                repo=repo,
+                direct_object=args.dspec,
+                indirect_objects=args.ispec,
+            )
+        else:
+            log.debug(f"Skipping verb source `{path.name}`...")
+
+
 def load_verbs(repo, verb_package):
     """
     Load the verbs from a Python package into the database and associate them with the given repository.
@@ -162,37 +194,7 @@ def load_verbs(repo, verb_package):
         elif ref.is_file():
             with importlib.resources.as_file(ref) as path:
                 if str(path).endswith(".py"):
-                    _process_file_path(path)
-
-    def _process_file_path(path):
-        with open(path, encoding="utf8") as f:
-            contents = f.read()
-            try:
-                first, _ = contents.split("\n", maxsplit=1)
-            except ValueError:
-                return
-            if first.startswith("#!moo "):
-                log.debug(f"Loading verb source `{ref.name}`...")
-                shebang = first[6:]
-                try:
-                    args = parser.parse_args(shlex.split(shebang))
-                except SystemExit:
-                    log.error(f"Invalid shebang in verb source `{ref.name}`: {shebang}")
-                    return
-                if args.on.startswith("$"):
-                    obj = system.get_property(name=args.on[1:])
-                else:
-                    obj = Object.objects.get(name=args.on)
-                obj.add_verb(
-                    *args.names,
-                    code=contents,
-                    filename=str(path.resolve()),
-                    repo=repo,
-                    direct_object=args.dspec,
-                    indirect_objects=args.ispec,
-                )
-            else:
-                log.debug(f"Skipping verb source `{ref.name}`...")
+                    load_verb_source(path, system, repo)
 
     for ref in importlib.resources.files(verb_package).iterdir():
         _iterate_file_paths(ref)
