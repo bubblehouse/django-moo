@@ -13,15 +13,6 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 
-from celery.signals import setup_logging
-
-
-@setup_logging.connect
-def configure_celery_logging(**_kwargs):
-    from logging.config import dictConfig
-
-    dictConfig(CELERY_LOGGING)
-
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -226,73 +217,6 @@ LOGGING = {
     "loggers": {
         "": {
             "handlers": ["console"],
-            "level": "INFO",
-            "propagate": False,
-        }
-    },
-}
-
-# Celery configuration
-# https://docs.celeryq.dev/en/stable/userguide/configuration.html
-
-CELERY_BROKER_URL = "redis://localhost:6379/0"
-CELERY_ACCEPT_CONTENT = ["moojson", "json"]
-CELERY_EVENT_SERIALIZER = "moojson"
-CELERY_TASK_SERIALIZER = "moojson"
-CELERY_RESULT_SERIALIZER = "moojson"
-CELERY_RESULT_BACKEND = "django-db"
-CELERY_CACHE_BACKEND = "default"
-CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
-CELERY_TASK_TIME_LIMIT = 3
-CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
-
-CELERY_LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {  # Sets up the format of the logging output
-        "simple": {
-            "format": "%(asctime)s: %(levelname)s %(message)s",
-        },
-        "celeryTask": {
-            "()": "celery.app.log.TaskFormatter",
-            "fmt": "%(asctime)s: %(levelname)s %(task_name)s[%(task_id)s]: %(message)s",
-        },
-        "celeryProcess": {"()": "celery.utils.log.ColorFormatter", "fmt": "%(asctime)s: %(levelname)s %(message)s"},
-    },
-    "filters": {
-        "celeryTask": {
-            "()": "moo.logging.CeleryTaskFilter",
-        },
-        "celeryProcess": {
-            "()": "moo.logging.CeleryProcessFilter",
-        },
-        "notCelery": {
-            "()": "moo.logging.NotCeleryFilter",
-        },
-    },
-    "handlers": {
-        "console": {
-            "level": "DEBUG",
-            "class": "logging.StreamHandler",
-            "formatter": "simple",
-            "filters": ["notCelery"],
-        },
-        "console2": {
-            "level": "DEBUG",
-            "class": "logging.StreamHandler",
-            "formatter": "celeryTask",
-            "filters": ["celeryTask"],
-        },
-        "console3": {
-            "level": "DEBUG",
-            "class": "logging.StreamHandler",
-            "formatter": "celeryProcess",
-            "filters": ["celeryProcess"],
-        },
-    },
-    "loggers": {
-        "": {
-            "handlers": ["console", "console2", "console3"],
             "level": "INFO",
             "propagate": False,
         }
