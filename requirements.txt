@@ -38,7 +38,7 @@ cffi==2.0.0 ; platform_python_implementation != 'PyPy'
     # via
     #   cryptography
     #   pynacl
-charset-normalizer==3.4.4
+charset-normalizer==3.4.5
     # via requests
 click==8.3.1
     # via
@@ -60,7 +60,7 @@ colorama==0.4.6 ; sys_platform == 'win32'
     #   sphinx
 coverage==7.13.4
     # via pytest-cov
-cron-descriptor==2.0.6
+cron-descriptor==1.4.5
     # via django-celery-beat
 cryptography==46.0.5
     # via
@@ -70,7 +70,7 @@ dill==0.4.1
     # via
     #   pylint
     #   pylint-gitlab
-django==5.2.11
+django==5.2.12
     # via
     #   django-ace
     #   django-celery-beat
@@ -79,7 +79,7 @@ django==5.2.11
     #   django-timezone-field
 django-ace==1.43.5
     # via django-moo
-django-celery-beat==2.8.1
+django-celery-beat==2.9.0
     # via django-moo
 django-celery-results==2.6.0
     # via django-moo
@@ -139,7 +139,7 @@ mdurl==0.1.2
 more-itertools==10.8.0
     # via django-moo
 myst-parser==3.0.1
-packaging==25.0
+packaging==26.0
     # via
     #   anybadge
     #   django-moo
@@ -151,7 +151,7 @@ paramiko==4.0.0
     # via webssh
 parso==0.8.6
     # via jedi
-platformdirs==4.9.2
+platformdirs==4.9.4
     # via
     #   pylint
     #   pylint-gitlab
@@ -175,8 +175,6 @@ pygments==2.19.2
     #   ptpython
     #   rich
     #   sphinx
-pyjwt==2.11.0
-    # via redis
 pylint==3.3.9
     # via
     #   pylint-django
@@ -211,15 +209,15 @@ python-dateutil==2.9.0.post0
     # via celery
 pyyaml==6.0.3
     # via myst-parser
-redis==5.3.1
+redis==6.4.0
     # via
     #   django-moo
     #   kombu
 requests==2.32.5
     # via sphinx
-restrictedpython==7.4
+restrictedpython==8.1
     # via django-moo
-rich==13.9.4
+rich==14.3.3
     # via django-moo
 six==1.17.0
     # via
@@ -264,7 +262,6 @@ tornado==6.5.4
 typing-extensions==4.15.0
     # via
     #   asyncssh
-    #   cron-descriptor
     #   pylint-gitlab
 tzdata==2025.3
     # via
@@ -283,13 +280,13 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
-watchdog==4.0.2
+watchdog==6.0.0
     # via django-moo
 wcwidth==0.6.0
     # via prompt-toolkit
 webssh==1.6.3
     # via django-moo
-wrapt==2.1.1
+wrapt==2.1.2
     # via pylint-gitlab
 zipp==3.23.0
     # via
