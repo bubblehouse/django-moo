@@ -221,6 +221,7 @@ class Object(models.Model, AccessibleMixin):
         filename: str = None,
         direct_object: str = "none",
         indirect_objects: dict[str, str] = None,
+        replace: bool = False,
     ):
         """
         Defines a new :class:`.Verb` on the given object.
@@ -237,14 +238,27 @@ class Object(models.Model, AccessibleMixin):
         owner = ContextManager.get("caller") or owner or self
         if filename and not code:
             code = bootstrap.get_source(filename, dataset=repo.slug)
-        verb = Verb.objects.create(
-            origin=self,
-            owner=owner,
-            repo=repo,
-            filename=filename,
-            code=code,
-            direct_object=direct_object,
-        )
+        verb = None
+        if replace and names:
+            verb = Verb.objects.filter(origin=self, names__name=names[0]).first()
+        if verb is not None:
+            verb.owner = owner
+            verb.repo = repo
+            verb.filename = filename
+            verb.code = code
+            verb.direct_object = direct_object
+            verb.save()
+            verb.indirect_objects.clear()
+            verb.names.all().delete()
+        else:
+            verb = Verb.objects.create(
+                origin=self,
+                owner=owner,
+                repo=repo,
+                filename=filename,
+                code=code,
+                direct_object=direct_object,
+            )
         if indirect_objects is not None:
             for prep, specifier in indirect_objects.items():
                 if prep in ["any", "none"]:
