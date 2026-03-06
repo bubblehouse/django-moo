@@ -1,3 +1,15 @@
+## [0.55.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.54.0...v0.55.0) (2026-03-06)
+
+
+### Features
+
+* added lookup boolean to parser methods ([ec2b356](https://gitlab.com/bubblehouse/django-moo/commit/ec2b356702e9a8c51b6bc72cb9dfed8ec2ce4d80))
+
+
+### Bug Fixes
+
+* update Celery configuration to use external file ([9cc5742](https://gitlab.com/bubblehouse/django-moo/commit/9cc57422800ba079f361d04daccd2295023feb75))
+
 ## [0.54.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.53.0...v0.54.0) (2026-03-06)
 
 
