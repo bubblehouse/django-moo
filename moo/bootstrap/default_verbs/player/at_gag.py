@@ -24,7 +24,7 @@ player = context.player
 #     player.tell("Permission denied.")
 #     return
 
-victims = [lookup(arg) for arg in args] if args else [lookup(parser.get_dobj_str())]
+victims = [lookup(arg) for arg in args] if args else [parser.get_dobj(lookup=True)]
 
 if not victims:
     print("Usage:  @gag <player or object> [<player or object>...]")
