@@ -1,3 +1,15 @@
+## [0.54.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.53.0...v0.54.0) (2026-03-06)
+
+
+### Features
+
+* added [@reload](https://gitlab.com/reload) verb to update filesystem-resident verbs in the database ([3e7f8e6](https://gitlab.com/bubblehouse/django-moo/commit/3e7f8e6f39254833fdda2b477ca2aca844ca7626))
+
+
+### Bug Fixes
+
+* resolve split dev dependency sections and upgrade packages ([65bf181](https://gitlab.com/bubblehouse/django-moo/commit/65bf181346083bded920b5c3f38f19ae0007f3c5))
+
 ## [0.53.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.52.2...v0.53.0) (2026-03-04)
 
 
