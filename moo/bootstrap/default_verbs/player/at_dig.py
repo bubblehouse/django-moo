@@ -35,7 +35,7 @@ if verb_name == "@dig":
     dest = create(context.parser.get_pobj_str("to"), parents=[_.room], location=None)
 else:
     action = "Tunnelled"
-    dest = lookup(context.parser.get_pobj_str("to"))
+    dest = context.parser.get_pobj("to", lookup=True)
 
 door.set_property("source", source)
 door.set_property("dest", dest)

@@ -307,16 +307,19 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         else:
             return None
 
-    def get_dobj(self):
+    def get_dobj(self, lookup=False):
         """
         Get the direct object for this parser. If there was no
         direct object found, raise a NoSuchObjectError
         """
+        if lookup and self.dobj_str is not None:
+            from moo.core import lookup
+            return lookup(self.dobj_str)
         if not (self.dobj):
             raise Object.DoesNotExist(self.dobj_str)
         return self.dobj
 
-    def get_pobj(self, *preps):
+    def get_pobj(self, *preps, lookup=False):
         """
         Get the object(s) for the given preposition(s). If there was no
         object found, raise a Object.DoesNotExist; if the preposition
@@ -327,13 +330,16 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             if not (prep in self.prepositions):
                 raise NoSuchPrepositionError(prep)
             for item in self.prepositions[prep]:
-                if item[2]:
+                if lookup and item[1] is not None:
+                    from moo.core import lookup
+                    matches.append(lookup(item[1]))
+                elif item[2]:
                     matches.append(item[2])
         if len(matches) > 1:
             raise AmbiguousObjectError(','.join(preps), matches)
         if not (matches):
             raise Object.DoesNotExist(self.prepositions[prep][0][1])
-        return self.prepositions[prep][0][2]
+        return matches[0]
 
     def get_dobj_str(self):
         """

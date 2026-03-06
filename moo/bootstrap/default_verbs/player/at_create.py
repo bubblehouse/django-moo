@@ -20,13 +20,8 @@ new_obj = create(name, location=None)
 print("[color yellow]Created %s[/color yellow]" % new_obj)
 
 if context.parser.has_pobj_str("from"):
-    parent_name = context.parser.get_pobj_str("from")
-    try:
-        parent = lookup(parent_name)
-        new_obj.parents.add(parent)
-    except type(new_obj).DoesNotExist:
-        print(f"[color red]No such object: {parent_name}[/color red]")
-        return
+    parent = context.parser.get_pobj("from", lookup=True)
+    new_obj.parents.add(parent)
     print("[color yellow]Transmuted %s to %s[/color yellow]" % (new_obj, parent))
 
 new_obj.moveto(context.player)
