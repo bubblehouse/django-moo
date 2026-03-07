@@ -6,22 +6,28 @@ Celery workers run the verb tasks.
 from pathlib import Path
 
 from celery import Celery, bootsteps
-from celery.signals import setup_logging, beat_init, worker_ready, worker_shutdown
+from celery.signals import setup_logging, beat_init, worker_ready, worker_shutdown, worker_process_init
 from kombu.serialization import register
+
+from opentelemetry.instrumentation.celery import CeleryInstrumentor
 
 from . import celeryconfig
 from .core import moojson
 
-WORKER_READINESS_FILE = Path('/var/run/worker-readiness')
-WORKER_LIVENESS_FILE = Path('/var/run/worker-liveness')
-BEAT_READINESS_FILE = Path('/var/run/beat-readiness')
-BEAT_LIVENESS_FILE = Path('/var/run/beat-liveness.pid')
+WORKER_READINESS_FILE = Path('/tmp/worker-readiness')
+WORKER_LIVENESS_FILE = Path('/tmp/worker-liveness')
+BEAT_READINESS_FILE = Path('/tmp/beat-readiness')
+BEAT_LIVENESS_FILE = Path('/tmp/beat-liveness.pid')
 
 app = Celery("moo")
 app.config_from_object("moo.celeryconfig")
 app.autodiscover_tasks()
 
 register("moojson", moojson.dumps, moojson.loads, content_type="application/x-moojson", content_encoding="utf-8")
+
+@worker_process_init.connect(weak=False)
+def init_celery_tracing(*args, **kwargs):
+    CeleryInstrumentor().instrument()
 
 @setup_logging.connect
 def configure_celery_logging(**kwargs):

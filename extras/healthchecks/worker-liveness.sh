@@ -1,6 +1,6 @@
 #!/bin/sh
 
-LIVENESS_FILE=/var/run/worker-liveness
+LIVENESS_FILE=/tmp/worker-liveness
 
 if [ ! -f "$LIVENESS_FILE" ]; then
     echo "Celery liveness file NOT found."
