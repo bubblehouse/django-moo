@@ -1,3 +1,10 @@
+## [0.57.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.3...v0.57.4) (2026-03-07)
+
+
+### Bug Fixes
+
+* change migration and collectstatic to pre-hooks ([e7caff3](https://gitlab.com/bubblehouse/django-moo/commit/e7caff31c1a9934e107ddc394de68cab71526a48))
+
 ## [0.57.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.2...v0.57.3) (2026-03-07)
 
 
