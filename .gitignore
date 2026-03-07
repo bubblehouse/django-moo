@@ -1,4 +1,5 @@
 *.gz
+*.tgz
 *.egg
 *.pyc
 *.sqlite
