@@ -1,3 +1,9 @@
+## [0.58.5](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.4...v0.58.5) (2026-03-07)
+
+### Bug Fixes
+
+* use the correct redis host in dev ([4df4f56](https://gitlab.com/bubblehouse/django-moo/commit/4df4f56ee335bcff8dc5f02917bb6c3c72f211b6))
+
 ## [0.58.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.3...v0.58.4) (2026-03-07)
 
 ### Bug Fixes
