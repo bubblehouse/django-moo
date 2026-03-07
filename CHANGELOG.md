@@ -1,3 +1,10 @@
+## [0.57.8](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.7...v0.57.8) (2026-03-07)
+
+
+### Bug Fixes
+
+* the real issue was using `command` instead of `args` ([0621b3d](https://gitlab.com/bubblehouse/django-moo/commit/0621b3df5c4f810ec67d99aa1c03e43f222003e7))
+
 ## [0.57.7](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.6...v0.57.7) (2026-03-07)
 
 
