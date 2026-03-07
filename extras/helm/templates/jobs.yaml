@@ -5,7 +5,7 @@ metadata:
   labels:
     {{- include "moo.labels" . | nindent 4 }}
   annotations:
-    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook: post-install,post-upgrade
 spec:
   template:
     metadata:
