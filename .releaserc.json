@@ -95,7 +95,7 @@
     ["@pubgcorp/semantic-release-helm",
       {
         "chartDirectory": "extras/helm",
-        "ociRegistry": "registry.gitlab.com/bubblehouse/django-moo-chart"
+        "ociRegistry": "registry.gitlab.com/bubblehouse/django-moo"
       }
     ],
     [
