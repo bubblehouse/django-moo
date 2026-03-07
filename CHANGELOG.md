@@ -1,3 +1,9 @@
+## [0.58.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.2...v0.58.3) (2026-03-07)
+
+### Bug Fixes
+
+* include subchart ([ab15ff8](https://gitlab.com/bubblehouse/django-moo/commit/ab15ff83d95c9cbd5ec55500125fb5d21c9532f7))
+
 ## [0.58.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.1...v0.58.2) (2026-03-07)
 
 ### Bug Fixes
