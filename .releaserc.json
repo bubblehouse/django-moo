@@ -64,38 +64,6 @@
               }
             ],
             "countMatches": true
-          },
-          {
-            "files": [
-              "extras/helm/Chart.yaml"
-            ],
-            "from": "^appVersion: .*",
-            "to": "appVersion: ${nextRelease.version}",
-            "results": [
-              {
-                "file": "extras/helm/Chart.yaml",
-                "hasChanged": true,
-                "numMatches": 1,
-                "numReplacements": 1
-              }
-            ],
-            "countMatches": true
-          },
-          {
-            "files": [
-              "extras/helm/Chart.yaml"
-            ],
-            "from": "^version: .*",
-            "to": "version: ${nextRelease.version}",
-            "results": [
-              {
-                "file": "extras/helm/Chart.yaml",
-                "hasChanged": true,
-                "numMatches": 1,
-                "numReplacements": 1
-              }
-            ],
-            "countMatches": true
           }
         ]
       }
@@ -122,6 +90,12 @@
       "semantic-release-pypi",
       {
         "envDir": false
+      }
+    ],
+    ["@pubgcorp/semantic-release-helm",
+      {
+        "chartDirectory": "extras/helm",
+        "ociRegistry": "ghcr.io/eaze/chart-service"
       }
     ],
     [
