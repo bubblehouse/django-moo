@@ -1,3 +1,11 @@
+## [0.56.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.55.0...v0.56.0) (2026-03-07)
+
+
+### Features
+
+* provide readiness and liveness files ([7983595](https://gitlab.com/bubblehouse/django-moo/commit/79835950bea3ca17bddb1df33a6e736a61a9e836))
+* update helm chart with missing components ([4e48cd2](https://gitlab.com/bubblehouse/django-moo/commit/4e48cd20f827cae1c4c89bdd3175dc056867b86a))
+
 ## [0.55.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.54.0...v0.55.0) (2026-03-06)
 
 
