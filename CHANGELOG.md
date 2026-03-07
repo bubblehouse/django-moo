@@ -1,3 +1,10 @@
+## [0.57.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.2...v0.57.3) (2026-03-07)
+
+
+### Bug Fixes
+
+* update to db creds on dev ([1e513e6](https://gitlab.com/bubblehouse/django-moo/commit/1e513e68a672c2b697fafdece0318b5eceb2cfea))
+
 ## [0.57.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.1...v0.57.2) (2026-03-07)
 
 
