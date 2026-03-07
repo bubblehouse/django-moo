@@ -1,3 +1,10 @@
+## [0.57.6](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.5...v0.57.6) (2026-03-07)
+
+
+### Bug Fixes
+
+* try removing leading ./ from command ([064b2da](https://gitlab.com/bubblehouse/django-moo/commit/064b2da3760b360f389297a0abdb58889edd3a72))
+
 ## [0.57.5](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.4...v0.57.5) (2026-03-07)
 
 
