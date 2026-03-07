@@ -1,6 +1,6 @@
 # moo
 
-![Version: 0.55.0](https://img.shields.io/badge/Version-0.55.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.55.0](https://img.shields.io/badge/AppVersion-0.55.0-informational?style=flat-square)
+![Version: 0.56.1](https://img.shields.io/badge/Version-0.56.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.56.1](https://img.shields.io/badge/AppVersion-0.56.1-informational?style=flat-square)
 
 A Helm chart for Kubernetes
 
@@ -33,10 +33,10 @@ A Helm chart for Kubernetes
 | podAnnotations | object | `{}` |  |
 | podSecurityContext.fsGroup | int | `33` |  |
 | replicaCount.beat | int | `1` |  |
-| replicaCount.shell | int | `1` |  |
-| replicaCount.webapp | int | `1` |  |
-| replicaCount.webssh | int | `1` |  |
-| replicaCount.worker | int | `1` |  |
+| replicaCount.shell | int | `2` |  |
+| replicaCount.webapp | int | `2` |  |
+| replicaCount.webssh | int | `2` |  |
+| replicaCount.worker | int | `2` |  |
 | resources | object | `{}` |  |
 | securityContext.runAsNonRoot | bool | `true` |  |
 | securityContext.runAsUser | int | `33` |  |
