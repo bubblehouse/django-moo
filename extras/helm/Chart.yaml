@@ -3,6 +3,11 @@ apiVersion: v2
 name: moo
 description: A Helm chart for Kubernetes
 
+dependencies:
+  - name: redis
+    version: "25.3.2"
+    repository: "https://charts.bitnami.com/bitnami"
+
 # A chart can be either an 'application' or a 'library' chart.
 #
 # Application charts are a collection of templates that can be packaged into
