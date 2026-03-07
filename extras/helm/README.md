@@ -1,6 +1,6 @@
 # moo
 
-![Version: 0.56.4](https://img.shields.io/badge/Version-0.56.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.56.4](https://img.shields.io/badge/AppVersion-0.56.4-informational?style=flat-square)
+![Version: 0.57.0](https://img.shields.io/badge/Version-0.57.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.57.0](https://img.shields.io/badge/AppVersion-0.57.0-informational?style=flat-square)
 
 A Helm chart for Kubernetes
 
@@ -8,7 +8,7 @@ A Helm chart for Kubernetes
 
 | Repository | Name | Version |
 |------------|------|---------|
-| https://charts.bitnami.com/bitnami | redis | 25.3.2 |
+| https://charts.bitnami.com/bitnami | redis | 17.3.11 |
 
 ## Values
 
