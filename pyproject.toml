@@ -30,6 +30,7 @@ dependencies = [
     "opentelemetry-sdk>=1.40.0",
     "opentelemetry-instrumentation-django>=0.61b0",
     "opentelemetry-instrumentation-celery>=0.61b0",
+    "redis-cache>=0.1.5",
 ]
 
 [project.urls]
