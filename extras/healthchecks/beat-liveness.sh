@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ ! -f /var/run/beat-liveness.pid ]; then
+if [ ! -f /tmp/beat-liveness.pid ]; then
     echo "Celery beat PID file NOT found."
     exit 1
 fi

@@ -5,7 +5,7 @@ export PATH="/bin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/app/bin"
 cd /usr/app/src
 
 if [ "$1" = '' ]; then
-    exec uwsgi --ini /etc/uwsgi.ini
+    exec opentelemetry-instrument uwsgi --ini /etc/uwsgi.ini
 elif [ "$1" = 'manage.py' ]; then
     if [ "$2" = 'moo_shell' ]; then
         exec watchmedo auto-restart -p '.reload' -- /usr/app/bin/python3.11 "$@"
