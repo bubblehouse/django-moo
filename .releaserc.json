@@ -95,7 +95,7 @@
     ["@pubgcorp/semantic-release-helm",
       {
         "chartDirectory": "extras/helm",
-        "ociRegistry": "ghcr.io/eaze/chart-service"
+        "ociRegistry": "registry.gitlab.com/bubblehouse/django-moo-chart"
       }
     ],
     [
