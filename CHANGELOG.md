@@ -1,3 +1,14 @@
+## [0.58.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.1...v0.58.2) (2026-03-07)
+
+### Bug Fixes
+
+* added correct redis_cache package ([2cce380](https://gitlab.com/bubblehouse/django-moo/commit/2cce3803e77b1da3b15350c05c358fa7d2912f16))
+* added missing params for helm push ([c2b9b06](https://gitlab.com/bubblehouse/django-moo/commit/c2b9b06b76c5785898252205d7ed648eff537dad))
+* update base imge ([8e9a543](https://gitlab.com/bubblehouse/django-moo/commit/8e9a54330220a6a8dcee2623c8528a2ca0348911))
+* update CI packages ([bf7f53c](https://gitlab.com/bubblehouse/django-moo/commit/bf7f53c8f49bd6edfea5efb7fc32039649f61cf8))
+* update runner-base images in CI pipeline ([816bad0](https://gitlab.com/bubblehouse/django-moo/commit/816bad065c4b1023feec1b9a450533b650282b51))
+* use correct package url ([dd2e558](https://gitlab.com/bubblehouse/django-moo/commit/dd2e5583933c721c29235502328bc72936057c4f))
+
 ## [0.58.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.0...v0.58.1) (2026-03-07)
 
 
