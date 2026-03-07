@@ -46,9 +46,10 @@ DATABASES = {
     }
 }
 
+REDIS_HOSTNAME = os.environ.get("REDIS_HOSTNAME", "redis")
 CACHES = {
     'default': {
         'BACKEND': 'redis_cache.RedisCache',
-        'LOCATION': 'redis:6379',
+        'LOCATION': f'{REDIS_HOSTNAME}:6379',
     }
 }
