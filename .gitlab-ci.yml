@@ -112,6 +112,10 @@ pages:
   tags:
     - shacklyn
   image: alpine:latest
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - moo/**/*.py
   script:
     - echo
   artifacts:
