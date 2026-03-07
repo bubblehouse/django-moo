@@ -1,3 +1,10 @@
+## [0.57.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.0...v0.57.1) (2026-03-07)
+
+
+### Bug Fixes
+
+* use a known working redis version for dependency ([acf6b14](https://gitlab.com/bubblehouse/django-moo/commit/acf6b143e910ff278ea0c4f3130709be24a87584))
+
 ## [0.57.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.56.4...v0.57.0) (2026-03-07)
 
 
