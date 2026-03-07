@@ -1,3 +1,3 @@
 #!/bin/sh
 
-[ -f /tmp[/beat-readiness ] || exit 1
+[ -f /tmp/beat-readiness ] || exit 1
