@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from .base import *  # pylint: disable=wildcard-import
 
+import os
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure-06xo%2f39ohlfrgu&)%1lsrlx6jqy)s%#_-$rc5l_z1+p6w(=r"
 
@@ -16,10 +18,10 @@ CSRF_TRUSTED_ORIGINS = ["https://moo.dev.shacklyn.net", "https://probe.cluster.l
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "termiverse",
-        "HOST": "termiverse-db.dev.shacklyn.net",
-        "USER": "termiverse",
-        "PASSWORD": "termiverse",
+        "NAME": "moo",
+        "HOST": "bubblehouse-dev-moo-db.cluster-cbepmog7ejmj.us-east-2.rds.amazonaws.com",
+        "USER": "moo",
+        "PASSWORD": os.getenv("DB_PASSWORD", "moo"),
     }
 }
 
