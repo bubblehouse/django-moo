@@ -1,3 +1,9 @@
+## [0.58.6](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.5...v0.58.6) (2026-03-07)
+
+### Bug Fixes
+
+* readiness typo ([598620b](https://gitlab.com/bubblehouse/django-moo/commit/598620b89c9be561f95d56de3171044c727cbf5c))
+
 ## [0.58.5](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.4...v0.58.5) (2026-03-07)
 
 ### Bug Fixes
