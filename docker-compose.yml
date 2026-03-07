@@ -32,6 +32,7 @@ services:
       context: .
       dockerfile: Dockerfile
     image: philchristensen/moo:latest
+    user: www-data
     command: [webssh]
     ports:
       - 8422:8422
@@ -43,6 +44,7 @@ services:
       context: .
       dockerfile: Dockerfile
     image: philchristensen/moo:latest
+    user: www-data
     ports:
       - 8443:8443
     links:
@@ -60,6 +62,7 @@ services:
       dockerfile: Dockerfile
     image: philchristensen/moo:latest
     command: [celery]
+    user: www-data
     links:
       - postgres
       - redis
@@ -75,6 +78,7 @@ services:
       dockerfile: Dockerfile
     image: philchristensen/moo:latest
     command: [manage.py, moo_shell]
+    user: www-data
     ports:
       - 8022:8022
     links:
