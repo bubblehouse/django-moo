@@ -9,6 +9,11 @@ moo:
   django:
     settings: moo.settings.dev
 
+redis:
+  architecture: standalone
+  auth:
+    enabled: false
+
 replicaCount:
   webapp: 2
   webssh: 2
