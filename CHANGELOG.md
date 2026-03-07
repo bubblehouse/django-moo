@@ -1,3 +1,10 @@
+## [0.56.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.56.0...v0.56.1) (2026-03-07)
+
+
+### Bug Fixes
+
+* dont use /var/run ([eed24ad](https://gitlab.com/bubblehouse/django-moo/commit/eed24ad12fc313fd0c58e12f1cc7a338703b66a7))
+
 ## [0.56.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.55.0...v0.56.0) (2026-03-07)
 
 
