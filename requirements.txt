@@ -101,7 +101,9 @@ idna==3.11
 imagesize==2.0.0
     # via sphinx
 importlib-metadata==8.7.1
-    # via pylint-gitlab
+    # via
+    #   opentelemetry-api
+    #   pylint-gitlab
 iniconfig==2.3.0
     # via pytest
 invoke==2.2.1
@@ -139,11 +141,44 @@ mdurl==0.1.2
 more-itertools==10.8.0
     # via django-moo
 myst-parser==3.0.1
+opentelemetry-api==1.40.0
+    # via
+    #   opentelemetry-instrumentation
+    #   opentelemetry-instrumentation-celery
+    #   opentelemetry-instrumentation-django
+    #   opentelemetry-instrumentation-wsgi
+    #   opentelemetry-sdk
+    #   opentelemetry-semantic-conventions
+opentelemetry-instrumentation==0.61b0
+    # via
+    #   opentelemetry-instrumentation-celery
+    #   opentelemetry-instrumentation-django
+    #   opentelemetry-instrumentation-wsgi
+opentelemetry-instrumentation-celery==0.61b0
+    # via django-moo
+opentelemetry-instrumentation-django==0.61b0
+    # via django-moo
+opentelemetry-instrumentation-wsgi==0.61b0
+    # via opentelemetry-instrumentation-django
+opentelemetry-sdk==1.40.0
+    # via django-moo
+opentelemetry-semantic-conventions==0.61b0
+    # via
+    #   opentelemetry-instrumentation
+    #   opentelemetry-instrumentation-celery
+    #   opentelemetry-instrumentation-django
+    #   opentelemetry-instrumentation-wsgi
+    #   opentelemetry-sdk
+opentelemetry-util-http==0.61b0
+    # via
+    #   opentelemetry-instrumentation-django
+    #   opentelemetry-instrumentation-wsgi
 packaging==26.0
     # via
     #   anybadge
     #   django-moo
     #   kombu
+    #   opentelemetry-instrumentation
     #   pylint-gitlab
     #   pytest
     #   sphinx
@@ -262,6 +297,9 @@ tornado==6.5.4
 typing-extensions==4.15.0
     # via
     #   asyncssh
+    #   opentelemetry-api
+    #   opentelemetry-sdk
+    #   opentelemetry-semantic-conventions
     #   pylint-gitlab
 tzdata==2025.3
     # via
@@ -286,8 +324,10 @@ wcwidth==0.6.0
     # via prompt-toolkit
 webssh==1.6.3
     # via django-moo
-wrapt==2.1.2
-    # via pylint-gitlab
+wrapt==1.17.3
+    # via
+    #   opentelemetry-instrumentation
+    #   pylint-gitlab
 zipp==3.23.0
     # via
     #   importlib-metadata
