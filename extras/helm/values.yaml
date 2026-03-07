@@ -10,11 +10,11 @@ moo:
     settings: moo.settings.dev
 
 replicaCount:
-  webapp: 1
-  webssh: 1
-  worker: 1
+  webapp: 2
+  webssh: 2
+  worker: 2
   beat: 1
-  shell: 1
+  shell: 2
 
 image:
   repository: registry.gitlab.com/bubblehouse/django-moo
