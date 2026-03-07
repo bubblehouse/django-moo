@@ -3,7 +3,6 @@ branch = True
 
 omit =
     # omit bootstrap verb code
-    */*_verbs/*
     # omit Django boilerplate
     moo/asgi.py
     moo/celery.py
