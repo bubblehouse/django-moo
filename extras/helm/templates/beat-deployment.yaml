@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "moo.fullname" . }}
+  name: {{ include "moo.fullname" . }}-beat
   labels:
-    {{- include "moo.labels" . | nindent 4 }}
+    {{- include "moo.beatLabels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.replicaCount.webapp }}
+  replicas: {{ .Values.replicaCount.beat }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "moo.selectorLabels" . | nindent 6 }}
+      {{- include "moo.beatSelectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -18,7 +18,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "moo.selectorLabels" . | nindent 8 }}
+        {{- include "moo.beatSelectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -33,6 +33,7 @@ spec:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["beat"]
           env:
           - name: DJANGO_SETTINGS_MODULE
             value: {{ .Values.moo.django.settings }}
@@ -43,26 +44,14 @@ spec:
           {{- with .Values.env }}
             {{- toYaml . | nindent 10 }}
           {{- end }}
-          ports:
-            - name: https
-              containerPort: {{ .Values.service.port }}
-              protocol: TCP
           livenessProbe:
-            httpGet:
-              path: /
-              port: https
-              scheme: HTTPS
-              httpHeaders:
-              - name: Host
-                value: probe.cluster.local
+            exec:
+              command:
+              - /usr/local/bin/beat-liveness.sh
           readinessProbe:
-            httpGet:
-              path: /
-              port: https
-              scheme: HTTPS
-              httpHeaders:
-              - name: Host
-                value: probe.cluster.local
+            exec:
+              command:
+              - /usr/local/bin/beat-readiness.sh
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
