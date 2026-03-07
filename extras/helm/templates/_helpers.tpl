@@ -60,6 +60,24 @@ app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
+{{- define "moo.workerLabels" -}}
+helm.sh/chart: {{ include "moo.chart" . }}
+{{ include "moo.workerSelectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
+{{- define "moo.beatLabels" -}}
+helm.sh/chart: {{ include "moo.chart" . }}
+{{ include "moo.beatSelectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
 {{/*
 Selector labels
 */}}
@@ -75,6 +93,16 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 
 {{- define "moo.websshSelectorLabels" -}}
 app.kubernetes.io/name: {{ include "moo.name" . }}-webssh
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{- define "moo.workerSelectorLabels" -}}
+app.kubernetes.io/name: {{ include "moo.name" . }}-worker
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}
+
+{{- define "moo.beatSelectorLabels" -}}
+app.kubernetes.io/name: {{ include "moo.name" . }}-beat
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
