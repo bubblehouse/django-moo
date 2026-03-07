@@ -1,3 +1,10 @@
+## [0.57.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.1...v0.57.2) (2026-03-07)
+
+
+### Bug Fixes
+
+* use latest version with correct OCI path ([5e15850](https://gitlab.com/bubblehouse/django-moo/commit/5e15850fd17f5943ff5d10849aa75e26d308aa13))
+
 ## [0.57.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.0...v0.57.1) (2026-03-07)
 
 
