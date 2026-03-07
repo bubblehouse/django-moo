@@ -1,3 +1,9 @@
+## [0.58.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.3...v0.58.4) (2026-03-07)
+
+### Bug Fixes
+
+* use correct OCI path ([04d0bb9](https://gitlab.com/bubblehouse/django-moo/commit/04d0bb9a630738062329e6eab7b751195d6de4d3))
+
 ## [0.58.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.2...v0.58.3) (2026-03-07)
 
 ### Bug Fixes
