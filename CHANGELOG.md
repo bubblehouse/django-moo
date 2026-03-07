@@ -1,3 +1,11 @@
+## [0.58.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.0...v0.58.1) (2026-03-07)
+
+
+### Bug Fixes
+
+* added missing setting ([42dbcb0](https://gitlab.com/bubblehouse/django-moo/commit/42dbcb0160d9027e7bdf5e8a1133cf812a3dc573))
+* added redis_cache dependency, setup caches in dev ([8ed61f0](https://gitlab.com/bubblehouse/django-moo/commit/8ed61f05b9e17f9f7ddf615c95f319d5b67d936d))
+
 ## [0.58.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.8...v0.58.0) (2026-03-07)
 
 
