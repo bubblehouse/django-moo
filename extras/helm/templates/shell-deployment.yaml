@@ -6,7 +6,7 @@ metadata:
     {{- include "moo.shellLabels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.replicaCount.shell }}
   {{- end }}
   selector:
     matchLabels:

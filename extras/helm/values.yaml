@@ -9,7 +9,12 @@ moo:
   django:
     settings: moo.settings.dev
 
-replicaCount: 1
+replicaCount:
+  webapp: 1
+  webssh: 1
+  worker: 1
+  beat: 1
+  shell: 1
 
 image:
   repository: registry.gitlab.com/bubblehouse/django-moo
