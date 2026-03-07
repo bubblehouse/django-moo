@@ -205,6 +205,8 @@ pyasn1==0.6.2
     # via django-simplesshkey
 pycparser==3.0 ; implementation_name != 'PyPy' and platform_python_implementation != 'PyPy'
     # via cffi
+pycrypto==2.6.1
+    # via vital-tools
 pygments==2.19.2
     # via
     #   ptpython
@@ -242,12 +244,20 @@ python-crontab==3.3.0
     # via django-celery-beat
 python-dateutil==2.9.0.post0
     # via celery
+python-redis-lock==4.0.0
+    # via redis-cache
 pyyaml==6.0.3
     # via myst-parser
 redis==6.4.0
     # via
     #   django-moo
     #   kombu
+    #   python-redis-lock
+    #   redis-structures
+redis-cache==0.1.5
+    # via django-moo
+redis-structures==0.1.7
+    # via redis-cache
 requests==2.32.5
     # via sphinx
 restrictedpython==8.1
@@ -318,6 +328,8 @@ vine==5.1.0
     #   amqp
     #   celery
     #   kombu
+vital-tools==0.1.13
+    # via redis-cache
 watchdog==6.0.0
     # via django-moo
 wcwidth==0.6.0
