@@ -6,7 +6,8 @@ https://docs.celeryq.dev/en/stable/userguide/configuration.html
 
 import os
 
-broker_url = os.environ.get("CELERY_BROKER_URL", "redis://redis:6379/0")
+redis_hostname = os.environ.get("REDIS_HOSTNAME", "redis")
+broker_url = os.environ.get("CELERY_BROKER_URL", f"redis://{redis_hostname}:6379/0")
 accept_content = ["moojson", "json"]
 event_serializer = "moojson"
 task_serializer = "moojson"
