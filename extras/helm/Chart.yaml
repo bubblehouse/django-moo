@@ -5,8 +5,8 @@ description: A Helm chart for Kubernetes
 
 dependencies:
   - name: redis
-    version: "17.3.11"
-    repository: "https://charts.bitnami.com/bitnami"
+    version: "25.3.2"
+    repository: "oci://registry-1.docker.io/bitnamicharts"
 
 # A chart can be either an 'application' or a 'library' chart.
 #
