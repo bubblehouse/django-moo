@@ -1,3 +1,10 @@
+## [0.56.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.56.3...v0.56.4) (2026-03-07)
+
+
+### Bug Fixes
+
+* run as www-data at the container level, dont drop permissions ([fdb64dc](https://gitlab.com/bubblehouse/django-moo/commit/fdb64dc656896796e157f3f82a090e89377358a1))
+
 ## [0.56.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.56.2...v0.56.3) (2026-03-07)
 
 
