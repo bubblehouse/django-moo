@@ -1,3 +1,10 @@
+## [0.57.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.56.4...v0.57.0) (2026-03-07)
+
+
+### Features
+
+* add redis as a chart dependency ([4832e3d](https://gitlab.com/bubblehouse/django-moo/commit/4832e3d19fe09ef938762591eff93c8ede6e5d55))
+
 ## [0.56.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.56.3...v0.56.4) (2026-03-07)
 
 
