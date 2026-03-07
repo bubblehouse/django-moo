@@ -75,6 +75,8 @@ RUN chgrp www-data /etc/ssl/private/ \
 
 ADD extras/entrypoint.sh /entrypoint.sh
 ADD extras/uwsgi/uwsgi.ini /etc/uwsgi.ini
+ADD extras/healthchecks/*ness.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/*ness.sh
 
 COPY --from=builder /usr/app /usr/app
 
