@@ -1,3 +1,10 @@
+## [0.56.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.56.1...v0.56.2) (2026-03-07)
+
+
+### Bug Fixes
+
+* use correct args in helm chart ([c128bee](https://gitlab.com/bubblehouse/django-moo/commit/c128beeeeff11f197206be88d6bcde03b7c595e8))
+
 ## [0.56.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.56.0...v0.56.1) (2026-03-07)
 
 
