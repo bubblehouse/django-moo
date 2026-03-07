@@ -27,6 +27,9 @@ dependencies = [
     "redis>=5.2.1",
     "packaging>=25.0",
     "more-itertools>=10.7.0",
+    "opentelemetry-sdk>=1.40.0",
+    "opentelemetry-instrumentation-django>=0.61b0",
+    "opentelemetry-instrumentation-celery>=0.61b0",
 ]
 
 [project.urls]
