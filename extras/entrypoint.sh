@@ -16,7 +16,7 @@ elif [ "$1" = 'webssh' ]; then
     exec wssh --port=8422 --hostfile=/etc/ssh/pregenerated_known_hosts --policy=reject
 elif [ "$1" = 'celery' ]; then
     if [ "$2" = 'beat' ]; then
-        exec celery -A moo beat --uid 33 -l INFO --pidfile=/var/run/beat-liveness.pid
+        exec celery -A moo beat --uid 33 -l INFO --pidfile=/tmp/beat-liveness.pid
     elif [ "$2" = 'worker' ]; then
         exec celery -A moo worker -E --uid 33 -l INFO
     else
