@@ -1,3 +1,10 @@
+## [0.58.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.8...v0.58.0) (2026-03-07)
+
+
+### Features
+
+* use S3 for static assets ([5f31fc4](https://gitlab.com/bubblehouse/django-moo/commit/5f31fc4a208cc50405393c525fd805728832da85))
+
 ## [0.57.8](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.7...v0.57.8) (2026-03-07)
 
 
