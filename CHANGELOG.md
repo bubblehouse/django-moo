@@ -1,3 +1,10 @@
+## [0.57.5](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.4...v0.57.5) (2026-03-07)
+
+
+### Bug Fixes
+
+* remove spurious env var ([eb089e5](https://gitlab.com/bubblehouse/django-moo/commit/eb089e5e63f622b2da7773328d3561a28554e378))
+
 ## [0.57.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.3...v0.57.4) (2026-03-07)
 
 
