@@ -12,6 +12,25 @@ DEBUG = True
 ALLOWED_HOSTS = ["moo.dev.shacklyn.net", "probe.cluster.local"]
 CSRF_TRUSTED_ORIGINS = ["https://moo.dev.shacklyn.net", "https://probe.cluster.local"]
 
+STORAGES = {
+    "default": {
+        "BACKEND": 'storages.backends.s3boto3.S3Boto3Storage',
+    },
+    "staticfiles": {
+        "BACKEND": 'moo.storage.CachedS3Boto3Storage',
+    },
+}
+AWS_STORAGE_BUCKET_NAME = 'django-moo-dev-assets-386413725601-us-east-2'
+AWS_S3_ADDRESSING_STYLE = "virtual"
+
+STATIC_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/"
+STATIC_ROOT = '/usr/src/app/static'
+
+COMPRESS_ENABLED = True
+COMPRESS_ROOT = STATIC_ROOT
+COMPRESS_STORAGE = STATICFILES_STORAGE
+COMPRESS_URL = STATIC_URL
+
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
