@@ -23,7 +23,7 @@ spec:
       containers:
         - name: migrate
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          command: [manage.py, migrate, --no-input]
+          command: [python, manage.py, migrate, --no-input]
           env:
           - name: DJANGO_SETTINGS_MODULE
             value: {{ .Values.moo.django.settings }}
@@ -36,7 +36,7 @@ spec:
           {{- end }}
         - name: collectstatic
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          command: [manage.py, collectstatic, --no-input]
+          command: [python, manage.py, collectstatic, --no-input]
           env:
           - name: DJANGO_SETTINGS_MODULE
             value: {{ .Values.moo.django.settings }}
