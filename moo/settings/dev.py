@@ -46,9 +46,9 @@ DATABASES = {
     }
 }
 
-# CACHES = {
-#     'default': {
-#         'BACKEND': 'redis_cache.RedisCache',
-#         'LOCATION': 'redis:6379',
-#     }
-# }
+CACHES = {
+    'default': {
+        'BACKEND': 'redis_cache.RedisCache',
+        'LOCATION': 'redis:6379',
+    }
+}
