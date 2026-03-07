@@ -1,3 +1,10 @@
+## [0.57.7](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.6...v0.57.7) (2026-03-07)
+
+
+### Bug Fixes
+
+* try inserting python ([c2c4dc7](https://gitlab.com/bubblehouse/django-moo/commit/c2c4dc7f0b95ffb192d319f6eef9930779df739c))
+
 ## [0.57.6](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.5...v0.57.6) (2026-03-07)
 
 
