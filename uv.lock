@@ -704,8 +704,20 @@ wheels = [
 ]
 
 [[package]]
+name = "django-cte"
+version = "3.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/db/c0/64cda7c7b3e5641160a4c9dd1030b3a567592ba2b6c64f5303678a780084/django_cte-3.0.0.tar.gz", hash = "sha256:888710bb7109559621a34ab890f0f87d54188c9678f874e61e82112b59bbccb4", size = 11422 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ee/8a/5fdf282b8496e485b007d48ac211a0e2b203b8623e67c32ed2cf65faedc4/django_cte-3.0.0-py3-none-any.whl", hash = "sha256:3eabb89b68d328a6a97c695a21f45ed6ee7a6602193670db74e70c2e17bf2cd5", size = 13211 },
+]
+
+[[package]]
 name = "django-moo"
-version = "0.58.10"
+version = "0.59.0"
 source = { editable = "." }
 dependencies = [
     { name = "asyncssh", extra = ["bcrypt"] },
@@ -716,6 +728,7 @@ dependencies = [
     { name = "django-celery-beat" },
     { name = "django-celery-results" },
     { name = "django-compressor" },
+    { name = "django-cte" },
     { name = "django-simplesshkey" },
     { name = "django-storages" },
     { name = "more-itertools" },
@@ -764,6 +777,7 @@ requires-dist = [
     { name = "django-celery-beat", specifier = ">=2.6.0,<3" },
     { name = "django-celery-results", specifier = ">=2.5.1,<3" },
     { name = "django-compressor", specifier = ">=4.6.0" },
+    { name = "django-cte", specifier = ">=3.0.0" },
     { name = "django-simplesshkey", specifier = ">=2.1.0,<3" },
     { name = "django-storages", specifier = ">=1.14.6" },
     { name = "more-itertools", specifier = ">=10.7.0" },

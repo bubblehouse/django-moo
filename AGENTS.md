@@ -185,7 +185,7 @@ This document provides essential context for AI models interacting with the Djan
   - **uv**: Defined in `pyproject.toml`. Run `uv run <command>`
   - **Django Management Commands**: Run via `python manage.py <command>` or `docker compose run webapp manage.py <command>`
   - **Common Commands**:
-    - `uv run pytest` - Run all tests
+    - `uv run pytest -n auto` - Run all tests (always use `-n auto` for parallel execution)
     - `uv run pylint moo` - Lint code
     - `uv run coverage report` - View coverage report
     - `python manage.py shell` - Django shell for debugging
@@ -225,9 +225,9 @@ This document provides essential context for AI models interacting with the Djan
 
 * **Contribution Guidelines:**
   - **Code Review Checklist**:
-    - All tests must pass (`uv run pytest`)
+    - All tests must pass (`uv run pytest -n auto`)
     - PyLint score must not go down (`uv run pylint moo`)
-    - Test coverage must not go down (`uv run pytest --cov`)
+    - Test coverage must not go down (`uv run pytest -n auto --cov`)
     - Add new tests for any feature or bug fix
     - Update documentation for user-facing changes
   - **Pull Request Requirements**:
