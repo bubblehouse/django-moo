@@ -15,7 +15,7 @@ result_serializer = "moojson"
 result_backend = "django-db"
 cache_backend = "default"
 beat_scheduler = "django_celery_beat.schedulers:DatabaseScheduler"
-task_time_limit = 3
+task_time_limit = int(os.environ.get("CELERY_TASK_TIME_LIMIT", "3"))
 broker_connection_retry_on_startup = True
 
 logging = {
