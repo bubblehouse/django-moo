@@ -15,6 +15,7 @@ repos:
           - pytest-cov
           - coverage
           - django-simplesshkey
+          - django-cte
           - opentelemetry-sdk
           - opentelemetry-instrumentation-celery
           - opentelemetry-instrumentation-django
