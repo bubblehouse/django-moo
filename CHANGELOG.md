@@ -1,3 +1,10 @@
+## [0.58.8](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.7...v0.58.8) (2026-03-08)
+
+### Bug Fixes
+
+* added missing django-storages dependency ([866bf66](https://gitlab.com/bubblehouse/django-moo/commit/866bf66c518705f78bf4b50100c0ce7e5b50d651))
+* force release ([d098be2](https://gitlab.com/bubblehouse/django-moo/commit/d098be20812eae4656e9e723f5234dcf98f35b4e))
+
 ## [0.58.7](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.6...v0.58.7) (2026-03-08)
 
 ### Bug Fixes
