@@ -660,6 +660,7 @@ dependencies = [
     { name = "django-celery-beat" },
     { name = "django-celery-results" },
     { name = "django-simplesshkey" },
+    { name = "django-storages" },
     { name = "more-itertools" },
     { name = "opentelemetry-instrumentation-celery" },
     { name = "opentelemetry-instrumentation-django" },
@@ -705,6 +706,7 @@ requires-dist = [
     { name = "django-celery-beat", specifier = ">=2.6.0,<3" },
     { name = "django-celery-results", specifier = ">=2.5.1,<3" },
     { name = "django-simplesshkey", specifier = ">=2.1.0,<3" },
+    { name = "django-storages", specifier = ">=1.14.6" },
     { name = "more-itertools", specifier = ">=10.7.0" },
     { name = "opentelemetry-instrumentation-celery", specifier = ">=0.61b0" },
     { name = "opentelemetry-instrumentation-django", specifier = ">=0.61b0" },
@@ -749,6 +751,18 @@ dependencies = [
     { name = "pyasn1" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/f4/2c/a94fe6e488e3916645be38b8732c6973a95235315616b7180d7fbef3236b/django-simplesshkey-2.2.0.tar.gz", hash = "sha256:b954c55b64c8b6f59cd5f7b7c05859aae84647f8c6d29717b4e2fc611d18933a", size = 16719 }
+
+[[package]]
+name = "django-storages"
+version = "1.14.6"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ff/d6/2e50e378fff0408d558f36c4acffc090f9a641fd6e084af9e54d45307efa/django_storages-1.14.6.tar.gz", hash = "sha256:7a25ce8f4214f69ac9c7ce87e2603887f7ae99326c316bc8d2d75375e09341c9", size = 87587 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1f/21/3cedee63417bc5553eed0c204be478071c9ab208e5e259e97287590194f1/django_storages-1.14.6-py3-none-any.whl", hash = "sha256:11b7b6200e1cb5ffcd9962bd3673a39c7d6a6109e8096f0e03d46fab3d3aabd9", size = 33095 },
+]
 
 [[package]]
 name = "django-timezone-field"
