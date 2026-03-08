@@ -1,3 +1,9 @@
+## [0.59.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.10...v0.59.0) (2026-03-08)
+
+### Features
+
+* lots of DB optimizations for related objects ([5ae1bf0](https://gitlab.com/bubblehouse/django-moo/commit/5ae1bf07d6304db1ab5fbb8e1d7be58ea3dcb0a3))
+
 ## [0.58.10](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.9...v0.58.10) (2026-03-08)
 
 ### Bug Fixes
