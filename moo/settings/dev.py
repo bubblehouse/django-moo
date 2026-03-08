@@ -12,14 +12,6 @@ DEBUG = True
 ALLOWED_HOSTS = ["moo.dev.shacklyn.net", "probe.cluster.local"]
 CSRF_TRUSTED_ORIGINS = ["https://moo.dev.shacklyn.net", "https://probe.cluster.local"]
 
-STORAGES = {
-    "default": {
-        "BACKEND": 'storages.backends.s3boto3.S3Boto3Storage',
-    },
-    "staticfiles": {
-        "BACKEND": 'moo.storage.CachedS3Boto3Storage',
-    },
-}
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 STATICFILES_STORAGE = 'moo.storage.CachedS3Boto3Storage'
 AWS_STORAGE_BUCKET_NAME = 'django-moo-dev-assets-386413725601-us-east-2'
