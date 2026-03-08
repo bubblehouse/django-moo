@@ -1,3 +1,9 @@
+## [0.58.7](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.6...v0.58.7) (2026-03-08)
+
+### Bug Fixes
+
+* revert updates ([0d5aed5](https://gitlab.com/bubblehouse/django-moo/commit/0d5aed586340db61703b9286eda26d5e767aa6d5))
+
 ## [0.58.6](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.5...v0.58.6) (2026-03-07)
 
 ### Bug Fixes
