@@ -1,3 +1,9 @@
+## [0.58.10](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.9...v0.58.10) (2026-03-08)
+
+### Bug Fixes
+
+* added missing django-compressor dependency ([151396e](https://gitlab.com/bubblehouse/django-moo/commit/151396e4a1f25d76eeece11638b6fdc2648ec1ef))
+
 ## [0.58.9](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.8...v0.58.9) (2026-03-08)
 
 ### Bug Fixes

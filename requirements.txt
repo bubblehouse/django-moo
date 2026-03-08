@@ -79,16 +79,22 @@ dill==0.4.1
 django==5.0.14
     # via
     #   django-ace
+    #   django-appconf
     #   django-celery-beat
     #   django-celery-results
+    #   django-compressor
     #   django-moo
     #   django-storages
     #   django-timezone-field
 django-ace==1.43.5
     # via django-moo
+django-appconf==1.2.0
+    # via django-compressor
 django-celery-beat==2.9.0
     # via django-moo
 django-celery-results==2.6.0
+    # via django-moo
+django-compressor==4.6.0
     # via django-moo
 django-simplesshkey==2.2.0
     # via django-moo
@@ -261,6 +267,8 @@ python-redis-cache==4.0.2
     # via django-moo
 pyyaml==6.0.3
     # via myst-parser
+rcssmin==1.2.2
+    # via django-compressor
 redis==6.4.0
     # via
     #   django-moo
@@ -272,6 +280,8 @@ restrictedpython==8.1
     # via django-moo
 rich==14.3.3
     # via django-moo
+rjsmin==1.2.5
+    # via django-compressor
 s3transfer==0.16.0
     # via boto3
 six==1.17.0
