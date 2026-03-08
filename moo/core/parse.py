@@ -272,7 +272,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
 
         search_order = filter(None, more_itertools.collapse([
             self.caller,
-            list(self.caller.contents.all()),
+            list(self.caller.contents.prefetch_related('aliases')),
             self.caller.location,
             self.dobj,
             [[x[2] for x in prep] for prep in self.prepositions.values()]
@@ -338,6 +338,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         if len(matches) > 1:
             raise AmbiguousObjectError(','.join(preps), matches)
         if not (matches):
+            prep = list(self.prepositions.keys())[0]
             raise Object.DoesNotExist(self.prepositions[prep][0][1])
         return matches[0]
 

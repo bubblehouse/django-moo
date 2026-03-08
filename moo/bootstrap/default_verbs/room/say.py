@@ -11,7 +11,7 @@ By overriding this verb, it is possible to provide all sorts of effects that wor
 example, you could redirect messages to other rooms, or repeat messages to provide cavernous echoes.
 """
 
-from moo.core import context, lookup
+from moo.core import context
 
 if context.parser.words:
     message = " ".join(context.parser.words[1:])
@@ -21,5 +21,4 @@ else:
 context.caller.tell("You: " + message)
 for obj in this.contents.all():
     if obj != context.caller:
-        obj = lookup(obj.id)
         obj.tell(context.caller.name + ": " + message)
