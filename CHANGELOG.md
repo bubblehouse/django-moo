@@ -1,3 +1,9 @@
+## [0.61.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.60.0...v0.61.0) (2026-03-08)
+
+### Features
+
+* time limit is overrideable by env var ([d102bd4](https://gitlab.com/bubblehouse/django-moo/commit/d102bd44cea3888ba5957e9b9dbdc79cff03eea5))
+
 ## [0.60.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.59.0...v0.60.0) (2026-03-08)
 
 ### Features
