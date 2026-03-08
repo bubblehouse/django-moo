@@ -6,5 +6,5 @@ dependencies:
     version: 25.3.2
     repository: oci://registry-1.docker.io/bitnamicharts
 type: application
-version: 0.59.0
-appVersion: 0.59.0
+version: 0.60.0
+appVersion: 0.60.0

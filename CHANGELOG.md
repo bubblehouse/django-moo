@@ -1,3 +1,9 @@
+## [0.60.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.59.0...v0.60.0) (2026-03-08)
+
+### Features
+
+* replace O(depth^2) Python recursion in object.py with recursive CTEs; correct parent ordering ([5364721](https://gitlab.com/bubblehouse/django-moo/commit/53647216cede11b483ee1efcf84c899947885999))
+
 ## [0.59.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.10...v0.59.0) (2026-03-08)
 
 ### Features
