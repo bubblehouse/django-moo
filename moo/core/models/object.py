@@ -4,12 +4,14 @@ The primary Object class
 """
 
 import logging
-from typing import Generator
 
 from django.db import models
+from django.db.models import IntegerField, Value
+from django.db.models.expressions import F
 from django.db.models.query import Q, QuerySet
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
+from django_cte import CTE, with_cte
 
 from moo import bootstrap
 from .. import exceptions, invoke, utils
@@ -35,6 +37,11 @@ def relationship_changed(sender, instance, action, model, signal, reverse, pk_se
         return
     elif action != "post_add":
         return
+    # Assign sequential weights to newly-added parents so lookup priority matches
+    # insertion order (last-added parent has highest weight = highest priority).
+    existing_before = Relationship.objects.filter(child=child).exclude(parent_id__in=pk_set).count()
+    for i, pk in enumerate(sorted(pk_set)):
+        Relationship.objects.filter(child=child, parent_id=pk).update(weight=existing_before + i)
     for pk in pk_set:
         parent = model.objects.get(pk=pk)
         # pylint: disable=redefined-builtin
@@ -167,10 +174,7 @@ class Object(models.Model, AccessibleMixin):
         return qs.union(aliases)
 
     def contains(self, obj: "Object"):
-        for item in self.get_contents():
-            if item == obj:
-                return True
-        return False
+        return self.get_contents().filter(pk=obj.pk).exists()
 
     def is_a(self, obj: "Object") -> bool:
         """
@@ -179,37 +183,114 @@ class Object(models.Model, AccessibleMixin):
         :param obj: the potential parent object
         :return: True if this object is a child of `obj`
         """
-        return obj in self.get_ancestors()
+        return self.get_ancestors().filter(pk=obj.pk).exists()
 
-    def get_ancestors(self) -> Generator["Object", None, None]:
+    def _ancestors_cte(self, name="ancestors"):
         """
-        Get the ancestor tree for this object.
+        Returns a recursive CTE yielding (object_id, depth, path_weight).
+        depth=1 is a direct parent. path_weight is the Relationship.weight of
+        the depth-1 link that leads to this ancestor (higher = higher priority).
+        """
+        self_pk = self.pk
+
+        def make_cte(cte):
+            return (
+                # Base: direct parents at depth=1 with their Relationship weight
+                Relationship.objects.filter(child_id=self_pk)
+                .values(
+                    object_id=F("parent_id"),
+                    depth=Value(1, output_field=IntegerField()),
+                    path_weight=F("weight"),
+                )
+                .union(
+                    # Recursive: climb further, carrying path_weight from depth-1
+                    cte.join(Relationship, child=cte.col.object_id)
+                    .values(
+                        object_id=F("parent_id"),
+                        depth=cte.col.depth + Value(1, output_field=IntegerField()),
+                        path_weight=cte.col.path_weight,
+                    ),
+                    all=True,
+                )
+            )
+
+        return CTE.recursive(make_cte, name=name)
+
+    def get_ancestors(self) -> QuerySet:
+        """
+        Get the ancestor tree for this object as a QuerySet ordered shallowest-first.
+        Each Object is annotated with ``depth`` (1 = direct parent) and ``path_weight``.
         """
         self.can_caller("read", self)
-        # TODO: One day when Django 5.0 works with `django-cte` this can be SQL.
-        for parent in self.parents.all():  # pylint: disable=no-member
-            yield from parent.get_ancestors()
-            yield parent
+        ancestors = self._ancestors_cte()
+        return with_cte(
+            ancestors,
+            select=ancestors.join(Object, id=ancestors.col.object_id)
+            .annotate(depth=ancestors.col.depth, path_weight=ancestors.col.path_weight)
+            .order_by("depth", "-path_weight"),
+        )
 
-    def get_descendents(self) -> Generator["Object", None, None]:
+    def get_descendents(self) -> QuerySet:
         """
-        Get the descendent tree for this object.
+        Get the descendent tree for this object as a QuerySet ordered shallowest-first.
+        Each Object is annotated with a ``depth`` attribute (1 = direct child).
         """
         self.can_caller("read", self)
-        # TODO: One day when Django 5.0 works with `django-cte` this can be SQL.
-        for child in self.children.all():
-            yield child
-            yield from child.get_descendents()
+        self_pk = self.pk
 
-    def get_contents(self) -> Generator["Object", None, None]:
+        def make_cte(cte):
+            return (
+                Object.objects.filter(pk=self_pk)
+                .values(object_id=F("id"), depth=Value(0, output_field=IntegerField()))
+                .union(
+                    cte.join(Relationship, parent=cte.col.object_id)
+                    .values(
+                        object_id=F("child_id"),
+                        depth=cte.col.depth + Value(1, output_field=IntegerField()),
+                    ),
+                    all=True,
+                )
+            )
+
+        cte = CTE.recursive(make_cte)
+        return with_cte(
+            cte,
+            select=cte.join(Object, id=cte.col.object_id)
+            .annotate(depth=cte.col.depth)
+            .filter(depth__gt=0)
+            .order_by("depth"),
+        )
+
+    def get_contents(self) -> QuerySet:
         """
-        Get the content tree for this object.
+        Get the content tree for this object as a QuerySet ordered shallowest-first.
+        Each Object is annotated with a ``depth`` attribute (1 = direct content).
         """
         self.can_caller("read", self)
-        # TODO: One day when Django 5.0 works with `django-cte` this can be SQL.
-        for item in self.contents.all():
-            yield item
-            yield from item.get_contents()
+        self_pk = self.pk
+
+        def make_cte(cte):
+            return (
+                Object.objects.filter(pk=self_pk)
+                .values(object_id=F("id"), depth=Value(0, output_field=IntegerField()))
+                .union(
+                    cte.join(Object, location_id=cte.col.object_id)
+                    .values(
+                        object_id=F("id"),
+                        depth=cte.col.depth + Value(1, output_field=IntegerField()),
+                    ),
+                    all=True,
+                )
+            )
+
+        cte = CTE.recursive(make_cte)
+        return with_cte(
+            cte,
+            select=cte.join(Object, id=cte.col.object_id)
+            .annotate(depth=cte.col.depth)
+            .filter(depth__gt=0)
+            .order_by("depth"),
+        )
 
     def add_verb(
         self,
@@ -358,25 +439,38 @@ class Object(models.Model, AccessibleMixin):
         raise exceptions.AmbiguousVerbError(parser.words[0], result)
 
     def _lookup_verb(self, name, recurse=True, return_first=True):
-        found = []
-        qs = Verb.objects.filter(origin=self, names__name=name).select_related('owner')
-        if not qs and recurse:
-            for ancestor in reversed(list(self.get_ancestors())):
-                qs = Verb.objects.filter(origin=ancestor, names__name=name).select_related('owner')
-                if qs:
-                    if return_first:
-                        return qs
-                    else:
-                        found.extend(qs.all())
-        elif qs:
-            if return_first:
-                return qs
-            else:
-                found.extend(qs.all())
-        if found:
-            return found
-        else:
+        # Self always takes priority — check before touching ancestors
+        qs = Verb.objects.filter(origin=self, names__name=name).select_related("owner")
+        if qs.exists():
+            return list(qs)
+
+        if not recurse:
             raise Verb.DoesNotExist(f"No such verb `{name}`.")
+
+        ancestors = self._ancestors_cte()
+        result = list(
+            with_cte(
+                ancestors,
+                select=ancestors.join(Verb, origin_id=ancestors.col.object_id)
+                .filter(names__name=name)
+                .annotate(
+                    ancestor_depth=ancestors.col.depth,
+                    path_weight=ancestors.col.path_weight,
+                )
+                .select_related("owner")
+                .order_by("ancestor_depth", "-path_weight"),
+            )
+        )
+        if not result:
+            raise Verb.DoesNotExist(f"No such verb `{name}`.")
+        if return_first:
+            first = result[0]
+            return [
+                v for v in result
+                if v.ancestor_depth == first.ancestor_depth
+                and v.path_weight == first.path_weight
+            ]
+        return result
 
     def set_property(self, name, value, inherit_owner=False, owner=None):
         """
@@ -413,16 +507,31 @@ class Object(models.Model, AccessibleMixin):
         from .. import moojson
 
         self.can_caller("read", self)
+        # Self always takes priority
         qs = Property.objects.filter(origin=self, name=name)
-        if not qs and recurse:
-            for ancestor in reversed(list(self.get_ancestors())):
-                qs = Property.objects.filter(origin=ancestor, name=name)
-                if qs:
-                    break
-        if qs:
+        if qs.exists():
             return qs[0] if original else moojson.loads(qs[0].value)
-        else:
+
+        if not recurse:
             raise Property.DoesNotExist(f"No such property `{name}`.")
+
+        ancestors = self._ancestors_cte()
+        prop = (
+            with_cte(
+                ancestors,
+                select=ancestors.join(Property, origin_id=ancestors.col.object_id)
+                .filter(name=name)
+                .annotate(
+                    ancestor_depth=ancestors.col.depth,
+                    path_weight=ancestors.col.path_weight,
+                )
+                .order_by("ancestor_depth", "-path_weight"),
+            )
+            .first()
+        )
+        if prop is None:
+            raise Property.DoesNotExist(f"No such property `{name}`.")
+        return prop if original else moojson.loads(prop.value)
 
     def get_property_objects(self, name, prefetch_related=None, select_related=None):
         """
@@ -438,18 +547,29 @@ class Object(models.Model, AccessibleMixin):
         """
         import json
         self.can_caller("read", self)
+        # Self always takes priority
         qs = Property.objects.filter(origin=self, name=name)
-        if not qs:
-            for ancestor in reversed(list(self.get_ancestors())):
-                qs = Property.objects.filter(origin=ancestor, name=name)
-                if qs:
-                    break
-        if not qs:
-            raise Property.DoesNotExist(f"No such property `{name}`.")
-        raw = json.loads(qs[0].value)
+        if not qs.exists():
+            ancestors = self._ancestors_cte()
+            prop_qs = with_cte(
+                ancestors,
+                select=ancestors.join(Property, origin_id=ancestors.col.object_id)
+                .filter(name=name)
+                .annotate(
+                    ancestor_depth=ancestors.col.depth,
+                    path_weight=ancestors.col.path_weight,
+                )
+                .order_by("ancestor_depth", "-path_weight"),
+            )
+            prop = prop_qs.first()
+            if prop is None:
+                raise Property.DoesNotExist(f"No such property `{name}`.")
+        else:
+            prop = qs[0]
+        raw = json.loads(prop.value)
         if not isinstance(raw, list):
             from .. import moojson
-            return moojson.loads(qs[0].value)
+            return moojson.loads(prop.value)
         ids = [
             int(k[2:])
             for item in raw
@@ -471,13 +591,16 @@ class Object(models.Model, AccessibleMixin):
         Check if a particular :class:`.Property` is defined on this object.
         """
         self.can_caller("read", self)
-        qs = Property.objects.filter(origin=self, name=name)
-        if not qs and recurse:
-            for ancestor in reversed(list(self.get_ancestors())):
-                qs = Property.objects.filter(origin=ancestor, name=name)
-                if qs:
-                    break
-        return qs.exists()
+        if Property.objects.filter(origin=self, name=name).exists():
+            return True
+        if not recurse:
+            return False
+        ancestors = self._ancestors_cte()
+        return with_cte(
+            ancestors,
+            select=ancestors.join(Property, origin_id=ancestors.col.object_id)
+            .filter(name=name),
+        ).exists()
 
     def delete(self, *args, **kwargs):
         if self.has_verb("recycle", recurse=False):
@@ -610,6 +733,11 @@ class Relationship(models.Model):
     child = models.ForeignKey(Object, related_name="+", on_delete=models.CASCADE)
     parent = models.ForeignKey(Object, related_name="+", on_delete=models.CASCADE)
     weight = models.IntegerField(default=0)
+
+    def save(self, *args, **kwargs):
+        if self.pk is None:
+            self.weight = Relationship.objects.filter(child=self.child).count()
+        super().save(*args, **kwargs)
 
 
 class Alias(models.Model):
