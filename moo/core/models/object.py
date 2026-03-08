@@ -3,11 +3,9 @@
 The primary Object class
 """
 
-import json
 import logging
 from typing import Generator
 
-from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models.query import Q, QuerySet
 from django.db.models.signals import m2m_changed
@@ -19,7 +17,7 @@ from ..code import ContextManager
 from .acl import Access, AccessibleMixin, Permission
 from .auth import Player
 from .property import Property
-from .verb import Verb, Preposition, PrepositionName, PrepositionSpecifier, VerbName
+from .verb import Verb, PrepositionName, PrepositionSpecifier, VerbName
 
 log = logging.getLogger(__name__)
 
@@ -151,10 +149,11 @@ class Object(models.Model, AccessibleMixin):
         """
         Check if this object has a name or alias that matches the given name.
         """
-        for alias in self.aliases.all():
-            if alias.alias.lower() == name.lower():
-                return True
-        return self.name.lower() == name.lower()  # pylint: disable=no-member
+        if self.name.lower() == name.lower():  # pylint: disable=no-member
+            return True
+        if 'aliases' in getattr(self, '_prefetched_objects_cache', {}):
+            return any(a.alias.lower() == name.lower() for a in self.aliases.all())
+        return self.aliases.filter(alias__iexact=name).exists()
 
     def find(self, name: str) -> 'QuerySet["Object"]':
         """
@@ -360,10 +359,10 @@ class Object(models.Model, AccessibleMixin):
 
     def _lookup_verb(self, name, recurse=True, return_first=True):
         found = []
-        qs = Verb.objects.filter(origin=self, names__name=name)
+        qs = Verb.objects.filter(origin=self, names__name=name).select_related('owner')
         if not qs and recurse:
             for ancestor in reversed(list(self.get_ancestors())):
-                qs = Verb.objects.filter(origin=ancestor, names__name=name)
+                qs = Verb.objects.filter(origin=ancestor, names__name=name).select_related('owner')
                 if qs:
                     if return_first:
                         return qs
@@ -424,6 +423,48 @@ class Object(models.Model, AccessibleMixin):
             return qs[0] if original else moojson.loads(qs[0].value)
         else:
             raise Property.DoesNotExist(f"No such property `{name}`.")
+
+    def get_property_objects(self, name, prefetch_related=None, select_related=None):
+        """
+        Like :meth:`get_property`, but when the stored value is a list of Objects,
+        returns them via a single bulk ``IN`` query with optional prefetches instead
+        of the N individual ``get()`` calls that :func:`moojson.loads` would issue.
+
+        Falls back to :meth:`get_property` for non-list or non-Object values.
+
+        :param name: the property name
+        :param prefetch_related: iterable of relation paths to prefetch on the result
+        :param select_related: iterable of FK paths to JOIN on the result
+        """
+        import json
+        self.can_caller("read", self)
+        qs = Property.objects.filter(origin=self, name=name)
+        if not qs:
+            for ancestor in reversed(list(self.get_ancestors())):
+                qs = Property.objects.filter(origin=ancestor, name=name)
+                if qs:
+                    break
+        if not qs:
+            raise Property.DoesNotExist(f"No such property `{name}`.")
+        raw = json.loads(qs[0].value)
+        if not isinstance(raw, list):
+            from .. import moojson
+            return moojson.loads(qs[0].value)
+        ids = [
+            int(k[2:])
+            for item in raw
+            if isinstance(item, dict)
+            for k in item
+            if len(k) > 2 and k[0] == "o" and k[1] == "#"
+        ]
+        if not ids:
+            return []
+        result = Object.objects.filter(id__in=ids)
+        if select_related:
+            result = result.select_related(*select_related)
+        if prefetch_related:
+            result = result.prefetch_related(*prefetch_related)
+        return list(result)
 
     def has_property(self, name, recurse=True):
         """

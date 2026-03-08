@@ -6,9 +6,10 @@
 This verb is used to tell a player what s/he has in his/her pockets.
 """
 
-if this.contents.count() > 0:
+contents = list(this.contents.all())
+if contents:
     this.tell("You are carrying:")
-    for thing in this.contents.all():
+    for thing in contents:
         this.tell(thing.title())
 else:
     this.tell("You are empty-handed.")

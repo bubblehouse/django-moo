@@ -8,7 +8,7 @@ room. The verb simply runs through the list of defined exits, stored in the prop
 object reference number, destination name, and exit aliases.
 """
 
-exits = this.get_property("exits") or []
+exits = this.get_property_objects("exits", prefetch_related=["aliases"]) or []
 if not exits:
     print("[color red]There are no exits defined for this room.[/color red]")
     return

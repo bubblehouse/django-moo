@@ -22,9 +22,10 @@ from moo.core import context
 obj = context.parser.get_dobj()
 
 print(f"{obj.name} (#{obj.id} ) is owned by {obj.owner.name} (#{obj.owner.id}).")
-if obj.parents.exists():
+parents = list(obj.parents.all())
+if parents:
     print("Parents:")
-    for parent in obj.parents.all():
+    for parent in parents:
         print(f"  {parent.name} (#{parent.id})")
 if obj.aliases.exists():
     print("Aliases: ")
@@ -40,15 +41,17 @@ if context.player.owns(obj):
         print("(no key)")
 
 # display contents if there are any
-if obj.contents.exists():
+contents = list(obj.contents.all())
+if contents:
     print("Contents:")
-    for item in obj.contents.all():
+    for item in contents:
         print(f"  {item.name} (#{item.id})")
 
 # display verbs if there are any and they are readable
-if obj.verbs.exists():
+verbs = list(obj.verbs.prefetch_related('names').all())
+if verbs:
     print("Verbs:")
-    for verb in obj.verbs.all():
+    for verb in verbs:
         if context.player.is_allowed('read', verb):
             print(f"  {verb.name()}")
         else:
