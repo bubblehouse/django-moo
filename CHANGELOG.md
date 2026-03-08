@@ -1,3 +1,9 @@
+## [0.58.9](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.8...v0.58.9) (2026-03-08)
+
+### Bug Fixes
+
+* installed boto3 ([c166221](https://gitlab.com/bubblehouse/django-moo/commit/c166221b213acd73a564c883215c857532c9d069))
+
 ## [0.58.8](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.7...v0.58.8) (2026-03-08)
 
 ### Bug Fixes
