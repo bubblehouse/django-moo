@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from .base import *  # pylint: disable=wildcard-import
-
 import os
+
+from .base import *  # pylint: disable=wildcard-import
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure-06xo%2f39ohlfrgu&)%1lsrlx6jqy)s%#_-$rc5l_z1+p6w(=r"
@@ -18,7 +18,7 @@ AWS_STORAGE_BUCKET_NAME = 'django-moo-dev-assets-386413725601-us-east-2'
 AWS_S3_ADDRESSING_STYLE = "virtual"
 
 STATIC_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/"
-STATIC_ROOT = '/usr/src/app/static'
+STATIC_ROOT = '/usr/app/static'
 
 COMPRESS_ENABLED = True
 COMPRESS_ROOT = STATIC_ROOT
