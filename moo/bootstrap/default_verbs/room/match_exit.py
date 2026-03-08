@@ -13,7 +13,7 @@ value AmbiguousObjectError is raised. If no match is found, the value NoSuchObje
 
 what = args[0].lower()
 matches = []
-exits = this.get_property("exits")
+exits = this.get_property_objects("exits", prefetch_related=["aliases"])
 for exit in exits:
     if exit.is_named(what):
         matches.append(exit)

@@ -6,9 +6,10 @@
 This verb displays the contents of the container. If the container is empty, the message `It is empty' is displayed.
 """
 
-if this.contents.exists():
+contents = list(this.contents.all())
+if contents:
     print("Contents:")
-    for item in this.contents.all():
+    for item in contents:
         print("  " + item.title())
 else:
     print("It is empty.")

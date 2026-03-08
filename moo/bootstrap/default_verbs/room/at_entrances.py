@@ -8,7 +8,7 @@ list it's entrances. For every object kept in the room's entrances list, the exi
 aliases are displayed to the player.
 """
 
-entrances = this.get_property("entrances") or []
+entrances = this.get_property_objects("entrances", prefetch_related=["aliases"]) or []
 if not entrances:
     print("[color red]There are no entrances defined for this room.[/color red]")
     return
