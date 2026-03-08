@@ -240,19 +240,19 @@ assert "You leave" in str(warnings.list[0].message)
 ### Running Specific Tests
 
 ```bash
-# Run all tests
-uv run pytest
+# Run all tests (always use -n auto for parallel execution)
+uv run pytest -n auto
 
 # Run specific test file
-uv run pytest moo/core/tests/test_invoke_verb.py
+uv run pytest -n auto moo/core/tests/test_invoke_verb.py
 
 # Run specific test function
-uv run pytest moo/core/tests/test_invoke_verb.py::test_successful_verb_execution
+uv run pytest -n auto moo/core/tests/test_invoke_verb.py::test_successful_verb_execution
 
 # Run with verbose output
-uv run pytest -vv
+uv run pytest -n auto -vv
 
-# Run with pdb on failure
+# Run with pdb on failure (note: -n auto is incompatible with --pdb)
 uv run pytest --pdb
 ```
 
