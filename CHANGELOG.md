@@ -1,3 +1,9 @@
+## [0.61.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.61.0...v0.61.1) (2026-03-08)
+
+### Bug Fixes
+
+* added admin panel for Relationship for spurious reason that might never happen again ([64b3e0b](https://gitlab.com/bubblehouse/django-moo/commit/64b3e0bdcf214333ab5323014f167ed1540fa845))
+
 ## [0.61.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.60.0...v0.61.0) (2026-03-08)
 
 ### Features
