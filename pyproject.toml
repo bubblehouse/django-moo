@@ -32,6 +32,7 @@ dependencies = [
     "opentelemetry-instrumentation-celery>=0.61b0",
     "python-redis-cache>=4.0.2",
     "django-storages>=1.14.6",
+    "boto3>=1.42.63",
 ]
 
 [project.urls]
