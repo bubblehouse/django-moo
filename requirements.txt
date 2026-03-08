@@ -76,6 +76,7 @@ django==5.0.14
     #   django-celery-beat
     #   django-celery-results
     #   django-moo
+    #   django-storages
     #   django-timezone-field
 django-ace==1.43.5
     # via django-moo
@@ -84,6 +85,8 @@ django-celery-beat==2.9.0
 django-celery-results==2.6.0
     # via django-moo
 django-simplesshkey==2.2.0
+    # via django-moo
+django-storages==1.14.6
     # via django-moo
 django-timezone-field==7.2.1
     # via django-celery-beat
