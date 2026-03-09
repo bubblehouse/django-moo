@@ -1,3 +1,9 @@
+## [0.65.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.65.3...v0.65.4) (2026-03-09)
+
+### Bug Fixes
+
+* additional caching and go improvements ([10efa56](https://gitlab.com/bubblehouse/django-moo/commit/10efa56ef0bb602772c37935204b436cf2ead89c))
+
 ## [0.65.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.65.2...v0.65.3) (2026-03-09)
 
 ### Bug Fixes
