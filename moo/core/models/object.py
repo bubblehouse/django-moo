@@ -914,7 +914,7 @@ class AncestorCache(models.Model):
         indexes = [
             models.Index(
                 fields=["descendant", "depth", "path_weight"],
-                name="ancestorcache_desc_depth_weight_idx",
+                name="ac_desc_depth_weight_idx",
             ),
             models.Index(fields=["ancestor"], name="ancestorcache_ancestor_idx"),
         ]
