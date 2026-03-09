@@ -241,10 +241,10 @@ class ContextManager:
         _active_caller_stack.set(caller_stack)
         _active_caller.set(frame["previous_caller"])
 
-    def __init__(self, caller, writer, task_id=None):
+    def __init__(self, caller, writer, task_id=None, player=None):
         self.caller = caller
         self.caller_token = None
-        self.player = self.caller
+        self.player = player if player is not None else self.caller
         self.player_token = None
         self.writer = writer
         self.writer_token = None
