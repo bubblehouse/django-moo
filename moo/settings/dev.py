@@ -32,7 +32,8 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "moo",
-        "HOST": "bubblehouse-dev-moo-db.cluster-cbepmog7ejmj.us-east-2.rds.amazonaws.com",
+        "HOST": "krustylu-db.dev.shacklyn.net",
+        # "HOST": "bubblehouse-dev-moo-db.cluster-cbepmog7ejmj.us-east-2.rds.amazonaws.com",
         "USER": "moo",
         "PASSWORD": os.getenv("DB_PASSWORD", "moo"),
     }
