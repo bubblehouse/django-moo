@@ -11,13 +11,13 @@ a suitable success message is sent.
 from moo.core import context
 
 if not context.parser.has_dobj_str():
-    print("[color yellow]What do you want to recycle?[/color yellow]")
+    print("[yellow]What do you want to recycle?[/yellow]")
     return
 
 obj = context.parser.get_dobj()
 name = obj.title()
 try:
     obj.delete()
-    print(f"[color yellow]Recycled {name}.[/color yellow]")
+    print(f"[yellow]Recycled {name}.[/yellow]")
 except Exception:
-    print(f"[color red]Error recycling {name}.[/color red]")
+    print(f"[red]Error recycling {name}.[/red]")

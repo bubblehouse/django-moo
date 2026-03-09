@@ -12,16 +12,16 @@ inventory, using the `move()` primitive.
 from moo.core import context, create, lookup
 
 if not (context.parser.has_dobj_str()):
-    print("[color yellow]What do you want to create?[/color yellow]")
+    print("[yellow]What do you want to create?[/yellow]")
     return
 
 name = context.parser.get_dobj_str()
 new_obj = create(name, location=None)
-print("[color yellow]Created %s[/color yellow]" % new_obj)
+print("[yellow]Created %s[/yellow]" % new_obj)
 
 if context.parser.has_pobj_str("from"):
     parent = context.parser.get_pobj("from", lookup=True)
     new_obj.parents.add(parent)
-    print("[color yellow]Transmuted %s to %s[/color yellow]" % (new_obj, parent))
+    print("[yellow]Transmuted %s to %s[/yellow]" % (new_obj, parent))
 
 new_obj.moveto(context.player)

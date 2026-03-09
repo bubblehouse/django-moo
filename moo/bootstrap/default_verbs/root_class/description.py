@@ -19,6 +19,6 @@ except PropertyDoesNotExist:
     pass
 
 if description:
-    return f"[color deep_sky_blue1]{description}[/color deep_sky_blue1]"
+    return f"[deep_sky_blue1]{description}[/deep_sky_blue1]"
 else:
-    return "[color deep_pink4 bold]Not much to see here.[/color deep_pink4 bold]"
+    return "[deep_pink4 bold]Not much to see here.[/deep_pink4 bold]"
