@@ -1,3 +1,9 @@
+## [0.64.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.63.0...v0.64.0) (2026-03-09)
+
+### Features
+
+* optimized default_verbs to reduce DB calls, introduced better exceptions for verbs ([7b8767a](https://gitlab.com/bubblehouse/django-moo/commit/7b8767ae7ef2ce8f3e652703e178471e8548fc46))
+
 ## [0.63.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.62.0...v0.63.0) (2026-03-09)
 
 ### Features
