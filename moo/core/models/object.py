@@ -33,6 +33,9 @@ _PROP_MISSING = object()
 # (no such property on this object or any ancestor). Must not be a valid moojson value.
 _CACHE_PROP_MISSING = "__moo:prop:missing__"
 
+# Sentinel stored in the cache backend to record a confirmed verb miss.
+_CACHE_VERB_MISSING = "__moo:verb:missing__"
+
 # Sentinel returned by cache.get() when a key is absent (never stored in the cache).
 _CACHE_MISS = object()
 
@@ -401,6 +404,13 @@ class Object(models.Model, AccessibleMixin):
                     for recurse_flag in (True, False):
                         for return_first_flag in (True, False):
                             vcache.pop((self.pk, item, recurse_flag, return_first_flag), None)
+        # Evict cross-session Redis verb cache entries for this object.
+        if getattr(settings, 'MOO_PROP_CACHE_TTL', 120) > 0:
+            for name in names:
+                for item in utils.expand_wildcard(name):
+                    for recurse_flag in (True, False):
+                        for return_first_flag in (True, False):
+                            cache.delete(f"moo:verb:{self.pk}:{item}:{int(recurse_flag)}:{int(return_first_flag)}")
         return verb
 
     def invoke_verb(self, name, *args, **kwargs):
@@ -492,6 +502,28 @@ class Object(models.Model, AccessibleMixin):
                 raise Verb.DoesNotExist(f"No such verb `{name}`.")
             return cached
 
+        # Cross-session Redis cache — stores comma-separated verb PKs to avoid the
+        # expensive AncestorCache JOIN on repeated lookups across requests.
+        # Bypassed when MOO_PROP_CACHE_TTL=0 (e.g. tests).
+        _cache_ttl = getattr(settings, 'MOO_PROP_CACHE_TTL', 120)
+        redis_key = None if _cache_ttl == 0 else f"moo:verb:{self.pk}:{name}:{int(recurse)}:{int(return_first)}"
+        if redis_key is not None:
+            raw = cache.get(redis_key, _CACHE_MISS)
+            if raw is not _CACHE_MISS:
+                if raw == _CACHE_VERB_MISSING:
+                    if vcache is not None:
+                        vcache[cache_key] = None
+                    raise Verb.DoesNotExist(f"No such verb `{name}`.")
+                pks = [int(p) for p in raw.split(",")]
+                result = list(
+                    Verb.objects.filter(pk__in=pks)
+                    .select_related("owner")
+                    .prefetch_related("indirect_objects__preposition__names")
+                )
+                if vcache is not None:
+                    vcache[cache_key] = result
+                return result
+
         # Self always takes priority — check before touching ancestors
         qs = (
             Verb.objects.filter(origin=self, names__name=name)
@@ -502,11 +534,15 @@ class Object(models.Model, AccessibleMixin):
         if result:
             if vcache is not None:
                 vcache[cache_key] = result
+            if redis_key is not None:
+                cache.set(redis_key, ",".join(str(v.pk) for v in result), timeout=_cache_ttl)
             return result
 
         if not recurse:
             if vcache is not None:
                 vcache[cache_key] = None
+            if redis_key is not None:
+                cache.set(redis_key, _CACHE_VERB_MISSING, timeout=_cache_ttl)
             raise Verb.DoesNotExist(f"No such verb `{name}`.")
 
         result = list(
@@ -525,6 +561,8 @@ class Object(models.Model, AccessibleMixin):
         if not result:
             if vcache is not None:
                 vcache[cache_key] = None
+            if redis_key is not None:
+                cache.set(redis_key, _CACHE_VERB_MISSING, timeout=_cache_ttl)
             raise Verb.DoesNotExist(f"No such verb `{name}`.")
         if return_first:
             first = result[0]
@@ -535,6 +573,8 @@ class Object(models.Model, AccessibleMixin):
             ]
         if vcache is not None:
             vcache[cache_key] = result
+        if redis_key is not None:
+            cache.set(redis_key, ",".join(str(v.pk) for v in result), timeout=_cache_ttl)
         return result
 
     def set_property(self, name, value, inherit_owner=False, owner=None):

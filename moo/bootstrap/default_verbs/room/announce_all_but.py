@@ -12,6 +12,12 @@ place.announce_all_but(this, "message");
 """
 
 skip, *messages = args
-for obj in this.contents.all():
+# If the caller pre-fetched room contents and passed them as the last arg,
+# use them directly to avoid a redundant contents.all() query.
+if messages and isinstance(messages[-1], list):
+    contents = messages.pop()
+else:
+    contents = this.contents.all()
+for obj in contents:
     if obj != skip:
         obj.tell(" ".join(messages))
