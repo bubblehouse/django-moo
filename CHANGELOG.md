@@ -1,3 +1,10 @@
+## [0.65.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.64.0...v0.65.0) (2026-03-09)
+
+### Features
+
+* denormalize ancestor lookups, add cross-session property cache, batch verb dispatch (opt-in) ([70475c6](https://gitlab.com/bubblehouse/django-moo/commit/70475c68c048de302f4a5e4b53226387495e25cd))
+* further optimizations for quick wins, missing indexes ([4e47ccb](https://gitlab.com/bubblehouse/django-moo/commit/4e47ccb59a4e8fc6eb41d9d94372b80aaea28c52))
+
 ## [0.64.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.63.0...v0.64.0) (2026-03-09)
 
 ### Features
