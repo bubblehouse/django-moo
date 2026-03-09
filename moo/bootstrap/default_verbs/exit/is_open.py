@@ -2,6 +2,8 @@
 
 # pylint: disable=return-outside-function,undefined-variable
 
+from moo.core import PropertyDoesNotExist
+
 door = this
 
 if verb_name == "is_open":
@@ -12,7 +14,7 @@ else:
     print("Unknown verb name for door state check: %s" % verb_name)
     return False
 
-if door.has_property(prop_name) and door.get_property(prop_name):
-    return True
-else:
+try:
+    return bool(door.get_property(prop_name))
+except PropertyDoesNotExist:
     return False
