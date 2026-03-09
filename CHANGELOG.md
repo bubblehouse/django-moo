@@ -1,3 +1,9 @@
+## [0.65.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.65.2...v0.65.3) (2026-03-09)
+
+### Bug Fixes
+
+* use correct server url ([3b3821d](https://gitlab.com/bubblehouse/django-moo/commit/3b3821d4f3dfff5387bc0ac9118441168516495c))
+
 ## [0.65.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.65.1...v0.65.2) (2026-03-09)
 
 ### Bug Fixes
