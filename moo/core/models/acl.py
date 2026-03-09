@@ -9,6 +9,25 @@ from django.db import models
 
 from .. import code
 
+_PERM_ID_CACHE_KEY = "__permission_id_cache__"
+
+
+def _get_permission_id(name: str) -> int:
+    """
+    Return the pk for a named Permission, caching in the per-session perm_cache.
+    The Permission table is static after bootstrap, so one lookup per session suffices.
+    Falls back to a direct DB query outside a ContextManager session.
+    """
+    cache = code.ContextManager.get_perm_cache()
+    if cache is not None:
+        perm_ids = cache.setdefault(_PERM_ID_CACHE_KEY, {})
+        if name in perm_ids:
+            return perm_ids[name]
+        pk = Permission.objects.get(name=name).id
+        perm_ids[name] = pk
+        return pk
+    return Permission.objects.get(name=name).id
+
 log = logging.getLogger(__name__)
 
 
@@ -40,7 +59,7 @@ class AccessibleMixin:
             verb=self if self.kind == "verb" else None,
             property=self if self.kind == "property" else None,
             rule="allow",
-            permission=Permission.objects.get(name=permission),
+            permission_id=_get_permission_id(permission),
             type="group" if isinstance(accessor, str) else "accessor",
             accessor=None if isinstance(accessor, str) else accessor,
             group=accessor if isinstance(accessor, str) else None,
@@ -58,7 +77,7 @@ class AccessibleMixin:
             verb=self if self.kind == "verb" else None,
             property=self if self.kind == "property" else None,
             rule="deny",
-            permission=Permission.objects.get(name=permission),
+            permission_id=_get_permission_id(permission),
             type="group" if isinstance(accessor, str) else "accessor",
             accessor=None if isinstance(accessor, str) else accessor,
             group=accessor if isinstance(accessor, str) else None,
@@ -82,6 +101,11 @@ class Access(models.Model):
     class Meta:
         verbose_name_plural = "access controls"
         unique_together = ("object", "verb", "property", "rule", "permission", "type", "accessor", "group", "weight")
+        indexes = [
+            models.Index(fields=["object", "permission"], name="access_object_permission_idx"),
+            models.Index(fields=["verb", "permission"], name="access_verb_permission_idx"),
+            models.Index(fields=["property", "permission"], name="access_property_permission_idx"),
+        ]
 
     object = models.ForeignKey("Object", related_name="acl", null=True, on_delete=models.CASCADE)
     verb = models.ForeignKey("Verb", related_name="acl", null=True, on_delete=models.CASCADE)

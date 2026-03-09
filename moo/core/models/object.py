@@ -16,7 +16,7 @@ from django_cte import CTE, with_cte
 from moo import bootstrap
 from .. import exceptions, invoke, utils
 from ..code import ContextManager
-from .acl import Access, AccessibleMixin, Permission
+from .acl import Access, AccessibleMixin, Permission, _get_permission_id
 from .auth import Player
 from .property import Property
 from .verb import Verb, PrepositionName, PrepositionSpecifier, VerbName
@@ -441,8 +441,9 @@ class Object(models.Model, AccessibleMixin):
     def _lookup_verb(self, name, recurse=True, return_first=True):
         # Self always takes priority — check before touching ancestors
         qs = Verb.objects.filter(origin=self, names__name=name).select_related("owner")
-        if qs.exists():
-            return list(qs)
+        result = list(qs)
+        if result:
+            return result
 
         if not recurse:
             raise Verb.DoesNotExist(f"No such verb `{name}`.")
@@ -508,9 +509,9 @@ class Object(models.Model, AccessibleMixin):
 
         self.can_caller("read", self)
         # Self always takes priority
-        qs = Property.objects.filter(origin=self, name=name)
-        if qs.exists():
-            return qs[0] if original else moojson.loads(qs[0].value)
+        prop = Property.objects.filter(origin=self, name=name).first()
+        if prop is not None:
+            return prop if original else moojson.loads(prop.value)
 
         if not recurse:
             raise Property.DoesNotExist(f"No such property `{name}`.")
@@ -548,10 +549,10 @@ class Object(models.Model, AccessibleMixin):
         import json
         self.can_caller("read", self)
         # Self always takes priority
-        qs = Property.objects.filter(origin=self, name=name)
-        if not qs.exists():
+        prop = Property.objects.filter(origin=self, name=name).first()
+        if prop is None:
             ancestors = self._ancestors_cte()
-            prop_qs = with_cte(
+            prop = with_cte(
                 ancestors,
                 select=ancestors.join(Property, origin_id=ancestors.col.object_id)
                 .filter(name=name)
@@ -560,12 +561,9 @@ class Object(models.Model, AccessibleMixin):
                     path_weight=ancestors.col.path_weight,
                 )
                 .order_by("ancestor_depth", "-path_weight"),
-            )
-            prop = prop_qs.first()
+            ).first()
             if prop is None:
                 raise Property.DoesNotExist(f"No such property `{name}`.")
-        else:
-            prop = qs[0]
         raw = json.loads(prop.value)
         if not isinstance(raw, list):
             from .. import moojson
@@ -628,9 +626,8 @@ class Object(models.Model, AccessibleMixin):
         if self.location and self.contains(self.location):
             raise exceptions.RecursiveError(f"{self} already contains {self.location}")
         # ACL Check: to change owner, caller must be allowed to `entrust` on this object
-        original_owner = getattr(self, "original_owner", None)
-        original_owner = Object.objects.get(pk=original_owner) if original_owner else None
-        if original_owner != self.owner and self.owner:
+        original_owner_id = getattr(self, "original_owner", None)
+        if original_owner_id != self.owner_id and self.owner_id:
             # Ownership affects the "owners" group match in is_allowed(), so evict any
             # cached permission results for this object before checking entrust.
             cache = ContextManager.get_perm_cache()
@@ -642,9 +639,8 @@ class Object(models.Model, AccessibleMixin):
         # ACL Check: to change anything else about the object you at least need `write`
         self.can_caller("write", self)
         # ACL Check: to change the location, caller must be allowed to `move` on this object
-        original_location = getattr(self, "original_location", None)
-        original_location = Object.objects.get(pk=original_location) if original_location else None
-        if original_location != self.location and self.location:
+        original_location_id = getattr(self, "original_location", None)
+        if original_location_id != self.location_id and self.location_id:
             self.can_caller("move", self)
             # the new location must define an `accept` verb that returns True for this obejct
             if self.location.has_verb("accept"):
@@ -653,8 +649,10 @@ class Object(models.Model, AccessibleMixin):
             else:
                 raise PermissionError(f"{self.location} did not accept {self}")
             # the optional `exitfunc` Verb will be called asyncronously
-            if original_location and original_location.has_verb("exitfunc"):
-                invoke(self, verb=original_location.get_verb("exitfunc"))
+            if original_location_id:
+                _prev_location = Object.objects.get(pk=original_location_id)
+                if _prev_location.has_verb("exitfunc"):
+                    invoke(self, verb=_prev_location.get_verb("exitfunc"))
             # the optional `enterfun` Verb will be called asyncronously
             if self.location and self.location.has_verb("enterfunc"):
                 invoke(self, verb=self.location.get_verb("enterfunc"))
@@ -693,10 +691,13 @@ class Object(models.Model, AccessibleMixin):
         if cache is not None and cache_key in cache:
             return True
 
-        # Get both permissions in a single query
-        perms = Permission.objects.filter(name__in=(permission, "anything")).values_list("id", flat=True)
-        if len(perms) < 2:
-            perms = list(perms) + [Permission.objects.get(name=permission).id]
+        # Resolve permission ids from the process-level cache (Permission table is static).
+        perm_id = _get_permission_id(permission)
+        try:
+            anything_id = _get_permission_id("anything")
+            perms = [perm_id, anything_id]
+        except Permission.DoesNotExist:
+            perms = [perm_id]
 
         # Build subject filter once
         subject_filter = Q()
@@ -724,7 +725,7 @@ class Object(models.Model, AccessibleMixin):
             (Q(type="group", group="wizards") if is_wizard else Q())
         )
 
-        rules = Access.objects.filter(query).order_by("rule", "type")
+        rules = Access.objects.filter(query).order_by("-rule", "type")
 
         if rules:
             for rule in rules:
