@@ -2,7 +2,7 @@
 
 # pylint: disable=return-outside-function,undefined-variable
 
-from moo.core import context
+from moo.core import context, PropertyDoesNotExist
 
 door_description = context.parser.get_dobj_str()
 door = context.caller.location.match_exit(door_description)
@@ -26,7 +26,11 @@ elif verb_name == "close":
         print("The door is already closed.")
     else:
         door.set_property("open", False)
-        if door.has_property("autolock") and door.get_property("autolock"):
+        try:
+            autolock = door.get_property("autolock")
+        except PropertyDoesNotExist:
+            autolock = False
+        if autolock:
             door.set_property("locked", True)
         print("The door is closed.")
 elif verb_name == "unlock":
