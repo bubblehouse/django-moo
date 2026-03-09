@@ -1,3 +1,10 @@
+## [0.62.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.61.2...v0.62.0) (2026-03-09)
+
+### Features
+
+* cache permission tables in the context ([a63cca6](https://gitlab.com/bubblehouse/django-moo/commit/a63cca6542aea4f016b8128152e0136b868f59c2))
+* permission caching improvements and updated indexes ([ddd7466](https://gitlab.com/bubblehouse/django-moo/commit/ddd7466ab5f323b6b333137bd27d44253de52b0d))
+
 ## [0.61.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.61.1...v0.61.2) (2026-03-09)
 
 ### Bug Fixes
