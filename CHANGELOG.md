@@ -1,3 +1,9 @@
+## [0.65.5](https://gitlab.com/bubblehouse/django-moo/compare/v0.65.4...v0.65.5) (2026-03-09)
+
+### Bug Fixes
+
+* preserve player context when invoking verbs asynchronously ([ed429ca](https://gitlab.com/bubblehouse/django-moo/commit/ed429cae1b00f0d3b545fcbc551b6ff6d1f2fb4c))
+
 ## [0.65.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.65.3...v0.65.4) (2026-03-09)
 
 ### Bug Fixes
