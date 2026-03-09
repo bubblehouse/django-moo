@@ -164,7 +164,14 @@ class Verb(models.Model, AccessibleMixin):
             kwargs['filename'] = self.filename
         if this is None:
             raise RuntimeError(f"Cannot call {self} without a non-null 'this' context.")
-        system = lookup(1)
+        _system_key = "__system_object__"
+        _cache = ContextManager.get_perm_cache()
+        if _cache is not None and _system_key in _cache:
+            system = _cache[_system_key]
+        else:
+            system = lookup(1)
+            if _cache is not None:
+                _cache[_system_key] = system
         active = ContextManager.is_active()
         if active:
             ContextManager.override_caller(self.owner, this=this, verb_name=name, origin=self.origin, player=ContextManager.get("player"))
