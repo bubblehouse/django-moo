@@ -1,3 +1,5 @@
+import warnings
+
 import pytest
 
 from moo.core import code, create, lookup, parse
@@ -73,7 +75,9 @@ def test_eject_victim_from_container(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, printed.append) as ctx:
         container = create("Vault", parents=[system.room], location=t_wizard.location)
         player_npc.location = container
-        player_npc.save()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            player_npc.save()
         for name, code_str in [
             ("victim_ejection_msg", 'return "You have been ejected!"'),
             ("ejection_msg",        'return "You ejected them."'),
@@ -82,10 +86,10 @@ def test_eject_victim_from_container(t_init: Object, t_wizard: Object):
         ]:
             v = Verb.objects.create(origin=container, owner=t_wizard, code=code_str)
             VerbName.objects.create(verb=v, name=name)
-        with pytest.warns(RuntimeWarning) as warnings:
+        with pytest.warns(RuntimeWarning) as w:
             parse.interpret(ctx, "@eject Player from Vault")
         player_npc.refresh_from_db()
-    messages = [str(w.message) for w in warnings.list]
+    messages = [str(x.message) for x in w.list]
     assert any("You have been ejected!" in m for m in messages)
     assert any("They were ejected." in m for m in messages)
     assert "You ejected them." in printed

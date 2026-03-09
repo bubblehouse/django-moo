@@ -19,7 +19,9 @@ def test_simple_async_verb(t_init: Object, t_wizard: Object, caplog: pytest.LogC
     verb.invoked_object = verb.origin
     with caplog.at_level(logging.INFO, "moo.core.tasks.background"):
         with code.ContextManager(t_wizard, _writer):
-            verb()
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", RuntimeWarning)
+                verb()
     assert printed == [1]
     counter = 1
     for line in caplog.text.split("\n"):
