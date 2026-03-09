@@ -1,6 +1,7 @@
 import logging
 
 import pytest
+from django.db import connection
 from django.test import override_settings
 
 from moo.core.models import Object, Player
@@ -212,6 +213,31 @@ def test_change_location_calls_accept(t_init: Object, t_wizard: Object):
             thing = create("thing", location=box)
         thing = lookup("thing")
         assert str(excinfo.value) == f"#{box.pk} (box) did not accept #{thing.pk} (thing)"
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_perm_cache_avoids_repeated_queries(t_init: Object, t_wizard: Object):
+    thing = Object.objects.create(name="thing", owner=t_wizard)
+    with code.ContextManager(t_wizard, lambda m: None):
+        # First call populates the cache.
+        assert t_wizard.is_allowed("read", thing)
+        queries_after_first = len(connection.queries)
+        # Second call for the same (caller, permission, subject) should hit the cache.
+        assert t_wizard.is_allowed("read", thing)
+        assert len(connection.queries) == queries_after_first
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_perm_cache_invalidated_by_deny(t_init: Object, t_wizard: Object):
+    user = Object.objects.get(name__iexact="player")
+    thing = Object.objects.create(name="thing", owner=user)
+    with code.ContextManager(t_wizard, lambda m: None):
+        # Populate cache with True for "read".
+        assert user.is_allowed("read", thing)
+        # Add a deny rule — cache should be evicted.
+        thing.deny(user, "read")
+        # Now the result must reflect the deny rule, not the stale cache.
+        assert not user.is_allowed("read", thing)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)

@@ -155,6 +155,7 @@ _active_task_id = contextvars.ContextVar("active_task_id", default=None)
 # appended to it outside a context would mutate the single default object permanently.
 _UNSET = object()
 _active_caller_stack = contextvars.ContextVar("active_caller_stack", default=_UNSET)
+_perm_cache = contextvars.ContextVar("perm_cache", default=None)
 
 class ContextManager:
     """
@@ -184,6 +185,10 @@ class ContextManager:
             # Return an empty list outside a session rather than exposing the sentinel.
             return [] if stack is _UNSET else stack
         raise NotImplementedError(f"Unknown ContextManager variable: {name}")
+
+    @classmethod
+    def get_perm_cache(cls) -> dict | None:
+        return _perm_cache.get()
 
     @classmethod
     def is_active(cls):
@@ -230,6 +235,9 @@ class ContextManager:
         # A fresh list per instance so each session has its own isolated stack.
         self.active_caller_stack = []
         self.active_caller_stack_token = None
+        # A fresh dict per instance for per-session permission caching.
+        self.perm_cache = {}
+        self.perm_cache_token = None
 
     def set_parser(self, parser):
         self.parser = parser
@@ -244,6 +252,7 @@ class ContextManager:
         # Replacing _UNSET with a real list marks the session as active (is_active() → True)
         # and gives override_caller a mutable list to append to.
         self.active_caller_stack_token = _active_caller_stack.set(self.active_caller_stack)
+        self.perm_cache_token = _perm_cache.set(self.perm_cache)
         return self
 
     def __exit__(self, cls, value, traceback):
@@ -261,3 +270,5 @@ class ContextManager:
             # reset() restores to whatever the var held before __enter__'s set() call,
             # regardless of how many times override_caller/pop_caller mutated it since.
             _active_caller_stack.reset(self.active_caller_stack_token)
+        if self.perm_cache_token:
+            _perm_cache.reset(self.perm_cache_token)

@@ -631,6 +631,13 @@ class Object(models.Model, AccessibleMixin):
         original_owner = getattr(self, "original_owner", None)
         original_owner = Object.objects.get(pk=original_owner) if original_owner else None
         if original_owner != self.owner and self.owner:
+            # Ownership affects the "owners" group match in is_allowed(), so evict any
+            # cached permission results for this object before checking entrust.
+            cache = ContextManager.get_perm_cache()
+            if cache is not None:
+                evict = [k for k in cache if k[0] == "perm" and k[3] == self.kind and k[4] == self.pk]
+                for k in evict:
+                    del cache[k]
             self.can_caller("entrust", self)
         # ACL Check: to change anything else about the object you at least need `write`
         self.can_caller("write", self)
@@ -679,6 +686,13 @@ class Object(models.Model, AccessibleMixin):
         :param fatal: if True, raise a :class:`.PermissionError` instead of returning False
         :raises PermissionError: if permission is denied and `fatal` is set to True
         """
+        # Per-session cache: only True results are cached so that exact error messages
+        # (denied vs. no rules) are preserved on the uncached False path.
+        cache = ContextManager.get_perm_cache()
+        cache_key = ("perm", self.pk, permission, subject.kind, subject.pk)
+        if cache is not None and cache_key in cache:
+            return True
+
         # Get both permissions in a single query
         perms = Permission.objects.filter(name__in=(permission, "anything")).values_list("id", flat=True)
         if len(perms) < 2:
@@ -693,12 +707,21 @@ class Object(models.Model, AccessibleMixin):
         elif subject.kind == "property":
             subject_filter = Q(property=subject)
 
+        # Cache wizard status to avoid a repeated Player query on every is_allowed() call.
+        wizard_key = ("wizard", self.pk)
+        if cache is not None and wizard_key in cache:
+            is_wizard = cache[wizard_key]
+        else:
+            is_wizard = Player.objects.filter(avatar=self, wizard=True).exists()
+            if cache is not None:
+                cache[wizard_key] = is_wizard
+
         # Build OR conditions for all matching rules
         query = subject_filter & Q(permission_id__in=perms) & (
             Q(type="accessor", accessor=self) |
             Q(type="group", group="everyone") |
             (Q(type="group", group="owners") if self.owns(subject) else Q()) |
-            (Q(type="group", group="wizards") if Player.objects.filter(avatar=self, wizard=True).exists() else Q())
+            (Q(type="group", group="wizards") if is_wizard else Q())
         )
 
         rules = Access.objects.filter(query).order_by("rule", "type")
@@ -709,6 +732,8 @@ class Object(models.Model, AccessibleMixin):
                     if fatal:
                         raise PermissionError(f"{self} is explicitly denied {permission} on {subject}")
                     return False
+            if cache is not None:
+                cache[cache_key] = True
             return True
         elif fatal:
             raise PermissionError(f"{self} is not allowed {permission} on {subject}")

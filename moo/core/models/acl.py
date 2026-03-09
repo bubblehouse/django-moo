@@ -63,6 +63,12 @@ class AccessibleMixin:
             accessor=None if isinstance(accessor, str) else accessor,
             group=accessor if isinstance(accessor, str) else None,
         )
+        # Evict any cached True results for this subject — a new deny rule may flip them.
+        cache = code.ContextManager.get_perm_cache()
+        if cache is not None:
+            evict = [k for k in cache if k[0] == "perm" and k[3] == self.kind and k[4] == self.pk]
+            for k in evict:
+                del cache[k]
 
 
 class Permission(models.Model):
