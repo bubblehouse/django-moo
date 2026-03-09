@@ -19,7 +19,7 @@ destination of the exit. Once this has been done, the arrive messages for the ex
 destination room's occupants.
 """
 
-from moo.core import context
+from moo.core import context, PropertyDoesNotExist
 
 thing = args[0]
 source = this.get_property("source")
@@ -30,13 +30,31 @@ if this.is_locked():
     source.announce_all_but(thing, this.onogo_msg(source, dest))
     return
 
-dest.bless_for_entry(context.caller)
-if dest.accept(thing):
+# Fast path: skip bless_for_entry and accept for open rooms (saves 3-4 DB queries).
+# bless_for_entry writes 2 properties; accept reads them back — all wasted I/O when
+# the destination simply has free_entry=True and no lock.
+try:
+    free_entry = dest.get_property("free_entry")
+except PropertyDoesNotExist:
+    free_entry = False
+
+if free_entry:
+    accepted = True
+else:
+    dest.bless_for_entry(context.caller)
+    accepted = dest.accept(thing)
+
+# Pre-fetch room contents once per room to avoid a second contents.all() query
+# inside each announce_all_but call.
+source_contents = list(source.contents.all())
+dest_contents = list(dest.contents.all())
+
+if accepted:
     thing.tell(this.leave_msg(source, dest))
-    source.announce_all_but(thing, this.oleave_msg(source, dest))
+    source.announce_all_but(thing, this.oleave_msg(source, dest), source_contents)
     thing.moveto(dest)
     thing.tell(this.arrive_msg(source, dest))
-    dest.announce_all_but(thing, this.oarrive_msg(source, dest))
+    dest.announce_all_but(thing, this.oarrive_msg(source, dest), dest_contents)
 else:
     thing.tell(this.nogo_msg(source, dest))
-    source.announce_all_but(thing, this.onogo_msg(source, dest))
+    source.announce_all_but(thing, this.onogo_msg(source, dest), source_contents)
