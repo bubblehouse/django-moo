@@ -16,7 +16,7 @@ def test_describe_sets_description(t_init: Object, t_wizard: Object, setup_item)
         widget = setup_item(t_wizard.location, "widget")
         parse.interpret(ctx, "@describe widget as A shiny widget.")
         widget.refresh_from_db()
-    assert widget.description() == "[color deep_sky_blue1]A shiny widget.[/color deep_sky_blue1]"
+    assert widget.description() == "[deep_sky_blue1]A shiny widget.[/deep_sky_blue1]"
     assert any("Description set for" in line for line in printed)
 
 

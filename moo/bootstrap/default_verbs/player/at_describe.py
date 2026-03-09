@@ -18,4 +18,4 @@ if not (context.parser.has_pobj_str("as")):
 
 subject = context.parser.get_dobj()
 subject.describe(context.parser.get_pobj_str("as"))
-print("[color yellow]Description set for %s[/color yellow]" % subject)
+print("[yellow]Description set for %s[/yellow]" % subject)

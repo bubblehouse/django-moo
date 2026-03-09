@@ -16,13 +16,13 @@ direction = context.parser.get_dobj_str()
 
 source = context.player.location
 if source.match_exit(direction):
-    print("[color red]There is already an exit in that direction.[/color red]")
+    print("[red]There is already an exit in that direction.[/red]")
     return
 
 if context.parser.has_pobj("through"):
     door = context.parser.get_pobj("through")
     if not door.is_a(_.exit):
-        print("[color red]The specified object is not an exit.[/color red]")
+        print("[red]The specified object is not an exit.[/red]")
         return
     if not door.aliases.filter(alias=direction):
         door.aliases.create(alias=direction)
@@ -42,4 +42,4 @@ door.set_property("dest", dest)
 source.add_exit(door)
 dest.add_entrance(door)
 
-print(f'[color yellow]{action} an exit {direction} to "{dest.name}".[/color yellow]')
+print(f'[yellow]{action} an exit {direction} to "{dest.name}".[/yellow]')

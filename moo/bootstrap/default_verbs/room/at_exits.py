@@ -10,13 +10,13 @@ object reference number, destination name, and exit aliases.
 
 exits = this.get_property_objects("exits", prefetch_related=["aliases"]) or []
 if not exits:
-    print("[color red]There are no exits defined for this room.[/color red]")
+    print("[red]There are no exits defined for this room.[/red]")
     return
 
-print("[color cyan]Exits defined for this room:[/color cyan]")
+print("[cyan]Exits defined for this room:[/cyan]")
 for exit in exits:
     exit_name = exit.name
     dest_name = exit.dest.name
     aliases = ", ".join([x.alias for x in exit.aliases.all()])
-    print(f"- [color yellow]{exit_name}[/color yellow] (Aliases: {aliases}) "
-          f"to [color green]{dest_name}[/color green] (#{exit.dest.id})")
+    print(f"- [yellow]{exit_name}[/yellow] (Aliases: {aliases}) "
+          f"to [green]{dest_name}[/green] (#{exit.dest.id})")
