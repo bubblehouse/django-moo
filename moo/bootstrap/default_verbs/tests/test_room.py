@@ -1,3 +1,5 @@
+import warnings
+
 import pytest
 
 from moo.core import context, code, create, exceptions, lookup, parse
@@ -10,7 +12,9 @@ def setup_room(t_wizard: Object, name: str = "Test Room", description: str = "A 
     room = create(name, parents=[rooms])
     room.describe(description)
     t_wizard.location = room
-    t_wizard.save()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        t_wizard.save()
     context.caller.refresh_from_db()
     return room
 
@@ -113,11 +117,15 @@ def test_tell_contents_ctype3_single_player(t_init: Object, t_wizard: Object):
         room = create("Player Room", parents=[rooms])
         room.set_property("content_list_type", 3)
         t_wizard.location = room
-        t_wizard.save()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            t_wizard.save()
         context.caller.refresh_from_db()
         player = lookup("Player")
         player.location = room
-        player.save()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            player.save()
         room.tell_contents()
     assert printed == ["You see Player here."]
 
@@ -131,13 +139,15 @@ def test_tell_contents_ctype3_multiple_players(t_init: Object, t_wizard: Object)
         rooms = lookup("Generic Room")
         room = create("Two Player Room", parents=[rooms])
         room.set_property("content_list_type", 3)
-        t_wizard.location = room
-        t_wizard.save()
-        context.caller.refresh_from_db()
-        player = lookup("Player")
-        player.location = room
-        player.save()
-        bob = create("Bob", location=room)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            t_wizard.location = room
+            t_wizard.save()
+            context.caller.refresh_from_db()
+            player = lookup("Player")
+            player.location = room
+            player.save()
+            bob = create("Bob", location=room)
         Player.objects.create(avatar=bob)
         room.tell_contents()
     assert printed == ["Player and Bob are here."]
@@ -152,13 +162,15 @@ def test_tell_contents_ctype3_mixed(t_init: Object, t_wizard: Object):
         rooms = lookup("Generic Room")
         room = create("Mixed Room", parents=[rooms])
         room.set_property("content_list_type", 3)
-        t_wizard.location = room
-        t_wizard.save()
-        context.caller.refresh_from_db()
-        setup_item(room, "red ball")
-        player = lookup("Player")
-        player.location = room
-        player.save()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            t_wizard.location = room
+            t_wizard.save()
+            context.caller.refresh_from_db()
+            setup_item(room, "red ball")
+            player = lookup("Player")
+            player.location = room
+            player.save()
         room.tell_contents()
     assert printed == ["You see red ball here.", "You see Player here."]
 
@@ -189,12 +201,14 @@ def test_tell_contents_ctype2_mixed(t_init: Object, t_wizard: Object):
         rooms = lookup("Generic Room")
         room = create("Ctype2 Mixed Room", parents=[rooms])
         room.set_property("content_list_type", 2)
-        t_wizard.location = room
-        t_wizard.save()
-        context.caller.refresh_from_db()
-        player = lookup("Player")
-        player.location = room
-        player.save()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            t_wizard.location = room
+            t_wizard.save()
+            context.caller.refresh_from_db()
+            player = lookup("Player")
+            player.location = room
+            player.save()
         setup_item(room, "red ball")
         room.tell_contents()
     assert printed == ["You see Player and red ball here."]
@@ -212,12 +226,14 @@ def test_tell_contents_ctype1(t_init: Object, t_wizard: Object):
         rooms = lookup("Generic Room")
         room = create("Ctype1 Room", parents=[rooms])
         room.set_property("content_list_type", 1)
-        t_wizard.location = room
-        t_wizard.save()
-        context.caller.refresh_from_db()
-        player = lookup("Player")
-        player.location = room
-        player.save()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            t_wizard.location = room
+            t_wizard.save()
+            context.caller.refresh_from_db()
+            player = lookup("Player")
+            player.location = room
+            player.save()
         setup_item(room, "red ball")
         room.tell_contents()
     assert printed == ["Player is here", "You see red ball here"]
@@ -235,8 +251,10 @@ def test_tell_contents_ctype0(t_init: Object, t_wizard: Object):
         rooms = lookup("Generic Room")
         room = create("Ctype0 Room", parents=[rooms])
         room.set_property("content_list_type", 0)
-        t_wizard.location = room
-        t_wizard.save()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            t_wizard.location = room
+            t_wizard.save()
         context.caller.refresh_from_db()
         setup_item(room, "red ball")
         room.tell_contents()
@@ -283,10 +301,12 @@ def test_confunc_announces_connection_to_others(t_init: Object, t_wizard: Object
         room = setup_room(t_wizard)
         player = lookup("Player")
         player.location = room
-        player.save()
-        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            player.save()
+        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as w:
             room.confunc()
-    messages = [str(w.message) for w in warnings.list]
+    messages = [str(x.message) for x in w.list]
     assert any("has connected" in m and str(t_wizard) in m for m in messages)
 
 
@@ -302,14 +322,18 @@ def test_disfunc_moves_player_to_home(t_init: Object, t_wizard: Object):
         away = create("Away Room", parents=[rooms])
         t_player = lookup("Player")
         t_player.location = away
-        t_player.save()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            t_player.save()
         t_wizard.location = away
-        t_wizard.save()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            t_wizard.save()
         context.caller.refresh_from_db()
-        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
+        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as w:
             t_wizard.location.disfunc()
         t_wizard.refresh_from_db()
-    messages = [str(w.message) for w in warnings.list]
+    messages = [str(x.message) for x in w.list]
     assert any(f"(Player)): #{t_wizard.pk} (Wizard) has disconnected." in m for m in messages)
     system = lookup(1)
     assert t_wizard.location == system.player_start
@@ -433,10 +457,12 @@ def test_announce_delivers_to_others(t_init: Object, t_wizard: Object):
         room = setup_room(t_wizard)
         player = lookup("Player")
         player.location = room
-        player.save()
-        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            player.save()
+        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as w:
             room.announce("broadcast message")
-    messages = [str(w.message) for w in warnings.list]
+    messages = [str(x.message) for x in w.list]
     assert any("(Player)): broadcast message" in m for m in messages)
     assert not any("(Wizard)): broadcast message" in m for m in messages)
 
@@ -452,10 +478,12 @@ def test_announce_all_delivers_to_everyone(t_init: Object, t_wizard: Object):
         room = setup_room(t_wizard)
         player = lookup("Player")
         player.location = room
-        player.save()
-        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            player.save()
+        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as w:
             room.announce_all("all hands message")
-    messages = [str(w.message) for w in warnings.list]
+    messages = [str(x.message) for x in w.list]
     assert any("(Wizard)): all hands message" in m for m in messages)
     assert any("(Player)): all hands message" in m for m in messages)
 
@@ -471,10 +499,12 @@ def test_announce_all_but_skips_specified_object(t_init: Object, t_wizard: Objec
         room = setup_room(t_wizard)
         player = lookup("Player")
         player.location = room
-        player.save()
-        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            player.save()
+        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as w:
             room.announce_all_but(player, "exclusive message")
-    messages = [str(w.message) for w in warnings.list]
+    messages = [str(x.message) for x in w.list]
     assert any("(Wizard)): exclusive message" in m for m in messages)
     assert not any("(Player)): exclusive message" in m for m in messages)
 
@@ -487,10 +517,12 @@ def test_announce_all_but_delivers_to_rest(t_init: Object, t_wizard: Object):
         room = setup_room(t_wizard)
         player = lookup("Player")
         player.location = room
-        player.save()
-        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            player.save()
+        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as w:
             room.announce_all_but(t_wizard, "player only message")
-    messages = [str(w.message) for w in warnings.list]
+    messages = [str(x.message) for x in w.list]
     assert any("(Player)): player only message" in m for m in messages)
     assert not any("(Wizard)): player only message" in m for m in messages)
 
@@ -671,11 +703,15 @@ def test_at_entrances_lists_entrances(t_init: Object, t_wizard: Object):
     printed = []
     with code.ContextManager(t_wizard, printed.append) as ctx:
         home = t_wizard.location
-        setup_room(t_wizard, name="Far Room")
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            setup_room(t_wizard, name="Far Room")
         parse.interpret(ctx, f"@tunnel south to {home.name}")
         # @tunnel added the entrance to `home`, so move back there before querying
         t_wizard.location = home
-        t_wizard.save()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            t_wizard.save()
         context.caller.refresh_from_db()
         printed.clear()
         parse.interpret(ctx, "@entrances")
