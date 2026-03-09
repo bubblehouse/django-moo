@@ -1,3 +1,9 @@
+## [0.65.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.65.1...v0.65.2) (2026-03-09)
+
+### Bug Fixes
+
+* use same redis client in dev as other envs ([cc1cc51](https://gitlab.com/bubblehouse/django-moo/commit/cc1cc516f4538c14f01a52fe0726005e013f95a7))
+
 ## [0.65.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.65.0...v0.65.1) (2026-03-09)
 
 ### Bug Fixes
