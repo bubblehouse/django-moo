@@ -14,4 +14,4 @@ else:
     msg = args[0]  # pylint: disable=undefined-variable  # type: ignore
 
 for obj in context.caller.location.contents.all():
-    write(obj, f"[color bright_yellow]{context.caller.name}[/color bright_yellow]: {msg}")
+    write(obj, f"[bright_yellow]{context.caller.name}[/bright_yellow]: {msg}")

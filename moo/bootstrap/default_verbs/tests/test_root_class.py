@@ -40,7 +40,7 @@ def test_description_with_property(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, lambda msg: None):
         obj = setup_obj(t_wizard)
         obj.describe("A shiny golden coin.")
-        assert obj.description() == "[color deep_sky_blue1]A shiny golden coin.[/color deep_sky_blue1]"
+        assert obj.description() == "[deep_sky_blue1]A shiny golden coin.[/deep_sky_blue1]"
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -50,7 +50,7 @@ def test_description_without_property(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, lambda msg: None):
         obj = setup_obj(t_wizard)
         Property.objects.filter(origin=obj, name="description").delete()
-        assert obj.description() == "[color deep_pink4 bold]Not much to see here.[/color deep_pink4 bold]"
+        assert obj.description() == "[deep_pink4 bold]Not much to see here.[/deep_pink4 bold]"
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
