@@ -64,14 +64,15 @@ def parse_code(self, caller_id: int, source: str, runtype: str = "exec") -> list
 
 @shared_task(bind=True)
 def invoke_verb(
-    self, *args, caller_id: int = None, this_id: int = None, verb_name: int = None, callback_this_id: Optional[int] = None, callback_verb_name: Optional[int] = None, **kwargs
+    self, *args, caller_id: int = None, player_id: Optional[int] = None, this_id: int = None, verb_name: int = None, callback_this_id: Optional[int] = None, callback_verb_name: Optional[int] = None, **kwargs
 ) -> None:
     """
     Asynchronously execute a Verb, optionally returning the result to another Verb.
     The `print()` method logs to a `moo.core.tasks.background` instead of sending
     to the caller; this could probably be improved.
 
-    :param caller_id: the PK of the caller of this command
+    :param caller_id: the PK of the verb owner (for permission checks)
+    :param player_id: the PK of the triggering player (for context.player); defaults to caller_id
     :param verb_id: the PK of the Verb to execute
     :param callback_verb_id: the PK of the verb to send the result to
     """
@@ -80,9 +81,10 @@ def invoke_verb(
     task_id = self.request.id
     with transaction.atomic():
         caller = Object.objects.get(pk=caller_id)
+        player = Object.objects.get(pk=player_id) if player_id else caller
         this = Object.objects.get(pk=this_id)
         verb = this.get_verb(verb_name)
-        with code.ContextManager(caller, background_log.info, task_id=task_id):
+        with code.ContextManager(caller, background_log.info, task_id=task_id, player=player):
             result = verb(*args, **kwargs)
             if callback_verb_name and callback_this_id:
                 invoke_verb.delay(result, caller_id=caller_id, this_id=callback_this_id, verb_name=callback_verb_name)
