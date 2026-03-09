@@ -45,6 +45,6 @@ REDIS_HOSTNAME = os.environ.get("REDIS_HOSTNAME", "redis")
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': f'{REDIS_HOSTNAME}:6379',
+        'LOCATION': f'redis://{REDIS_HOSTNAME}:6379',
     }
 }
