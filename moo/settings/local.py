@@ -21,6 +21,7 @@ DATABASES = {
         "HOST": "postgres",
         "USER": "moo",
         "PASSWORD": "moo",
+        "CONN_MAX_AGE": 60,
     }
 }
 

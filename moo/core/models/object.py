@@ -23,6 +23,10 @@ from .verb import Verb, PrepositionName, PrepositionSpecifier, VerbName
 
 log = logging.getLogger(__name__)
 
+# Sentinel used by the per-session property lookup cache to distinguish
+# "cached miss" (property does not exist) from "not yet cached" (None).
+_PROP_MISSING = object()
+
 
 @receiver(m2m_changed)
 def relationship_changed(sender, instance, action, model, signal, reverse, pk_set, using, **kwargs):
@@ -184,9 +188,9 @@ class Object(models.Model, AccessibleMixin):
         :param name: the name or alias to search for, case-insensitive
         """
         self.can_caller("read", self)
-        qs = Object.objects.filter(location=self, name__iexact=name)
-        aliases = Object.objects.filter(location=self, aliases__alias__iexact=name)
-        return qs.union(aliases)
+        return Object.objects.filter(location=self).filter(
+            Q(name__iexact=name) | Q(aliases__alias__iexact=name)
+        ).distinct()
 
     def contains(self, obj: "Object"):
         return self.get_contents().filter(pk=obj.pk).exists()
@@ -371,6 +375,15 @@ class Object(models.Model, AccessibleMixin):
         for name in names:
             for item in utils.expand_wildcard(name):
                 verb.names.add(VerbName.objects.create(verb=verb, name=item))
+        # Evict cached verb lookups for all names on this object so subsequent
+        # dispatches in the same session see the new verb.
+        vcache = ContextManager.get_verb_lookup_cache()
+        if vcache is not None:
+            for name in names:
+                for item in utils.expand_wildcard(name):
+                    for recurse_flag in (True, False):
+                        for return_first_flag in (True, False):
+                            vcache.pop((self.pk, item, recurse_flag, return_first_flag), None)
         return verb
 
     def invoke_verb(self, name, *args, **kwargs):
@@ -454,13 +467,29 @@ class Object(models.Model, AccessibleMixin):
         raise exceptions.AmbiguousVerbError(parser.words[0], result)
 
     def _lookup_verb(self, name, recurse=True, return_first=True):
+        vcache = ContextManager.get_verb_lookup_cache()
+        cache_key = (self.pk, name, recurse, return_first)
+        if vcache is not None and cache_key in vcache:
+            cached = vcache[cache_key]
+            if cached is None:
+                raise Verb.DoesNotExist(f"No such verb `{name}`.")
+            return cached
+
         # Self always takes priority — check before touching ancestors
-        qs = Verb.objects.filter(origin=self, names__name=name).select_related("owner")
+        qs = (
+            Verb.objects.filter(origin=self, names__name=name)
+            .select_related("owner")
+            .prefetch_related("indirect_objects__preposition__names")
+        )
         result = list(qs)
         if result:
+            if vcache is not None:
+                vcache[cache_key] = result
             return result
 
         if not recurse:
+            if vcache is not None:
+                vcache[cache_key] = None
             raise Verb.DoesNotExist(f"No such verb `{name}`.")
 
         ancestors = self._ancestors_cte()
@@ -474,18 +503,23 @@ class Object(models.Model, AccessibleMixin):
                     path_weight=ancestors.col.path_weight,
                 )
                 .select_related("owner")
+                .prefetch_related("indirect_objects__preposition__names")
                 .order_by("ancestor_depth", "-path_weight"),
             )
         )
         if not result:
+            if vcache is not None:
+                vcache[cache_key] = None
             raise Verb.DoesNotExist(f"No such verb `{name}`.")
         if return_first:
             first = result[0]
-            return [
+            result = [
                 v for v in result
                 if v.ancestor_depth == first.ancestor_depth
                 and v.path_weight == first.path_weight
             ]
+        if vcache is not None:
+            vcache[cache_key] = result
         return result
 
     def set_property(self, name, value, inherit_owner=False, owner=None):
@@ -511,6 +545,12 @@ class Object(models.Model, AccessibleMixin):
                 inherit_owner=inherit_owner,
             ),
         )
+        # Evict cached property values for this object so subsequent reads in
+        # the same session see the freshly written value.
+        pcache = ContextManager.get_prop_lookup_cache()
+        if pcache is not None:
+            for recurse_flag in (True, False):
+                pcache.pop((self.pk, name, recurse_flag), None)
 
     def get_property(self, name, recurse=True, original=False):
         """
@@ -523,12 +563,28 @@ class Object(models.Model, AccessibleMixin):
         from .. import moojson
 
         self.can_caller("read", self)
+
+        # Session-level cache for non-original (value) lookups only — Property
+        # objects carry ORM state that should not be shared across call frames.
+        pcache = None if original else ContextManager.get_prop_lookup_cache()
+        cache_key = (self.pk, name, recurse) if pcache is not None else None
+        if cache_key is not None and cache_key in pcache:
+            cached = pcache[cache_key]
+            if cached is _PROP_MISSING:
+                raise Property.DoesNotExist(f"No such property `{name}`.")
+            return cached
+
         # Self always takes priority
         prop = Property.objects.filter(origin=self, name=name).first()
         if prop is not None:
-            return prop if original else moojson.loads(prop.value)
+            value = prop if original else moojson.loads(prop.value)
+            if cache_key is not None:
+                pcache[cache_key] = value
+            return value
 
         if not recurse:
+            if cache_key is not None:
+                pcache[cache_key] = _PROP_MISSING
             raise Property.DoesNotExist(f"No such property `{name}`.")
 
         ancestors = self._ancestors_cte()
@@ -546,8 +602,13 @@ class Object(models.Model, AccessibleMixin):
             .first()
         )
         if prop is None:
+            if cache_key is not None:
+                pcache[cache_key] = _PROP_MISSING
             raise Property.DoesNotExist(f"No such property `{name}`.")
-        return prop if original else moojson.loads(prop.value)
+        value = prop if original else moojson.loads(prop.value)
+        if cache_key is not None:
+            pcache[cache_key] = value
+        return value
 
     def get_property_objects(self, name, prefetch_related=None, select_related=None):
         """

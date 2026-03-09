@@ -4,6 +4,7 @@ Development support resources for MOO programs
 """
 
 import contextvars
+import functools
 import logging
 import warnings
 
@@ -26,14 +27,23 @@ def interpret(source, name, *args, runtype="exec", **kwargs):
         return r_eval(source, {}, globals, *args, **kwargs)
 
 
+@functools.lru_cache(maxsize=512)
+def _cached_compile(body, filename):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=SyntaxWarning)
+        return compile_restricted_function(
+            p="this=None, passthrough=None, _=None, *args, **kwargs",
+            body=body,
+            name="verb",
+            filename=filename,
+        )
+
+
 def compile_verb_code(body, filename):
     """
     Take a given piece of verb code and wrap it in a function.
     """
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=SyntaxWarning)
-        result = compile_restricted_function(p="this=None, passthrough=None, _=None, *args, **kwargs", body=body, name="verb", filename=filename)
-    return result
+    return _cached_compile(body, filename)
 
 
 def r_eval(src, locals, globals, *args, filename="<string>", **kwargs):  # pylint: disable=redefined-builtin
@@ -149,6 +159,8 @@ _active_player = contextvars.ContextVar("active_player", default=None)
 _active_writer = contextvars.ContextVar("active_writer", default=None)
 _active_parser = contextvars.ContextVar("active_parser", default=None)
 _active_task_id = contextvars.ContextVar("active_task_id", default=None)
+_verb_lookup_cache = contextvars.ContextVar("verb_lookup_cache", default=None)
+_prop_lookup_cache = contextvars.ContextVar("prop_lookup_cache", default=None)
 # A sentinel object (not a mutable default like []) so we can reliably detect whether
 # a ContextManager is active: _active_caller_stack.get() is _UNSET means no session.
 # Using a mutable list as the default would cause shared-state bugs — any code that
@@ -189,6 +201,14 @@ class ContextManager:
     @classmethod
     def get_perm_cache(cls) -> dict | None:
         return _perm_cache.get()
+
+    @classmethod
+    def get_verb_lookup_cache(cls) -> dict | None:
+        return _verb_lookup_cache.get()
+
+    @classmethod
+    def get_prop_lookup_cache(cls) -> dict | None:
+        return _prop_lookup_cache.get()
 
     @classmethod
     def is_active(cls):
@@ -238,6 +258,11 @@ class ContextManager:
         # A fresh dict per instance for per-session permission caching.
         self.perm_cache = {}
         self.perm_cache_token = None
+        # Per-session verb and property lookup caches keyed by (object_pk, name, ...).
+        self.verb_lookup_cache = {}
+        self.verb_lookup_cache_token = None
+        self.prop_lookup_cache = {}
+        self.prop_lookup_cache_token = None
 
     def set_parser(self, parser):
         self.parser = parser
@@ -253,6 +278,8 @@ class ContextManager:
         # and gives override_caller a mutable list to append to.
         self.active_caller_stack_token = _active_caller_stack.set(self.active_caller_stack)
         self.perm_cache_token = _perm_cache.set(self.perm_cache)
+        self.verb_lookup_cache_token = _verb_lookup_cache.set(self.verb_lookup_cache)
+        self.prop_lookup_cache_token = _prop_lookup_cache.set(self.prop_lookup_cache)
         return self
 
     def __exit__(self, cls, value, traceback):
@@ -272,3 +299,7 @@ class ContextManager:
             _active_caller_stack.reset(self.active_caller_stack_token)
         if self.perm_cache_token:
             _perm_cache.reset(self.perm_cache_token)
+        if self.verb_lookup_cache_token:
+            _verb_lookup_cache.reset(self.verb_lookup_cache_token)
+        if self.prop_lookup_cache_token:
+            _prop_lookup_cache.reset(self.prop_lookup_cache_token)
