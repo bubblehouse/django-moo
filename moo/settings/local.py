@@ -31,7 +31,7 @@ DATABASES = {
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "rediss://redis:6379",
+        "LOCATION": "redis://redis:6379",
     }
 }
 
