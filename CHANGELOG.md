@@ -1,3 +1,9 @@
+## [0.65.6](https://gitlab.com/bubblehouse/django-moo/compare/v0.65.5...v0.65.6) (2026-03-09)
+
+### Bug Fixes
+
+* route enterfunc print output to player and fix original_location tracking after move ([5a560fb](https://gitlab.com/bubblehouse/django-moo/commit/5a560fbb3fa9494459b127993efc5afbf48b36c9))
+
 ## [0.65.5](https://gitlab.com/bubblehouse/django-moo/compare/v0.65.4...v0.65.5) (2026-03-09)
 
 ### Bug Fixes
