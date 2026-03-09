@@ -1,3 +1,9 @@
+## [0.63.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.62.0...v0.63.0) (2026-03-09)
+
+### Features
+
+* convert set_default_permissions to a special case, other verb execution optimizations ([98d24f4](https://gitlab.com/bubblehouse/django-moo/commit/98d24f4b532628ca882add19819d8c8d767d9bc3))
+
 ## [0.62.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.61.2...v0.62.0) (2026-03-09)
 
 ### Features
