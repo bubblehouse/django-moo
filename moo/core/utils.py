@@ -5,19 +5,30 @@ Useful global utilities.
 
 import warnings
 
+_VERB_CACHE_KEY = "__set_default_permissions_verb__"
+
 
 def apply_default_permissions(instance):
+    from .code import ContextManager
     from .models import Object
     from .models.verb import Verb
-    system = Object.objects.get(pk=1)
-    set_default_permissions = Verb.objects.filter(
-        origin=system, names__name="set_default_permissions"
-    )
-    set_default_permissions = set_default_permissions.first()
-    if set_default_permissions:
-        set_default_permissions.invoked_name = "set_default_permissions"
-        set_default_permissions.invoked_object = system
-        set_default_permissions(instance)
+
+    # Cache the verb in the per-session perm_cache so the DB lookups happen at most
+    # once per ContextManager session instead of once per Object/Verb/Property save.
+    # Outside a session (e.g. early bootstrap) we still do the full lookup.
+    cache = ContextManager.get_perm_cache()
+    if cache is not None and _VERB_CACHE_KEY in cache:
+        verb = cache[_VERB_CACHE_KEY]
+    else:
+        system = Object.objects.get(pk=1)
+        verb = Verb.objects.filter(origin=system, names__name="set_default_permissions").first()
+        if cache is not None and verb is not None:
+            cache[_VERB_CACHE_KEY] = verb
+
+    if verb:
+        verb.invoked_name = "set_default_permissions"
+        verb.invoked_object = verb.origin
+        verb(instance)
     else:
         warnings.warn(f"set_default_permissions failed for {instance}: verb not found", category=RuntimeWarning)
 

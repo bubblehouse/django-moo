@@ -12,6 +12,9 @@ from .acl import AccessibleMixin
 class Property(models.Model, AccessibleMixin):
     class Meta:
         verbose_name_plural = "properties"
+        indexes = [
+            models.Index(fields=["origin", "name"], name="property_origin_name_idx"),
+        ]
 
     #: Name of the Property
     name = models.CharField(max_length=255, db_index=True)
