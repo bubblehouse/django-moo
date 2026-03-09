@@ -15,8 +15,8 @@ from moo.core import context
 
 door = context.parser.get_dobj()
 if not door.is_a(_.exit):
-    print("[color red]The specified object is not an exit.[/color red]")
+    print("[red]The specified object is not an exit.[/red]")
     return
 
 this.add_entrance(door)
-print(f'[color yellow]Added entrance "{door.name}".[/color yellow]')
+print(f'[yellow]Added entrance "{door.name}".[/yellow]')

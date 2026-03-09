@@ -36,7 +36,7 @@ def test_look_self_prints_room_name(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, printed.append):
         room = setup_room(t_wizard)
         room.look_self()
-    assert f"[color bright_yellow]{room.name}[/color bright_yellow]" in printed
+    assert f"[bright_yellow]{room.name}[/bright_yellow]" in printed
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -289,7 +289,7 @@ def test_confunc_shows_room_to_player(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, printed.append):
         room = setup_room(t_wizard)
         room.confunc()
-    assert f"[color bright_yellow]{room.name}[/color bright_yellow]" in printed
+    assert f"[bright_yellow]{room.name}[/bright_yellow]" in printed
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -368,7 +368,7 @@ def test_look_no_args_shows_current_room(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, printed.append) as ctx:
         room = setup_room(t_wizard)
         parse.interpret(ctx, "look")
-    assert f"[color bright_yellow]{room.name}[/color bright_yellow]" in printed
+    assert f"[bright_yellow]{room.name}[/bright_yellow]" in printed
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -665,7 +665,7 @@ def test_at_exits_no_exits(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, printed.append) as ctx:
         setup_room(t_wizard)
         parse.interpret(ctx, "@exits")
-    assert printed == ["[color red]There are no exits defined for this room.[/color red]"]
+    assert printed == ["[red]There are no exits defined for this room.[/red]"]
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -678,7 +678,7 @@ def test_at_exits_lists_exits(t_init: Object, t_wizard: Object):
         parse.interpret(ctx, "@dig north to The North Hall")
         printed.clear()
         parse.interpret(ctx, "@exits")
-    assert printed[0] == "[color cyan]Exits defined for this room:[/color cyan]"
+    assert printed[0] == "[cyan]Exits defined for this room:[/cyan]"
     assert any("north" in line and "The North Hall" in line for line in printed)
 
 
@@ -693,7 +693,7 @@ def test_at_entrances_no_entrances(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, printed.append) as ctx:
         setup_room(t_wizard)
         parse.interpret(ctx, "@entrances")
-    assert printed == ["[color red]There are no entrances defined for this room.[/color red]"]
+    assert printed == ["[red]There are no entrances defined for this room.[/red]"]
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -715,7 +715,7 @@ def test_at_entrances_lists_entrances(t_init: Object, t_wizard: Object):
         context.caller.refresh_from_db()
         printed.clear()
         parse.interpret(ctx, "@entrances")
-    assert printed[0] == "[color cyan]Entrances defined for this room:[/color cyan]"
+    assert printed[0] == "[cyan]Entrances defined for this room:[/cyan]"
     assert any("south" in line and home.name in line for line in printed)
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -734,12 +734,12 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
         parse.interpret(ctx, "@dig north to Another Room")
         another_room = lookup("Another Room")
         assert printed == [
-            '[color yellow]Dug an exit north to "Another Room".[/color yellow]',
+            '[yellow]Dug an exit north to "Another Room".[/yellow]',
         ]
         printed.clear()
 
         parse.interpret(ctx, "@dig north to Another Room")
-        assert printed == ["[color red]There is already an exit in that direction.[/color red]"]
+        assert printed == ["[red]There is already an exit in that direction.[/red]"]
         printed.clear()
 
     with code.ContextManager(t_player, _writer) as ctx:
@@ -748,8 +748,8 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
         assert [str(x.message) for x in warnings.list] == [
             f"ConnectionError(#{t_player.pk} (Player)): You leave #{home_location.pk} (The Laboratory).",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): #{t_player.pk} (Player) leaves #{home_location.pk} (The Laboratory).",
-            f"ConnectionError(#{t_player.pk} (Player)): [color bright_yellow]Another Room[/color bright_yellow]",
-            f"ConnectionError(#{t_player.pk} (Player)): [color deep_sky_blue1]There's not much to see here.[/color deep_sky_blue1]",
+            f"ConnectionError(#{t_player.pk} (Player)): [bright_yellow]Another Room[/bright_yellow]",
+            f"ConnectionError(#{t_player.pk} (Player)): [deep_sky_blue1]There's not much to see here.[/deep_sky_blue1]",
             f"ConnectionError(#{t_player.pk} (Player)): You arrive at #{another_room.pk} (Another Room)."
         ]
         t_player.refresh_from_db()
@@ -761,8 +761,8 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
             parse.interpret(ctx, "go north")
         assert [str(x.message) for x in warnings.list] == [
             f"ConnectionError(#{t_wizard.pk} (Wizard)): You leave #{home_location.pk} (The Laboratory).",
-            f"ConnectionError(#{t_wizard.pk} (Wizard)): [color bright_yellow]Another Room[/color bright_yellow]",
-            f"ConnectionError(#{t_wizard.pk} (Wizard)): [color deep_sky_blue1]There's not much to see here.[/color deep_sky_blue1]",
+            f"ConnectionError(#{t_wizard.pk} (Wizard)): [bright_yellow]Another Room[/bright_yellow]",
+            f"ConnectionError(#{t_wizard.pk} (Wizard)): [deep_sky_blue1]There's not much to see here.[/deep_sky_blue1]",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): You see {t_player.name} here.",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): You arrive at #{another_room.pk} (Another Room).",
             f"ConnectionError(#{t_player.pk} (Player)): #{t_wizard.pk} (Wizard) arrives at #{another_room.pk} (Another Room)."
@@ -771,7 +771,7 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
         context.player.refresh_from_db()
         parse.interpret(ctx, f"@tunnel south to {home_location.name}")
         assert printed == [
-            f'[color yellow]Tunnelled an exit south to "{home_location.name}".[/color yellow]',
+            f'[yellow]Tunnelled an exit south to "{home_location.name}".[/yellow]',
         ]
         assert t_player.location.get_property('exits')
         printed.clear()
@@ -782,7 +782,7 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
         assert [str(x.message) for x in warnings.list] == [
             f"ConnectionError(#{t_player.pk} (Player)): You leave #{another_room.pk} (Another Room).",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): #{t_player.pk} (Player) leaves #{another_room.pk} (Another Room).",
-            f"ConnectionError(#{t_player.pk} (Player)): [color bright_yellow]The Laboratory[/color bright_yellow]",
+            f"ConnectionError(#{t_player.pk} (Player)): [bright_yellow]The Laboratory[/bright_yellow]",
             f"ConnectionError(#{t_player.pk} (Player)): {lab_desc}",
             f"ConnectionError(#{t_player.pk} (Player)): You arrive at #{home_location.pk} (The Laboratory)."
         ]
@@ -793,15 +793,15 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_player, _writer) as ctx:
         parse.interpret(ctx, "@exits")
         assert printed == [
-            "[color cyan]Exits defined for this room:[/color cyan]",
-            f"- [color yellow]north from The Laboratory[/color yellow] (Aliases: north) to [color green]Another Room[/color green] (#{another_room.pk})"
+            "[cyan]Exits defined for this room:[/cyan]",
+            f"- [yellow]north from The Laboratory[/yellow] (Aliases: north) to [green]Another Room[/green] (#{another_room.pk})"
         ]
         printed.clear()
 
     with code.ContextManager(t_player, _writer) as ctx:
         parse.interpret(ctx, "@entrances")
         assert printed == [
-            "[color cyan]Entrances defined for this room:[/color cyan]",
-            f"- [color yellow]south from Another Room[/color yellow] (Aliases: south) to [color green]The Laboratory[/color green] (#{home_location.pk})"
+            "[cyan]Entrances defined for this room:[/cyan]",
+            f"- [yellow]south from Another Room[/yellow] (Aliases: south) to [green]The Laboratory[/green] (#{home_location.pk})"
         ]
         printed.clear()

@@ -280,8 +280,8 @@ def test_look_through_exit(t_init: Object, t_wizard: Object):
         printed.clear()
         parse.interpret(ctx, "look through wooden door")
         assert printed == [
-            "[color bright_yellow]Destination Room[/color bright_yellow]",
-            "[color deep_sky_blue1]There's not much to see here.[/color deep_sky_blue1]"
+            "[bright_yellow]Destination Room[/bright_yellow]",
+            "[deep_sky_blue1]There's not much to see here.[/deep_sky_blue1]"
         ]
 
 
@@ -308,8 +308,8 @@ def test_move_through_exit(t_init: Object, t_wizard: Object):
         assert [str(x.message) for x in w.list] == [
             f"ConnectionError(#{t_wizard.pk} (Wizard)): You leave {source}.",
             f"ConnectionError(#{player.pk} (Player)): {t_wizard} leaves {source}.",
-            f"ConnectionError(#{t_wizard.pk} (Wizard)): [color bright_yellow]{dest.name}[/color bright_yellow]",
-            f"ConnectionError(#{t_wizard.pk} (Wizard)): [color deep_sky_blue1]There's not much to see here.[/color deep_sky_blue1]",
+            f"ConnectionError(#{t_wizard.pk} (Wizard)): [bright_yellow]{dest.name}[/bright_yellow]",
+            f"ConnectionError(#{t_wizard.pk} (Wizard)): [deep_sky_blue1]There's not much to see here.[/deep_sky_blue1]",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): You arrive at {dest}.",
         ]
         context.caller.refresh_from_db()
@@ -406,8 +406,8 @@ def test_invoke_moves_player(t_init: Object, t_wizard: Object):
             door.invoke(t_wizard)
         assert [str(x.message) for x in w.list] == [
             f"ConnectionError(#{t_wizard.pk} (Wizard)): You leave {source}.",
-            f"ConnectionError(#{t_wizard.pk} (Wizard)): [color bright_yellow]{dest.name}[/color bright_yellow]",
-            f"ConnectionError(#{t_wizard.pk} (Wizard)): [color deep_sky_blue1]There's not much to see here.[/color deep_sky_blue1]",
+            f"ConnectionError(#{t_wizard.pk} (Wizard)): [bright_yellow]{dest.name}[/bright_yellow]",
+            f"ConnectionError(#{t_wizard.pk} (Wizard)): [deep_sky_blue1]There's not much to see here.[/deep_sky_blue1]",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): You see {player.name} here.",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): You arrive at {dest}.",
             f"ConnectionError(#{player.pk} (Player)): {t_wizard} arrives at {dest}.",
