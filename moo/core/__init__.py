@@ -171,7 +171,8 @@ def invoke(*args, verb=None, callback=None, delay: int = 0, periodic: bool = Fal
     from moo.core import tasks
     kwargs.update(
         dict(
-            caller_id=context.caller.pk,
+            caller_id=verb.owner.pk,
+            player_id=context.caller.pk,
             this_id=verb.invoked_object.pk,
             verb_name=verb.invoked_name,
             callback_this_id=callback.invoked_object.pk if callback else None,
