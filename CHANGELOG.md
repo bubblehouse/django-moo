@@ -1,3 +1,10 @@
+## [0.65.8](https://gitlab.com/bubblehouse/django-moo/compare/v0.65.7...v0.65.8) (2026-03-09)
+
+### Bug Fixes
+
+* redis typo ([201ef34](https://gitlab.com/bubblehouse/django-moo/commit/201ef34bdb068adc384704d97bcc0a5285ceef73))
+* syntax issues with color tags ([6a4ee54](https://gitlab.com/bubblehouse/django-moo/commit/6a4ee54939c95aadf3a567a52355ba7641da5aeb))
+
 ## [0.65.7](https://gitlab.com/bubblehouse/django-moo/compare/v0.65.6...v0.65.7) (2026-03-09)
 
 ### Bug Fixes
