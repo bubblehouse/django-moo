@@ -1,3 +1,11 @@
+## [0.65.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.65.0...v0.65.1) (2026-03-09)
+
+### Bug Fixes
+
+* enable batch verb dispatch ([28f3125](https://gitlab.com/bubblehouse/django-moo/commit/28f3125839505f0b53f50cfa9e864f16dbeb3436))
+* index name too long ([b0a9b1d](https://gitlab.com/bubblehouse/django-moo/commit/b0a9b1d2fd29a18a6a1389d34016443f06f25d6f))
+* mangled env fix, ci update ([64a1368](https://gitlab.com/bubblehouse/django-moo/commit/64a13684328e3b46ad4135ba1fec8705a05818a5))
+
 ## [0.65.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.64.0...v0.65.0) (2026-03-09)
 
 ### Features
