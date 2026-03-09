@@ -68,23 +68,32 @@ def invoke_verb(
 ) -> None:
     """
     Asynchronously execute a Verb, optionally returning the result to another Verb.
-    The `print()` method logs to a `moo.core.tasks.background` instead of sending
-    to the caller; this could probably be improved.
+    The `print()` method routes output to the triggering player's message queue when
+    `player_id` is provided, otherwise falls back to the background log.
 
-    :param caller_id: the PK of the verb owner (for permission checks)
-    :param player_id: the PK of the triggering player (for context.player); defaults to caller_id
+    :param caller_id: the PK of the context caller (for permission checks)
+    :param player_id: the PK of the triggering player; print() output routes to this player
     :param verb_id: the PK of the Verb to execute
     :param callback_verb_id: the PK of the verb to send the result to
     """
-    from moo.core import context
+    from moo.core import context, _publish_to_player
 
     task_id = self.request.id
     with transaction.atomic():
         caller = Object.objects.get(pk=caller_id)
-        player = Object.objects.get(pk=player_id) if player_id else caller
+        player = Object.objects.get(pk=player_id) if player_id else None
         this = Object.objects.get(pk=this_id)
         verb = this.get_verb(verb_name)
-        with code.ContextManager(caller, background_log.info, task_id=task_id, player=player):
+        if player:
+            def _player_writer(msg):
+                try:
+                    _publish_to_player(player, msg)
+                except Exception:
+                    background_log.info(msg)
+            writer = _player_writer
+        else:
+            writer = background_log.info
+        with code.ContextManager(caller, writer, task_id=task_id, player=player):
             result = verb(*args, **kwargs)
             if callback_verb_name and callback_this_id:
                 invoke_verb.delay(result, caller_id=caller_id, this_id=callback_this_id, verb_name=callback_verb_name)

@@ -1,5 +1,3 @@
-import logging
-
 import pytest
 from django.db import connection
 from django.test import override_settings
@@ -159,43 +157,43 @@ def test_cant_change_location_unless_allowed_to_move(t_init: Object, t_wizard: O
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
-def test_change_location_calls_enterfunc(t_init: Object, t_wizard: Object, caplog: pytest.LogCaptureFixture):
+def test_change_location_calls_enterfunc(t_init: Object, t_wizard: Object):
     printed = []
 
     def _writer(msg):
         printed.append(msg)
 
-    with caplog.at_level(logging.INFO, "moo.core.tasks.background"):
-        with code.ContextManager(t_wizard, _writer):
-            containers = lookup("container class")
-            box = create("box", parents=[containers])
-            box.add_verb("enterfunc", code="print(args[0])")
-            thing = create("thing")
+    with code.ContextManager(t_wizard, _writer):
+        containers = lookup("container class")
+        box = create("box", parents=[containers])
+        box.add_verb("enterfunc", code="print(args[0])")
+        thing = create("thing")
+        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as w:
             thing.location = box
             thing.save()
-    assert f"#{thing.pk} (thing)\n" in caplog.text
+    assert any(f"#{thing.pk} (thing)" in str(warning.message) for warning in w.list)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
-def test_change_location_calls_exitfunc(t_init: Object, t_wizard: Object, caplog: pytest.LogCaptureFixture):
+def test_change_location_calls_exitfunc(t_init: Object, t_wizard: Object):
     printed = []
 
     def _writer(msg):
         printed.append(msg)
 
-    with caplog.at_level(logging.INFO, "moo.core.tasks.background"):
-        with code.ContextManager(t_wizard, _writer):
-            containers = lookup("container class")
-            box = create("box", parents=[containers])
-            box.add_verb("exitfunc", code="print(args[0])")
-            thing = create("thing", location=box)
-            assert thing.location == box
-        with code.ContextManager(t_wizard, _writer):
-            thing = lookup("thing")
+    with code.ContextManager(t_wizard, _writer):
+        containers = lookup("container class")
+        box = create("box", parents=[containers])
+        box.add_verb("exitfunc", code="print(args[0])")
+        thing = create("thing", location=box)
+        assert thing.location == box
+    with code.ContextManager(t_wizard, _writer):
+        thing = lookup("thing")
+        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as w:
             thing.location = t_wizard.location
             thing.save()
-            assert thing.location == t_wizard.location
-    assert f"#{thing.pk} (thing)\n" in caplog.text
+        assert thing.location == t_wizard.location
+    assert any(f"#{thing.pk} (thing)" in str(warning.message) for warning in w.list)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
