@@ -13,7 +13,7 @@ from django.db.models import Q
 from .code import ContextManager
 from .exceptions import QuotaError, AmbiguousObjectError, UserError
 
-__all__ = ["lookup", "create", "write", "invoke", "set_task_perms", "context",
+__all__ = ["lookup", "create", "write", "_publish_to_player", "invoke", "set_task_perms", "context",
            "ObjectDoesNotExist", "VerbDoesNotExist", "PropertyDoesNotExist"]
 
 log = logging.getLogger(__name__)
@@ -106,29 +106,22 @@ def create(name, *a, **kw):
     return obj
 
 
-def write(obj, message):
+def _publish_to_player(obj, message):
     """
-    Send an asynchronous message to the user.
+    Publish a message directly to a player's Kombu queue without a permission check.
+    This is an internal primitive used by `write()` and the async task writer.
 
-    :param obj: the Object to write to
-    :type obj: Object
+    :param obj: the Object (player avatar) to write to
     :param message: any pickle-able object
-    :type message: Any
     """
-    if context.caller and not context.caller.is_wizard():
-        raise UserError("Only verbs owned by wizards can write to the console.")
-
     from .models.auth import Player
-
-    player = Player.objects.get(avatar=obj)
     from kombu import Exchange, Queue
-
     from ..celery import app
-    # don't try to write to the message queue if we're using the in-memory test broker
-    # when running unit tests there's no Redis available
+
     if app.conf.broker_url == "memory://":
         warnings.warn(RuntimeWarning(f"ConnectionError({obj}): {message}"))
         return
+    player = Player.objects.get(avatar=obj)
     # this is an uncommon scenario, but applies to the stock Player object if it hasn't been configured for login
     if not player.user:
         return
@@ -146,6 +139,20 @@ def write(obj, message):
                 declare=[queue],
                 retry=True,
             )
+
+
+def write(obj, message):
+    """
+    Send an asynchronous message to the user.
+
+    :param obj: the Object to write to
+    :type obj: Object
+    :param message: any pickle-able object
+    :type message: Any
+    """
+    if context.caller and not context.caller.is_wizard():
+        raise UserError("Only verbs owned by wizards can write to the console.")
+    _publish_to_player(obj, message)
 
 
 def invoke(*args, verb=None, callback=None, delay: int = 0, periodic: bool = False, cron: str = None, **kwargs):
@@ -171,8 +178,8 @@ def invoke(*args, verb=None, callback=None, delay: int = 0, periodic: bool = Fal
     from moo.core import tasks
     kwargs.update(
         dict(
-            caller_id=verb.owner.pk,
-            player_id=context.caller.pk,
+            caller_id=context.caller.pk,
+            player_id=context.player.pk if context.player else None,
             this_id=verb.invoked_object.pk,
             verb_name=verb.invoked_name,
             callback_this_id=callback.invoked_object.pk if callback else None,
