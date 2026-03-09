@@ -1,3 +1,10 @@
+## [0.61.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.61.1...v0.61.2) (2026-03-09)
+
+### Bug Fixes
+
+* commit to force release ([bf5145b](https://gitlab.com/bubblehouse/django-moo/commit/bf5145b35cf524e597bceca9e7f9b391b35f8094))
+* try using non-serverless micro DB ([9eaf8b8](https://gitlab.com/bubblehouse/django-moo/commit/9eaf8b8af0b2e24f7e0da8e2df8d419aadae2491))
+
 ## [0.61.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.61.0...v0.61.1) (2026-03-08)
 
 ### Bug Fixes
