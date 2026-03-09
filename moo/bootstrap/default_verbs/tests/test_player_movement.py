@@ -1,3 +1,5 @@
+import warnings
+
 import pytest
 
 from moo.core import code, create, lookup, parse
@@ -60,7 +62,9 @@ def test_home_moves_player(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, lambda _: None) as ctx:
         second_room = create("Home Room", parents=[system.room], location=None)
         t_wizard.set_property("home", second_room)
-        parse.interpret(ctx, "home")
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            parse.interpret(ctx, "home")
         t_wizard.refresh_from_db()
     assert t_wizard.location == second_room
 

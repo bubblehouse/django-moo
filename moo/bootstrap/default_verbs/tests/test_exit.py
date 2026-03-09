@@ -1,3 +1,5 @@
+import warnings
+
 import pytest
 
 from moo.core import context, code, create, lookup, parse
@@ -11,7 +13,9 @@ def setup_exit(t_wizard: Object):
     source = create("Source Room", parents=[rooms])
     door = create("wooden door", parents=[exits], location=source)
     t_wizard.location = source
-    t_wizard.save()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        t_wizard.save()
     context.caller.refresh_from_db()
     return source, door
 
@@ -294,12 +298,14 @@ def test_move_through_exit(t_init: Object, t_wizard: Object):
         source, _ = setup_exit(t_wizard)
         player = lookup("Player")
         player.location = source
-        player.save()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            player.save()
         parse.interpret(ctx, "@dig north to Destination Room through wooden door")
         dest = lookup("Destination Room")
-        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
+        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as w:
             parse.interpret(ctx, "go north")
-        assert [str(x.message) for x in warnings.list] == [
+        assert [str(x.message) for x in w.list] == [
             f"ConnectionError(#{t_wizard.pk} (Wizard)): You leave {source}.",
             f"ConnectionError(#{player.pk} (Player)): {t_wizard} leaves {source}.",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): [color bright_yellow]{dest.name}[/color bright_yellow]",
@@ -392,11 +398,13 @@ def test_invoke_moves_player(t_init: Object, t_wizard: Object):
         dest = lookup("Destination Room")
         player = lookup("Player")
         player.location = dest
-        player.save()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            player.save()
         door = source.match_exit("north")
-        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
+        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as w:
             door.invoke(t_wizard)
-        assert [str(x.message) for x in warnings.list] == [
+        assert [str(x.message) for x in w.list] == [
             f"ConnectionError(#{t_wizard.pk} (Wizard)): You leave {source}.",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): [color bright_yellow]{dest.name}[/color bright_yellow]",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): [color deep_sky_blue1]There's not much to see here.[/color deep_sky_blue1]",
