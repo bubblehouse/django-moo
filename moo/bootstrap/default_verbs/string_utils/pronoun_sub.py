@@ -32,7 +32,7 @@ Code       Property      Pronoun       Defaults
 """
 
 import re
-from moo.core import context
+from moo.core import context, PropertyDoesNotExist
 
 text = args[0]
 who = args[1] if len(args) > 1 else context.player
@@ -70,22 +70,24 @@ for match in re.finditer(r'%(\w|%)(\((\w+)\))?', text):
             name = parser.get_pobj(arg).title()
             result = name.capitalize() if vartype.isupper() else name
     elif vartype.lower() == 'x' and arg:
-        if who.has_property(arg):
+        try:
             value = who.get_property(arg)
             result = value.capitalize() if vartype.isupper() else value
-        elif hasattr(who, arg):
-            try:
-                value = getattr(who, arg).title()
-            except AttributeError:
-                pass
-            else:
-                result = value.capitalize() if vartype.isupper() else value
+        except PropertyDoesNotExist:
+            if hasattr(who, arg):
+                try:
+                    value = getattr(who, arg).title()
+                except AttributeError:
+                    pass
+                else:
+                    result = value.capitalize() if vartype.isupper() else value
     elif vartype in substitutions:
         prop = substitutions[vartype]
-        if who.has_property(prop):
+        try:
             result = who.get_property(prop)
-        elif prop == 'name':
-            result = who.name
+        except PropertyDoesNotExist:
+            if prop == 'name':
+                result = who.name
     if not result:
         result = f"%{vartype}"
     text = text.replace(match.group(0), result)

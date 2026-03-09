@@ -2,15 +2,15 @@
 
 # pylint: disable=return-outside-function,undefined-variable
 
-from moo.core import lookup, context
+from moo.core import lookup, context, PropertyDoesNotExist
 
 obj = this
 
 response = ""
 
-if obj.has_property("description"):
+try:
     response += obj.get_property('description')
-else:
+except PropertyDoesNotExist:
     response += "[color deep_sky_blue1]No description available.[/color deep_sky_blue1]"
 
 contents = obj.contents.filter(obvious=True)
