@@ -3,34 +3,59 @@
 Useful global utilities.
 """
 
-import warnings
 
-_VERB_CACHE_KEY = "__set_default_permissions_verb__"
+def _make_access(instance, rule, permission_id, group):
+    from .models.acl import Access
+    return Access(
+        object=instance if instance.kind == "object" else None,
+        verb=instance if instance.kind == "verb" else None,
+        property=instance if instance.kind == "property" else None,
+        rule=rule,
+        permission_id=permission_id,
+        type="group",
+        group=group,
+    )
 
 
 def apply_default_permissions(instance):
-    from .code import ContextManager
-    from .models import Object
-    from .models.verb import Verb
+    """
+    Apply default permissions to a newly created Object, Verb, or Property.
 
-    # Cache the verb in the per-session perm_cache so the DB lookups happen at most
-    # once per ContextManager session instead of once per Object/Verb/Property save.
-    # Outside a session (e.g. early bootstrap) we still do the full lookup.
-    cache = ContextManager.get_perm_cache()
-    if cache is not None and _VERB_CACHE_KEY in cache:
-        verb = cache[_VERB_CACHE_KEY]
-    else:
-        system = Object.objects.get(pk=1)
-        verb = Verb.objects.filter(origin=system, names__name="set_default_permissions").first()
-        if cache is not None and verb is not None:
-            cache[_VERB_CACHE_KEY] = verb
+    This mirrors the logic of the ``set_default_permissions`` verb natively,
+    avoiding verb-lookup and execution overhead. The verb is considered stable
+    for the lifetime of a running service; changes to it require a matching
+    update here and a service restart.
+    """
+    from .models.acl import Access, _get_permission_id
+    anything_id = _get_permission_id("anything")
+    perm_for_everyone = _get_permission_id("execute" if instance.kind == "verb" else "read")
+    Access.objects.bulk_create([
+        _make_access(instance, "allow", anything_id, "wizards"),
+        _make_access(instance, "allow", anything_id, "owners"),
+        _make_access(instance, "allow", perm_for_everyone, "everyone"),
+    ])
 
-    if verb:
-        verb.invoked_name = "set_default_permissions"
-        verb.invoked_object = verb.origin
-        verb(instance)
-    else:
-        warnings.warn(f"set_default_permissions failed for {instance}: verb not found", category=RuntimeWarning)
+
+def apply_default_permissions_bulk(instances):
+    """
+    Apply default permissions to many newly created instances in a single query.
+    Equivalent to calling :func:`apply_default_permissions` for each instance,
+    but emits only one ``INSERT`` for all ACL records combined.
+    """
+    from .models.acl import Access, _get_permission_id
+    anything_id = _get_permission_id("anything")
+    read_id = _get_permission_id("read")
+    execute_id = _get_permission_id("execute")
+    records = []
+    for instance in instances:
+        perm_for_everyone = execute_id if instance.kind == "verb" else read_id
+        records.extend([
+            _make_access(instance, "allow", anything_id, "wizards"),
+            _make_access(instance, "allow", anything_id, "owners"),
+            _make_access(instance, "allow", perm_for_everyone, "everyone"),
+        ])
+    if records:
+        Access.objects.bulk_create(records)
 
 def expand_wildcard(name):
     if "*" not in name:
