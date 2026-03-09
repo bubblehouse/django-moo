@@ -44,7 +44,7 @@ MOO_BATCH_VERB_DISPATCH = True
 REDIS_HOSTNAME = os.environ.get("REDIS_HOSTNAME", "redis")
 CACHES = {
     'default': {
-        'BACKEND': 'redis_cache.RedisCache',
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
         'LOCATION': f'{REDIS_HOSTNAME}:6379',
     }
 }
