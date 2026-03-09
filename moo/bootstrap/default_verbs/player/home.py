@@ -20,15 +20,16 @@ is printed, and no further action is taken.
 from moo.core import context
 
 player = context.player
-if player.get_property("home") == player.location:
+home = player.get_property("home")
+if home == player.location:
     print("You are already at home.")
     return
-if not player.get_property("home"):
+if not home:
     player.set_property("home", _.player_start)
     print("Your home was not set. It has been set to the default location.")
     return
 
-player.moveto(player.get_property("home"))
+player.moveto(home)
 
-if player.get_property("home") != player.location:
+if home != player.location:
     print("You cannot go home. Your home location is not allowing you to enter.")

@@ -14,14 +14,15 @@ and to tell other people in the room that the object has just been dropped.
 
 from moo.core import context
 
+title = this.title()
 if this.location != context.player:
-    print("You check your pockets, but can't find {}.".format(this.title()))
+    print("You check your pockets, but can't find {}.".format(title))
 elif this.location.accept(this):
     this.moveto(context.player.location)
-    print(this.drop_succeeded_msg().format(actor="You", subject=this))
-    if msg := this.odrop_succeeded_msg():
+    print(this.drop_succeeded_msg(title).format(actor="You", subject=this))
+    if msg := this.odrop_succeeded_msg(title):
         this.location.announce(msg.format(actor=context.player, subject=this))
 else:
-    print(this.drop_failed_msg().format(actor="You", subject=this))
-    if msg := this.odrop_failed_msg():
+    print(this.drop_failed_msg(title).format(actor="You", subject=this))
+    if msg := this.odrop_failed_msg(title):
         this.location.announce(msg.format(actor=context.player, subject=this))

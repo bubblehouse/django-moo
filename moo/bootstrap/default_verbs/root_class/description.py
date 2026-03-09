@@ -10,11 +10,13 @@ The default implementation of the `look` command (defined on the $room class), p
 verb on the object. `look_self` uses `description` to obtain the text to display.
 """
 
-from moo.core import context
+from moo.core import context, PropertyDoesNotExist
 
 description = ""
-if this.has_property("description"):
+try:
     description = this.get_property("description")
+except PropertyDoesNotExist:
+    pass
 
 if description:
     return f"[color deep_sky_blue1]{description}[/color deep_sky_blue1]"
