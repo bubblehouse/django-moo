@@ -694,6 +694,7 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
     t_player = lookup("Player")
     with code.ContextManager(t_wizard, _writer) as ctx:
         home_location = t_wizard.location
+        lab_desc = home_location.description()
         parse.interpret(ctx, "@dig north to Another Room")
         another_room = lookup("Another Room")
         assert printed == [
@@ -711,6 +712,8 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
         assert [str(x.message) for x in warnings.list] == [
             f"ConnectionError(#{t_player.pk} (Player)): You leave #{home_location.pk} (The Laboratory).",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): #{t_player.pk} (Player) leaves #{home_location.pk} (The Laboratory).",
+            f"ConnectionError(#{t_player.pk} (Player)): [color bright_yellow]Another Room[/color bright_yellow]",
+            f"ConnectionError(#{t_player.pk} (Player)): [color deep_sky_blue1]There's not much to see here.[/color deep_sky_blue1]",
             f"ConnectionError(#{t_player.pk} (Player)): You arrive at #{another_room.pk} (Another Room)."
         ]
         t_player.refresh_from_db()
@@ -722,6 +725,9 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
             parse.interpret(ctx, "go north")
         assert [str(x.message) for x in warnings.list] == [
             f"ConnectionError(#{t_wizard.pk} (Wizard)): You leave #{home_location.pk} (The Laboratory).",
+            f"ConnectionError(#{t_wizard.pk} (Wizard)): [color bright_yellow]Another Room[/color bright_yellow]",
+            f"ConnectionError(#{t_wizard.pk} (Wizard)): [color deep_sky_blue1]There's not much to see here.[/color deep_sky_blue1]",
+            f"ConnectionError(#{t_wizard.pk} (Wizard)): You see {t_player.name} here.",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): You arrive at #{another_room.pk} (Another Room).",
             f"ConnectionError(#{t_player.pk} (Player)): #{t_wizard.pk} (Wizard) arrives at #{another_room.pk} (Another Room)."
         ]
@@ -740,6 +746,8 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
         assert [str(x.message) for x in warnings.list] == [
             f"ConnectionError(#{t_player.pk} (Player)): You leave #{another_room.pk} (Another Room).",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): #{t_player.pk} (Player) leaves #{another_room.pk} (Another Room).",
+            f"ConnectionError(#{t_player.pk} (Player)): [color bright_yellow]The Laboratory[/color bright_yellow]",
+            f"ConnectionError(#{t_player.pk} (Player)): {lab_desc}",
             f"ConnectionError(#{t_player.pk} (Player)): You arrive at #{home_location.pk} (The Laboratory)."
         ]
         t_player.refresh_from_db()

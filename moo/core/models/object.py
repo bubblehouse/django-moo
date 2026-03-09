@@ -814,9 +814,10 @@ class Object(models.Model, AccessibleMixin):
                 _prev_location = Object.objects.get(pk=original_location_id)
                 if _prev_location.has_verb("exitfunc"):
                     invoke(self, verb=_prev_location.get_verb("exitfunc"))
-            # the optional `enterfun` Verb will be called asyncronously
+            # the optional `enterfunc` Verb will be called asyncronously
             if self.location and self.location.has_verb("enterfunc"):
                 invoke(self, verb=self.location.get_verb("enterfunc"))
+            self.original_location = self.location_id
 
     # Django gets upset if this meddles with anything in RESERVED_NAMES
     # but otherwise this seems to work, including in the admin interface
