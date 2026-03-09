@@ -16,13 +16,14 @@ then the object cannot be taken by the player. This sort of condition should be 
 
 from moo.core import context
 
+title = this.title()
 if this.location == context.player:
-    print("You already have {} in your inventory.".format(this.title()))
+    print("You already have {} in your inventory.".format(title))
 elif this.moveto(context.player):
-    print(this.take_succeeded_msg().format(actor="You", subject=this))
-    if msg := this.otake_succeeded_msg():
+    print(this.take_succeeded_msg(title).format(actor="You", subject=this))
+    if msg := this.otake_succeeded_msg(title):
         this.location.announce(msg.format(actor=context.player, subject=this))
 else:
-    print(this.take_failed_msg().format(actor="You", subject=this))
-    if msg := this.otake_failed_msg():
+    print(this.take_failed_msg(title).format(actor="You", subject=this))
+    if msg := this.otake_failed_msg(title):
         this.location.announce(msg.format(actor=context.player, subject=this))

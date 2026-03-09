@@ -30,7 +30,7 @@ if the player's location was The Venue Hallway.
 If no potential bugs are found, the the message `Communications are secure.' is printed, and the player can breathe
 easily (ish).
 """
-from moo.core import context
+from moo.core import context, VerbDoesNotExist
 
 buggable_verbs = ["announce", "announce_all", "announce_all_but", "say", "emote", "huh", "huh2", "whisper"]
 
@@ -40,16 +40,20 @@ secure = True
 for obj in room.contents.all():
     if obj.is_player():
         print(f"{obj} is listening.")
-    if obj.has_verb("sweep_msg"):
+    try:
         print(f"{obj} {obj.invoke_verb('sweep_msg')}")
-    if obj.has_verb("tell"):
+    except VerbDoesNotExist:
+        pass
+    try:
         tell = obj.get_verb("tell")
         if tell.owner != player and not tell.owner.is_wizard():
             secure = False
             print(f"{obj} has been taught to listen by {tell.owner}.")
+    except VerbDoesNotExist:
+        pass
 already_printed = {}
 for verb in buggable_verbs:
-    if room.has_verb(verb):
+    try:
         v = room.get_verb(verb)
         if v.owner != player and not v.owner.is_wizard():
             msg = f"{room} may have been bugged by {v.owner}."
@@ -57,5 +61,7 @@ for verb in buggable_verbs:
                 already_printed[msg] = True
                 secure = False
                 print(msg)
+    except VerbDoesNotExist:
+        pass
 if secure:
     print("Communications are secure.")
