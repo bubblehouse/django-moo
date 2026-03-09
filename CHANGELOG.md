@@ -1,3 +1,9 @@
+## [0.65.7](https://gitlab.com/bubblehouse/django-moo/compare/v0.65.6...v0.65.7) (2026-03-09)
+
+### Bug Fixes
+
+* handle uncaught test warnings ([61abc29](https://gitlab.com/bubblehouse/django-moo/commit/61abc291095dd9e6618b1dd932637ac21172829a))
+
 ## [0.65.6](https://gitlab.com/bubblehouse/django-moo/compare/v0.65.5...v0.65.6) (2026-03-09)
 
 ### Bug Fixes
