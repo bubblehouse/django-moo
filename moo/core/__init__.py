@@ -11,7 +11,8 @@ from typing import Union
 from .code import ContextManager
 from .exceptions import QuotaError, AmbiguousObjectError, UserError
 
-__all__ = ["lookup", "create", "write", "invoke", "set_task_perms", "context"]
+__all__ = ["lookup", "create", "write", "invoke", "set_task_perms", "context",
+           "ObjectDoesNotExist", "VerbDoesNotExist", "PropertyDoesNotExist"]
 
 log = logging.getLogger(__name__)
 
@@ -72,7 +73,14 @@ def create(name, *a, **kw):
     :raises QuotaError: if the caller has a quota and it has been exceeded
     """
     from .models.object import Object, Property
-    system = Object.objects.get(pk=1)
+    _SYSTEM_KEY = "__system_object__"
+    cache = ContextManager.get_perm_cache()
+    if cache is not None and _SYSTEM_KEY in cache:
+        system = cache[_SYSTEM_KEY]
+    else:
+        system = Object.objects.get(pk=1)
+        if cache is not None:
+            cache[_SYSTEM_KEY] = system
     default_parents = [system.root_class] if system.has_property("root_class") else []
     if context.caller:
         try:
@@ -87,10 +95,6 @@ def create(name, *a, **kw):
             kw["owner"] = context.caller
     if "location" not in kw and "owner" in kw:
         kw["location"] = kw["owner"].location
-    if " to " in name:
-        print('its a door')
-    elif name == "Another Room":
-        print('its another room')
     parents = kw.pop("parents", default_parents)
     obj = Object.objects.create(name=name, *a, **kw)
     if parents:
@@ -248,3 +252,18 @@ class _Context:
 
 
 context = _Context()
+
+_EXCEPTION_ALIASES = {
+    "ObjectDoesNotExist": ("models.object", "Object"),
+    "VerbDoesNotExist": ("models.verb", "Verb"),
+    "PropertyDoesNotExist": ("models.property", "Property"),
+}
+
+
+def __getattr__(name):
+    if name in _EXCEPTION_ALIASES:
+        module_path, class_name = _EXCEPTION_ALIASES[name]
+        import importlib
+        mod = importlib.import_module(f".{module_path}", package=__name__)
+        return getattr(mod, class_name).DoesNotExist
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
