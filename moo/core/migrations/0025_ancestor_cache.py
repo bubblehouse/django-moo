@@ -94,7 +94,7 @@ class Migration(migrations.Migration):
             model_name="ancestorcache",
             index=models.Index(
                 fields=["descendant", "depth", "path_weight"],
-                name="ancestorcache_desc_depth_weight_idx",
+                name="ac_desc_depth_weight_idx",
             ),
         ),
         migrations.AddIndex(
