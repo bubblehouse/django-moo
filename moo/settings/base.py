@@ -83,6 +83,17 @@ OBJECT_SPECIFIER_CHOICES = (("this", "this"), ("any", "any"), ("none", "none"), 
 
 PREPOSITION_SPECIFIER_CHOICES = (("any", "any"), ("none", "none"))
 
+# When True, Parser.get_verb() issues a single batch query against AncestorCache
+# instead of one _lookup_verb() call per search-order object.
+# Requires AncestorCache to be migrated and populated (migration 0025).
+# Set to False to fall back to the sequential dispatch path.
+MOO_BATCH_VERB_DISPATCH = False
+
+# TTL in seconds for cross-session property value caching in get_property().
+# Set to 0 to disable (e.g. in test environments where the cache backend is
+# in-process and does not reset between test cases).
+MOO_PROP_CACHE_TTL = 120
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
