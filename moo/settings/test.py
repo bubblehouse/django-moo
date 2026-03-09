@@ -16,3 +16,8 @@ CACHES = {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache"
     }
 }
+
+# Disable cross-session property cache in tests: the in-process LocMemCache
+# does not reset between test cases, which would poison subsequent tests
+# when PKs are reused after sequence resets.
+MOO_PROP_CACHE_TTL = 0

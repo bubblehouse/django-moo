@@ -12,7 +12,10 @@ There are a long list of prepositions supported, some of which are interchangeab
 import logging
 import re
 
+from collections import defaultdict
+
 from django.conf import settings
+from django.db.models import F, Value
 from django.db.models.query import QuerySet
 import more_itertools
 
@@ -20,6 +23,30 @@ from .exceptions import *  # pylint: disable=wildcard-import
 from .models import Object, Verb
 
 log = logging.getLogger(__name__)
+
+
+def _passes_parse_filters(verb, viewed_by, parser):
+    """
+    Replicates Object.parse_verb() dspec/ispec filtering for a single verb.
+    Returns True if the verb matches the parser's dobj/pobj constraints
+    when the search-order object is `viewed_by`.
+    """
+    if verb.direct_object == "this" and parser.dobj != viewed_by:
+        return False
+    if verb.direct_object == "none" and parser.has_dobj_str():
+        return False
+    if verb.direct_object == "any" and not parser.has_dobj_str():
+        return False
+    for ispec in verb.indirect_objects.all():
+        for prep, values in parser.prepositions.items():
+            if ispec.preposition_specifier == "none":
+                continue
+            if ispec.preposition_specifier == "this" and values[2] != viewed_by:
+                return False
+            if ispec.preposition_specifier != "any":
+                if not ispec.preposition.names.filter(name=prep).exists():
+                    return False
+    return True
 
 
 def interpret(ctx, line):
@@ -270,28 +297,118 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         if self.verb:
             return self.verb
 
-        search_order = filter(None, more_itertools.collapse([
+        search_order_list = list(filter(None, more_itertools.collapse([
             self.caller,
             list(self.caller.contents.prefetch_related('aliases')),
             self.caller.location,
             self.dobj,
             [[x[2] for x in prep] for prep in self.prepositions.values()]
-        ]))
+        ])))
 
-        for obj in search_order:
-            try:
-                if verb := obj.parse_verb(self):
-                    self.this = obj
-                    self.verb = verb
-            except Verb.DoesNotExist:
-                continue
+        if getattr(settings, 'MOO_BATCH_VERB_DISPATCH', False):
+            winner_this, winner_verb = self._batch_get_verb(search_order_list)
+            if winner_this is not None:
+                self.this = winner_this
+                self.verb = winner_verb
+        else:
+            for obj in search_order_list:
+                try:
+                    if verb := obj.parse_verb(self):
+                        self.this = obj
+                        self.verb = verb
+                except Verb.DoesNotExist:
+                    continue
 
-        if not (self.this):
+        if not self.this:
             raise Verb.DoesNotExist("parser: " + self.words[0])
 
         self.verb.invoked_name = self.words[0]
         self.verb.invoked_object = self.this
         return self.verb
+
+    def _batch_get_verb(self, search_order_list):
+        """
+        Batch verb dispatch using the AncestorCache flat table.
+
+        Issues two VALUES queries (direct + inherited) then fetches full Verb objects
+        for the finalist set — typically 3 DB round-trips instead of 5-10.
+
+        Returns (this_object, verb) for the winning match, or (None, None) if not found.
+        """
+        pk_to_rank = {obj.pk: i for i, obj in enumerate(search_order_list)}
+        pk_to_obj = {obj.pk: obj for obj in search_order_list}
+        verb_name = self.words[0]
+
+        # Query 1: verbs defined directly on search-order objects.
+        direct = list(
+            Verb.objects.filter(
+                origin_id__in=pk_to_rank,
+                names__name=verb_name,
+            ).values("id", "direct_object").annotate(
+                viewing_pk=F("origin_id"),
+                depth=Value(0),
+                pw=Value(0),
+            )
+        )
+
+        # Query 2: verbs inherited via AncestorCache.
+        inherited = list(
+            Verb.objects.filter(
+                origin__ancestor_descendants__descendant_id__in=pk_to_rank,
+                names__name=verb_name,
+            ).values("id", "direct_object").annotate(
+                viewing_pk=F("origin__ancestor_descendants__descendant_id"),
+                depth=F("origin__ancestor_descendants__depth"),
+                pw=F("origin__ancestor_descendants__path_weight"),
+            )
+        )
+
+        # Deduplicate: for each (verb_id, viewing_pk) keep shallowest match.
+        best = {}
+        for row in direct + inherited:
+            vp = row["viewing_pk"]
+            if vp not in pk_to_rank:
+                continue
+            key = (row["id"], vp)
+            existing = best.get(key)
+            if existing is None or (row["depth"], -row["pw"]) < (existing["depth"], -existing["pw"]):
+                best[key] = row
+
+        if not best:
+            return None, None
+
+        # Query 3: fetch full Verb objects for all candidates.
+        candidate_ids = list({row["id"] for row in best.values()})
+        verb_map = {
+            v.pk: v
+            for v in Verb.objects.filter(pk__in=candidate_ids)
+            .select_related("owner")
+            .prefetch_related("indirect_objects__preposition__names")
+        }
+
+        # Group by (search_rank, viewing_pk), each group sorted by (depth, -pw).
+        rank_viewer_verbs = defaultdict(list)
+        for (verb_id, viewing_pk), row in best.items():
+            rank = pk_to_rank[viewing_pk]
+            rank_viewer_verbs[(rank, viewing_pk)].append(
+                (row["depth"], -row["pw"], verb_id)
+            )
+        for key in rank_viewer_verbs:
+            rank_viewer_verbs[key].sort()
+
+        # Iterate in ascending rank order; last passing match wins.
+        winner_this = None
+        winner_verb = None
+        for (rank, viewing_pk) in sorted(rank_viewer_verbs.keys()):
+            viewed_by = pk_to_obj[viewing_pk]
+            for _depth, _neg_pw, verb_id in rank_viewer_verbs[(rank, viewing_pk)]:
+                v = verb_map.get(verb_id)
+                if v is not None and _passes_parse_filters(v, viewed_by, self):
+                    winner_this = viewed_by
+                    winner_verb = v
+                    break  # shallowest passing verb for this viewer
+
+        return winner_this, winner_verb
 
     def get_pronoun_object(self, pronoun):
         """
