@@ -11,6 +11,8 @@ from django.db.models.expressions import F
 from django.db.models.query import Q, QuerySet
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
+from django.conf import settings
+from django.core.cache import cache
 from django_cte import CTE, with_cte
 
 from moo import bootstrap
@@ -27,6 +29,40 @@ log = logging.getLogger(__name__)
 # "cached miss" (property does not exist) from "not yet cached" (None).
 _PROP_MISSING = object()
 
+# Sentinel stored in the cache backend to record a confirmed property miss
+# (no such property on this object or any ancestor). Must not be a valid moojson value.
+_CACHE_PROP_MISSING = "__moo:prop:missing__"
+
+# Sentinel returned by cache.get() when a key is absent (never stored in the cache).
+_CACHE_MISS = object()
+
+
+def _make_ancestors_cte(self_pk, name="ancestors"):
+    """
+    Returns a recursive CTE yielding (object_id, depth, path_weight) for the given PK.
+    depth=1 is a direct parent. path_weight is the Relationship.weight of the depth-1 link.
+    Factored out so rebuild helpers can use it without an Object instance.
+    """
+    def make_cte(cte):
+        return (
+            Relationship.objects.filter(child_id=self_pk)
+            .values(
+                object_id=F("parent_id"),
+                depth=Value(1, output_field=IntegerField()),
+                path_weight=F("weight"),
+            )
+            .union(
+                cte.join(Relationship, child=cte.col.object_id)
+                .values(
+                    object_id=F("parent_id"),
+                    depth=cte.col.depth + Value(1, output_field=IntegerField()),
+                    path_weight=cte.col.path_weight,
+                ),
+                all=True,
+            )
+        )
+    return CTE.recursive(make_cte, name=name)
+
 
 @receiver(m2m_changed)
 def relationship_changed(sender, instance, action, model, signal, reverse, pk_set, using, **kwargs):
@@ -38,6 +74,9 @@ def relationship_changed(sender, instance, action, model, signal, reverse, pk_se
         for pk in pk_set:
             parent = model.objects.get(pk=pk)
             parent.can_caller("derive", parent)
+        return
+    elif action == "post_remove":
+        _rebuild_ancestor_cache_for(child)
         return
     elif action != "post_add":
         return
@@ -83,6 +122,7 @@ def relationship_changed(sender, instance, action, model, signal, reverse, pk_se
             utils.apply_default_permissions_bulk(created)
         if to_update:
             Property.objects.bulk_update(to_update, ["owner", "inherit_owner"])
+    _rebuild_ancestor_cache_for(child)
 
 
 class Object(models.Model, AccessibleMixin):
@@ -202,7 +242,7 @@ class Object(models.Model, AccessibleMixin):
         :param obj: the potential parent object
         :return: True if this object is a child of `obj`
         """
-        return self.get_ancestors().filter(pk=obj.pk).exists()
+        return AncestorCache.objects.filter(descendant=self, ancestor=obj).exists()
 
     def _ancestors_cte(self, name="ancestors"):
         """
@@ -210,30 +250,7 @@ class Object(models.Model, AccessibleMixin):
         depth=1 is a direct parent. path_weight is the Relationship.weight of
         the depth-1 link that leads to this ancestor (higher = higher priority).
         """
-        self_pk = self.pk
-
-        def make_cte(cte):
-            return (
-                # Base: direct parents at depth=1 with their Relationship weight
-                Relationship.objects.filter(child_id=self_pk)
-                .values(
-                    object_id=F("parent_id"),
-                    depth=Value(1, output_field=IntegerField()),
-                    path_weight=F("weight"),
-                )
-                .union(
-                    # Recursive: climb further, carrying path_weight from depth-1
-                    cte.join(Relationship, child=cte.col.object_id)
-                    .values(
-                        object_id=F("parent_id"),
-                        depth=cte.col.depth + Value(1, output_field=IntegerField()),
-                        path_weight=cte.col.path_weight,
-                    ),
-                    all=True,
-                )
-            )
-
-        return CTE.recursive(make_cte, name=name)
+        return _make_ancestors_cte(self.pk, name)
 
     def get_ancestors(self) -> QuerySet:
         """
@@ -492,20 +509,18 @@ class Object(models.Model, AccessibleMixin):
                 vcache[cache_key] = None
             raise Verb.DoesNotExist(f"No such verb `{name}`.")
 
-        ancestors = self._ancestors_cte()
         result = list(
-            with_cte(
-                ancestors,
-                select=ancestors.join(Verb, origin_id=ancestors.col.object_id)
-                .filter(names__name=name)
-                .annotate(
-                    ancestor_depth=ancestors.col.depth,
-                    path_weight=ancestors.col.path_weight,
-                )
-                .select_related("owner")
-                .prefetch_related("indirect_objects__preposition__names")
-                .order_by("ancestor_depth", "-path_weight"),
+            Verb.objects.filter(
+                origin__ancestor_descendants__descendant=self,
+                names__name=name,
             )
+            .annotate(
+                ancestor_depth=F("origin__ancestor_descendants__depth"),
+                path_weight=F("origin__ancestor_descendants__path_weight"),
+            )
+            .order_by("ancestor_depth", "-path_weight")
+            .select_related("owner")
+            .prefetch_related("indirect_objects__preposition__names")
         )
         if not result:
             if vcache is not None:
@@ -551,6 +566,12 @@ class Object(models.Model, AccessibleMixin):
         if pcache is not None:
             for recurse_flag in (True, False):
                 pcache.pop((self.pk, name, recurse_flag), None)
+        # Evict the cross-session cache for this object's property.
+        # Descendant caches are intentionally not invalidated here — they will
+        # expire naturally within MOO_PROP_CACHE_TTL, which is acceptable for gameplay.
+        if getattr(settings, 'MOO_PROP_CACHE_TTL', 120) > 0:
+            for recurse_flag in (True, False):
+                cache.delete(f"moo:prop:{self.pk}:{name}:{int(recurse_flag)}")
 
     def get_property(self, name, recurse=True, original=False):
         """
@@ -567,47 +588,72 @@ class Object(models.Model, AccessibleMixin):
         # Session-level cache for non-original (value) lookups only — Property
         # objects carry ORM state that should not be shared across call frames.
         pcache = None if original else ContextManager.get_prop_lookup_cache()
-        cache_key = (self.pk, name, recurse) if pcache is not None else None
-        if cache_key is not None and cache_key in pcache:
-            cached = pcache[cache_key]
+        session_key = (self.pk, name, recurse) if pcache is not None else None
+        if session_key is not None and session_key in pcache:
+            cached = pcache[session_key]
             if cached is _PROP_MISSING:
                 raise Property.DoesNotExist(f"No such property `{name}`.")
             return cached
+
+        # Cross-session cache — stores raw moojson text to avoid serialization
+        # issues with Object references.  _CACHE_PROP_MISSING marks confirmed misses.
+        # Bypassed for original=True (returns a Property ORM object, not cacheable).
+        # Bypassed when MOO_PROP_CACHE_TTL=0 (e.g. tests, where the in-process cache
+        # does not reset between test cases and would poison subsequent tests).
+        _cache_ttl = getattr(settings, 'MOO_PROP_CACHE_TTL', 120)
+        cache_key = None if (original or _cache_ttl == 0) else f"moo:prop:{self.pk}:{name}:{int(recurse)}"
+        if cache_key is not None:
+            raw = cache.get(cache_key, _CACHE_MISS)
+            if raw is not _CACHE_MISS:
+                if raw == _CACHE_PROP_MISSING:
+                    if session_key is not None:
+                        pcache[session_key] = _PROP_MISSING
+                    raise Property.DoesNotExist(f"No such property `{name}`.")
+                value = moojson.loads(raw)
+                if session_key is not None:
+                    pcache[session_key] = value
+                return value
 
         # Self always takes priority
         prop = Property.objects.filter(origin=self, name=name).first()
         if prop is not None:
             value = prop if original else moojson.loads(prop.value)
+            if session_key is not None:
+                pcache[session_key] = value
             if cache_key is not None:
-                pcache[cache_key] = value
+                cache.set(cache_key, prop.value if prop.value is not None else "null", timeout=_cache_ttl)
             return value
 
         if not recurse:
+            if session_key is not None:
+                pcache[session_key] = _PROP_MISSING
             if cache_key is not None:
-                pcache[cache_key] = _PROP_MISSING
+                cache.set(cache_key, _CACHE_PROP_MISSING, timeout=_cache_ttl)
             raise Property.DoesNotExist(f"No such property `{name}`.")
 
-        ancestors = self._ancestors_cte()
         prop = (
-            with_cte(
-                ancestors,
-                select=ancestors.join(Property, origin_id=ancestors.col.object_id)
-                .filter(name=name)
-                .annotate(
-                    ancestor_depth=ancestors.col.depth,
-                    path_weight=ancestors.col.path_weight,
-                )
-                .order_by("ancestor_depth", "-path_weight"),
+            Property.objects.filter(
+                origin__ancestor_descendants__descendant=self,
+                name=name,
             )
+            .annotate(
+                ancestor_depth=F("origin__ancestor_descendants__depth"),
+                path_weight=F("origin__ancestor_descendants__path_weight"),
+            )
+            .order_by("ancestor_depth", "-path_weight")
             .first()
         )
         if prop is None:
+            if session_key is not None:
+                pcache[session_key] = _PROP_MISSING
             if cache_key is not None:
-                pcache[cache_key] = _PROP_MISSING
+                cache.set(cache_key, _CACHE_PROP_MISSING, timeout=_cache_ttl)
             raise Property.DoesNotExist(f"No such property `{name}`.")
         value = prop if original else moojson.loads(prop.value)
+        if session_key is not None:
+            pcache[session_key] = value
         if cache_key is not None:
-            pcache[cache_key] = value
+            cache.set(cache_key, prop.value if prop.value is not None else "null", timeout=_cache_ttl)
         return value
 
     def get_property_objects(self, name, prefetch_related=None, select_related=None):
@@ -627,17 +673,18 @@ class Object(models.Model, AccessibleMixin):
         # Self always takes priority
         prop = Property.objects.filter(origin=self, name=name).first()
         if prop is None:
-            ancestors = self._ancestors_cte()
-            prop = with_cte(
-                ancestors,
-                select=ancestors.join(Property, origin_id=ancestors.col.object_id)
-                .filter(name=name)
-                .annotate(
-                    ancestor_depth=ancestors.col.depth,
-                    path_weight=ancestors.col.path_weight,
+            prop = (
+                Property.objects.filter(
+                    origin__ancestor_descendants__descendant=self,
+                    name=name,
                 )
-                .order_by("ancestor_depth", "-path_weight"),
-            ).first()
+                .annotate(
+                    ancestor_depth=F("origin__ancestor_descendants__depth"),
+                    path_weight=F("origin__ancestor_descendants__path_weight"),
+                )
+                .order_by("ancestor_depth", "-path_weight")
+                .first()
+            )
             if prop is None:
                 raise Property.DoesNotExist(f"No such property `{name}`.")
         raw = json.loads(prop.value)
@@ -669,11 +716,9 @@ class Object(models.Model, AccessibleMixin):
             return True
         if not recurse:
             return False
-        ancestors = self._ancestors_cte()
-        return with_cte(
-            ancestors,
-            select=ancestors.join(Property, origin_id=ancestors.col.object_id)
-            .filter(name=name),
+        return Property.objects.filter(
+            origin__ancestor_descendants__descendant=self,
+            name=name,
         ).exists()
 
     def delete(self, *args, **kwargs):
@@ -856,3 +901,80 @@ class Alias(models.Model):
     def save(self, *args, **kwargs):
         self.object.can_caller("write", self.object)
         super().save(*args, **kwargs)
+
+
+class AncestorCache(models.Model):
+    """
+    Denormalized flat table of ancestor relationships for fast indexed JOINs.
+    Replaces recursive CTE usage in hot-path verb and property lookups.
+    Maintained by the relationship_changed() signal on parents.add/remove.
+    """
+    class Meta:
+        unique_together = [["descendant", "ancestor"]]
+        indexes = [
+            models.Index(
+                fields=["descendant", "depth", "path_weight"],
+                name="ancestorcache_desc_depth_weight_idx",
+            ),
+            models.Index(fields=["ancestor"], name="ancestorcache_ancestor_idx"),
+        ]
+
+    descendant = models.ForeignKey(Object, related_name="ancestor_cache", on_delete=models.CASCADE)
+    ancestor = models.ForeignKey(Object, related_name="ancestor_descendants", on_delete=models.CASCADE)
+    depth = models.IntegerField()
+    path_weight = models.IntegerField()
+
+
+def _collect_descendants_pks(root_pk):
+    """
+    Returns the set of all descendant PKs for the given root_pk using direct
+    Relationship queries — no permission checks, safe to call from signal handlers.
+    """
+    result = set()
+    queue = list(
+        Relationship.objects.filter(parent_id=root_pk).values_list("child_id", flat=True)
+    )
+    while queue:
+        pk = queue.pop()
+        if pk not in result:
+            result.add(pk)
+            queue.extend(
+                Relationship.objects.filter(parent_id=pk).values_list("child_id", flat=True)
+            )
+    return result
+
+
+def _rebuild_ancestor_cache_for(obj):
+    """
+    Rebuild the AncestorCache rows for `obj` and all its descendants.
+    Called after any parents.add() or parents.remove() signal.
+    """
+    affected_pks = _collect_descendants_pks(obj.pk)
+    affected_pks.add(obj.pk)
+
+    AncestorCache.objects.filter(descendant_id__in=affected_pks).delete()
+
+    rows = []
+    for pk in affected_pks:
+        ancestors_cte = _make_ancestors_cte(pk)
+        # Deduplicate: for each ancestor keep only the shallowest path
+        # (min depth, and max path_weight among those at min depth).
+        seen = {}
+        for row in with_cte(
+            ancestors_cte,
+            select=ancestors_cte.join(Object, id=ancestors_cte.col.object_id)
+            .annotate(depth=ancestors_cte.col.depth, path_weight=ancestors_cte.col.path_weight)
+            .order_by("depth", "-path_weight")
+        ).values("id", "depth", "path_weight"):
+            if row["id"] not in seen:
+                seen[row["id"]] = row
+        for row in seen.values():
+            rows.append(AncestorCache(
+                descendant_id=pk,
+                ancestor_id=row["id"],
+                depth=row["depth"],
+                path_weight=row["path_weight"],
+            ))
+
+    if rows:
+        AncestorCache.objects.bulk_create(rows, ignore_conflicts=True)
