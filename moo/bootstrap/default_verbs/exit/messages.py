@@ -11,8 +11,8 @@ from moo.core import context
 
 prop_name = verb_name
 prop_value = this.get_property(prop_name)
-source = this.get_property("source")
-dest = this.get_property("dest")
+source = args[0] if len(args) > 0 else this.get_property("source")
+dest = args[1] if len(args) > 1 else this.get_property("dest")
 actor = context.player
 
 if prop_name == 'nogo_msg':

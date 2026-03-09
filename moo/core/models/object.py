@@ -44,26 +44,41 @@ def relationship_changed(sender, instance, action, model, signal, reverse, pk_se
         Relationship.objects.filter(child=child, parent_id=pk).update(weight=existing_before + i)
     for pk in pk_set:
         parent = model.objects.get(pk=pk)
-        # pylint: disable=redefined-builtin
-        for property in Property.objects.filter(origin=parent):
-            if property.inherit_owner:
-                new_owner = property.owner
-            else:
-                new_owner = child.owner
-            Property.objects.update_or_create(
-                name=property.name,
-                origin=child,
-                defaults=dict(
-                    owner=new_owner,
-                    inherit_owner=property.inherit_owner,
-                ),
-                create_defaults=dict(
-                    owner=new_owner,
-                    inherit_owner=property.inherit_owner,
-                    value=property.value,
-                    type=property.type,
-                ),
+        parent_props = list(Property.objects.filter(origin=parent))
+        if not parent_props:
+            continue
+        # Identify which properties already exist on the child so we don't
+        # overwrite their values — only update owner/inherit_owner.
+        existing = {
+            p.name: p
+            for p in Property.objects.filter(
+                origin=child, name__in=[p.name for p in parent_props]
             )
+        }
+        to_create = []
+        to_update = []
+        for prop in parent_props:
+            new_owner = prop.owner if prop.inherit_owner else child.owner
+            if prop.name in existing:
+                ep = existing[prop.name]
+                ep.owner = new_owner
+                ep.inherit_owner = prop.inherit_owner
+                to_update.append(ep)
+            else:
+                to_create.append(Property(
+                    name=prop.name,
+                    origin=child,
+                    owner=new_owner,
+                    inherit_owner=prop.inherit_owner,
+                    value=prop.value,
+                    type=prop.type,
+                ))
+        if to_create:
+            # bulk_create returns objects with PKs populated; apply ACL in one shot.
+            created = Property.objects.bulk_create(to_create)
+            utils.apply_default_permissions_bulk(created)
+        if to_update:
+            Property.objects.bulk_update(to_update, ["owner", "inherit_owner"])
 
 
 class Object(models.Model, AccessibleMixin):
@@ -662,10 +677,14 @@ class Object(models.Model, AccessibleMixin):
     def __getattr__(self, name):
         if name in RESERVED_NAMES:
             raise AttributeError(name)
-        if self.has_verb(name, recurse=True):
+        try:
             return self.get_verb(name, recurse=True)
-        if self.has_property(name, recurse=True):
+        except Verb.DoesNotExist:
+            pass
+        try:
             return self.get_property(name, recurse=True)
+        except Property.DoesNotExist:
+            pass
         raise AttributeError(f"{self} has no attribute `{name}`")
 
     def owns(self, subject) -> bool:

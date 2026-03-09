@@ -26,17 +26,17 @@ source = this.get_property("source")
 dest = this.get_property("dest")
 
 if this.is_locked():
-    thing.tell(this.nogo_msg())
-    source.announce_all_but(thing, this.onogo_msg())
+    thing.tell(this.nogo_msg(source, dest))
+    source.announce_all_but(thing, this.onogo_msg(source, dest))
     return
 
 dest.bless_for_entry(context.caller)
-if this.dest.accept(thing):
-    thing.tell(this.leave_msg())
-    source.announce_all_but(thing, this.oleave_msg())
-    thing.moveto(this.dest)
-    thing.tell(this.arrive_msg())
-    dest.announce_all_but(thing, this.oarrive_msg())
+if dest.accept(thing):
+    thing.tell(this.leave_msg(source, dest))
+    source.announce_all_but(thing, this.oleave_msg(source, dest))
+    thing.moveto(dest)
+    thing.tell(this.arrive_msg(source, dest))
+    dest.announce_all_but(thing, this.oarrive_msg(source, dest))
 else:
-    thing.tell(this.nogo_msg())
-    source.announce_all_but(thing, this.onogo_msg())
+    thing.tell(this.nogo_msg(source, dest))
+    source.announce_all_but(thing, this.onogo_msg(source, dest))
