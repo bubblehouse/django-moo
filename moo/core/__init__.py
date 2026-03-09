@@ -8,6 +8,8 @@ import warnings
 from contextlib import contextmanager
 from typing import Union
 
+from django.db.models import Q
+
 from .code import ContextManager
 from .exceptions import QuotaError, AmbiguousObjectError, UserError
 
@@ -34,9 +36,9 @@ def lookup(x: Union[int, str]):
         if x.startswith("$"):
             system = lookup(1)
             return system.get_property(name=x[1:])
-        qs = Object.objects.filter(name__iexact=x)
-        aliases = Object.objects.filter(aliases__alias__iexact=x)
-        qs = qs.union(aliases)
+        qs = Object.objects.filter(
+            Q(name__iexact=x) | Q(aliases__alias__iexact=x)
+        ).distinct()
         if not qs:
             raise Object.DoesNotExist(x)
         return qs[0]
