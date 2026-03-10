@@ -131,8 +131,9 @@ def _publish_to_player(obj, message):
             "messages", Exchange("moo", type="direct", channel=channel), f"user-{player.user.pk}", channel=channel
         )
         with app.producer_or_acquire() as producer:
+            caller = ContextManager.get("caller")
             producer.publish(
-                dict(message=message, caller=ContextManager.get("caller")),
+                dict(message=message, caller_id=caller.pk if caller else None),
                 serializer="moojson",
                 exchange=queue.exchange,
                 routing_key=f"user-{player.user.pk}",
