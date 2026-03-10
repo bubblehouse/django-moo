@@ -46,6 +46,12 @@ ALLOWED_MODULES = (
     "re"
 )
 
+WIZARD_ALLOWED_MODULES = (
+    "moo.core.models.object",
+    "moo.core.models.verb",
+    "moo.core.models.property",
+)
+
 ALLOWED_BUILTINS = (
     "dict",
     "dir",
