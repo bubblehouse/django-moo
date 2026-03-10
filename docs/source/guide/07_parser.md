@@ -95,16 +95,13 @@ Once all the objects are defined, the caller's context is searched for the verb 
 1. The caller
 2. Any objects in the caller's inventory
 3. The location of the caller
-4. Any objects in the location of the caller
-5. The direct object, if any
-6. The objects of the preposition, if any
+4. The direct object, if any
+5. The objects of the preposition, if any
 
 For each of these objects in turn, it tests if all of the the following are true:
 
 1. `caller` can `read` object
 2. object or an ancestor defines verb with a matching name
-  1. if verb is an `ability`, the object must be the caller
-  2. if the verb was already found on this object, skip it
 
 > Every verb has one or more names; all of the names are kept in a single string, separated by spaces. In the simplest case, a verb-name is just a word made up of any characters other than spaces and stars (i.e., "" and "*"). In this case, the verb-name matches only itself; that is, the name must be matched exactly.
 >
