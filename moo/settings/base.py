@@ -89,10 +89,10 @@ PREPOSITION_SPECIFIER_CHOICES = (("any", "any"), ("none", "none"))
 # Set to False to fall back to the sequential dispatch path.
 MOO_BATCH_VERB_DISPATCH = False
 
-# TTL in seconds for cross-session property value caching in get_property().
+# TTL in seconds for cross-session attribute (verb/property) lookup caching.
 # Set to 0 to disable (e.g. in test environments where the cache backend is
 # in-process and does not reset between test cases).
-MOO_PROP_CACHE_TTL = 120
+MOO_ATTRIB_CACHE_TTL = 120
 
 INSTALLED_APPS = [
     "django.contrib.admin",

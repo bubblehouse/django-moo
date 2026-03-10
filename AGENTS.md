@@ -114,6 +114,7 @@ This document provides essential context for AI models interacting with the Djan
     - **Performance vs. Safety**: RestrictedPython adds overhead but provides security guarantees for user-written code
     - **Simplicity vs. Power**: The MOO object model is simpler than traditional OOP or procedural systems but is powerful enough for complex game logic
     - **Database vs. In-Memory**: Uses PostgreSQL for durability; Redis is used for caching and Celery message storage
+    - **Attribute Lookup Caching**: Verb and property lookups use a three-tier cache: (1) a per-`ContextManager` session dict, (2) a Redis cross-session store keyed by `moo:verb:…` / `moo:prop:…`, and (3) the `AncestorCache` denormalized table that replaces recursive CTEs on the hot dispatch path. The Redis TTL is controlled by `MOO_ATTRIB_CACHE_TTL` (default 120 s; set to 0 in tests).
 
 * **Common Patterns & Idioms:**
   - **Inheritance & Properties**: Objects inherit from parent objects. Properties are created via `Object.set_property()` and retrieved via `Object.get_property()` or model access. Inherited properties are propagated to child objects automatically, optionally inheriting ownership.
@@ -305,7 +306,8 @@ This document provides essential context for AI models interacting with the Djan
 
 * **Performance Considerations:**
   - **Database Queries**: Use Django QuerySet `.select_related()` and `.prefetch_related()` to minimize N+1 queries
-  - **Caching**: Redis is available for caching frequently accessed data (room contents, player locations, etc.)
+  - **Attribute Caching**: Verb and property lookups are automatically cached at three levels — do not implement separate caching for these. See `docs/source/guide/03b_caching.md` for the full architecture.
+  - **Caching**: Redis is available for caching other frequently accessed data (room contents, player locations, etc.)
   - **Celery Tasks**: All code and command-parser invocations are executed as tasks inside Celery workers. Creating new Celery Tasks is uncommon.
   - **Verb Time Limits**: Verbs called with `__getattr__` syntax (`obj.someverb()`) add to the total execution time for a verb, which is limited to 3 seconds. For verbs with effective runtimes that are longer than this, the `moo.core.invoke()` command can be used to asynchronously execute another verb with its own 3-second time limit.
   - **Indexing**: Add database indexes to frequently queried fields (Django `db_index=True`)
