@@ -69,6 +69,8 @@ The `moo` package is organized as a Django project with the following main compo
 - `ALLOWED_BUILTINS`: Builtin functions accessible to verbs
 - `DEFAULT_PERMISSIONS`: Core permission strings for the ACL system
 - `PREPOSITIONS`: MOO preposition definitions
+- `MOO_ATTRIB_CACHE_TTL`: TTL in seconds for the Redis cross-session verb/property cache (default 120). Set to 0 in `test.py` to prevent stale entries from poisoning tests when PKs are reused after sequence resets.
+- `MOO_BATCH_VERB_DISPATCH`: When `True`, the parser issues two bulk queries against `AncestorCache` instead of sequential per-object `_lookup_verb()` calls (experimental, default `False`). Requires migration 0025.
 
 ## Development Guidelines for `moo` Package
 
@@ -258,11 +260,17 @@ uv run pytest --pdb
 
 ## Performance Considerations
 
-1. **Caching**: Use Redis for frequently accessed objects or computed properties
-2. **Lazy Loading**: Use `.defer()` and `.only()` to load only needed fields
-3. **Aggregation**: Use Django's aggregation functions instead of Python loops
-4. **Indexing**: Add `db_index=True` to frequently filtered fields
-5. **Celery Tasks**: All code and command-parser invocations are executed as tasks inside Celery workers. Creating new Celery Tasks is uncommon.
+1. **Attribute lookup caching**: `get_property()` and `_lookup_verb()` implement a three-tier cache automatically:
+   - **Tier 1 — Session dict**: A plain `dict` per `ContextManager`, valid for one command invocation. Keyed by `(object_pk, name, ...)`.
+   - **Tier 2 — Redis**: Cross-session store keyed by `moo:verb:<pk>:<name>:…` / `moo:prop:<pk>:<name>:…`, TTL controlled by `MOO_ATTRIB_CACHE_TTL`. Do not add separate caching for verb or property values.
+   - **Tier 3 — `AncestorCache` table**: A denormalized flat table that replaces recursive CTEs in the hot-path inheritance JOIN. Maintained automatically by the `relationship_changed` signal; rebuild manually with `manage.py rebuild_ancestor_cache` after bulk data changes.
+   - See `docs/source/guide/03b_caching.md` for the full architecture.
+2. **Avoid redundant property lookups**: `has_property(name)` + `get_property(name)` is always two DB queries for the same data. Use `try: get_property(name) except PropertyDoesNotExist: ...` instead. Assign results to locals when a value is used more than once.
+3. **Caching**: Use Redis for other frequently accessed data (room contents, player locations, etc.)
+4. **Lazy Loading**: Use `.defer()` and `.only()` to load only needed fields
+5. **Aggregation**: Use Django's aggregation functions instead of Python loops
+6. **Indexing**: Add `db_index=True` to frequently filtered fields
+7. **Celery Tasks**: All code and command-parser invocations are executed as tasks inside Celery workers. Creating new Celery Tasks is uncommon.
 
 ## Important Notes
 

@@ -405,7 +405,7 @@ class Object(models.Model, AccessibleMixin):
                         for return_first_flag in (True, False):
                             vcache.pop((self.pk, item, recurse_flag, return_first_flag), None)
         # Evict cross-session Redis verb cache entries for this object.
-        if getattr(settings, 'MOO_PROP_CACHE_TTL', 120) > 0:
+        if getattr(settings, 'MOO_ATTRIB_CACHE_TTL', 120) > 0:
             for name in names:
                 for item in utils.expand_wildcard(name):
                     for recurse_flag in (True, False):
@@ -504,8 +504,8 @@ class Object(models.Model, AccessibleMixin):
 
         # Cross-session Redis cache — stores comma-separated verb PKs to avoid the
         # expensive AncestorCache JOIN on repeated lookups across requests.
-        # Bypassed when MOO_PROP_CACHE_TTL=0 (e.g. tests).
-        _cache_ttl = getattr(settings, 'MOO_PROP_CACHE_TTL', 120)
+        # Bypassed when MOO_ATTRIB_CACHE_TTL=0 (e.g. tests).
+        _cache_ttl = getattr(settings, 'MOO_ATTRIB_CACHE_TTL', 120)
         redis_key = None if _cache_ttl == 0 else f"moo:verb:{self.pk}:{name}:{int(recurse)}:{int(return_first)}"
         if redis_key is not None:
             raw = cache.get(redis_key, _CACHE_MISS)
@@ -608,8 +608,8 @@ class Object(models.Model, AccessibleMixin):
                 pcache.pop((self.pk, name, recurse_flag), None)
         # Evict the cross-session cache for this object's property.
         # Descendant caches are intentionally not invalidated here — they will
-        # expire naturally within MOO_PROP_CACHE_TTL, which is acceptable for gameplay.
-        if getattr(settings, 'MOO_PROP_CACHE_TTL', 120) > 0:
+        # expire naturally within MOO_ATTRIB_CACHE_TTL, which is acceptable for gameplay.
+        if getattr(settings, 'MOO_ATTRIB_CACHE_TTL', 120) > 0:
             for recurse_flag in (True, False):
                 cache.delete(f"moo:prop:{self.pk}:{name}:{int(recurse_flag)}")
 
@@ -638,9 +638,9 @@ class Object(models.Model, AccessibleMixin):
         # Cross-session cache — stores raw moojson text to avoid serialization
         # issues with Object references.  _CACHE_PROP_MISSING marks confirmed misses.
         # Bypassed for original=True (returns a Property ORM object, not cacheable).
-        # Bypassed when MOO_PROP_CACHE_TTL=0 (e.g. tests, where the in-process cache
+        # Bypassed when MOO_ATTRIB_CACHE_TTL=0 (e.g. tests, where the in-process cache
         # does not reset between test cases and would poison subsequent tests).
-        _cache_ttl = getattr(settings, 'MOO_PROP_CACHE_TTL', 120)
+        _cache_ttl = getattr(settings, 'MOO_ATTRIB_CACHE_TTL', 120)
         cache_key = None if (original or _cache_ttl == 0) else f"moo:prop:{self.pk}:{name}:{int(recurse)}"
         if cache_key is not None:
             raw = cache.get(cache_key, _CACHE_MISS)
