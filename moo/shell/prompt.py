@@ -82,6 +82,7 @@ class MooPrompt:
         if edited_text is not None and req.get("callback_this_id") and req.get("callback_verb_name"):
             tasks.invoke_verb.delay(
                 edited_text,
+                *req.get("args", []),
                 caller_id=req["caller_id"],
                 player_id=req["player_id"],
                 this_id=req["callback_this_id"],
