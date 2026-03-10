@@ -1,1382 +1,816 @@
-## [0.65.8](https://gitlab.com/bubblehouse/django-moo/compare/v0.65.7...v0.65.8) (2026-03-09)
+## [0.65](https://gitlab.com/bubblehouse/django-moo/compare/v0.64.0...v0.65.8) (2026-03-09)
 
-### Bug Fixes
-
-* redis typo ([201ef34](https://gitlab.com/bubblehouse/django-moo/commit/201ef34bdb068adc384704d97bcc0a5285ceef73))
-* syntax issues with color tags ([6a4ee54](https://gitlab.com/bubblehouse/django-moo/commit/6a4ee54939c95aadf3a567a52355ba7641da5aeb))
-
-## [0.65.7](https://gitlab.com/bubblehouse/django-moo/compare/v0.65.6...v0.65.7) (2026-03-09)
-
-### Bug Fixes
-
-* handle uncaught test warnings ([61abc29](https://gitlab.com/bubblehouse/django-moo/commit/61abc291095dd9e6618b1dd932637ac21172829a))
-
-## [0.65.6](https://gitlab.com/bubblehouse/django-moo/compare/v0.65.5...v0.65.6) (2026-03-09)
-
-### Bug Fixes
-
-* route enterfunc print output to player and fix original_location tracking after move ([5a560fb](https://gitlab.com/bubblehouse/django-moo/commit/5a560fbb3fa9494459b127993efc5afbf48b36c9))
-
-## [0.65.5](https://gitlab.com/bubblehouse/django-moo/compare/v0.65.4...v0.65.5) (2026-03-09)
-
-### Bug Fixes
-
-* preserve player context when invoking verbs asynchronously ([ed429ca](https://gitlab.com/bubblehouse/django-moo/commit/ed429cae1b00f0d3b545fcbc551b6ff6d1f2fb4c))
-
-## [0.65.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.65.3...v0.65.4) (2026-03-09)
-
-### Bug Fixes
-
-* additional caching and go improvements ([10efa56](https://gitlab.com/bubblehouse/django-moo/commit/10efa56ef0bb602772c37935204b436cf2ead89c))
-
-## [0.65.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.65.2...v0.65.3) (2026-03-09)
-
-### Bug Fixes
-
-* use correct server url ([3b3821d](https://gitlab.com/bubblehouse/django-moo/commit/3b3821d4f3dfff5387bc0ac9118441168516495c))
-
-## [0.65.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.65.1...v0.65.2) (2026-03-09)
-
-### Bug Fixes
-
-* use same redis client in dev as other envs ([cc1cc51](https://gitlab.com/bubblehouse/django-moo/commit/cc1cc516f4538c14f01a52fe0726005e013f95a7))
+### Features
 
-## [0.65.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.65.0...v0.65.1) (2026-03-09)
+* denormalize ancestor lookups, add cross-session property cache, batch verb dispatch (opt-in) (70475c6)
+* further optimizations for quick wins, missing indexes (4e47ccb)
 
 ### Bug Fixes
 
-* enable batch verb dispatch ([28f3125](https://gitlab.com/bubblehouse/django-moo/commit/28f3125839505f0b53f50cfa9e864f16dbeb3436))
-* index name too long ([b0a9b1d](https://gitlab.com/bubblehouse/django-moo/commit/b0a9b1d2fd29a18a6a1389d34016443f06f25d6f))
-* mangled env fix, ci update ([64a1368](https://gitlab.com/bubblehouse/django-moo/commit/64a13684328e3b46ad4135ba1fec8705a05818a5))
+* redis typo (201ef34)
+* syntax issues with color tags (6a4ee54)
+* handle uncaught test warnings (61abc29)
+* route enterfunc print output to player and fix original_location tracking after move (5a560fb)
+* preserve player context when invoking verbs asynchronously (ed429ca)
+* additional caching and go improvements (10efa56)
+* use correct server url (3b3821d)
+* use same redis client in dev as other envs (cc1cc51)
+* enable batch verb dispatch (28f3125)
+* index name too long (b0a9b1d)
+* mangled env fix, ci update (64a1368)
 
-## [0.65.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.64.0...v0.65.0) (2026-03-09)
+## [0.64](https://gitlab.com/bubblehouse/django-moo/compare/v0.63.0...v0.64.0) (2026-03-09)
 
 ### Features
 
-* denormalize ancestor lookups, add cross-session property cache, batch verb dispatch (opt-in) ([70475c6](https://gitlab.com/bubblehouse/django-moo/commit/70475c68c048de302f4a5e4b53226387495e25cd))
-* further optimizations for quick wins, missing indexes ([4e47ccb](https://gitlab.com/bubblehouse/django-moo/commit/4e47ccb59a4e8fc6eb41d9d94372b80aaea28c52))
+* optimized default_verbs to reduce DB calls, introduced better exceptions for verbs (7b8767a)
 
-## [0.64.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.63.0...v0.64.0) (2026-03-09)
+## [0.63](https://gitlab.com/bubblehouse/django-moo/compare/v0.62.0...v0.63.0) (2026-03-09)
 
 ### Features
 
-* optimized default_verbs to reduce DB calls, introduced better exceptions for verbs ([7b8767a](https://gitlab.com/bubblehouse/django-moo/commit/7b8767ae7ef2ce8f3e652703e178471e8548fc46))
+* convert set_default_permissions to a special case, other verb execution optimizations (98d24f4)
 
-## [0.63.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.62.0...v0.63.0) (2026-03-09)
+## [0.62](https://gitlab.com/bubblehouse/django-moo/compare/v0.61.2...v0.62.0) (2026-03-09)
 
 ### Features
 
-* convert set_default_permissions to a special case, other verb execution optimizations ([98d24f4](https://gitlab.com/bubblehouse/django-moo/commit/98d24f4b532628ca882add19819d8c8d767d9bc3))
+* cache permission tables in the context (a63cca6)
+* permission caching improvements and updated indexes (ddd7466)
 
-## [0.62.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.61.2...v0.62.0) (2026-03-09)
+## [0.61](https://gitlab.com/bubblehouse/django-moo/compare/v0.60.0...v0.61.2) (2026-03-09)
 
 ### Features
-
-* cache permission tables in the context ([a63cca6](https://gitlab.com/bubblehouse/django-moo/commit/a63cca6542aea4f016b8128152e0136b868f59c2))
-* permission caching improvements and updated indexes ([ddd7466](https://gitlab.com/bubblehouse/django-moo/commit/ddd7466ab5f323b6b333137bd27d44253de52b0d))
-
-## [0.61.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.61.1...v0.61.2) (2026-03-09)
 
-### Bug Fixes
+* time limit is overrideable by env var (d102bd4)
 
-* commit to force release ([bf5145b](https://gitlab.com/bubblehouse/django-moo/commit/bf5145b35cf524e597bceca9e7f9b391b35f8094))
-* try using non-serverless micro DB ([9eaf8b8](https://gitlab.com/bubblehouse/django-moo/commit/9eaf8b8af0b2e24f7e0da8e2df8d419aadae2491))
 
-## [0.61.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.61.0...v0.61.1) (2026-03-08)
-
 ### Bug Fixes
 
-* added admin panel for Relationship for spurious reason that might never happen again ([64b3e0b](https://gitlab.com/bubblehouse/django-moo/commit/64b3e0bdcf214333ab5323014f167ed1540fa845))
+* commit to force release (bf5145b)
+* try using non-serverless micro DB (9eaf8b8)
+* added admin panel for Relationship for spurious reason that might never happen again (64b3e0b)
 
-## [0.61.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.60.0...v0.61.0) (2026-03-08)
+## [0.60](https://gitlab.com/bubblehouse/django-moo/compare/v0.59.0...v0.60.0) (2026-03-08)
 
 ### Features
 
-* time limit is overrideable by env var ([d102bd4](https://gitlab.com/bubblehouse/django-moo/commit/d102bd44cea3888ba5957e9b9dbdc79cff03eea5))
+* replace O(depth^2) Python recursion in object.py with recursive CTEs; correct parent ordering (5364721)
 
-## [0.60.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.59.0...v0.60.0) (2026-03-08)
+## [0.59](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.10...v0.59.0) (2026-03-08)
 
 ### Features
 
-* replace O(depth^2) Python recursion in object.py with recursive CTEs; correct parent ordering ([5364721](https://gitlab.com/bubblehouse/django-moo/commit/53647216cede11b483ee1efcf84c899947885999))
+* lots of DB optimizations for related objects (5ae1bf0)
 
-## [0.59.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.10...v0.59.0) (2026-03-08)
+## [0.58](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.8...v0.58.10) (2026-03-08)
 
 ### Features
-
-* lots of DB optimizations for related objects ([5ae1bf0](https://gitlab.com/bubblehouse/django-moo/commit/5ae1bf07d6304db1ab5fbb8e1d7be58ea3dcb0a3))
-
-## [0.58.10](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.9...v0.58.10) (2026-03-08)
-
-### Bug Fixes
-
-* added missing django-compressor dependency ([151396e](https://gitlab.com/bubblehouse/django-moo/commit/151396e4a1f25d76eeece11638b6fdc2648ec1ef))
-
-## [0.58.9](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.8...v0.58.9) (2026-03-08)
-
-### Bug Fixes
-
-* installed boto3 ([c166221](https://gitlab.com/bubblehouse/django-moo/commit/c166221b213acd73a564c883215c857532c9d069))
-
-## [0.58.8](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.7...v0.58.8) (2026-03-08)
-
-### Bug Fixes
-
-* added missing django-storages dependency ([866bf66](https://gitlab.com/bubblehouse/django-moo/commit/866bf66c518705f78bf4b50100c0ce7e5b50d651))
-* force release ([d098be2](https://gitlab.com/bubblehouse/django-moo/commit/d098be20812eae4656e9e723f5234dcf98f35b4e))
-
-## [0.58.7](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.6...v0.58.7) (2026-03-08)
-
-### Bug Fixes
-
-* revert updates ([0d5aed5](https://gitlab.com/bubblehouse/django-moo/commit/0d5aed586340db61703b9286eda26d5e767aa6d5))
-
-## [0.58.6](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.5...v0.58.6) (2026-03-07)
-
-### Bug Fixes
-
-* readiness typo ([598620b](https://gitlab.com/bubblehouse/django-moo/commit/598620b89c9be561f95d56de3171044c727cbf5c))
-
-## [0.58.5](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.4...v0.58.5) (2026-03-07)
-
-### Bug Fixes
-
-* use the correct redis host in dev ([4df4f56](https://gitlab.com/bubblehouse/django-moo/commit/4df4f56ee335bcff8dc5f02917bb6c3c72f211b6))
-
-## [0.58.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.3...v0.58.4) (2026-03-07)
-
-### Bug Fixes
 
-* use correct OCI path ([04d0bb9](https://gitlab.com/bubblehouse/django-moo/commit/04d0bb9a630738062329e6eab7b751195d6de4d3))
+* use S3 for static assets (5f31fc4)
 
-## [0.58.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.2...v0.58.3) (2026-03-07)
 
 ### Bug Fixes
 
-* include subchart ([ab15ff8](https://gitlab.com/bubblehouse/django-moo/commit/ab15ff83d95c9cbd5ec55500125fb5d21c9532f7))
+* added missing django-compressor dependency (151396e)
+* installed boto3 (c166221)
+* added missing django-storages dependency (866bf66)
+* force release (d098be2)
+* revert updates (0d5aed5)
+* readiness typo (598620b)
+* use the correct redis host in dev (4df4f56)
+* use correct OCI path (04d0bb9)
+* include subchart (ab15ff8)
+* added correct redis_cache package (2cce380)
+* added missing params for helm push (c2b9b06)
+* update base imge (8e9a543)
+* update CI packages (bf7f53c)
+* update runner-base images in CI pipeline (816bad0)
+* use correct package url (dd2e558)
+* added missing setting (42dbcb0)
+* added redis_cache dependency, setup caches in dev (8ed61f0)
 
-## [0.58.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.1...v0.58.2) (2026-03-07)
+## [0.57](https://gitlab.com/bubblehouse/django-moo/compare/v0.56.4...v0.57.8) (2026-03-07)
 
-### Bug Fixes
-
-* added correct redis_cache package ([2cce380](https://gitlab.com/bubblehouse/django-moo/commit/2cce3803e77b1da3b15350c05c358fa7d2912f16))
-* added missing params for helm push ([c2b9b06](https://gitlab.com/bubblehouse/django-moo/commit/c2b9b06b76c5785898252205d7ed648eff537dad))
-* update base imge ([8e9a543](https://gitlab.com/bubblehouse/django-moo/commit/8e9a54330220a6a8dcee2623c8528a2ca0348911))
-* update CI packages ([bf7f53c](https://gitlab.com/bubblehouse/django-moo/commit/bf7f53c8f49bd6edfea5efb7fc32039649f61cf8))
-* update runner-base images in CI pipeline ([816bad0](https://gitlab.com/bubblehouse/django-moo/commit/816bad065c4b1023feec1b9a450533b650282b51))
-* use correct package url ([dd2e558](https://gitlab.com/bubblehouse/django-moo/commit/dd2e5583933c721c29235502328bc72936057c4f))
-
-## [0.58.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.58.0...v0.58.1) (2026-03-07)
-
-
-### Bug Fixes
-
-* added missing setting ([42dbcb0](https://gitlab.com/bubblehouse/django-moo/commit/42dbcb0160d9027e7bdf5e8a1133cf812a3dc573))
-* added redis_cache dependency, setup caches in dev ([8ed61f0](https://gitlab.com/bubblehouse/django-moo/commit/8ed61f05b9e17f9f7ddf615c95f319d5b67d936d))
-
-## [0.58.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.8...v0.58.0) (2026-03-07)
-
-
 ### Features
-
-* use S3 for static assets ([5f31fc4](https://gitlab.com/bubblehouse/django-moo/commit/5f31fc4a208cc50405393c525fd805728832da85))
-
-## [0.57.8](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.7...v0.57.8) (2026-03-07)
-
-
-### Bug Fixes
-
-* the real issue was using `command` instead of `args` ([0621b3d](https://gitlab.com/bubblehouse/django-moo/commit/0621b3df5c4f810ec67d99aa1c03e43f222003e7))
-
-## [0.57.7](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.6...v0.57.7) (2026-03-07)
-
-
-### Bug Fixes
-
-* try inserting python ([c2c4dc7](https://gitlab.com/bubblehouse/django-moo/commit/c2c4dc7f0b95ffb192d319f6eef9930779df739c))
-
-## [0.57.6](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.5...v0.57.6) (2026-03-07)
-
-
-### Bug Fixes
-
-* try removing leading ./ from command ([064b2da](https://gitlab.com/bubblehouse/django-moo/commit/064b2da3760b360f389297a0abdb58889edd3a72))
-
-## [0.57.5](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.4...v0.57.5) (2026-03-07)
-
-
-### Bug Fixes
 
-* remove spurious env var ([eb089e5](https://gitlab.com/bubblehouse/django-moo/commit/eb089e5e63f622b2da7773328d3561a28554e378))
+* add redis as a chart dependency (4832e3d)
 
-## [0.57.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.3...v0.57.4) (2026-03-07)
 
-
-### Bug Fixes
-
-* change migration and collectstatic to pre-hooks ([e7caff3](https://gitlab.com/bubblehouse/django-moo/commit/e7caff31c1a9934e107ddc394de68cab71526a48))
-
-## [0.57.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.2...v0.57.3) (2026-03-07)
-
-
-### Bug Fixes
-
-* update to db creds on dev ([1e513e6](https://gitlab.com/bubblehouse/django-moo/commit/1e513e68a672c2b697fafdece0318b5eceb2cfea))
-
-## [0.57.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.1...v0.57.2) (2026-03-07)
-
-
-### Bug Fixes
-
-* use latest version with correct OCI path ([5e15850](https://gitlab.com/bubblehouse/django-moo/commit/5e15850fd17f5943ff5d10849aa75e26d308aa13))
-
-## [0.57.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.57.0...v0.57.1) (2026-03-07)
-
-
 ### Bug Fixes
 
-* use a known working redis version for dependency ([acf6b14](https://gitlab.com/bubblehouse/django-moo/commit/acf6b143e910ff278ea0c4f3130709be24a87584))
+* the real issue was using `command` instead of `args` (0621b3d)
+* try inserting python (c2c4dc7)
+* try removing leading ./ from command (064b2da)
+* remove spurious env var (eb089e5)
+* change migration and collectstatic to pre-hooks (e7caff3)
+* update to db creds on dev (1e513e6)
+* use latest version with correct OCI path (5e15850)
+* use a known working redis version for dependency (acf6b14)
 
-## [0.57.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.56.4...v0.57.0) (2026-03-07)
+## [0.56](https://gitlab.com/bubblehouse/django-moo/compare/v0.55.0...v0.56.4) (2026-03-07)
 
-
 ### Features
-
-* add redis as a chart dependency ([4832e3d](https://gitlab.com/bubblehouse/django-moo/commit/4832e3d19fe09ef938762591eff93c8ede6e5d55))
-
-## [0.56.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.56.3...v0.56.4) (2026-03-07)
-
-
-### Bug Fixes
-
-* run as www-data at the container level, dont drop permissions ([fdb64dc](https://gitlab.com/bubblehouse/django-moo/commit/fdb64dc656896796e157f3f82a090e89377358a1))
-
-## [0.56.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.56.2...v0.56.3) (2026-03-07)
-
-
-### Bug Fixes
-
-* dont use /var/run ([fae2a12](https://gitlab.com/bubblehouse/django-moo/commit/fae2a12b21ba2ca763fac9a3c9eb64c4cdd62c3c))
-
-## [0.56.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.56.1...v0.56.2) (2026-03-07)
-
 
-### Bug Fixes
-
-* use correct args in helm chart ([c128bee](https://gitlab.com/bubblehouse/django-moo/commit/c128beeeeff11f197206be88d6bcde03b7c595e8))
-
-## [0.56.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.56.0...v0.56.1) (2026-03-07)
+* provide readiness and liveness files (7983595)
+* update helm chart with missing components (4e48cd2)
 
 
 ### Bug Fixes
-
-* dont use /var/run ([eed24ad](https://gitlab.com/bubblehouse/django-moo/commit/eed24ad12fc313fd0c58e12f1cc7a338703b66a7))
-
-## [0.56.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.55.0...v0.56.0) (2026-03-07)
-
-
-### Features
 
-* provide readiness and liveness files ([7983595](https://gitlab.com/bubblehouse/django-moo/commit/79835950bea3ca17bddb1df33a6e736a61a9e836))
-* update helm chart with missing components ([4e48cd2](https://gitlab.com/bubblehouse/django-moo/commit/4e48cd20f827cae1c4c89bdd3175dc056867b86a))
+* run as www-data at the container level, dont drop permissions (fdb64dc)
+* dont use /var/run (fae2a12)
+* use correct args in helm chart (c128bee)
+* dont use /var/run (eed24ad)
 
-## [0.55.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.54.0...v0.55.0) (2026-03-06)
+## [0.55](https://gitlab.com/bubblehouse/django-moo/compare/v0.54.0...v0.55.0) (2026-03-06)
 
-
 ### Features
 
-* added lookup boolean to parser methods ([ec2b356](https://gitlab.com/bubblehouse/django-moo/commit/ec2b356702e9a8c51b6bc72cb9dfed8ec2ce4d80))
+* added lookup boolean to parser methods (ec2b356)
 
 
 ### Bug Fixes
-
-* update Celery configuration to use external file ([9cc5742](https://gitlab.com/bubblehouse/django-moo/commit/9cc57422800ba079f361d04daccd2295023feb75))
 
-## [0.54.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.53.0...v0.54.0) (2026-03-06)
+* update Celery configuration to use external file (9cc5742)
 
+## [0.54](https://gitlab.com/bubblehouse/django-moo/compare/v0.53.0...v0.54.0) (2026-03-06)
 
 ### Features
 
-* added [@reload](https://gitlab.com/reload) verb to update filesystem-resident verbs in the database ([3e7f8e6](https://gitlab.com/bubblehouse/django-moo/commit/3e7f8e6f39254833fdda2b477ca2aca844ca7626))
+* added [@reload](https://gitlab.com/reload) verb to update filesystem-resident verbs in the database (3e7f8e6)
 
 
 ### Bug Fixes
 
-* resolve split dev dependency sections and upgrade packages ([65bf181](https://gitlab.com/bubblehouse/django-moo/commit/65bf181346083bded920b5c3f38f19ae0007f3c5))
+* resolve split dev dependency sections and upgrade packages (65bf181)
 
-## [0.53.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.52.2...v0.53.0) (2026-03-04)
+## [0.53](https://gitlab.com/bubblehouse/django-moo/compare/v0.52.2...v0.53.0) (2026-03-04)
 
-
 ### Features
-
-* lookup support $var syntax ([59c0619](https://gitlab.com/bubblehouse/django-moo/commit/59c061927fe7bb6f5f559cea47147d2beade50de))
-
-
-### Bug Fixes
-
-* dont include self in tell_contents() ([82b216e](https://gitlab.com/bubblehouse/django-moo/commit/82b216e45f858d08c6141230625e45f6190c0fcf))
-* handle unallocated users in write() ([b8c8257](https://gitlab.com/bubblehouse/django-moo/commit/b8c82579eef4f6e3b4c38fdd050a882781a53f1d))
-* update existing player objects properly when using moo_enableuser ([a15f76b](https://gitlab.com/bubblehouse/django-moo/commit/a15f76b5596803ff9962bb515363997314eed99e))
-
-## [0.52.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.52.1...v0.52.2) (2026-03-04)
-
-
-### Bug Fixes
-
-* exits shouldn't be literally inside the rooms they connect to ([630bb05](https://gitlab.com/bubblehouse/django-moo/commit/630bb051fdcf1c4965d5472228980a728650477e))
-* only generic exits should be in location None, objects used as doors should not be moved ([cfb473b](https://gitlab.com/bubblehouse/django-moo/commit/cfb473ba1b7759ed59ea62b1b944606d851ed9ea))
 
-## [0.52.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.52.0...v0.52.1) (2026-03-03)
+* lookup support $var syntax (59c0619)
 
 
 ### Bug Fixes
 
-* added stub obj.is_connected() for later implementation ([343232e](https://gitlab.com/bubblehouse/django-moo/commit/343232ea322858707c083b09f6b0c345b5817e89))
-* small verb fixes from testing ([9aac98a](https://gitlab.com/bubblehouse/django-moo/commit/9aac98a55a958bdfe3abe2255f3d29d1bf395384))
+* dont include self in tell_contents() (82b216e)
+* handle unallocated users in write() (b8c8257)
+* update existing player objects properly when using moo_enableuser (a15f76b)
 
-## [0.52.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.51.0...v0.52.0) (2026-03-02)
+## [0.52](https://gitlab.com/bubblehouse/django-moo/compare/v0.51.0...v0.52.2) (2026-03-04)
 
-
 ### Features
 
-* added $sprintf alias for easy access to the `pronoun_sub` verb ([497b2ed](https://gitlab.com/bubblehouse/django-moo/commit/497b2ed574382db447da229081bf1cbc86686544))
-* added many verbs for $player ([f09eacd](https://gitlab.com/bubblehouse/django-moo/commit/f09eacd120690ac796fc80aafa5d3ae531385d18))
-* added more verbs for $player ([0f375e0](https://gitlab.com/bubblehouse/django-moo/commit/0f375e095a9d4c898874b0e515a2b62b21740d32))
-* added more verbs for $player ([4f85f79](https://gitlab.com/bubblehouse/django-moo/commit/4f85f79accd551e33a4026662b1885030c9d0bb4))
-* added more verbs for $player ([44130f8](https://gitlab.com/bubblehouse/django-moo/commit/44130f8fc1a8418513952568292391ca31690b8c))
-* implemented context.caller_stack to see the list of callers ([7ad7be4](https://gitlab.com/bubblehouse/django-moo/commit/7ad7be4556aa30af60667c7e0ca0f6e145d6dc58))
-* write() and set_task_perms() can ony be called by Wizard-owned code ([36f7db9](https://gitlab.com/bubblehouse/django-moo/commit/36f7db9ea254a2454555be0814432d4621fa5cc3))
+* added $sprintf alias for easy access to the `pronoun_sub` verb (497b2ed)
+* added many verbs for $player (f09eacd)
+* added more verbs for $player (0f375e0)
+* added more verbs for $player (4f85f79)
+* added more verbs for $player (44130f8)
+* implemented context.caller_stack to see the list of callers (7ad7be4)
+* write() and set_task_perms() can ony be called by Wizard-owned code (36f7db9)
 
 
 ### Bug Fixes
-
-* ensure all verbs will be bound before execution, raise exception otherwise ([4bfe898](https://gitlab.com/bubblehouse/django-moo/commit/4bfe898b2256ce798852dc1d32be326dab1262d2))
-* fixed remaining caller_stack issues ([78d35e9](https://gitlab.com/bubblehouse/django-moo/commit/78d35e9351d512a2f92537a5cc8e66dec00e81e4))
-* issues in take/get for player ([361d924](https://gitlab.com/bubblehouse/django-moo/commit/361d92485d4299ea0b675107fda0788d43388e57))
-* many fixes for player commands ([ceb6442](https://gitlab.com/bubblehouse/django-moo/commit/ceb6442c9cb08cbc31404dc603cc40cc1aedd08d))
-* remove use of sprintf because of missing `this` ([aab6a83](https://gitlab.com/bubblehouse/django-moo/commit/aab6a83fa69cfe194f3d1edda0a139734e50dafd))
-* unit test errors ([3fbeff3](https://gitlab.com/bubblehouse/django-moo/commit/3fbeff3cfc0a70055547e7836c91bd27694ad74a))
 
-## [0.51.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.50.0...v0.51.0) (2026-02-26)
+* ensure all verbs will be bound before execution, raise exception otherwise (4bfe898)
+* fixed remaining caller_stack issues (78d35e9)
+* issues in take/get for player (361d924)
+* many fixes for player commands (ceb6442)
+* remove use of sprintf because of missing `this` (aab6a83)
+* unit test errors (3fbeff3)
+* exits shouldn't be literally inside the rooms they connect to (630bb05)
+* only generic exits should be in location None, objects used as doors should not be moved (cfb473b)
+* added stub obj.is_connected() for later implementation (343232e)
+* small verb fixes from testing (9aac98a)
 
+## [0.51](https://gitlab.com/bubblehouse/django-moo/compare/v0.50.0...v0.51.0) (2026-02-26)
 
 ### Features
 
-* added $gender_utils and tests ([4ef8f8f](https://gitlab.com/bubblehouse/django-moo/commit/4ef8f8f7bf010a08c2b25fe73833e03e96777783))
+* added $gender_utils and tests (4ef8f8f)
 
 
 ### Bug Fixes
 
-* propertly handle "dark" rooms ([3c227e2](https://gitlab.com/bubblehouse/django-moo/commit/3c227e275ceb061d88d2b9e5c8058c6fda8e8157))
+* propertly handle "dark" rooms (3c227e2)
 
-## [0.50.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.49.0...v0.50.0) (2026-02-26)
+## [0.50](https://gitlab.com/bubblehouse/django-moo/compare/v0.49.0...v0.50.0) (2026-02-26)
 
-
 ### Features
 
-* added $string_utils and tests ([8df685a](https://gitlab.com/bubblehouse/django-moo/commit/8df685a2052291da81fa3dcf2aafac62bd607bfc))
+* added $string_utils and tests (8df685a)
 
 
 ### Bug Fixes
-
-* parser token should be set to none in every context ([e51a0f7](https://gitlab.com/bubblehouse/django-moo/commit/e51a0f7ffd1b32fbb0efdbc274298ec1b70f8d45))
 
-## [0.49.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.48.3...v0.49.0) (2026-02-26)
+* parser token should be set to none in every context (e51a0f7)
 
+## [0.49](https://gitlab.com/bubblehouse/django-moo/compare/v0.48.3...v0.49.0) (2026-02-26)
 
 ### Features
-
-* renamed the `api` context variable to just `context` for clarity ([e946aaf](https://gitlab.com/bubblehouse/django-moo/commit/e946aafcca6c9b0fcfd47a82108c9ef40d6f5823))
-
-## [0.48.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.48.2...v0.48.3) (2026-02-25)
-
-
-### Bug Fixes
-
-* issues found while unit testing, merge old room integration test into new file ([2e134b9](https://gitlab.com/bubblehouse/django-moo/commit/2e134b9b46e12a9ec2e05c0052e3561aeb23d353))
-
-## [0.48.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.48.1...v0.48.2) (2026-02-24)
-
-
-### Bug Fixes
-
-* linting issues ([cb2857a](https://gitlab.com/bubblehouse/django-moo/commit/cb2857a08d720c545e06ad2c3d065b8f60b58079))
 
-## [0.48.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.48.0...v0.48.1) (2026-02-24)
+* renamed the `api` context variable to just `context` for clarity (e946aaf)
 
+## [0.48](https://gitlab.com/bubblehouse/django-moo/compare/v0.47.5...v0.48.3) (2026-02-25)
 
-### Bug Fixes
-
-* allow use of the type() builtin ([951cb7f](https://gitlab.com/bubblehouse/django-moo/commit/951cb7ff00bc6fa8f6067ddfa9c60bfd9a522e52))
-* handle RESERVED_NAMES properly ([9dc3acc](https://gitlab.com/bubblehouse/django-moo/commit/9dc3accb1fd8c5adc9d157d856a6d082ab028229))
-* moveto has no underscore ([3dcdc58](https://gitlab.com/bubblehouse/django-moo/commit/3dcdc5872c3b1a0944bde4b8295a54381b615de9))
-* the default description for an object should be the empty string ([75f9f3e](https://gitlab.com/bubblehouse/django-moo/commit/75f9f3edab5abb0faf3b4733f97cdc3de609a30d))
-
-## [0.48.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.47.5...v0.48.0) (2026-02-24)
-
-
 ### Features
-
-* added improved handling of multple prepositions ([de58915](https://gitlab.com/bubblehouse/django-moo/commit/de58915e2161fa7f8e43e2adf96bc6b8dcfb920d))
-* implementing container support ([8116fc2](https://gitlab.com/bubblehouse/django-moo/commit/8116fc258f2a9646aed1721e0bee24f2009bea18))
-
-
-### Bug Fixes
-
-* added trivial implementation of $room.tell_contents for now ([6077ce6](https://gitlab.com/bubblehouse/django-moo/commit/6077ce6f46581863bb3788a459717874dfcb8203))
-* fixed remaining test issues ([89a74c5](https://gitlab.com/bubblehouse/django-moo/commit/89a74c570977e37cc23ea348be9d6b723d6758d1))
-* missing f-string prefix ([66ae8ff](https://gitlab.com/bubblehouse/django-moo/commit/66ae8ffec6eec50b709c86c9d0533bc6e351eb1d))
-
-## [0.47.5](https://gitlab.com/bubblehouse/django-moo/compare/v0.47.4...v0.47.5) (2026-02-23)
-
-
-### Bug Fixes
-
-* fixes found during testing ([e5fb790](https://gitlab.com/bubblehouse/django-moo/commit/e5fb790e13bfde6eb6503be513be2a7ae7e562ac))
-* parser.find_object() searches the player inventory first, then the current location ([ff08ce5](https://gitlab.com/bubblehouse/django-moo/commit/ff08ce52828d668969d9f5a5f7d160fe4ee0fbc3))
-* remove unnecessary use of inherit_owner, will restore as needed ([b81f6cf](https://gitlab.com/bubblehouse/django-moo/commit/b81f6cff231dff2b8bc7982111888845c730eda8))
-* set correct owner when moving ([16259c6](https://gitlab.com/bubblehouse/django-moo/commit/16259c64fefe903919bf13f2325a6697b8592898))
-* set default messages for things ([fa3653b](https://gitlab.com/bubblehouse/django-moo/commit/fa3653b0fe7e46c525b174baa22f07a1f4546ee6))
-
-## [0.47.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.47.3...v0.47.4) (2026-02-22)
-
-
-### Bug Fixes
-
-* install uv ([4ac9052](https://gitlab.com/bubblehouse/django-moo/commit/4ac9052012ee60d69729a6155a906c22a27a80e5))
-* install uv ([fc55505](https://gitlab.com/bubblehouse/django-moo/commit/fc55505d6d6b6342af8713b93d8b2715bb432cb1))
-* run anybadge through uv ([96be7f9](https://gitlab.com/bubblehouse/django-moo/commit/96be7f9d42296e59ef892622e6be5f307a4fea8c))
-* updated Dockerfile and entrypoint after uv migration ([ef2a771](https://gitlab.com/bubblehouse/django-moo/commit/ef2a77176eb62ebcbf57eaf2a99e8b03eda1433c))
-* use correct arch when installing uv ([0ab45c7](https://gitlab.com/bubblehouse/django-moo/commit/0ab45c77eae925eecef72279d8c66f76fadf4725))
-
-## [0.47.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.47.2...v0.47.3) (2026-02-21)
-
-
-### Bug Fixes
-
-* --on is required in the moo shebang line ([00fa31e](https://gitlab.com/bubblehouse/django-moo/commit/00fa31e4b2da55b7fe8c45e3b1b751f7ecc71de9))
-* added migration to remove old proxy objects, renamed inherited to inherit_owner, other leftover ([f8e157d](https://gitlab.com/bubblehouse/django-moo/commit/f8e157dbe337d30061f8d54a03bd1d1b17127924))
-
-## [0.47.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.47.1...v0.47.2) (2026-02-20)
-
-
-### Bug Fixes
-
-* disable Redis in unit tests to avoid blocking issues ([383ed3c](https://gitlab.com/bubblehouse/django-moo/commit/383ed3c8fb69c82d932ea34f931a65caab1989f9))
-* optimize is_allowed ([4e7089b](https://gitlab.com/bubblehouse/django-moo/commit/4e7089b04177a9899caaaa5b952a99f10d1849b0))
 
-## [0.47.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.47.0...v0.47.1) (2026-02-18)
+* added improved handling of multple prepositions (de58915)
+* implementing container support (8116fc2)
 
 
 ### Bug Fixes
 
-* match_object improvements ([a435c9d](https://gitlab.com/bubblehouse/django-moo/commit/a435c9d1bbcce2733e818391ca5681e92947c053))
-* moved look to room, parser now calls huh on failure ([1aae1cf](https://gitlab.com/bubblehouse/django-moo/commit/1aae1cf459636e2da70e5afb06defb9060008549))
+* linting issues (cb2857a)
+* allow use of the type() builtin (951cb7f)
+* handle RESERVED_NAMES properly (9dc3acc)
+* moveto has no underscore (3dcdc58)
+* the default description for an object should be the empty string (75f9f3e)
+* added trivial implementation of $room.tell_contents for now (6077ce6)
+* fixed remaining test issues (89a74c5)
+* missing f-string prefix (66ae8ff)
+* issues found while unit testing, merge old room integration test into new file (2e134b9)
 
-## [0.47.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.46.2...v0.47.0) (2026-02-16)
+## [0.47](https://gitlab.com/bubblehouse/django-moo/compare/v0.46.2...v0.47.5) (2026-02-23)
 
-
 ### Features
-
-* added remaining room functions ([5ffddba](https://gitlab.com/bubblehouse/django-moo/commit/5ffddba25cb5af7bb4393e7682ad44b030cc6e89))
-* added remaining root_class functions, ensure all objects use $root_class if it exists ([5b7af13](https://gitlab.com/bubblehouse/django-moo/commit/5b7af134d4b8811793bc56ff7eecb86807a86710))
-
-
-### Bug Fixes
-
-* prevent Verbs from being called by the admin template engine ([0f625a5](https://gitlab.com/bubblehouse/django-moo/commit/0f625a5b09041c77197be238456e8dec82795689))
-* update the webssh template directly in the container ([b8ae502](https://gitlab.com/bubblehouse/django-moo/commit/b8ae5023b215428c88071782a76342d65ed38634))
-* update the webssh template directly in the container ([0554075](https://gitlab.com/bubblehouse/django-moo/commit/0554075937e8280af73af74e2be06489cd8c126f))
-
-## [0.46.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.46.1...v0.46.2) (2026-02-10)
-
 
-### Bug Fixes
-
-* webapp port clobbered ([7ac881f](https://gitlab.com/bubblehouse/django-moo/commit/7ac881ff1fddcb26810a9cddef24d4dabe40bd9d))
-
-## [0.46.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.46.0...v0.46.1) (2026-02-10)
+* added remaining room functions (5ffddba)
+* added remaining root_class functions, ensure all objects use $root_class if it exists (5b7af13)
 
 
 ### Bug Fixes
 
-* webssh deployment to helm chart ([aa68c03](https://gitlab.com/bubblehouse/django-moo/commit/aa68c034bb53fa577cbb72974afe1c00c42464ba))
+* fixes found during testing (e5fb790)
+* parser.find_object() searches the player inventory first, then the current location (ff08ce5)
+* remove unnecessary use of inherit_owner, will restore as needed (b81f6cf)
+* set correct owner when moving (16259c6)
+* set default messages for things (fa3653b)
+* install uv (4ac9052)
+* install uv (fc55505)
+* run anybadge through uv (96be7f9)
+* updated Dockerfile and entrypoint after uv migration (ef2a771)
+* use correct arch when installing uv (0ab45c7)
+* --on is required in the moo shebang line (00fa31e)
+* added migration to remove old proxy objects, renamed inherited to inherit_owner, other leftover (f8e157d)
+* disable Redis in unit tests to avoid blocking issues (383ed3c)
+* optimize is_allowed (4e7089b)
+* match_object improvements (a435c9d)
+* moved look to room, parser now calls huh on failure (1aae1cf)
+* prevent Verbs from being called by the admin template engine (0f625a5)
+* update the webssh template directly in the container (b8ae502)
+* update the webssh template directly in the container (0554075)
 
-## [0.46.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.45.1...v0.46.0) (2026-02-10)
+## [0.46](https://gitlab.com/bubblehouse/django-moo/compare/v0.45.1...v0.46.2) (2026-02-10)
 
-
 ### Features
-
-* add webssh deployment to helm chart ([f314d3c](https://gitlab.com/bubblehouse/django-moo/commit/f314d3c66bed7a1c19ffc5bdcb280a9234bf763a))
 
-## [0.45.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.45.0...v0.45.1) (2026-02-02)
+* add webssh deployment to helm chart (f314d3c)
 
 
 ### Bug Fixes
 
-* use player, not caller ([63e2285](https://gitlab.com/bubblehouse/django-moo/commit/63e22855962c55503a7f1ecf20d8f1716251be4f))
+* webapp port clobbered (7ac881f)
+* webssh deployment to helm chart (aa68c03)
 
-## [0.45.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.44.3...v0.45.0) (2026-02-02)
+## [0.45](https://gitlab.com/bubblehouse/django-moo/compare/v0.44.3...v0.45.1) (2026-02-02)
 
-
 ### Features
-
-* removed Accessible- proxy objects ([1ad9f2d](https://gitlab.com/bubblehouse/django-moo/commit/1ad9f2d07c240dd50e96cfccc6e30a0053b84ed2))
-
-## [0.44.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.44.2...v0.44.3) (2026-02-01)
-
-
-### Bug Fixes
-
-* update trusted hostname one last time ([9d52261](https://gitlab.com/bubblehouse/django-moo/commit/9d522615b339dc60d566b7558b46a3924e02f7ac))
-
-## [0.44.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.44.1...v0.44.2) (2026-02-01)
-
-
-### Bug Fixes
 
-* update trusted hostname ([1c30908](https://gitlab.com/bubblehouse/django-moo/commit/1c30908ec45a300219ce32eb543398439fffe478))
+* removed Accessible- proxy objects (1ad9f2d)
 
-## [0.44.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.44.0...v0.44.1) (2026-02-01)
 
-
 ### Bug Fixes
-
-* update trusted hostname ([2cddc00](https://gitlab.com/bubblehouse/django-moo/commit/2cddc005f60bb11dae145e9de275e08efc71c6be))
 
-## [0.44.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.43.0...v0.44.0) (2026-01-31)
+* use player, not caller (63e2285)
 
+## [0.44](https://gitlab.com/bubblehouse/django-moo/compare/v0.43.0...v0.44.3) (2026-02-01)
 
 ### Features
 
-* added API descriptor value for the Celery task_id ([a1daf41](https://gitlab.com/bubblehouse/django-moo/commit/a1daf414c13d21219ba36ddf777558b337390722))
-* added key support and parsing, modify tests to use variable PKs ([6b6ecaf](https://gitlab.com/bubblehouse/django-moo/commit/6b6ecafbd7536d2546669de651b0f26e75361653))
-* implement add_entrance and add_exit, convert dig and tunnel to use those ([4f4d1ee](https://gitlab.com/bubblehouse/django-moo/commit/4f4d1ee6cf8afa1c26e0858691639a34d436d2bc))
-* implemented support verbs for exits ([adf7100](https://gitlab.com/bubblehouse/django-moo/commit/adf710073b3edcd12984334bd9e421814bb3e8ad))
+* added API descriptor value for the Celery task_id (a1daf41)
+* added key support and parsing, modify tests to use variable PKs (6b6ecaf)
+* implement add_entrance and add_exit, convert dig and tunnel to use those (4f4d1ee)
+* implemented support verbs for exits (adf7100)
 
 
 ### Bug Fixes
 
-* almost removed AccessibleObject model ([9ac2304](https://gitlab.com/bubblehouse/django-moo/commit/9ac23046dc46b23d94cf7011ed7df6d32d9f170e))
-* create use objects by default so Wizard group rights work ([1cd9fb4](https://gitlab.com/bubblehouse/django-moo/commit/1cd9fb4a47c5f0aeb6ea2981b733d29ac89dcde5))
-* ensure we always get an accessible object here ([c1c1640](https://gitlab.com/bubblehouse/django-moo/commit/c1c16400ae601bd7a9d33bd1064a021a097f2817))
-* handle encoding consistently ([406a0d7](https://gitlab.com/bubblehouse/django-moo/commit/406a0d71e0493aa0fe39aaddde9ad3dcf72b0764))
-* major permissions fixes by adding player (which is static) vs caller (which can change) ([bad1836](https://gitlab.com/bubblehouse/django-moo/commit/bad1836fe04414d6525843e870344ddc4ee5402e))
-* make exceptions available through moo.core ([c055dcf](https://gitlab.com/bubblehouse/django-moo/commit/c055dcf242a77dde053a6a15f95c3cba5c45ddb3))
-* moved getattr override to main Object model ([09ec6c1](https://gitlab.com/bubblehouse/django-moo/commit/09ec6c1c4869ee64cf9e0f072ea2de5b3d9b5f66))
-* properly handle set_task_perms ([5967b94](https://gitlab.com/bubblehouse/django-moo/commit/5967b943d34a289f2f578949ef5386b00b49da2a))
-* properties are not readable by default ([d193084](https://gitlab.com/bubblehouse/django-moo/commit/d19308428c37a51102f1e26afa37c3b7e350cd63))
-* properties are not readable by default ([fb047d7](https://gitlab.com/bubblehouse/django-moo/commit/fb047d73da09c40063b7b696d67f7dc161e22706))
-* reimplementing exits ([626f06e](https://gitlab.com/bubblehouse/django-moo/commit/626f06e9a2401cd5ebb793353af01918576b3aa8))
-* reimplementing exits ([e5a25c9](https://gitlab.com/bubblehouse/django-moo/commit/e5a25c95d538a85ae23a92e4df6a1a930ffef7bf))
+* almost removed AccessibleObject model (9ac2304)
+* create use objects by default so Wizard group rights work (1cd9fb4)
+* ensure we always get an accessible object here (c1c1640)
+* handle encoding consistently (406a0d7)
+* major permissions fixes by adding player (which is static) vs caller (which can change) (bad1836)
+* make exceptions available through moo.core (c055dcf)
+* moved getattr override to main Object model (09ec6c1)
+* properly handle set_task_perms (5967b94)
+* properties are not readable by default (d193084)
+* properties are not readable by default (fb047d7)
+* reimplementing exits (626f06e)
+* reimplementing exits (e5a25c9)
+* update trusted hostname (9d52261)
+* update trusted hostname (1c30908)
+* update trusted hostname (2cddc00)
 
-## [0.43.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.42.0...v0.43.0) (2026-01-19)
+## [0.43](https://gitlab.com/bubblehouse/django-moo/compare/v0.42.0...v0.43.0) (2026-01-19)
 
-
 ### Features
-
-* instead of having the verb name as args[0], make it verb_name ([5c61bc3](https://gitlab.com/bubblehouse/django-moo/commit/5c61bc3f4b6e92e17f07ce671b5c2bd298343365))
 
-## [0.42.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.41.0...v0.42.0) (2026-01-19)
+* instead of having the verb name as args[0], make it verb_name (5c61bc3)
 
+## [0.42](https://gitlab.com/bubblehouse/django-moo/compare/v0.41.0...v0.42.0) (2026-01-19)
 
 ### Features
 
-* begin to mimic LambdaCore in the `default` bootstrap configuration. ([6f6434f](https://gitlab.com/bubblehouse/django-moo/commit/6f6434f1a845af538a5e02fe3f8450493fc8175f))
+* begin to mimic LambdaCore in the `default` bootstrap configuration. (6f6434f)
 
-## [0.41.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.40.0...v0.41.0) (2025-09-06)
+## [0.41](https://gitlab.com/bubblehouse/django-moo/compare/v0.40.0...v0.41.0) (2025-09-06)
 
-
 ### Features
-
-* add support for asterisk wildcard when creating verbs, closes [#8](https://gitlab.com/bubblehouse/django-moo/issues/8) ([eb017ba](https://gitlab.com/bubblehouse/django-moo/commit/eb017ba97dc9d4633ea542a3b72d5781b4ddcf15))
 
-## [0.40.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.39.0...v0.40.0) (2025-08-30)
+* add support for asterisk wildcard when creating verbs, closes [#8](https://gitlab.com/bubblehouse/django-moo/issues/8) (eb017ba)
 
+## [0.40](https://gitlab.com/bubblehouse/django-moo/compare/v0.39.0...v0.40.0) (2025-08-30)
 
 ### Features
 
-* added "either" dspec to support verbs with optional direct objects ([31ae9a3](https://gitlab.com/bubblehouse/django-moo/commit/31ae9a30c41098ee1f0bae578be1537f1ddc027f))
+* added "either" dspec to support verbs with optional direct objects (31ae9a3)
 
-## [0.39.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.38.0...v0.39.0) (2025-06-22)
+## [0.39](https://gitlab.com/bubblehouse/django-moo/compare/v0.38.0...v0.39.0) (2025-06-22)
 
-
 ### Features
-
-* support verb specifiers ([f2ea0e3](https://gitlab.com/bubblehouse/django-moo/commit/f2ea0e33ca182c73912c5285ad4fe1067a1bae2a))
 
-## [0.38.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.37.1...v0.38.0) (2025-05-03)
+* support verb specifiers (f2ea0e3)
 
+## [0.38](https://gitlab.com/bubblehouse/django-moo/compare/v0.37.1...v0.38.0) (2025-05-03)
 
 ### Features
-
-* first release to PyPI ([9357b30](https://gitlab.com/bubblehouse/django-moo/commit/9357b3054bbc71494ad5f6e8baf306a0fcf65860))
-
 
-### Bug Fixes
-
-* allow use of external packages, update docstrings ([8ee3261](https://gitlab.com/bubblehouse/django-moo/commit/8ee32610980d5bdb1f5263f3169974374e850b17))
-* dependency fix for redis, move import ([0fd6b65](https://gitlab.com/bubblehouse/django-moo/commit/0fd6b6594bc83ddbfc80b11478795aef78a1f4a1))
-* improve method handling to handle system.describe() implementation ([a65a03b](https://gitlab.com/bubblehouse/django-moo/commit/a65a03b0bfd0b6627c22591280ca483ef3dd163a))
+* first release to PyPI (9357b30)
 
-## [0.37.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.37.0...v0.37.1) (2025-03-16)
 
-
 ### Bug Fixes
-
-* door locking issues resolved ([0711aba](https://gitlab.com/bubblehouse/django-moo/commit/0711ababdf601a4d9f669a7ef4c4662d5431b87b))
-* handle verb names in methods properly ([a5522e7](https://gitlab.com/bubblehouse/django-moo/commit/a5522e7f001dfbf6d74d60fa5e84eb59b6fe71f9))
-* throw warnings when trying to write without redis ([997e2df](https://gitlab.com/bubblehouse/django-moo/commit/997e2df5c641d6a77148d7f6562ab10d24513da9))
 
-## [0.37.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.36.3...v0.37.0) (2025-03-09)
+* allow use of external packages, update docstrings (8ee3261)
+* dependency fix for redis, move import (0fd6b65)
+* improve method handling to handle system.describe() implementation (a65a03b)
 
+## [0.37](https://gitlab.com/bubblehouse/django-moo/compare/v0.36.3...v0.37.1) (2025-03-16)
 
 ### Features
-
-* added preliminary door support ([e77ddef](https://gitlab.com/bubblehouse/django-moo/commit/e77ddef119c4c74961e86ba174281d6a2d4c6489))
-* implement getattr support for props and verbs ([f2d1cf7](https://gitlab.com/bubblehouse/django-moo/commit/f2d1cf7df3d8fd5b4ad369a43965cbbcdb860255))
-
-
-### Bug Fixes
-
-* getattr support for props and verbs ([9586e6f](https://gitlab.com/bubblehouse/django-moo/commit/9586e6f351e8055d2b17aa0169872b3f30b62907))
-* ignore methods when parsing for verbs ([8644f0f](https://gitlab.com/bubblehouse/django-moo/commit/8644f0f5083874f89b6041398f3b0b2c20bc4cf5))
-* tests broken by parser changes ([7c4969e](https://gitlab.com/bubblehouse/django-moo/commit/7c4969e5d1431083c2ef83a41a180cc2c7b06956))
-* tests broken by parser changes ([42939c3](https://gitlab.com/bubblehouse/django-moo/commit/42939c39ac74a6ac44a71740dacd2e1948a4e417))
-
-## [0.36.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.36.2...v0.36.3) (2025-02-09)
-
-
-### Bug Fixes
-
-* dont remove shebang when bootstrapping ([792d65a](https://gitlab.com/bubblehouse/django-moo/commit/792d65afdc6a6dac986be930aa3723dafe1e866e))
-* final issues with verbs in debugger ([f75ae53](https://gitlab.com/bubblehouse/django-moo/commit/f75ae532d1f46522aa2d0507df10d79b664c4158))
-* prompt correctly updating from DB ([fbe1d87](https://gitlab.com/bubblehouse/django-moo/commit/fbe1d8774b7728c20cd99fda861590f7f731753a))
-* proper filename handling fixes debug issues ([f4cdcfc](https://gitlab.com/bubblehouse/django-moo/commit/f4cdcfce176677f529ebb9bbf4452c5078f3f38c))
-* set __file__ when using a file-backed verb ([9285e93](https://gitlab.com/bubblehouse/django-moo/commit/9285e93bd9ba913cf01375116348157c8155e017))
-
-## [0.36.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.36.1...v0.36.2) (2025-02-02)
-
-
-### Bug Fixes
-
-* add viewport meta tag to fix mobile ([b05506c](https://gitlab.com/bubblehouse/django-moo/commit/b05506c3c3db7fbfa3d8d5895fdc64db3a3fb95a))
-* allow login form to wrap on smaller screens ([13907f4](https://gitlab.com/bubblehouse/django-moo/commit/13907f4e994daafbf3067d121e816013039bfd33))
 
-## [0.36.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.36.0...v0.36.1) (2025-01-29)
+* added preliminary door support (e77ddef)
+* implement getattr support for props and verbs (f2d1cf7)
 
 
 ### Bug Fixes
 
-* prevent wssh from being hijacked for other connections ([417651f](https://gitlab.com/bubblehouse/django-moo/commit/417651f1d30b989140bb5b84623b8c1ac2b0c6bb))
+* door locking issues resolved (0711aba)
+* handle verb names in methods properly (a5522e7)
+* throw warnings when trying to write without redis (997e2df)
+* getattr support for props and verbs (9586e6f)
+* ignore methods when parsing for verbs (8644f0f)
+* tests broken by parser changes (7c4969e)
+* tests broken by parser changes (42939c3)
 
-## [0.36.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.35.0...v0.36.0) (2025-01-28)
+## [0.36](https://gitlab.com/bubblehouse/django-moo/compare/v0.35.0...v0.36.3) (2025-02-09)
 
-
 ### Features
 
-* install a web-based ssh client on the root page ([1216a1c](https://gitlab.com/bubblehouse/django-moo/commit/1216a1c77163ceffca8a7a2cce2afffa046e211d))
+* install a web-based ssh client on the root page (1216a1c)
 
 
 ### Bug Fixes
 
-* hard-code hostname and port for webssh ([00120ef](https://gitlab.com/bubblehouse/django-moo/commit/00120efa04ba3b744b39e76a14d95cff4b5fe7e6))
+* dont remove shebang when bootstrapping (792d65a)
+* final issues with verbs in debugger (f75ae53)
+* prompt correctly updating from DB (fbe1d87)
+* proper filename handling fixes debug issues (f4cdcfc)
+* set __file__ when using a file-backed verb (9285e93)
+* add viewport meta tag to fix mobile (b05506c)
+* allow login form to wrap on smaller screens (13907f4)
+* prevent wssh from being hijacked for other connections (417651f)
+* hard-code hostname and port for webssh (00120ef)
 
-## [0.35.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.34.0...v0.35.0) (2025-01-24)
+## [0.35](https://gitlab.com/bubblehouse/django-moo/compare/v0.34.0...v0.35.0) (2025-01-24)
 
-
 ### Features
-
-* add devcontainer support ([d88812e](https://gitlab.com/bubblehouse/django-moo/commit/d88812ea2dbadf3b543b85e9111d69e85b11b290))
 
-## [0.34.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.33.3...v0.34.0) (2025-01-12)
+* add devcontainer support (d88812e)
 
+## [0.34](https://gitlab.com/bubblehouse/django-moo/compare/v0.33.3...v0.34.0) (2025-01-12)
 
 ### Features
-
-* reduce image size by using a builder image ([ca20fc6](https://gitlab.com/bubblehouse/django-moo/commit/ca20fc6748e6f95eaae80ab7a57f763e85aef48c))
-
-## [0.33.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.33.2...v0.33.3) (2025-01-12)
-
-
-### Bug Fixes
-
-* allow more look scenarios, update test ([69f60f2](https://gitlab.com/bubblehouse/django-moo/commit/69f60f21aae96fa502162180ab22f2d971b209b5))
-* improve describe verb and add test ([3a08e90](https://gitlab.com/bubblehouse/django-moo/commit/3a08e90367f5ff22617712aa66662d214bdd9fcf))
-
-## [0.33.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.33.1...v0.33.2) (2025-01-11)
 
+* reduce image size by using a builder image (ca20fc6)
 
-### Bug Fixes
+## [0.33](https://gitlab.com/bubblehouse/django-moo/compare/v0.32.0...v0.33.3) (2025-01-12)
 
-* broken BBcode colors ([d84f87f](https://gitlab.com/bubblehouse/django-moo/commit/d84f87f33f153e1b296f9cb105fe1e7e7d961537))
-* improve create when using args ([dd0b1bd](https://gitlab.com/bubblehouse/django-moo/commit/dd0b1bd849b7a920701b2205a7ec7fee845610bd))
-* logging improvements ([5909244](https://gitlab.com/bubblehouse/django-moo/commit/5909244f3e4fb158ebcbea9ca03f18d3a8ac0a54))
-* logging improvements for shell server ([181c1fe](https://gitlab.com/bubblehouse/django-moo/commit/181c1fe6a3a11e507d917fea26c798257ab2556d))
-* logging improvements for shell server ([44efe39](https://gitlab.com/bubblehouse/django-moo/commit/44efe39693daba8da1dd5a89dc02716cc1bd4786))
-* quiet down celery ([7005c7e](https://gitlab.com/bubblehouse/django-moo/commit/7005c7e05dd9f2caffa9428f0ac73fd4ea65be4a))
-* quiet down nginx, restore redirect ([6759ea3](https://gitlab.com/bubblehouse/django-moo/commit/6759ea34230570d4febce2f9ff461c216cd84a62))
-* updated dependencies ([47ff80d](https://gitlab.com/bubblehouse/django-moo/commit/47ff80d43b2128826dbab2fb750412868d0fc6b0))
+### Features
 
-## [0.33.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.33.0...v0.33.1) (2024-12-28)
+* implement serialization for moo types (2c2470f)
 
 
 ### Bug Fixes
-
-* class name consistency ([4c46ab1](https://gitlab.com/bubblehouse/django-moo/commit/4c46ab11cac02517a03e956c645ec7dc9cfc2eb1))
-* go verb needs to save the changes to caller location ([cd752b0](https://gitlab.com/bubblehouse/django-moo/commit/cd752b06f51e42f790bb80538785f3f797b7afcb))
-* use moo de-serialization for property values ([07b76ce](https://gitlab.com/bubblehouse/django-moo/commit/07b76ce2985ec334f0f78b2d3af96472a7f84118))
-
-## [0.33.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.32.0...v0.33.0) (2024-12-28)
 
+* allow more look scenarios, update test (69f60f2)
+* improve describe verb and add test (3a08e90)
+* broken BBcode colors (d84f87f)
+* improve create when using args (dd0b1bd)
+* logging improvements (5909244)
+* logging improvements for shell server (181c1fe)
+* logging improvements for shell server (44efe39)
+* quiet down celery (7005c7e)
+* quiet down nginx, restore redirect (6759ea3)
+* updated dependencies (47ff80d)
+* class name consistency (4c46ab1)
+* go verb needs to save the changes to caller location (cd752b0)
+* use moo de-serialization for property values (07b76ce)
 
-### Features
-
-* implement serialization for moo types ([2c2470f](https://gitlab.com/bubblehouse/django-moo/commit/2c2470fb0d191bd320925a9bc19397b06a72f2be))
-
-## [0.32.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.31.0...v0.32.0) (2024-12-02)
+## [0.32](https://gitlab.com/bubblehouse/django-moo/compare/v0.31.0...v0.32.0) (2024-12-02)
 
-
 ### Features
 
-* added has_property ([e13f961](https://gitlab.com/bubblehouse/django-moo/commit/e13f961a332d3001d5ae3379fe1500f71c2b81d3))
+* added has_property (e13f961)
 
 
 ### Bug Fixes
-
-* restore default bootstrap after mistaking it for test ([3312f1d](https://gitlab.com/bubblehouse/django-moo/commit/3312f1d048f38ea429f91467fcc8ca123ef49f7c))
-* small tweaks and debug improvements for verbs ([f0247c4](https://gitlab.com/bubblehouse/django-moo/commit/f0247c4d4db5a146a7b9838dbc4dcf391e8649e3))
 
-## [0.31.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.30.0...v0.31.0) (2024-11-30)
+* restore default bootstrap after mistaking it for test (3312f1d)
+* small tweaks and debug improvements for verbs (f0247c4)
 
+## [0.31](https://gitlab.com/bubblehouse/django-moo/compare/v0.30.0...v0.31.0) (2024-11-30)
 
 ### Features
 
-* first pass at room movement verbs ([3d38859](https://gitlab.com/bubblehouse/django-moo/commit/3d38859238537f926473abb3f77a3064292614a1))
-* improve verb loading ([f14bbb5](https://gitlab.com/bubblehouse/django-moo/commit/f14bbb5c88d3a03fda22b386cb7a3203baeeef04))
-* move common boostrap code for universe into initialize_dataset ([f3df4f5](https://gitlab.com/bubblehouse/django-moo/commit/f3df4f514535d385e62ee558043407756676436b))
+* first pass at room movement verbs (3d38859)
+* improve verb loading (f14bbb5)
+* move common boostrap code for universe into initialize_dataset (f3df4f5)
 
 
 ### Bug Fixes
 
-* dont load from a file when the code is provided ([6bb56d8](https://gitlab.com/bubblehouse/django-moo/commit/6bb56d8bc97c4c5d10bd0a95c7b24439fa035bd2))
-* remove SFTP spike ([6938154](https://gitlab.com/bubblehouse/django-moo/commit/693815400d77a50d5dde82d4b44b9ac533b343e9))
-* verb cleanup ([8e8f10c](https://gitlab.com/bubblehouse/django-moo/commit/8e8f10c888e0e229b742ff926ad51e05141d52e5))
+* dont load from a file when the code is provided (6bb56d8)
+* remove SFTP spike (6938154)
+* verb cleanup (8e8f10c)
 
-## [0.30.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.29.2...v0.30.0) (2024-07-21)
+## [0.30](https://gitlab.com/bubblehouse/django-moo/compare/v0.29.2...v0.30.0) (2024-07-21)
 
-
 ### Features
-
-* added sftp/scp support for editing verbs and properties ([dcbe75f](https://gitlab.com/bubblehouse/django-moo/commit/dcbe75f1f2faba1a5b222d663b776d458cf50b93))
 
-## [0.29.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.29.1...v0.29.2) (2024-07-18)
+* added sftp/scp support for editing verbs and properties (dcbe75f)
 
+## [0.29](https://gitlab.com/bubblehouse/django-moo/compare/v0.28.0...v0.29.2) (2024-07-18)
 
-### Bug Fixes
-
-* override delete() on Object, not AccessibleObject ([a4c0860](https://gitlab.com/bubblehouse/django-moo/commit/a4c08601cb3640b6c37ae31d499fd41b299f35a6))
+### Features
 
-## [0.29.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.29.0...v0.29.1) (2024-07-12)
+* proper location change behavior, closes [#12](https://gitlab.com/bubblehouse/django-moo/issues/12) (32e94cb)
 
 
 ### Bug Fixes
-
-* check for recursion when changing location ([f27c76a](https://gitlab.com/bubblehouse/django-moo/commit/f27c76a871976872fa50f19f3784f9373617644b))
-
-## [0.29.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.28.0...v0.29.0) (2024-07-10)
-
-
-### Features
 
-* proper location change behavior, closes [#12](https://gitlab.com/bubblehouse/django-moo/issues/12) ([32e94cb](https://gitlab.com/bubblehouse/django-moo/commit/32e94cb672907dd89b187fed1e000281c45a4e33))
+* override delete() on Object, not AccessibleObject (a4c0860)
+* check for recursion when changing location (f27c76a)
 
-## [0.28.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.27.0...v0.28.0) (2024-07-09)
+## [0.28](https://gitlab.com/bubblehouse/django-moo/compare/v0.27.0...v0.28.0) (2024-07-09)
 
-
 ### Features
 
-* implement proper permissions and handlers for owners and locations ([88e422a](https://gitlab.com/bubblehouse/django-moo/commit/88e422ab4e40242b13dda705e8203f6a64aab8d4))
+* implement proper permissions and handlers for owners and locations (88e422a)
 
-## [0.27.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.26.0...v0.27.0) (2024-07-08)
+## [0.27](https://gitlab.com/bubblehouse/django-moo/compare/v0.26.0...v0.27.0) (2024-07-08)
 
-
 ### Features
-
-* added object quotas and initialization ([98b5d00](https://gitlab.com/bubblehouse/django-moo/commit/98b5d006c67c598c9591f2a57271ee2ef719e66e))
 
-## [0.26.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.25.3...v0.26.0) (2024-07-05)
+* added object quotas and initialization (98b5d00)
 
+## [0.26](https://gitlab.com/bubblehouse/django-moo/compare/v0.25.3...v0.26.0) (2024-07-05)
 
 ### Features
-
-* began implementing support for background tasks ([0e79a9a](https://gitlab.com/bubblehouse/django-moo/commit/0e79a9a735582de64e607bb38d0543c072e46cb0))
-
-
-### Bug Fixes
-
-* added db_index to important fields ([1e72ccc](https://gitlab.com/bubblehouse/django-moo/commit/1e72ccc3af567c63b0ebb250219eaa819f7e9ea5))
-* cleaned up invoke_verb, added docs ([32b0724](https://gitlab.com/bubblehouse/django-moo/commit/32b0724e1fea98a4b3f1e71410c5ea20f2847d0b))
-* rename functions ([3001aa0](https://gitlab.com/bubblehouse/django-moo/commit/3001aa0611b3a04b253c3e128ed87053c26a704e))
-
-## [0.25.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.25.2...v0.25.3) (2024-07-04)
-
-
-### Bug Fixes
-
-* added missing lookup() function ([fb41cc6](https://gitlab.com/bubblehouse/django-moo/commit/fb41cc6e404ec6e2c0b979ddd0a665893a72085a))
-
-## [0.25.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.25.1...v0.25.2) (2024-07-02)
-
 
-### Bug Fixes
-
-* fixed use of args/kwargs with multiple verb invocations ([f7711e1](https://gitlab.com/bubblehouse/django-moo/commit/f7711e1dea22faa1bc971f18b59ba003a832d7c1))
-
-## [0.25.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.25.0...v0.25.1) (2024-06-28)
+* began implementing support for background tasks (0e79a9a)
 
 
 ### Bug Fixes
 
-* consolidate custom verb functions in moo.core ([e3c9329](https://gitlab.com/bubblehouse/django-moo/commit/e3c9329a1e93417eb9eda886e5ddbc4bd37729ce))
+* added db_index to important fields (1e72ccc)
+* cleaned up invoke_verb, added docs (32b0724)
+* rename functions (3001aa0)
 
-## [0.25.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.24.0...v0.25.0) (2024-06-17)
+## [0.25](https://gitlab.com/bubblehouse/django-moo/compare/v0.24.0...v0.25.3) (2024-07-04)
 
-
 ### Features
 
-* improved prompt, some refactoring ([3ec3b2d](https://gitlab.com/bubblehouse/django-moo/commit/3ec3b2d2fe07eabf9f07750c28443e47f2228d3f))
+* improved prompt, some refactoring (3ec3b2d)
 
 
 ### Bug Fixes
-
-* correctly handle ctrl-D ([b0558c7](https://gitlab.com/bubblehouse/django-moo/commit/b0558c7e38e4f0ad348e8455a613fb735de9fadc))
-* sleep before starting server to give time for the previous server port to be closed ([86b247b](https://gitlab.com/bubblehouse/django-moo/commit/86b247bed4c1cb75f7299c7d8fccc73708b1b820))
 
-## [0.24.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.23.0...v0.24.0) (2024-06-10)
+* correctly handle ctrl-D (b0558c7)
+* sleep before starting server to give time for the previous server port to be closed (86b247b)
+* added missing lookup() function (fb41cc6)
+* fixed use of args/kwargs with multiple verb invocations (f7711e1)
+* consolidate custom verb functions in moo.core (e3c9329)
 
+## [0.24](https://gitlab.com/bubblehouse/django-moo/compare/v0.23.0...v0.24.0) (2024-06-10)
 
 ### Features
 
-* simplified client code and removed Python REPL ([b035087](https://gitlab.com/bubblehouse/django-moo/commit/b0350870c9c4108025344ad32137fdbc9d921eb1))
+* simplified client code and removed Python REPL (b035087)
 
-## [0.23.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.22.0...v0.23.0) (2024-06-09)
+## [0.23](https://gitlab.com/bubblehouse/django-moo/compare/v0.22.0...v0.23.0) (2024-06-09)
 
-
 ### Features
-
-* allow sending messages directly to a user ([444ce9a](https://gitlab.com/bubblehouse/django-moo/commit/444ce9a081b9fdbfc3fae3d27ab5388011cf878a))
 
-## [0.22.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.21.0...v0.22.0) (2024-05-20)
+* allow sending messages directly to a user (444ce9a)
 
+## [0.22](https://gitlab.com/bubblehouse/django-moo/compare/v0.21.0...v0.22.0) (2024-05-20)
 
 ### Features
 
-* add a celery runner to docker-compose ([a218f3e](https://gitlab.com/bubblehouse/django-moo/commit/a218f3e9c686c1cdbdffbf86dddc69b27c6ba06a))
-* add celery with django and redis integration ([6eadf15](https://gitlab.com/bubblehouse/django-moo/commit/6eadf15dadf9f677efee86609201a2a9a1aceb2e))
-* configure django/celery intergration ([88654f7](https://gitlab.com/bubblehouse/django-moo/commit/88654f7d82a40bad7ffa9fee1e57dcbcaace4164))
-* run verb code in Celery workers instead of the web application ([bab48ee](https://gitlab.com/bubblehouse/django-moo/commit/bab48ee87809a9c55fa5741c9c173522f39f63b3))
+* add a celery runner to docker-compose (a218f3e)
+* add celery with django and redis integration (6eadf15)
+* configure django/celery intergration (88654f7)
+* run verb code in Celery workers instead of the web application (bab48ee)
 
 
 ### Bug Fixes
 
-* only run watchedo on moo_shell invocations ([ffcf3f4](https://gitlab.com/bubblehouse/django-moo/commit/ffcf3f4e6c81ea018c9a1f3cf8a166eac3fddacb))
+* only run watchedo on moo_shell invocations (ffcf3f4)
 
-## [0.21.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.20.0...v0.21.0) (2024-05-07)
+## [0.21](https://gitlab.com/bubblehouse/django-moo/compare/v0.20.0...v0.21.0) (2024-05-07)
 
-
 ### Features
-
-* added moo_enableuser command ([1be7daf](https://gitlab.com/bubblehouse/django-moo/commit/1be7dafa7a456c17755ce0268a3465040081471f))
 
-## [0.20.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.19.0...v0.20.0) (2024-05-07)
+* added moo_enableuser command (1be7daf)
 
+## [0.20](https://gitlab.com/bubblehouse/django-moo/compare/v0.19.0...v0.20.0) (2024-05-07)
 
 ### Features
 
-* use ACE editor inside the Django admin for editing Verbs ([2c0a1d6](https://gitlab.com/bubblehouse/django-moo/commit/2c0a1d6e54522ffc5645fe10d723011cca38d856))
+* use ACE editor inside the Django admin for editing Verbs (2c0a1d6)
 
 
 ### Bug Fixes
 
-* handle direct object ID lookups ([aec1cf5](https://gitlab.com/bubblehouse/django-moo/commit/aec1cf50589c7efe30a96f234f55f5d4079f78f1))
+* handle direct object ID lookups (aec1cf5)
 
-## [0.19.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.18.2...v0.19.0) (2024-05-06)
+## [0.19](https://gitlab.com/bubblehouse/django-moo/compare/v0.18.2...v0.19.0) (2024-05-06)
 
-
 ### Features
-
-* add intrinsic `obvious` property to improve object searching ([97a7d62](https://gitlab.com/bubblehouse/django-moo/commit/97a7d62588b0ebc611d21d8c80486c642edeb741))
-* added contents to look output ([92b41ea](https://gitlab.com/bubblehouse/django-moo/commit/92b41ea3f717fefbf5e3f3d8a8e10f2add6ea438))
-
-
-### Bug Fixes
-
-* added more safe builtins ([476cf3c](https://gitlab.com/bubblehouse/django-moo/commit/476cf3c21b8c7766a5899bc99ccc80e92c7c9c1e))
-* improved `look` command with better functionality and ANSI colors ([e872eec](https://gitlab.com/bubblehouse/django-moo/commit/e872eecb9465e409976b0161516075a4660abbc2))
 
-## [0.18.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.18.1...v0.18.2) (2024-05-02)
+* add intrinsic `obvious` property to improve object searching (97a7d62)
+* added contents to look output (92b41ea)
 
 
 ### Bug Fixes
 
-* improve var handling ([acd163c](https://gitlab.com/bubblehouse/django-moo/commit/acd163c8ae9a6dea81c9a1f2e916dbd531b087fe))
+* added more safe builtins (476cf3c)
+* improved `look` command with better functionality and ANSI colors (e872eec)
 
-## [0.18.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.18.0...v0.18.1) (2024-04-30)
+## [0.18](https://gitlab.com/bubblehouse/django-moo/compare/v0.17.4...v0.18.2) (2024-05-02)
 
-
-### Bug Fixes
-
-* dont stringify things being printed ([5694467](https://gitlab.com/bubblehouse/django-moo/commit/56944672b121e3ff6a511ff6f65ae74c46f82b63))
-
-## [0.18.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.17.4...v0.18.0) (2024-04-29)
-
-
 ### Features
-
-* enable Rich-based markup processing on output ([b3a3e27](https://gitlab.com/bubblehouse/django-moo/commit/b3a3e27bff5ed2f2b1724d56a9f9d42811e66269))
 
-## [0.17.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.17.3...v0.17.4) (2024-04-28)
+* enable Rich-based markup processing on output (b3a3e27)
 
 
 ### Bug Fixes
 
-* prompt improvements ([1e49817](https://gitlab.com/bubblehouse/django-moo/commit/1e49817d9d7db4de902f5778b06bfdc7f4cb4d69))
-* use existing hosts ([1c8b09c](https://gitlab.com/bubblehouse/django-moo/commit/1c8b09cad5f32f9c1432cd091edeac428a1a8a4a))
+* improve var handling (acd163c)
+* dont stringify things being printed (5694467)
 
-## [0.17.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.17.2...v0.17.3) (2024-04-28)
-
-
-### Bug Fixes
-
-* set permissions so www-data can use the host key ([50aeb5a](https://gitlab.com/bubblehouse/django-moo/commit/50aeb5afb746d57d16d53cc6d281bf63676d7ac7))
-
-## [0.17.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.17.1...v0.17.2) (2024-04-26)
-
-
-### Bug Fixes
+## [0.17](https://gitlab.com/bubblehouse/django-moo/compare/v0.16.0...v0.17.4) (2024-04-28)
 
-* add some missing fields, include extras in the package so it can build a Docker container ([cc86019](https://gitlab.com/bubblehouse/django-moo/commit/cc8601987a93397e31bd95762811f249021ff463))
+### Features
 
-## [0.17.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.17.0...v0.17.1) (2024-03-29)
+* formally released as django-moo (e519798)
 
 
 ### Bug Fixes
 
-* packaging naming ([19c5562](https://gitlab.com/bubblehouse/django-moo/commit/19c5562dfdc612de63e7853be955153467eea28f))
-* quiet build warnings about this plugin ([34f7a18](https://gitlab.com/bubblehouse/django-moo/commit/34f7a18f420a305635fbb51fa7648be45cfbeb55))
-* updated lockfile ([135be75](https://gitlab.com/bubblehouse/django-moo/commit/135be754da532ea0bef178aec677f0fbe0aedeac))
+* prompt improvements (1e49817)
+* use existing hosts (1c8b09c)
+* set permissions so www-data can use the host key (50aeb5a)
+* add some missing fields, include extras in the package so it can build a Docker container (cc86019)
+* packaging naming (19c5562)
+* quiet build warnings about this plugin (34f7a18)
+* updated lockfile (135be75)
 
-## [0.17.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.16.0...v0.17.0) (2024-03-28)
+## [0.16](https://gitlab.com/bubblehouse/django-moo/compare/v0.15.1...v0.16.0) (2024-03-23)
 
-
 ### Features
-
-* formally released as django-moo ([e519798](https://gitlab.com/bubblehouse/django-moo/commit/e519798b7d243416581dee545b99882e65ccc36d))
 
-## [0.16.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.15.1...v0.16.0) (2024-03-23)
+* begin integrating ACLs (7edb982)
 
+## [0.15](https://gitlab.com/bubblehouse/django-moo/compare/v0.14.8...v0.15.1) (2024-03-17)
 
 ### Features
 
-* begin integrating ACLs ([7edb982](https://gitlab.com/bubblehouse/django-moo/commit/7edb982b1bb0193398301d8fd09f85d8e2f3a64c))
+* add inherited field to property (081cf38)
+* add object.invoke_verb() (7da3d28)
+* added add_ancestor with inheritence of properties (9c6113b)
+* added alternate prompt mode for MUD mode (c530a1f)
+* added parser/lexer, very early successes with each (747f598)
+* get_property will now recurse the inheritance tree (12090ee)
+* ssh prompt now defaults to sentence parser (15d1251)
 
-## [0.15.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.15.0...v0.15.1) (2024-03-17)
 
-
 ### Bug Fixes
-
-* changed location of chart ([083e2f7](https://gitlab.com/bubblehouse/django-moo/commit/083e2f74206bcd844a677c3cd2496f6ca0689c58))
 
-## [0.15.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.14.8...v0.15.0) (2024-03-17)
+* changed location of chart (083e2f7)
+* aliases work inside the parser now (45fb2d5)
+* always use Accessible- objects if they will be used in a restricted env (1c3c8dc)
+* be clear about which dataset is being used (7c70b2d)
+* correctly clone instances (90194d6)
+* dont massage verb code in prompt (d6b6429)
+* fixes for permissions and associated tests (eed7c9a)
+* make get ancestors/descendents generators so we can stop once we find something (3845247)
+* prepositions and handle query sets (a25499e)
+* remove invalid/unneeded related names (2af5ba1)
+* remove invalid/unneeded related names (4e87d55)
+* remove magic variables (3e2d9e0)
+* typo in exception message (c8ac77b)
+* update to python3.11 (0f21ed4)
+* use a single eval function for both (06f8b5a)
+* use signals instead of overriding through.save() (7343898)
+* use warnings instead of logging them (4a2a673)
+* verb environment globals (41e5365)
 
+## [0.14](https://gitlab.com/bubblehouse/django-moo/compare/v0.13.2...v0.14.8) (2023-12-18)
 
 ### Features
-
-* add inherited field to property ([081cf38](https://gitlab.com/bubblehouse/django-moo/commit/081cf383ae88cc3c62c091d17210d4357c6df634))
-* add object.invoke_verb() ([7da3d28](https://gitlab.com/bubblehouse/django-moo/commit/7da3d283ddae62b488269fa26f8167f1182f382a))
-* added add_ancestor with inheritence of properties ([9c6113b](https://gitlab.com/bubblehouse/django-moo/commit/9c6113b55dab28b4f4fe8cc5cdf6b0c95a0f5507))
-* added alternate prompt mode for MUD mode ([c530a1f](https://gitlab.com/bubblehouse/django-moo/commit/c530a1fc4cdf5ac3505c6c6de53dd4d9d62f0051))
-* added parser/lexer, very early successes with each ([747f598](https://gitlab.com/bubblehouse/django-moo/commit/747f5988b100a6e9ae1fa1c3e8b0892dc7b777f8))
-* get_property will now recurse the inheritance tree ([12090ee](https://gitlab.com/bubblehouse/django-moo/commit/12090ee61847bc346ba8235a7b648947b78a223a))
-* ssh prompt now defaults to sentence parser ([15d1251](https://gitlab.com/bubblehouse/django-moo/commit/15d1251b8d3558b3dcf643f2bf65ffa89001e70f))
-
-
-### Bug Fixes
-
-* aliases work inside the parser now ([45fb2d5](https://gitlab.com/bubblehouse/django-moo/commit/45fb2d5d5ffb56b3b1ef44d33e0a2c670c2906bd))
-* always use Accessible- objects if they will be used in a restricted env ([1c3c8dc](https://gitlab.com/bubblehouse/django-moo/commit/1c3c8dcad10e20f9344f2c544ba3c74aa67519e1))
-* be clear about which dataset is being used ([7c70b2d](https://gitlab.com/bubblehouse/django-moo/commit/7c70b2dd01338e8e50f11208e0ed048edaf28f2a))
-* correctly clone instances ([90194d6](https://gitlab.com/bubblehouse/django-moo/commit/90194d63092f447b43c7335bb76dd5f9642e801c))
-* dont massage verb code in prompt ([d6b6429](https://gitlab.com/bubblehouse/django-moo/commit/d6b6429b4b355fd4372458a5da733c8e9f3ed787))
-* fixes for permissions and associated tests ([eed7c9a](https://gitlab.com/bubblehouse/django-moo/commit/eed7c9a563218c999662f22acb779ce752846622))
-* make get ancestors/descendents generators so we can stop once we find something ([3845247](https://gitlab.com/bubblehouse/django-moo/commit/3845247d3ed6a27465611983180bcb8cad064471))
-* prepositions and handle query sets ([a25499e](https://gitlab.com/bubblehouse/django-moo/commit/a25499eb2a5cc17419290ae7c91aeaa16fa23499))
-* remove invalid/unneeded related names ([2af5ba1](https://gitlab.com/bubblehouse/django-moo/commit/2af5ba12929153e7d0622f375703045ddd5cb8c1))
-* remove invalid/unneeded related names ([4e87d55](https://gitlab.com/bubblehouse/django-moo/commit/4e87d550966b57b2d555b0940a03a6a7bddd5853))
-* remove magic variables ([3e2d9e0](https://gitlab.com/bubblehouse/django-moo/commit/3e2d9e0ae354b1f2b0a5973276ad7086a408a68e))
-* typo in exception message ([c8ac77b](https://gitlab.com/bubblehouse/django-moo/commit/c8ac77b6b0375e2213ce347b8594c5469c128641))
-* update to python3.11 ([0f21ed4](https://gitlab.com/bubblehouse/django-moo/commit/0f21ed42d9bd95d3228d22b67096e0730de91630))
-* use a single eval function for both ([06f8b5a](https://gitlab.com/bubblehouse/django-moo/commit/06f8b5a0be2a28882d37abf78c1b78093b02d2fe))
-* use signals instead of overriding through.save() ([7343898](https://gitlab.com/bubblehouse/django-moo/commit/7343898ddd0a97c9bab60884cc0071bef5b26309))
-* use warnings instead of logging them ([4a2a673](https://gitlab.com/bubblehouse/django-moo/commit/4a2a6737ca95e025b006a3d4bf3046ea58a304bb))
-* verb environment globals ([41e5365](https://gitlab.com/bubblehouse/django-moo/commit/41e5365e3020dcdb399f0101650023d5d3b4993a))
-
-## [0.14.8](https://gitlab.com/bubblehouse/django-moo/compare/v0.14.7...v0.14.8) (2023-12-18)
-
-
-### Bug Fixes
-
-* provide an output for the context ([02a09d6](https://gitlab.com/bubblehouse/django-moo/commit/02a09d655407d0ba1993daec3072a3754291912b))
-
-## [0.14.7](https://gitlab.com/bubblehouse/django-moo/compare/v0.14.6...v0.14.7) (2023-12-18)
-
-
-### Bug Fixes
-
-* more verb reload updates ([ea9e984](https://gitlab.com/bubblehouse/django-moo/commit/ea9e984edd79df4f5f09f7bee7026a26236ac3e8))
-* output now sent to client instead of log ([7858155](https://gitlab.com/bubblehouse/django-moo/commit/7858155c4d6dd08d9cb43c806725c59b366e4db6))
-
-## [0.14.6](https://gitlab.com/bubblehouse/django-moo/compare/v0.14.5...v0.14.6) (2023-12-17)
-
-
-### Bug Fixes
-
-* further improvements to syntax sugar ([bcf34a5](https://gitlab.com/bubblehouse/django-moo/commit/bcf34a5d6dc3fc7f61b54795decda013c87f5baf))
-
-## [0.14.5](https://gitlab.com/bubblehouse/django-moo/compare/v0.14.4...v0.14.5) (2023-12-17)
-
-
-### Bug Fixes
-
-* sketching out first verb ([9c779ec](https://gitlab.com/bubblehouse/django-moo/commit/9c779ec0e08f7c7cac4a96f8265c0b3da9832e2f))
-* starting to implement proper context support ([ffc2159](https://gitlab.com/bubblehouse/django-moo/commit/ffc2159f848b009317c2e695c822aabaf59312f1))
-* updated to Django 5.0 ([47e30c6](https://gitlab.com/bubblehouse/django-moo/commit/47e30c6ba0cce2db4b16365124df7aede8447de3))
-
-## [0.14.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.14.3...v0.14.4) (2023-12-17)
-
-
-### Bug Fixes
-
-* add owner variable to add_* methods ([b4796da](https://gitlab.com/bubblehouse/django-moo/commit/b4796dade2b65c7085b6fd8a2120a276659bd5ac))
-* remove observations, that concept doesnt exist here ([58935da](https://gitlab.com/bubblehouse/django-moo/commit/58935daf262fe4c192f27ce7f1a65b6c1bc3ae06))
-
-## [0.14.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.14.2...v0.14.3) (2023-12-17)
-
-
-### Bug Fixes
-
-* add_propery and add_verb updates ([3fbfe4c](https://gitlab.com/bubblehouse/django-moo/commit/3fbfe4ca38c1ec160b6dc3cc8b033336eac47301))
-* use correct PK for system ([afbd6ea](https://gitlab.com/bubblehouse/django-moo/commit/afbd6ea965ddf7b0f4280889915d4aaad1a42c0d))
-
-## [0.14.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.14.1...v0.14.2) (2023-12-16)
-
-
-### Bug Fixes
-
-* bootstrap naming tweaks, trying to add first properties with little success ([4295497](https://gitlab.com/bubblehouse/django-moo/commit/4295497b3ee25bae264d75580cc6258ccd2d352a))
-* correct verb handling scenarios ([6e5a5d8](https://gitlab.com/bubblehouse/django-moo/commit/6e5a5d83301643f465961911c573533161444be9))
-* include repo for reloadable verbs ([c057478](https://gitlab.com/bubblehouse/django-moo/commit/c057478327c040c2547ea7446f0b28db5c72ab66))
 
-## [0.14.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.14.0...v0.14.1) (2023-12-11)
+* use a context manager around code invocations (f82a23c)
 
 
 ### Bug Fixes
 
-* other login fixes, still having exec trouble ([e1d7a3e](https://gitlab.com/bubblehouse/django-moo/commit/e1d7a3ecf5f4736c10081d798eb5ef050cb94af4))
+* provide an output for the context (02a09d6)
+* more verb reload updates (ea9e984)
+* output now sent to client instead of log (7858155)
+* further improvements to syntax sugar (bcf34a5)
+* sketching out first verb (9c779ec)
+* starting to implement proper context support (ffc2159)
+* updated to Django 5.0 (47e30c6)
+* add owner variable to add_* methods (b4796da)
+* remove observations, that concept doesnt exist here (58935da)
+* add_propery and add_verb updates (3fbfe4c)
+* use correct PK for system (afbd6ea)
+* bootstrap naming tweaks, trying to add first properties with little success (4295497)
+* correct verb handling scenarios (6e5a5d8)
+* include repo for reloadable verbs (c057478)
+* other login fixes, still having exec trouble (e1d7a3e)
 
-## [0.14.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.13.2...v0.14.0) (2023-12-11)
+## [0.13](https://gitlab.com/bubblehouse/django-moo/compare/v0.12.0...v0.13.2) (2023-12-10)
 
-
 ### Features
-
-* use a context manager around code invocations ([f82a23c](https://gitlab.com/bubblehouse/django-moo/commit/f82a23c88d2a9c76db53cf5742120dfce3193ff4))
-
-## [0.13.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.13.1...v0.13.2) (2023-12-10)
-
-
-### Bug Fixes
-
-* hold on to get/set_caller until we have a replacement for verb to use ([18c07ad](https://gitlab.com/bubblehouse/django-moo/commit/18c07ad62701b643b79aa16748ec55f07e4f4ef1))
-* its okay to save the whole model object ([bade6a0](https://gitlab.com/bubblehouse/django-moo/commit/bade6a0c199bf5ca65eb8350894c33cc9835c6b1))
 
-## [0.13.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.13.0...v0.13.1) (2023-12-10)
+* integrate Python shell with restricted environment (f1155e3)
 
 
 ### Bug Fixes
 
-* active user not so simple ([96d17cb](https://gitlab.com/bubblehouse/django-moo/commit/96d17cb1b4f518503b86040342cf824893ead91a))
-* instead of trying to use contextvars within a thread, just pass the user_id along ([24a2a3f](https://gitlab.com/bubblehouse/django-moo/commit/24a2a3fea13b8818995727d5306d6695ec4755ab))
+* remove os.system() loophole and prep for further customization (84f3985)
+* hold on to get/set_caller until we have a replacement for verb to use (18c07ad)
+* its okay to save the whole model object (bade6a0)
+* active user not so simple (96d17cb)
+* instead of trying to use contextvars within a thread, just pass the user_id along (24a2a3f)
 
-## [0.13.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.12.0...v0.13.0) (2023-12-08)
+## [0.12](https://gitlab.com/bubblehouse/django-moo/compare/v0.11.0...v0.12.0) (2023-12-04)
 
-
 ### Features
-
-* integrate Python shell with restricted environment ([f1155e3](https://gitlab.com/bubblehouse/django-moo/commit/f1155e3314050c7112cb7f13b363480dcfd444b4))
-
-
-### Bug Fixes
-
-* remove os.system() loophole and prep for further customization ([84f3985](https://gitlab.com/bubblehouse/django-moo/commit/84f3985cf2b635a96e9c1e34f755bdf7e9ae4351))
 
-## [0.12.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.11.0...v0.12.0) (2023-12-04)
+* add support for SSH key login (cbb00b4)
 
+## [0.11](https://gitlab.com/bubblehouse/django-moo/compare/v0.10.4...v0.11.0) (2023-12-04)
 
 ### Features
 
-* add support for SSH key login ([cbb00b4](https://gitlab.com/bubblehouse/django-moo/commit/cbb00b49a92459ee8d881edde061d46ea04efb95))
+* use Django user to authenticate (8e11f94)
 
-## [0.11.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.10.4...v0.11.0) (2023-12-04)
+## [0.10](https://gitlab.com/bubblehouse/django-moo/compare/v0.9.0...v0.10.4) (2023-12-03)
 
-
 ### Features
-
-* use Django user to authenticate ([8e11f94](https://gitlab.com/bubblehouse/django-moo/commit/8e11f9407bb87c918e6c92dcf8ebbaa2b32d42c7))
-
-## [0.10.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.10.3...v0.10.4) (2023-12-03)
-
-
-### Bug Fixes
-
-* raw id field ([a79710d](https://gitlab.com/bubblehouse/django-moo/commit/a79710de92b247f63705d7aed330daa326048363))
-
-## [0.10.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.10.2...v0.10.3) (2023-12-03)
-
-
-### Bug Fixes
-
-* raw id field ([5573c4e](https://gitlab.com/bubblehouse/django-moo/commit/5573c4efffaab10c77f4adf4ef03ad8cc3b2ec11))
-
-## [0.10.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.10.1...v0.10.2) (2023-12-03)
-
-
-### Bug Fixes
-
-* add Player model for User/Avatar integration ([02b8f68](https://gitlab.com/bubblehouse/django-moo/commit/02b8f6867266d184749aaa2df09f9d1af2ebb10b))
-* add Player model for User/Avatar integration ([4554112](https://gitlab.com/bubblehouse/django-moo/commit/45541125224c2fe43915f07feea48f3f011ea626))
 
-## [0.10.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.10.0...v0.10.1) (2023-12-03)
+* ownership and ACL support (a1c96ca)
 
 
 ### Bug Fixes
 
-* bootstrapping issues, refactoring ([f24f4d3](https://gitlab.com/bubblehouse/django-moo/commit/f24f4d3aa6be6427d1a29a90cbbb97e455e6f932))
+* raw id field (a79710d)
+* raw id field (5573c4e)
+* add Player model for User/Avatar integration (02b8f68)
+* add Player model for User/Avatar integration (4554112)
+* bootstrapping issues, refactoring (f24f4d3)
 
-## [0.10.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.9.0...v0.10.0) (2023-12-03)
+## [0.9](https://gitlab.com/bubblehouse/django-moo/compare/v0.8.0...v0.9.0) (2023-12-03)
 
-
-### Features
-
-* ownership and ACL support ([a1c96ca](https://gitlab.com/bubblehouse/django-moo/commit/a1c96ca82e55eb0a40a03c4a4909ef67593ad022))
-
-## [0.9.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.8.0...v0.9.0) (2023-12-03)
-
-
 ### Features
-
-* replace temp shell with python repl ([ed75b0a](https://gitlab.com/bubblehouse/django-moo/commit/ed75b0ac1c5eb49f901c3af55e1fd0499e4983c8))
 
-## [0.8.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.7.0...v0.8.0) (2023-11-30)
+* replace temp shell with python repl (ed75b0a)
 
+## [0.8](https://gitlab.com/bubblehouse/django-moo/compare/v0.7.0...v0.8.0) (2023-11-30)
 
 ### Features
 
-* created db init script ([6436a54](https://gitlab.com/bubblehouse/django-moo/commit/6436a54df2628baed601cf8b875a1f1884992613))
+* created db init script (6436a54)
 
 
 ### Bug Fixes
 
-* continuing to address init issues ([05b7fa9](https://gitlab.com/bubblehouse/django-moo/commit/05b7fa9786215e8d16bef6d54e490b02496620e9))
-* implementing more permissions details, refactoring ([f7534fc](https://gitlab.com/bubblehouse/django-moo/commit/f7534fca30242f4ab346b16747f1eeb880926acb))
+* continuing to address init issues (05b7fa9)
+* implementing more permissions details, refactoring (f7534fc)
 
-## [0.7.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.6.0...v0.7.0) (2023-11-27)
+## [0.7](https://gitlab.com/bubblehouse/django-moo/compare/v0.6.0...v0.7.0) (2023-11-27)
 
-
 ### Features
-
-* begin implementing code execution ([ec1ad55](https://gitlab.com/bubblehouse/django-moo/commit/ec1ad55d3778a8ac4121db714401b0d158cb20fe))
 
-## [0.6.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.5.0...v0.6.0) (2023-11-14)
+* begin implementing code execution (ec1ad55)
 
+## [0.6](https://gitlab.com/bubblehouse/django-moo/compare/v0.5.0...v0.6.0) (2023-11-14)
 
 ### Features
 
-* created core app with model imported from antioch ([1cd61be](https://gitlab.com/bubblehouse/django-moo/commit/1cd61be9ef33e52c77d1088ff75403aa3d9c3d87))
+* created core app with model imported from antioch (1cd61be)
 
-## [0.5.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.4.3...v0.5.0) (2023-11-04)
+## [0.5](https://gitlab.com/bubblehouse/django-moo/compare/v0.4.3...v0.5.0) (2023-11-04)
 
-
 ### Features
-
-* fully interactive SSH prompt using `python-prompt-toolkit` ([d9e567d](https://gitlab.com/bubblehouse/django-moo/commit/d9e567d3674c93ad210c2fc6c1f412f4c07f6a7f))
-* setup postgres settings for dev and local ([7361ccf](https://gitlab.com/bubblehouse/django-moo/commit/7361ccfff781b98f9c4c51e364217bd91e2e164f))
-
-
-### Bug Fixes
-
-* force release ([014d462](https://gitlab.com/bubblehouse/django-moo/commit/014d4620de1cf6eea0aebcfde2e65642a5401464))
-* force release ([1e8641c](https://gitlab.com/bubblehouse/django-moo/commit/1e8641c39e250b3f9d7f6d35d1b0fcf5211559af))
-* force release ([f3b4a8f](https://gitlab.com/bubblehouse/django-moo/commit/f3b4a8fb7b061802115480c48ed9b7491d50449f))
-* force release ([6d296a1](https://gitlab.com/bubblehouse/django-moo/commit/6d296a1ed3a53ef78776ec4bb169188aa648e285))
 
-## [0.4.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.4.2...v0.4.3) (2023-10-10)
+* fully interactive SSH prompt using `python-prompt-toolkit` (d9e567d)
+* setup postgres settings for dev and local (7361ccf)
 
 
 ### Bug Fixes
 
-* helm chart selector labels for shell service ([02beba3](https://gitlab.com/bubblehouse/django-moo/commit/02beba38f8e71f797884d56eb09c8bf448622656))
+* force release (014d462)
+* force release (1e8641c)
+* force release (f3b4a8f)
+* force release (6d296a1)
 
-## [0.4.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.4.1...v0.4.2) (2023-10-10)
+## [0.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.3.7...v0.4.3) (2023-10-10)
 
-
-### Bug Fixes
-
-* use port name ([26b7379](https://gitlab.com/bubblehouse/django-moo/commit/26b73791b1a9c2fe4aabf240423eb5688c113a0e))
-
-## [0.4.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.4.0...v0.4.1) (2023-10-10)
-
-
-### Bug Fixes
-
-* port for shell service ([4d0df41](https://gitlab.com/bubblehouse/django-moo/commit/4d0df4146e895a9ebf5c343861766c01dd8a1a34))
-
-## [0.4.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.3.7...v0.4.0) (2023-09-30)
-
-
 ### Features
-
-* add shell to compose file ([7704588](https://gitlab.com/bubblehouse/django-moo/commit/77045880128cc934bd912e6d5b8c7e0e1d6fc62d))
-
-
-### Bug Fixes
 
-* configure logging ([942743b](https://gitlab.com/bubblehouse/django-moo/commit/942743b6da1346e0de481624b8c9e69f58584245))
-* dont try to install native python modules ([48a7a9c](https://gitlab.com/bubblehouse/django-moo/commit/48a7a9c4b9301d28bad97b6778ccc0d4823aaabb))
-* use correct listening address ([1cbed76](https://gitlab.com/bubblehouse/django-moo/commit/1cbed76ac2e888ac29f674052facf1a686589642))
+* add shell to compose file (7704588)
 
-## [0.3.7](https://gitlab.com/bubblehouse/django-moo/compare/v0.3.6...v0.3.7) (2023-09-23)
 
-
-### Bug Fixes
-
-* installed uwsgi-python3 and net-tools ([7ded073](https://gitlab.com/bubblehouse/django-moo/commit/7ded073f9acb9e965bb98c7eeb9e6edf2c94d2ef))
-
-## [0.3.6](https://gitlab.com/bubblehouse/django-moo/compare/v0.3.5...v0.3.6) (2023-09-19)
-
-
-### Bug Fixes
-
-* remove broken redirect ([fd38705](https://gitlab.com/bubblehouse/django-moo/commit/fd3870595ee758c17955ac9622c5794ec651a074))
-
-## [0.3.5](https://gitlab.com/bubblehouse/django-moo/compare/v0.3.4...v0.3.5) (2023-09-19)
-
-
-### Bug Fixes
-
-* disable liveness/readiness for ssh server for now ([221434b](https://gitlab.com/bubblehouse/django-moo/commit/221434bb18b30432707feabbdee4b8ede2de6fb6))
-
-## [0.3.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.3.3...v0.3.4) (2023-09-19)
-
-
-### Bug Fixes
-
-* change ownership of server key ([cf23255](https://gitlab.com/bubblehouse/django-moo/commit/cf232550c426c054327a8cc4c55bb0f8a36b3c08))
-
-## [0.3.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.3.2...v0.3.3) (2023-09-19)
-
-
-### Bug Fixes
-
-* force release ([c977ec7](https://gitlab.com/bubblehouse/django-moo/commit/c977ec75a8f3aaaa927918844d97f02aebaac0cd))
-* generate a key inside the Dockfile ([9bcf9e8](https://gitlab.com/bubblehouse/django-moo/commit/9bcf9e8646224cce521a0a5ff82974931a4b8e8a))
-* generate a key inside the Dockfile ([a46d0cc](https://gitlab.com/bubblehouse/django-moo/commit/a46d0cc8fedb6b631eee8f58f5ea9edd2f686c29))
-* install ssh ([e6e3f3f](https://gitlab.com/bubblehouse/django-moo/commit/e6e3f3f2951c630672c05bc2705ef684694d7021))
-* mixed up service ports ([0376e5b](https://gitlab.com/bubblehouse/django-moo/commit/0376e5b424edb20e7b35a7085b0c6c58a3f48f77))
-
-## [0.3.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.3.1...v0.3.2) (2023-09-19)
-
-
-### Bug Fixes
-
-* chart typo ([00bcb1a](https://gitlab.com/bubblehouse/django-moo/commit/00bcb1a218c6353f31a36850fb41c9f29a5cf015))
-
-## [0.3.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.3.0...v0.3.1) (2023-09-19)
-
-
 ### Bug Fixes
 
-* port updates ([4041617](https://gitlab.com/bubblehouse/django-moo/commit/4041617ea99f9e287ab95d429b9d337cdc3e9164))
+* configure logging (942743b)
+* dont try to install native python modules (48a7a9c)
+* use correct listening address (1cbed76)
+* helm chart selector labels for shell service (02beba3)
+* use port name (26b7379)
+* port for shell service (4d0df41)
 
-## [0.3.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.2.3...v0.3.0) (2023-09-18)
+## [0.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.2.3...v0.3.7) (2023-09-23)
 
-
 ### Features
-
-* implement a trivial SSH server as a Django Management command ([9291f50](https://gitlab.com/bubblehouse/django-moo/commit/9291f50ff55ad31c227b974ef42d94152bf278da))
-
-## [0.2.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.2.2...v0.2.3) (2023-09-17)
-
-
-### Bug Fixes
 
-* ingress port correction ([6af8a74](https://gitlab.com/bubblehouse/django-moo/commit/6af8a743b05b6febdce8ed5501c976839e93ccdc))
+* implement a trivial SSH server as a Django Management command (9291f50)
 
-## [0.2.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.2.1...v0.2.2) (2023-09-17)
 
-
-### Bug Fixes
-
-* chart typo ([53872e6](https://gitlab.com/bubblehouse/django-moo/commit/53872e673d68dcff7b57fd5fd2189529805ad559))
-* force release ([f750eb3](https://gitlab.com/bubblehouse/django-moo/commit/f750eb3aaef3e1311af394676df3a908bc155c8b))
-
-## [0.2.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.2.0...v0.2.1) (2023-09-17)
-
-
 ### Bug Fixes
 
-* more setup and Django settings refactoring ([47a0bac](https://gitlab.com/bubblehouse/django-moo/commit/47a0bacb129ca7047de78b9e748fd09de9ef0420))
+* installed uwsgi-python3 and net-tools (7ded073)
+* remove broken redirect (fd38705)
+* disable liveness/readiness for ssh server for now (221434b)
+* change ownership of server key (cf23255)
+* force release (c977ec7)
+* generate a key inside the Dockfile (9bcf9e8)
+* generate a key inside the Dockfile (a46d0cc)
+* install ssh (e6e3f3f)
+* mixed up service ports (0376e5b)
+* chart typo (00bcb1a)
+* port updates (4041617)
 
-## [0.2.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.1.4...v0.2.0) (2023-09-17)
+## [0.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.1.4...v0.2.3) (2023-09-17)
 
-
 ### Features
-
-* added Rich library ([72787b5](https://gitlab.com/bubblehouse/django-moo/commit/72787b569d4d40b6655537af459e7dfb9d41f115))
 
+* added Rich library (72787b5)
 
-### Bug Fixes
-
-* disabled DBs and cache temporarily in dev, moved around environment names ([29462b6](https://gitlab.com/bubblehouse/django-moo/commit/29462b6778b1e17be8e8355ed50837c5d5d0ca93))
-
-## [0.1.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.1.3...v0.1.4) (2023-09-17)
-
-
-### Bug Fixes
-
-* chart semantic-release version missing files ([bbccce5](https://gitlab.com/bubblehouse/django-moo/commit/bbccce510cbb11a825b95253ee3ee62220732bb9))
-* chart semantic-release version missing files ([579ca1a](https://gitlab.com/bubblehouse/django-moo/commit/579ca1a305716b0a97b88b6712e03514cf8e1b1c))
 
-## [0.1.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.1.2...v0.1.3) (2023-09-17)
-
-
-### Bug Fixes
-
-* chart semantic-release version ([42aeae4](https://gitlab.com/bubblehouse/django-moo/commit/42aeae49fa500b11333ecc2b9568429980916ebe))
-
-## [0.1.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.1.1...v0.1.2) (2023-09-17)
-
-
 ### Bug Fixes
-
-* update chart image ([9bf0976](https://gitlab.com/bubblehouse/django-moo/commit/9bf0976ae25f28e194ccc5bb713733e5b1772551))
 
-## [0.1.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.1.0...v0.1.1) (2023-09-17)
+* disabled DBs and cache temporarily in dev, moved around environment names (29462b6)
+* ingress port correction (6af8a74)
+* chart typo (53872e6)
+* force release (f750eb3)
+* more setup and Django settings refactoring (47a0bac)
 
+## [0.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.1.0...v0.1.4) (2023-09-17)
 
 ### Bug Fixes
 
-* avoid pinning Python version, include wheel as release attachment ([f83b300](https://gitlab.com/bubblehouse/django-moo/commit/f83b300be9968fb20c57412868d2c64c87c53b9f))
-* force release ([153af17](https://gitlab.com/bubblehouse/django-moo/commit/153af17ebf97acd38fbac0c33ffe3c7afc8cf38d))
-* start using base image ([21295d3](https://gitlab.com/bubblehouse/django-moo/commit/21295d3751382b4711e2c2a07d8b3c0fbc248ee9))
-* use poetry publish ([d966ff4](https://gitlab.com/bubblehouse/django-moo/commit/d966ff4a2f3ccfc5b48f22009f520df7aa1cede8))
+* avoid pinning Python version, include wheel as release attachment (f83b300)
+* force release (153af17)
+* start using base image (21295d3)
+* use poetry publish (d966ff4)
+* chart semantic-release version (42aeae4)
+* update chart image (9bf0976)
+* chart semantic-release version missing files (bbccce5)
+* chart semantic-release version missing files (579ca1a)
