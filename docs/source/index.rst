@@ -12,7 +12,6 @@
    :glob:
 
    guide/*
-   architecture
    api
 
 Indices and tables
