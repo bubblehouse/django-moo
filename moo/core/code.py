@@ -110,6 +110,9 @@ def get_restricted_environment(name, writer):
         """
         if name in settings.ALLOWED_MODULES:
             return __builtins__["__import__"](name, gdict, ldict, fromlist, level)
+        caller = ContextManager.get("caller")
+        if name in settings.WIZARD_ALLOWED_MODULES and caller and caller.is_wizard():
+            return __builtins__["__import__"](name, gdict, ldict, fromlist, level)
         raise ImportError("Restricted: %s" % name)
 
     def get_protected_attribute(obj, name, g=getattr):
