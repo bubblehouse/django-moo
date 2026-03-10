@@ -13,7 +13,7 @@ from django.db.models import Q
 from .code import ContextManager
 from .exceptions import QuotaError, AmbiguousObjectError, UserError
 
-__all__ = ["lookup", "create", "write", "_publish_to_player", "invoke", "set_task_perms", "context",
+__all__ = ["lookup", "create", "write", "open_editor", "_publish_to_player", "invoke", "set_task_perms", "context",
            "ObjectDoesNotExist", "VerbDoesNotExist", "PropertyDoesNotExist"]
 
 log = logging.getLogger(__name__)
@@ -133,7 +133,7 @@ def _publish_to_player(obj, message):
         with app.producer_or_acquire() as producer:
             producer.publish(
                 dict(message=message, caller=ContextManager.get("caller")),
-                serializer="pickle",
+                serializer="moojson",
                 exchange=queue.exchange,
                 routing_key=f"user-{player.user.pk}",
                 declare=[queue],
@@ -153,6 +153,32 @@ def write(obj, message):
     if context.caller and not context.caller.is_wizard():
         raise UserError("Only verbs owned by wizards can write to the console.")
     _publish_to_player(obj, message)
+
+
+def open_editor(obj, initial_content: str, callback_verb, content_type: str = "text"):
+    """
+    Request the connected SSH client to open a full-screen text editor.
+    When the user saves, the edited text is passed to callback_verb as args[0].
+    If the user cancels, the callback is not invoked.
+
+    :param obj: the player Object whose client should open the editor
+    :param initial_content: text to pre-populate the editor buffer
+    :param callback_verb: Verb to invoke with the edited text as args[0]
+    :param content_type: "python", "json", or "text" (default); controls syntax highlighting
+    """
+    if content_type not in ("python", "json", "text"):
+        raise UserError(f"content_type must be 'python', 'json', or 'text', not {content_type!r}.")
+    if context.caller and not context.caller.is_wizard():
+        raise UserError("Only verbs owned by wizards can open the editor.")
+    _publish_to_player(obj, {
+        "event": "editor",
+        "content": initial_content,
+        "content_type": content_type,
+        "callback_this_id": callback_verb.invoked_object.pk,
+        "callback_verb_name": callback_verb.invoked_name,
+        "caller_id": context.caller.pk,
+        "player_id": (context.player or context.caller).pk,
+    })
 
 
 def invoke(*args, verb=None, callback=None, delay: int = 0, periodic: bool = False, cron: str = None, **kwargs):
