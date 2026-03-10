@@ -26,6 +26,13 @@ callback = this.get_verb("edit_callback")
 open_editor(context.player, "def foo():\\n    pass", callback, content_type="python")
 """
 
+# Trigger verb variant that passes extra args to the callback.
+_TRIGGER_VERB_EXTRA_ARGS = """\
+from moo.core import context, open_editor
+callback = this.get_verb("edit_callback")
+open_editor(context.player, "hello\\nworld", callback, "extra1", 42)
+"""
+
 # Callback verb: receives the edited text as args[0] and prints it.
 _CALLBACK_VERB = "print(args[0])"
 
@@ -41,7 +48,7 @@ def test_open_editor_publishes_editor_event(t_init: Object, t_wizard: Object):
     """Invoking a verb that calls open_editor() publishes an editor event dict
     to the player's Kombu queue (emitted as a RuntimeWarning in tests)."""
     with code.ContextManager(t_wizard, lambda _: None):
-        obj = create("editor_test", parents=[lookup(1).root_class], location=t_wizard.location)
+        obj = create("editor_test", parents=[t_init.root_class], location=t_wizard.location)
         obj.add_verb("edit_callback", code=_CALLBACK_VERB)
         obj.add_verb("trigger_edit", code=_TRIGGER_VERB)
 
@@ -60,7 +67,7 @@ def test_open_editor_publishes_editor_event(t_init: Object, t_wizard: Object):
 def test_open_editor_python_content_type(t_init: Object, t_wizard: Object):
     """content_type='python' is passed through to the editor event dict."""
     with code.ContextManager(t_wizard, lambda _: None):
-        obj = create("editor_test_py", parents=[lookup(1).root_class], location=t_wizard.location)
+        obj = create("editor_test_py", parents=[t_init.root_class], location=t_wizard.location)
         obj.add_verb("edit_callback", code=_CALLBACK_VERB)
         obj.add_verb("trigger_edit", code=_TRIGGER_VERB_PYTHON)
 
@@ -73,10 +80,27 @@ def test_open_editor_python_content_type(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_open_editor_extra_args_forwarded(t_init: Object, t_wizard: Object):
+    """Extra positional args to open_editor() appear in the editor event dict."""
+    with code.ContextManager(t_wizard, lambda _: None):
+        obj = create("editor_test_args", parents=[t_init.root_class], location=t_wizard.location)
+        obj.add_verb("edit_callback", code=_CALLBACK_VERB)
+        obj.add_verb("trigger_edit", code=_TRIGGER_VERB_EXTRA_ARGS)
+
+        with pytest.warns(RuntimeWarning) as w:
+            obj.invoke_verb("trigger_edit")
+
+    messages = [str(warning.message) for warning in w.list]
+    assert any("extra1" in m for m in messages)
+    assert any("42" in m for m in messages)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_open_editor_invalid_content_type_raises(t_init: Object, t_wizard: Object):
     """open_editor() raises UserError for an unrecognised content_type."""
     with code.ContextManager(t_wizard, lambda _: None):
-        obj = create("editor_test_err", parents=[lookup(1).root_class], location=t_wizard.location)
+        obj = create("editor_test_err", parents=[t_init.root_class], location=t_wizard.location)
         obj.add_verb("edit_callback", code=_CALLBACK_VERB)
         callback = obj.get_verb("edit_callback")
 
@@ -90,7 +114,7 @@ def test_open_editor_non_wizard_raises(t_init: Object, t_wizard: Object):
     """open_editor() raises UserError when the caller is not a wizard."""
     player_npc = lookup("Player")
     with code.ContextManager(t_wizard, lambda _: None):
-        obj = create("editor_test_perm", parents=[lookup(1).root_class], location=t_wizard.location)
+        obj = create("editor_test_perm", parents=[t_init.root_class], location=t_wizard.location)
         obj.add_verb("edit_callback", code=_CALLBACK_VERB)
         callback = obj.get_verb("edit_callback")
 
