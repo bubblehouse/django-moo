@@ -155,15 +155,17 @@ def write(obj, message):
     _publish_to_player(obj, message)
 
 
-def open_editor(obj, initial_content: str, callback_verb, content_type: str = "text"):
+def open_editor(obj, initial_content: str, callback_verb, *args, content_type: str = "text"):
     """
     Request the connected SSH client to open a full-screen text editor.
-    When the user saves, the edited text is passed to callback_verb as args[0].
+    When the user saves, the edited text is passed to callback_verb as args[0],
+    followed by any extra positional arguments supplied here.
     If the user cancels, the callback is not invoked.
 
     :param obj: the player Object whose client should open the editor
     :param initial_content: text to pre-populate the editor buffer
     :param callback_verb: Verb to invoke with the edited text as args[0]
+    :param args: additional arguments forwarded to the callback verb as args[1:]
     :param content_type: "python", "json", or "text" (default); controls syntax highlighting
     """
     if content_type not in ("python", "json", "text"):
@@ -174,6 +176,7 @@ def open_editor(obj, initial_content: str, callback_verb, content_type: str = "t
         "event": "editor",
         "content": initial_content,
         "content_type": content_type,
+        "args": list(args),
         "callback_this_id": callback_verb.invoked_object.pk,
         "callback_verb_name": callback_verb.invoked_name,
         "caller_id": context.caller.pk,
