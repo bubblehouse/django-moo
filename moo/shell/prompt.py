@@ -5,7 +5,6 @@ Prompt-Toolkit interface
 
 import asyncio
 import logging
-import pickle
 
 from asgiref.sync import sync_to_async
 from kombu import Exchange, Queue, simple
@@ -17,7 +16,7 @@ from prompt_toolkit.styles import Style
 from rich.console import Console
 
 from ..celery import app
-from ..core import models, tasks
+from ..core import models, moojson, tasks
 
 log = logging.getLogger(__name__)
 
@@ -46,21 +45,48 @@ class MooPrompt:
     def __init__(self, user, *a, **kw):
         self.user = user
         self.is_exiting = False
+        self.editor_queue = asyncio.Queue()
 
     async def process_commands(self):
         prompt_session = PromptSession()
         try:
             while not self.is_exiting:
                 message = await self.generate_prompt()
-                line = await prompt_session.prompt_async(message, style=self.style)
-                await self.handle_command(line)
-        except EOFError:
-            self.is_exiting = True
-        except KeyboardInterrupt:
-            self.is_exiting = True
+                prompt_task = asyncio.ensure_future(
+                    prompt_session.prompt_async(message, style=self.style))
+                editor_task = asyncio.ensure_future(self.editor_queue.get())
+                done, pending = await asyncio.wait(
+                    [prompt_task, editor_task], return_when=asyncio.FIRST_COMPLETED)
+                for task in pending:
+                    task.cancel()
+                    try:
+                        await task
+                    except asyncio.CancelledError:
+                        pass
+                if editor_task in done:
+                    await self.run_editor_session(editor_task.result())
+                elif prompt_task in done:
+                    try:
+                        line = prompt_task.result()
+                    except (EOFError, KeyboardInterrupt):
+                        self.is_exiting = True
+                        break
+                    await self.handle_command(line)
         except:  # pylint: disable=bare-except
             log.exception("Error in command processing")
         log.debug("REPL is exiting, stopping main thread...")
+
+    async def run_editor_session(self, req: dict):
+        from .editor import run_editor
+        edited_text = await run_editor(req.get("content", ""), req.get("content_type", "text"))
+        if edited_text is not None and req.get("callback_this_id") and req.get("callback_verb_name"):
+            tasks.invoke_verb.delay(
+                edited_text,
+                caller_id=req["caller_id"],
+                player_id=req["player_id"],
+                this_id=req["callback_this_id"],
+                verb_name=req["callback_verb_name"],
+            )
 
     @sync_to_async
     def generate_prompt(self):
@@ -114,8 +140,12 @@ class MooPrompt:
                         await asyncio.sleep(1)
                         continue
                     if msg:
-                        content = pickle.loads(msg.body)
-                        await run_in_terminal(lambda: self.writer(content["message"]))
+                        content = moojson.loads(msg.body)
+                        message = content["message"]
+                        if isinstance(message, dict) and message.get("event") == "editor":
+                            await self.editor_queue.put(message)
+                        else:
+                            await run_in_terminal(lambda: self.writer(message))
                     sb.close()
         except:  # pylint: disable=bare-except
             log.exception("Stopping message processing")
