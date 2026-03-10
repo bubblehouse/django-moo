@@ -439,6 +439,7 @@ obj.add_verb("my_verb", code='return "verb result"')
 - Use `get_pobj_string()` / `has_pobj_string()` — these methods do not exist; the correct names are `get_pobj_str()` / `has_pobj_str()`.
 
 ### ✓ Do:
+- Trust that `set_property()` and `add_verb()` automatically invalidate the attribute cache — no manual cache eviction is needed from verb code.
 - Use `context.player` to identify who initiated a command (the sender/initiator)
 - Use `this` only when the verb genuinely needs the object it was dispatched on (e.g., a room's `accept` or an exit's `go`)
 - Use `lookup()` or properties to find objects
