@@ -1,3 +1,15 @@
+## [0.66.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.65.8...v0.66.0) (2026-03-11)
+
+### Features
+
+* add simple text editor feature that can be used by wizard verbs ([88a514a](https://gitlab.com/bubblehouse/django-moo/commit/88a514a7f075a628248d3f453ccdecdbf75e41c3))
+* added [@edit](https://gitlab.com/edit) verb to default_verbs ([6171691](https://gitlab.com/bubblehouse/django-moo/commit/6171691d39b916335fb0615c2cd96a304f5f0956))
+
+### Bug Fixes
+
+* added additional args to callback ([02cb20e](https://gitlab.com/bubblehouse/django-moo/commit/02cb20eb757ea1979bc438685e8468ae247a367a))
+* removed line editor from asyncssh since prompt-toolkit handles lines ([54b7d73](https://gitlab.com/bubblehouse/django-moo/commit/54b7d737ace16360e7868c2fb6baa7f70664e47f))
+
 ## [0.65](https://gitlab.com/bubblehouse/django-moo/compare/v0.64.0...v0.65.8) (2026-03-09)
 
 ### Features
