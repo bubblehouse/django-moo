@@ -61,7 +61,7 @@ def interpret(ctx, line):
     try:
         verb = parser.get_verb()
     except Verb.DoesNotExist:
-        if context.player.location.has_verb("huh"):
+        if context.player.location and context.player.location.has_verb("huh"):
             verb = context.player.location.get_verb("huh")
         else:
             raise
@@ -249,7 +249,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         form is used (i.e., "Bill's spoon") and that person is not
         here, a NoSuchObjectError is thrown for that person.
         """
-        result = None
+        result = []
         search = None
 
         if specifier == "my":
@@ -268,7 +268,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             search = search[0]
         if name and search:
             result = search.find(name)
-            if not result:
+            if not result and self.caller.location:
                 result = self.caller.location.find(name)
 
         if len(result) == 1:
