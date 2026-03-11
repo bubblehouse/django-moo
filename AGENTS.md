@@ -274,6 +274,10 @@ This document provides essential context for AI models interacting with the Djan
     3. Be cautious with major version updates; review changelogs for breaking changes
   - **Dependency Rationale**: Document why a new dependency is needed in the PR description or code comments
 
+* **AsyncSSH + prompt_toolkit Integration:**
+  - The SSH server (`moo/shell/server.py`) must pass `line_editor=False` to `asyncssh.create_server()`. asyncssh's `line_editor=True` default wraps every channel with `SSHLineEditorChannel`, which intercepts ALL output through `SSHLineEditor.process_output()`. This is incompatible with prompt_toolkit: it does a second `\n`→`\r\n` replacement (causing `\r\r\r\n` triples), tracks cursor position with a naive parser that only ends escape sequences on `m` (corrupting column tracking for all other VT100 codes), and injects `' \b'` at column-80 boundaries — overwriting characters in the terminal.
+  - prompt_toolkit handles all terminal I/O itself. The asyncssh line editor must be disabled.
+
 * **MOO Verb Code Development:**
   - **File Organization**: Verbs are organized in `moo/bootstrap/{default,test}_verbs/` directories
   - **Shebang Line**: Every verb file starts with `#!moo verb <names> --on <object>` and optional flags. Example:
