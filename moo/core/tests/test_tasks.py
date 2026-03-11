@@ -1,7 +1,6 @@
 import logging
 import warnings
 import pytest
-from django.test import override_settings
 
 from .. import code, tasks
 from ..models import Object, Verb
@@ -55,3 +54,21 @@ def test_simple_async_verb_callback(t_init: Object, t_wizard: Object, caplog: py
             continue
         counter += 1
         assert line.endswith(str(counter))
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_basic_rollback(t_init: Object, t_wizard: Object):
+    tasks.parse_code(
+        t_wizard.pk, 'from moo.core import create;create(name="CreatedObjectWithAUniqueName", unique_name=True)'
+    )
+    with pytest.raises(RuntimeError):
+        tasks.parse_code(
+            t_wizard.pk,
+            """from moo.core import create
+o = create(name="ErroredObjectWithAUniqueName", unique_name=True)
+raise RuntimeError()
+""",
+        )
+    Object.objects.get(name="CreatedObjectWithAUniqueName")
+    with pytest.raises(Object.DoesNotExist):
+        Object.objects.get(name="ErroredObjectWithAUniqueName")
