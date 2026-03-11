@@ -7,5 +7,4 @@ from .acl import *
 from .auth import *
 from .object import *
 from .property import *
-from .task import *
 from .verb import *

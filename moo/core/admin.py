@@ -8,7 +8,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User  # pylint: disable=imported-auth-user
 
 from .forms import VerbAdminForm
-from .models import acl, auth, object, property, task, verb  # pylint: disable=redefined-builtin
+from .models import acl, auth, object, property, verb  # pylint: disable=redefined-builtin
 
 
 class VerbInline(admin.TabularInline):
@@ -99,8 +99,6 @@ admin.site.unregister(User)
 class UserAdmin(BaseUserAdmin):
     inlines = [PlayerInline]
 
-
-admin.register(task.Task)
 
 @admin.register(auth.Player)
 class PlayerAdmin(admin.ModelAdmin):
