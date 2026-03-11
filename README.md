@@ -31,12 +31,13 @@ Now you should be able to connect to https://localhost/ and login with the super
 To make things easier for folks without SSH access or who are behind firewalls, the server interface is exposed through [webssh](https://github.com/huashengdun/webssh).
 
 ![WebSSH Client Example](https://gitlab.com/bubblehouse/django-moo/-/raw/main/docs/images/webssh-client-example.png)
+![WebSSH Editor Example](https://gitlab.com/bubblehouse/django-moo/-/raw/main/docs/images/webssh-editor-example.png)
 
 This client is only able to open connections to the local SSH server.
 
 ### Admin Interface
 
-As a secondary way to view the contents of a running server, a Django Admin interface is available at `/admin`. It's really a last resort for most things, but it's still the best way to modify verb code in a running server:
+As a secondary way to view the contents of a running server, a Django Admin interface is available at `/admin`. It's really a last resort for most things:
 
 ![Django Admin Example](https://gitlab.com/bubblehouse/django-moo/-/raw/main/docs/images/django-admin-example.png)
 
