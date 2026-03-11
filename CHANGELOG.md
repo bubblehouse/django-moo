@@ -1,3 +1,13 @@
+## [0.67.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.66.0...v0.67.0) (2026-03-11)
+
+### Features
+
+* removed unused Task model ([205ae5e](https://gitlab.com/bubblehouse/django-moo/commit/205ae5eb4c2575c3cf4435849079cb5dd75e614c))
+
+### Bug Fixes
+
+* incorrect is_bound() handling ([a02f759](https://gitlab.com/bubblehouse/django-moo/commit/a02f7592973068d8ecb1ccb3e3059fe15af270fd))
+
 ## [0.66.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.65.8...v0.66.0) (2026-03-11)
 
 ### Features
