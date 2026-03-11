@@ -32,6 +32,7 @@ def test_lex_look_at_QUOTED_painting_with_the_glasses():
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_parse_imperative_command(t_init: Object, t_wizard: Object):
+    t_wizard.add_verb("look", code="pass")
     lex = parse.Lexer("look")
     parser = parse.Parser(lex, t_wizard)
     verb = parser.get_verb()
@@ -52,7 +53,7 @@ def test_parse_imperative_command(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_parse_direct_object(t_init: Object, t_wizard: Object):
-    bag = Object.objects.get(name="bag of holding")
+    bag = Object.objects.create(name="bag of holding", location=t_wizard)
     lex = parse.Lexer("look my bag of holding")
     parser = parse.Parser(lex, t_wizard)
     assert parser.dobj == bag
@@ -86,6 +87,10 @@ def test_parse_object_of_the_preposition(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_parse_object_of_the_preposition_with_preposition(t_init: Object, t_wizard: Object):
+    room = Object.objects.create(name="test room")
+    room.add_verb("accept", code="return True")
+    t_wizard.location = room
+    t_wizard.save()
     lex = parse.Lexer("look through peephole with wizard")
     parser = parse.Parser(lex, t_wizard)
     assert not parser.has_dobj(), "unexpected object found for dobj"
@@ -103,6 +108,10 @@ def test_parse_object_of_the_preposition_with_preposition(t_init: Object, t_wiza
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_parse_direct_object_object_of_the_preposition_with_preposition(t_init: Object, t_wizard: Object):
+    room = Object.objects.create(name="test room")
+    room.add_verb("accept", code="return True")
+    t_wizard.location = room
+    t_wizard.save()
     lex = parse.Lexer("@eval glasses from wizard with tongs")
     parser = parse.Parser(lex, t_wizard)
     with pytest.raises(Object.DoesNotExist):
@@ -117,6 +126,10 @@ def test_parse_direct_object_object_of_the_preposition_with_preposition(t_init: 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_parse_direct_object_and_multiple_prepositions_with_specifiers(t_init: Object, t_wizard: Object):
+    room = Object.objects.create(name="test room")
+    room.add_verb("accept", code="return True")
+    t_wizard.location = room
+    t_wizard.save()
     lex = parse.Lexer("@eval the wizard from 'bag under stairs' with tongs in wizard's bag")
     parser = parse.Parser(lex, t_wizard)
     with pytest.raises(Object.DoesNotExist):
@@ -130,6 +143,10 @@ def test_parse_direct_object_and_multiple_prepositions_with_specifiers(t_init: O
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_parse_command_referring_to_aliases(t_init: Object, t_wizard: Object):
+    room = Object.objects.create(name="test room")
+    room.add_verb("accept", code="return True")
+    t_wizard.location = room
+    t_wizard.save()
     alias = t_wizard.aliases.create(alias="The Wiz")
     lex = parse.Lexer("@eval the Wiz from 'bag under stairs' with tongs in wizard's bag")
     parser = parse.Parser(lex, t_wizard)
@@ -171,14 +188,20 @@ def test_parse_with_quoted_strings_and_escapes(t_init: Object, t_wizard: Object)
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_parse_with_my_object(t_init: Object, t_wizard: Object):
+    room = Object.objects.create(name="test room")
+    room.add_verb("accept", code="return True")
+    t_wizard.location = room
+    t_wizard.save()
     box = Object.objects.create(name="box")
     box.location = t_wizard
     box.save()
     lex = parse.Lexer("@eval my box")
     parser = parse.Parser(lex, t_wizard)
     assert parser.has_dobj()
-    user = Object.objects.get(name__iexact="player")
+    user = Object.objects.create(name="player")
     user.add_verb("accept", code="return True")
+    user.location = room
+    user.save()
     box.location = user
     box.save()
     lex = parse.Lexer("@eval player's box")
@@ -188,6 +211,10 @@ def test_parse_with_my_object(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_parse_with_complex_name(t_init: Object, t_wizard: Object):
+    room = Object.objects.create(name="test room")
+    room.add_verb("accept", code="return True")
+    t_wizard.location = room
+    t_wizard.save()
     box = Object.objects.create(name="box containing spaces")
     box.location = t_wizard.location
     box.save()

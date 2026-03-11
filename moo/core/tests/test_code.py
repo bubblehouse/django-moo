@@ -100,9 +100,9 @@ def test_caller_stack(t_init: Object, t_wizard: Object):
         printed.append(msg)
 
     with code.ContextManager(t_wizard, _writer):
-        from moo.core import context, lookup, create
+        from moo.core import context, create
 
-        player = lookup("Player")
+        player = create("Player")
 
         # Create 3 new objects to serve as verb owners
         p3 = create("TestPlayer3")

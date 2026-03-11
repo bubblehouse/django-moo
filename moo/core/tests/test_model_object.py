@@ -523,7 +523,7 @@ def test_relationship_weight_auto_assigned(t_init, t_wizard):
 def test_alias_requires_write_permission(t_init, t_wizard):
     with _ctx(t_wizard):
         obj = create("alias target")
-    user = Object.objects.get(name__iexact="player")
+    user = Object.objects.create(name="player")
     with code.ContextManager(user, lambda m: None):
         with pytest.raises(PermissionError):
             Alias.objects.create(object=obj, alias="forbidden")

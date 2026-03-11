@@ -145,8 +145,9 @@ def test_property_value_roundtrip_object_ref(t_init, t_wizard):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_child_owns_inherited_property(t_init: Object):
-    player = Object.objects.get(name="Player")
-    room_class = Object.objects.get(name="room class")
+    player = Object.objects.create(name="Player")
+    room_class = Object.objects.create(name="room class")
+    room_class.set_property("description", "")
     room = Object.objects.create(name="new room", owner=player)
     room.parents.add(room_class)
     description = room.get_property(name="description", recurse=False, original=True)
@@ -155,8 +156,9 @@ def test_child_owns_inherited_property(t_init: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_returned_property_is_from_correct_object(t_init: Object):
-    player = Object.objects.get(name="Player")
-    room_class = Object.objects.get(name="room class")
+    player = Object.objects.create(name="Player")
+    room_class = Object.objects.create(name="room class")
+    room_class.set_property("description", "")
     room = Object.objects.create(name="new room", owner=player)
     room.parents.add(room_class)
     description = room.get_property(name="description", recurse=False, original=True)
@@ -165,7 +167,7 @@ def test_returned_property_is_from_correct_object(t_init: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_property_inheritance_can_change_after_save(t_init: Object, t_wizard: Object):
-    player = Object.objects.get(name="Player")
+    player = Object.objects.create(name="Player")
     o = Object.objects.create(name="new object", owner=player)
     p = Object.objects.create(name="new parent", owner=t_wizard)
     p.set_property("test_post_creation", "There's not much to see here.", owner=t_wizard)
