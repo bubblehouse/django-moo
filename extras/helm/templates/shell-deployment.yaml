@@ -41,6 +41,8 @@ spec:
             value: {{ .Values.moo.aws.region }}
           - name: AWS_STS_REGIONAL_ENDPOINTS
             value: regional
+          - name: OTEL_SERVICE_NAME
+            value: django-moo-shell
           {{- with .Values.env }}
             {{- toYaml . | nindent 10 }}
           {{- end }}
