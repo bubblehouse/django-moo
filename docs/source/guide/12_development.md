@@ -105,10 +105,9 @@ uv run pytest --pdb
 ### Test Organization
 
 - **Core bootstrap data**: Defined in `moo/bootstrap/test.py`, used by the Core tests
-- **Core verb sources**: `moo/bootstrap/test_verbs/` - MOO verb definitions for the `test` dataset, used by the Core tests
 - **Core tests**: `moo/core/tests/` - Tests for models, permissions, verb execution engine
 - **Default bootstrap data**: Defined in `moo/bootstrap/default.py`, used to create playable databases
-- **Default verb sources**: `moo/bootstrap/default_verbs/` - MOO verb definitions for the `default` dataset
+- **Default verb sources**: `moo/bootstrap/default_verbs/` - MOO verb definitions for the `default` dataset only
 - **Default tests**: `moo/bootstrap/default_verbs/tests/` - Tests for the default objects and their verbs
 
 Shared pytest fixtures live in `moo/conftest.py` and provide a pre-seeded game world for integration tests.
