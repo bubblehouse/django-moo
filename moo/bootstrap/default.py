@@ -3,14 +3,12 @@ from time import time
 
 from moo import bootstrap
 from moo.core import code, create, lookup
-from moo.core.models import Player, User
+from moo.core.models import Player
 
 log = logging.getLogger(__name__)
 
 repo = bootstrap.initialize_dataset("default")
 wizard = lookup("Wizard")
-user = User.objects.create(username="wizard")
-Player.objects.create(user=user, avatar=wizard, wizard=True)
 
 containers = lookup("container class")
 containers.name = "Generic Container"

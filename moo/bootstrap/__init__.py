@@ -7,8 +7,6 @@ import argparse
 import importlib.resources
 import logging
 import shlex
-import warnings
-
 from django.conf import settings
 
 log = logging.getLogger(__name__)
@@ -90,22 +88,11 @@ def initialize_dataset(dataset="default"):
         _ = models.Permission.objects.create(name=name)
     Pattern.initializePrepositions()
 
+    from django.contrib.auth.models import User  # pylint: disable=imported-auth-user
+    from moo.core.models.auth import Player
+
     repo = models.Repository.objects.get(slug=dataset)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=RuntimeWarning)
-        system = models.Object.objects.create(name="System Object", unique_name=True)
-        set_default_permissions = models.Verb.objects.create(
-            origin=system,
-            repo=repo,
-            code=get_source("_system_set_default_permissions.py", dataset=dataset),
-        )
-        set_default_permissions.names.add(
-            models.VerbName.objects.create(verb=set_default_permissions, name="set_default_permissions")
-        )
-        set_default_permissions.invoked_name = "set_default_permissions"
-        set_default_permissions.invoked_object = system
-        set_default_permissions(set_default_permissions)
-        set_default_permissions(system)
+    system = models.Object.objects.create(name="System Object", unique_name=True)
     containers = models.Object.objects.create(name="container class")
     containers.add_verb("accept", code="return True")
     # Create the first real user
@@ -113,15 +100,15 @@ def initialize_dataset(dataset="default"):
     wizard.add_verb("accept", code="return True")
     wizard.owner = wizard
     wizard.save()
+    # Wizard gets a User and Player record so is_wizard() works
+    user = User.objects.create_user(username="wizard")
+    Player.objects.create(user=user, avatar=wizard, wizard=True)
     # Wizard owns containers
     containers.owner = wizard
     containers.save()
-    # Wizard owns the system...
+    # Wizard owns the system
     system.owner = wizard
     system.save()
-    # ...and the default permissions verb
-    set_default_permissions.owner = wizard
-    set_default_permissions.save()
     return repo
 
 
