@@ -1,3 +1,10 @@
+## [0.67.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.67.2...v0.67.3) (2026-03-11)
+
+### Bug Fixes
+
+* move player setup into dataset_initialize ([46ad48a](https://gitlab.com/bubblehouse/django-moo/commit/46ad48ab0fc12de2ba5e32215bc81e0598eda3f1))
+* parser bugs for unusual situations ([5ff9df9](https://gitlab.com/bubblehouse/django-moo/commit/5ff9df91a2203e8df9eaf8c73fdb0358dae3e4f2))
+
 ## [0.67.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.67.1...v0.67.2) (2026-03-11)
 
 ### Bug Fixes
