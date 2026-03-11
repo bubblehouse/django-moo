@@ -4,7 +4,7 @@ While the contents of this guide cover the essential elements of any DjangoMOO e
 actually do anything interesting you need to boostrap your database with some essential objects.
 
 Right now there are two datasets defined, `test` and `default`. The `test` dataset is used in the
-core unit tests. It contains verbs and properties that have no real value outside of the tests.
+core unit tests. It uses no additional verb files — only the base objects created by `initialize_dataset()`.
 
 `default` is a lot more interesting, and is the dataset used when you initialize a new DjangoMOO
 database with:
@@ -39,9 +39,8 @@ Once all the objects are created and necessary properties created, the `moo.boot
 The bootstrap system is organized into several files:
 
 - **`default.py`**: Creates the production game world with rooms, players, and other game objects
-- **`test.py`**: Creates a minimal test dataset used by pytest
-- **`default_verbs/`**: Directory containing verb files for the default dataset
-- **`test_verbs/`**: Directory containing verb files for the test dataset
+- **`test.py`**: Creates a minimal test dataset used by pytest; uses no additional verb files
+- **`default_verbs/`**: Directory containing verb files for the `default` dataset only
 
 ## Verb Files in Bootstrap
 
