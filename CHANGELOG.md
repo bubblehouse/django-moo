@@ -1,3 +1,9 @@
+## [0.67.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.67.0...v0.67.1) (2026-03-11)
+
+### Bug Fixes
+
+* add default OTEL_SERVICE_NAME to chart ([177a9d3](https://gitlab.com/bubblehouse/django-moo/commit/177a9d358a075e4b94ffaed2df26e26173aa2be7))
+
 ## [0.67.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.66.0...v0.67.0) (2026-03-11)
 
 ### Features
