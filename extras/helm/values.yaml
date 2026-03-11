@@ -41,6 +41,16 @@ serviceAccount:
   # using the fullname template
   name: ''
 
+# env:
+#   - name: OTEL_TRACES_EXPORTER
+#     value: "otlp"
+#   - name: OTEL_EXPORTER_OTLP_ENDPOINT
+#     value: "http://53971991.otel.gitlab-o11y.com:4318"
+#   - name: OTEL_EXPORTER_OTLP_PROTOCOL
+#     value: "http/protobuf"
+#   - name: OTEL_SERVICE_NAME
+#     value: "django-moo"
+
 podAnnotations: {}
 
 podSecurityContext:
