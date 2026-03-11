@@ -4,6 +4,32 @@ from moo.core import exceptions, parse
 from moo.core.models.object import Object
 
 
+def test_lex_imperative_command():
+    lex = parse.Lexer("look")
+    assert lex.command == "look"
+
+
+def test_lex_direct_object():
+    lex = parse.Lexer("look here")
+    assert lex.dobj_str == "here"
+
+
+def test_lex_object_of_the_preposition():
+    lex = parse.Lexer("look at this")
+    assert lex.prepositions["at"][0][1] == "this"
+
+
+def test_lex_direct_object_with_preposition():
+    lex = parse.Lexer("look at painting with the glasses")
+    assert lex.prepositions["at"][0][1] == "painting"
+    assert lex.prepositions["with"][0][0] == "the"
+    assert lex.prepositions["with"][0][1] == "glasses"
+
+
+def test_lex_look_at_QUOTED_painting_with_the_glasses():
+    lex = parse.Lexer("look at 'painting with the glasses'")
+    assert lex.prepositions["at"][0][1] == "painting with the glasses"
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_parse_imperative_command(t_init: Object, t_wizard: Object):
     lex = parse.Lexer("look")

@@ -1,10 +1,183 @@
-import pytest
-from django.db import connection
-from django.test import override_settings
+# -*- coding: utf-8 -*-
+"""
+Tests for moo/core/models/acl.py — Permission, Access, AccessibleMixin.
+"""
 
-from moo.core.models import Object, Player
+from django.db import connection
+
+import pytest
 
 from .. import code, create, exceptions, lookup
+from ..models import Access, Object, Permission, Player
+from ..models.acl import _get_permission_id
+
+
+def _ctx(wizard):
+    return code.ContextManager(wizard, lambda m: None)
+
+
+# ---------------------------------------------------------------------------
+# Permission.__str__
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_permission_str(t_init, t_wizard):
+    perm = Permission.objects.get(name="read")
+    assert str(perm) == "read"
+
+
+# ---------------------------------------------------------------------------
+# Access.__str__
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_access_str(t_init, t_wizard):
+    with _ctx(t_wizard):
+        obj = create("access str obj")
+        obj.allow("everyone", "read")
+    rule = Access.objects.filter(object=obj, rule="allow", group="everyone").first()
+    s = str(rule)
+    assert "allow" in s
+    assert "read" in s
+
+
+# ---------------------------------------------------------------------------
+# can_caller with no active context is a no-op
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_can_caller_no_caller_is_noop(t_init, t_wizard):
+    # Outside any ContextManager there is no caller — should not raise
+    obj = Object.objects.create(name="noop obj", owner=t_wizard)
+    obj.can_caller("read", obj)  # must not raise
+
+
+# ---------------------------------------------------------------------------
+# allow / deny create Access rows
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_allow_group_creates_access_row(t_init, t_wizard):
+    with _ctx(t_wizard):
+        obj = create("allow obj")
+        obj.allow("everyone", "read")
+    assert Access.objects.filter(object=obj, rule="allow", group="everyone").exists()
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_deny_group_creates_access_row(t_init, t_wizard):
+    with _ctx(t_wizard):
+        obj = create("deny obj")
+        obj.deny("everyone", "write")
+    assert Access.objects.filter(object=obj, rule="deny", group="everyone").exists()
+
+
+# ---------------------------------------------------------------------------
+# deny() evicts cached True results
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_deny_evicts_cached_true(t_init, t_wizard):
+    player = Object.objects.get(name__iexact="player")
+    with _ctx(t_wizard):
+        obj = create("evict obj")
+        obj.allow(player, "read")
+    with _ctx(t_wizard):
+        # populate cache with True
+        assert player.is_allowed("read", obj)
+        # add deny — must evict cached result
+        obj.deny(player, "read")
+        assert not player.is_allowed("read", obj)
+
+
+# ---------------------------------------------------------------------------
+# is_allowed — group checks
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_is_allowed_group_everyone(t_init, t_wizard):
+    stranger = Object.objects.create(name="stranger")
+    with _ctx(t_wizard):
+        obj = create("public obj")
+        obj.allow("everyone", "read")
+    assert stranger.is_allowed("read", obj)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_is_allowed_group_owners(t_init, t_wizard):
+    with _ctx(t_wizard):
+        obj = create("owner obj")
+        obj.allow("owners", "write")
+    player = Object.objects.get(name__iexact="player")
+    # wizard owns it, player does not
+    assert t_wizard.is_allowed("write", obj)
+    assert not player.is_allowed("write", obj)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_is_allowed_group_wizards(t_init, t_wizard):
+    Player.objects.filter(avatar=t_wizard).update(wizard=True)
+    with _ctx(t_wizard):
+        obj = create("wiz obj")
+        obj.allow("wizards", "develop")
+    player = Object.objects.get(name__iexact="player")
+    assert t_wizard.is_allowed("develop", obj)
+    assert not player.is_allowed("develop", obj)
+
+
+# ---------------------------------------------------------------------------
+# is_allowed — specific accessor
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_is_allowed_specific_accessor(t_init, t_wizard):
+    player = Object.objects.get(name__iexact="player")
+    with _ctx(t_wizard):
+        obj = create("accessor obj")
+        obj.allow(player, "write")
+    assert player.is_allowed("write", obj)
+    stranger = Object.objects.create(name="stranger2")
+    assert not stranger.is_allowed("write", obj)
+
+
+# ---------------------------------------------------------------------------
+# deny beats allow
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_deny_overrides_allow(t_init, t_wizard):
+    player = Object.objects.get(name__iexact="player")
+    with _ctx(t_wizard):
+        obj = create("mixed obj")
+        obj.allow("everyone", "anything")
+        obj.deny(player, "write")
+    assert player.is_allowed("read", obj)
+    assert not player.is_allowed("write", obj)
+
+
+# ---------------------------------------------------------------------------
+# fatal=True raises PermissionError
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_is_allowed_fatal_raises(t_init, t_wizard):
+    stranger = Object.objects.create(name="stranger fatal")
+    with _ctx(t_wizard):
+        obj = create("fatal obj")
+    with pytest.raises(PermissionError):
+        stranger.is_allowed("write", obj, fatal=True)
+
+
+# ---------------------------------------------------------------------------
+# _get_permission_id caching
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_get_permission_id_returns_pk(t_init, t_wizard):
+    perm = Permission.objects.get(name="read")
+    with _ctx(t_wizard):
+        pk = _get_permission_id("read")
+    assert pk == perm.pk
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
