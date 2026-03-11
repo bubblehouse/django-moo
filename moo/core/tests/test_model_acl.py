@@ -78,7 +78,7 @@ def test_deny_group_creates_access_row(t_init, t_wizard):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_deny_evicts_cached_true(t_init, t_wizard):
-    player = Object.objects.get(name__iexact="player")
+    player = Object.objects.create(name="player")
     with _ctx(t_wizard):
         obj = create("evict obj")
         obj.allow(player, "read")
@@ -108,7 +108,7 @@ def test_is_allowed_group_owners(t_init, t_wizard):
     with _ctx(t_wizard):
         obj = create("owner obj")
         obj.allow("owners", "write")
-    player = Object.objects.get(name__iexact="player")
+    player = Object.objects.create(name="player")
     # wizard owns it, player does not
     assert t_wizard.is_allowed("write", obj)
     assert not player.is_allowed("write", obj)
@@ -120,7 +120,7 @@ def test_is_allowed_group_wizards(t_init, t_wizard):
     with _ctx(t_wizard):
         obj = create("wiz obj")
         obj.allow("wizards", "develop")
-    player = Object.objects.get(name__iexact="player")
+    player = Object.objects.create(name="player")
     assert t_wizard.is_allowed("develop", obj)
     assert not player.is_allowed("develop", obj)
 
@@ -131,7 +131,7 @@ def test_is_allowed_group_wizards(t_init, t_wizard):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_is_allowed_specific_accessor(t_init, t_wizard):
-    player = Object.objects.get(name__iexact="player")
+    player = Object.objects.create(name="player")
     with _ctx(t_wizard):
         obj = create("accessor obj")
         obj.allow(player, "write")
@@ -146,7 +146,7 @@ def test_is_allowed_specific_accessor(t_init, t_wizard):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_deny_overrides_allow(t_init, t_wizard):
-    player = Object.objects.get(name__iexact="player")
+    player = Object.objects.create(name="player")
     with _ctx(t_wizard):
         obj = create("mixed obj")
         obj.allow("everyone", "anything")
@@ -183,7 +183,7 @@ def test_get_permission_id_returns_pk(t_init, t_wizard):
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_regular_user_can_read_a_thing(t_init: Object, t_wizard: Object):
     thing = Object.objects.create(name="thing", owner=t_wizard)
-    user = Object.objects.get(name__iexact="player")
+    user = Object.objects.create(name="player")
     assert user.is_allowed("read", thing)
     assert not user.is_allowed("write", thing)
     assert not user.is_allowed("entrust", thing)
@@ -195,7 +195,7 @@ def test_regular_user_can_read_a_thing(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_regular_user_who_owns_a_thing(t_init: Object, t_wizard: Object):
-    user = Object.objects.get(name__iexact="player")
+    user = Object.objects.create(name="player")
     thing = Object.objects.create(name="thing", owner=user)
     assert user.is_allowed("read", thing)
     assert user.is_allowed("write", thing)
@@ -235,7 +235,7 @@ def test_wizard_can_do_most_things(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_add_a_simple_deny_clase(t_init: Object, t_wizard: Object):
-    user = Object.objects.get(name__iexact="player")
+    user = Object.objects.create(name="player")
     thing = Object.objects.create(name="thing", owner=user)
     thing.allow("everyone", "anything")
     thing.deny(user, "write")
@@ -251,7 +251,7 @@ def test_cant_create_child_of_an_object_that_isnt_yours(t_init: Object, t_wizard
     def _writer(msg):
         printed.append(msg)
 
-    user = Object.objects.get(name__iexact="player")
+    user = Object.objects.create(name="Player")
     parent_thing = Object.objects.create(name="parent thing", owner=t_wizard)
     with code.ContextManager(user, _writer):
         child_thing = Object.objects.create(name="child thing", owner=user)
@@ -267,7 +267,7 @@ def test_cant_create_parent_of_an_object_that_isnt_yours(t_init: Object, t_wizar
     def _writer(msg):
         printed.append(msg)
 
-    user = Object.objects.get(name__iexact="player")
+    user = Object.objects.create(name="Player")
     child_thing = Object.objects.create(name="child thing", owner=t_wizard)
     with code.ContextManager(user, _writer):
         parent_thing = Object.objects.create(name="parent thing", owner=user)
@@ -283,7 +283,7 @@ def test_cant_change_owner_unless_allowed_to_entrust(t_init: Object, t_wizard: O
     def _writer(msg):
         printed.append(msg)
 
-    user = Object.objects.get(name__iexact="player")
+    user = Object.objects.create(name="Player")
     with code.ContextManager(user, _writer):
         with pytest.raises(PermissionError) as excinfo:
             create("thing", owner=t_wizard)
@@ -312,7 +312,7 @@ def test_cant_change_location_unless_allowed_to_move(t_init: Object, t_wizard: O
 
     with code.ContextManager(t_wizard, _writer):
         obj = create("thing")
-    user = Object.objects.get(name__iexact="player")
+    user = Object.objects.create(name="Player")
     with code.ContextManager(user, _writer):
         obj = lookup("thing")
         obj.location = user
@@ -354,6 +354,10 @@ def test_change_location_calls_exitfunc(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
+    room = Object.objects.create(name="test room")
+    room.add_verb("accept", code="return True")
+    t_wizard.location = room
+    t_wizard.save()
     with code.ContextManager(t_wizard, _writer):
         containers = lookup("container class")
         box = create("box", parents=[containers])
@@ -376,7 +380,7 @@ def test_change_location_calls_accept(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
-    user = Object.objects.get(name__iexact="player")
+    user = Object.objects.create(name="player")
     with code.ContextManager(user, _writer):
         box = create("box")
         box.add_verb("accept", code="return False")
@@ -400,7 +404,7 @@ def test_perm_cache_avoids_repeated_queries(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_perm_cache_invalidated_by_deny(t_init: Object, t_wizard: Object):
-    user = Object.objects.get(name__iexact="player")
+    user = Object.objects.create(name="player")
     thing = Object.objects.create(name="thing", owner=user)
     with code.ContextManager(t_wizard, lambda m: None):
         # Populate cache with True for "read".

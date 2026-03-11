@@ -99,6 +99,10 @@ def test_ambiguous_object_error_raised_by_parser(t_init, t_wizard):
     The exception is raised inside Parser.__init__ while resolving the dobj,
     before any verb body even executes.
     """
+    room = Object.objects.create(name="test room")
+    room.add_verb("accept", code="return True")
+    t_wizard.location = room
+    t_wizard.save()
     loc = t_wizard.location
     create("coin", parents=[], location=loc)
     create("coin", parents=[], location=loc)
@@ -117,6 +121,10 @@ def test_ambiguous_object_error_raised_by_parser(t_init, t_wizard):
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_ambiguous_object_error_caught_by_parse_command(t_init, t_wizard):
     """tasks.parse_command catches AmbiguousObjectError and formats it as bold red."""
+    room = Object.objects.create(name="test room")
+    room.add_verb("accept", code="return True")
+    t_wizard.location = room
+    t_wizard.save()
     loc = t_wizard.location
     create("coin", parents=[], location=loc)
     create("coin", parents=[], location=loc)
@@ -285,6 +293,10 @@ def test_object_does_not_exist_caught_by_parse_command(t_init, t_wizard):
 def test_verb_does_not_exist_raised_by_parser(t_init, t_wizard):
     """Verb.DoesNotExist is raised by the parser when no object has a matching
     verb and the location has no huh verb to fall back to."""
+    room = Object.objects.create(name="test room")
+    room.add_verb("accept", code="return True")
+    t_wizard.location = room
+    t_wizard.save()
     with code.ContextManager(t_wizard, lambda _: None) as ctx:
         with pytest.raises(Verb.DoesNotExist) as exc_info:
             parse.interpret(ctx, "xyzzy-no-such-verb")
@@ -294,6 +306,10 @@ def test_verb_does_not_exist_raised_by_parser(t_init, t_wizard):
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_verb_does_not_exist_caught_by_parse_command(t_init, t_wizard):
     """tasks.parse_command catches Verb.DoesNotExist and formats it as bold red."""
+    room = Object.objects.create(name="test room")
+    room.add_verb("accept", code="return True")
+    t_wizard.location = room
+    t_wizard.save()
     result = tasks.parse_command(t_wizard.pk, "xyzzy-no-such-verb")
     assert any("[bold red]" in line for line in result)
     assert any("xyzzy-no-such-verb" in line for line in result)

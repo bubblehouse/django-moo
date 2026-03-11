@@ -13,6 +13,19 @@ def test_simple_async_verb(t_init: Object, t_wizard: Object, caplog: pytest.LogC
     def _writer(msg):
         printed.append(msg)
 
+    v = t_wizard.add_verb("test-async-verbs", code="""\
+from moo.core import context, invoke
+counter = 1
+if args and len(args):
+    counter = args[0] + 1
+print(counter)
+if counter < 10:
+    verb = context.caller.get_verb("test-async-verbs")
+    invoke(counter, verb=verb)
+""", direct_object="any")
+    v.owner = t_wizard
+    v.save()
+
     verb = Verb.objects.get(names__name="test-async-verbs")
     verb.invoked_name = "test-async-verbs"
     verb.invoked_object = verb.origin
@@ -37,6 +50,18 @@ def test_simple_async_verb(t_init: Object, t_wizard: Object, caplog: pytest.LogC
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_simple_async_verb_callback(t_init: Object, t_wizard: Object, caplog: pytest.LogCaptureFixture):
+    t_wizard.add_verb("test-async-verb", code="""\
+from moo.core import context, invoke
+counter = 1
+if args and len(args):
+    counter = args[0] + 1
+if counter < 10:
+    return counter
+""", direct_object="this")
+    t_wizard.add_verb("test-async-verb-callback", code="""\
+print(args[0])
+""", direct_object="this")
+
     verb = Verb.objects.get(names__name="test-async-verb")
     callback = Verb.objects.get(names__name="test-async-verb-callback")
     with warnings.catch_warnings():
