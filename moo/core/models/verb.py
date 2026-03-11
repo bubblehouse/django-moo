@@ -104,7 +104,7 @@ class Verb(models.Model, AccessibleMixin):
         bootstrap.load_verb_source(pathlib.Path(self.filename), lookup(1), self.repo, replace=True)
 
     def is_bound(self):
-        return hasattr(self, "invoked_object") and hasattr(self, "invoked_name")
+        return self.invoked_object is not None and self.invoked_name is not None
 
     def passthrough(self, *args, **kwargs):
         """
