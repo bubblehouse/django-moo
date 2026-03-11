@@ -4,11 +4,31 @@ services:
     volumes:
       - .:/usr/src/app
   webapp:
+    environment:
+      DJANGO_SETTINGS_MODULE: moo.settings.local
+      OTEL_PYTHON_DJANGO_INSTRUMENT: 'True'
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://53971991.otel.gitlab-o11y.com:4318"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+      OTEL_SERVICE_NAME: "django-moo-webapp"
     volumes:
       - .:/usr/src/app
   shell:
+    environment:
+      DJANGO_SETTINGS_MODULE: moo.settings.local
+      OTEL_PYTHON_DJANGO_INSTRUMENT: 'True'
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://53971991.otel.gitlab-o11y.com:4318"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+      OTEL_SERVICE_NAME: "django-moo"
     volumes:
       - .:/usr/src/app
   celery:
+    environment:
+      DJANGO_SETTINGS_MODULE: moo.settings.local
+      CELERY_TASK_TIME_LIMIT: "300"
+      OTEL_PYTHON_DJANGO_INSTRUMENT: 'True'
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://53971991.otel.gitlab-o11y.com:4318"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+      OTEL_SERVICE_NAME: "django-moo-celery"
     volumes:
       - .:/usr/src/app
