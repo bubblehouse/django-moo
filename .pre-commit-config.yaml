@@ -16,11 +16,15 @@ repos:
           - coverage
           - django-simplesshkey
           - django-cte
+          - opentelemetry-exporter-otlp
           - opentelemetry-sdk
           - opentelemetry-instrumentation-celery
           - opentelemetry-instrumentation-django
+          - opentelemetry-instrumentation-psycopg2
+          - opentelemetry-instrumentation-redis
           - RestrictedPython
           - psycopg2-binary
+          - redis
           - django_ace
           - celery
           - django_celery_results
