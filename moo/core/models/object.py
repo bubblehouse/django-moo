@@ -897,13 +897,13 @@ class Object(models.Model, AccessibleMixin):
             for rule in rules:
                 if rule.rule == "deny":
                     if fatal:
-                        raise PermissionError(f"{self} is explicitly denied {permission} on {subject}")
+                        raise exceptions.AccessError(self, permission, subject)
                     return False
             if cache is not None:
                 cache[cache_key] = True
             return True
         elif fatal:
-            raise PermissionError(f"{self} is not allowed {permission} on {subject}")
+            raise exceptions.AccessError(self, permission, subject)
         else:
             return False
 

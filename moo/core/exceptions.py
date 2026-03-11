@@ -7,8 +7,8 @@ class UserError(Exception):
     """
     This is the superclass for all Errors that may be generated which
     should be reported to the user who "caused" them. At construction,
-    additional information can be supplied that will be presented to the
-    user if they are a "wizard" user.
+    additional information can be supplied that can be presented to the
+    user if they are a privileged user.
     """
 
     def __init__(self, message, data=None):

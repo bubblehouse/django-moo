@@ -257,7 +257,7 @@ def test_cant_create_child_of_an_object_that_isnt_yours(t_init: Object, t_wizard
         child_thing = Object.objects.create(name="child thing", owner=user)
         with pytest.raises(PermissionError) as excinfo:
             child_thing.parents.add(parent_thing)
-        assert str(excinfo.value) == f"#{user.pk} (Player) is not allowed derive on #{parent_thing.pk} (parent thing)"
+        assert str(excinfo.value) == f"#{user.pk} (Player) is not allowed to 'derive' on #{parent_thing.pk} (parent thing)"
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -273,7 +273,7 @@ def test_cant_create_parent_of_an_object_that_isnt_yours(t_init: Object, t_wizar
         parent_thing = Object.objects.create(name="parent thing", owner=user)
         with pytest.raises(PermissionError) as excinfo:
             child_thing.parents.add(parent_thing)
-        assert str(excinfo.value) == f"#{user.pk} (Player) is not allowed transmute on #{child_thing.pk} (child thing)"
+        assert str(excinfo.value) == f"#{user.pk} (Player) is not allowed to 'transmute' on #{child_thing.pk} (child thing)"
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -292,7 +292,7 @@ def test_cant_change_owner_unless_allowed_to_entrust(t_init: Object, t_wizard: O
         with pytest.raises(PermissionError) as excinfo:
             obj.owner = t_wizard
             obj.save()
-        assert str(excinfo.value) == f"#{user.pk} (Player) is not allowed entrust on #{obj.pk} (thing)"
+        assert str(excinfo.value) == f"#{user.pk} (Player) is not allowed to 'entrust' on #{obj.pk} (thing)"
     with code.ContextManager(t_wizard, _writer):
         obj = lookup("thing")
         obj.allow(user, "entrust")
@@ -318,7 +318,7 @@ def test_cant_change_location_unless_allowed_to_move(t_init: Object, t_wizard: O
         obj.location = user
         with pytest.raises(PermissionError) as excinfo:
             obj.save()
-        assert str(excinfo.value) == f"#{user.pk} (Player) is not allowed write on #{obj.pk} (thing)"
+        assert str(excinfo.value) == f"#{user.pk} (Player) is not allowed to 'write' on #{obj.pk} (thing)"
     with code.ContextManager(t_wizard, _writer):
         obj = lookup("thing")
         obj.allow(user, "move")
