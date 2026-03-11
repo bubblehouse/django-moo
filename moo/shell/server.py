@@ -38,7 +38,9 @@ async def server(port=8022):
     """
     await asyncio.sleep(1)
     await asyncssh.create_server(
-        lambda: SSHServer(interact), "", port, server_host_keys=["/etc/ssh/ssh_host_ecdsa_key"]
+        lambda: SSHServer(interact), "", port,
+        server_host_keys=["/etc/ssh/ssh_host_ecdsa_key"],
+        line_editor=False,
     )
     await asyncio.Future()
 
