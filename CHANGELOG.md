@@ -1,3 +1,9 @@
+## [0.68.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.67.3...v0.68.0) (2026-03-11)
+
+### Features
+
+* use solarized-dark for the code editor ([7c5e230](https://gitlab.com/bubblehouse/django-moo/commit/7c5e230f49cabf1a9be9ffed18166c88203ff478))
+
 ## [0.67.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.67.2...v0.67.3) (2026-03-11)
 
 ### Bug Fixes
