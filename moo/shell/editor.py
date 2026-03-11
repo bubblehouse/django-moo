@@ -11,7 +11,9 @@ from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.layout import Layout, HSplit, Window
 from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.lexers import PygmentsLexer
+from prompt_toolkit.styles import style_from_pygments_cls
 from prompt_toolkit.widgets import Frame, TextArea
+from pygments.styles import get_style_by_name
 
 _LEXERS = {
     "python": ("pygments.lexers", "PythonLexer"),
@@ -90,7 +92,8 @@ async def run_editor(initial_text: str = "", content_type: str = "text") -> str 
         style="reverse",
     )
     layout = Layout(HSplit([Frame(editor, title=_TITLES.get(content_type, "Editor")), status_bar]))
-    app = Application(layout=layout, key_bindings=kb, full_screen=True)
+    pygments_style = style_from_pygments_cls(get_style_by_name("solarized-dark"))
+    app = Application(layout=layout, key_bindings=kb, full_screen=True, style=pygments_style)
 
     await app.run_async()
     return result["text"]
