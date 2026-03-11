@@ -91,5 +91,6 @@ async def run_editor(initial_text: str = "", content_type: str = "text") -> str 
     )
     layout = Layout(HSplit([Frame(editor, title=_TITLES.get(content_type, "Editor")), status_bar]))
     app = Application(layout=layout, key_bindings=kb, full_screen=True)
+
     await app.run_async()
     return result["text"]
