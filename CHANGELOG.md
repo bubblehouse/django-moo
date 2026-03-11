@@ -1,3 +1,9 @@
+## [0.67.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.67.1...v0.67.2) (2026-03-11)
+
+### Bug Fixes
+
+* improve exception handling by parser ([002d390](https://gitlab.com/bubblehouse/django-moo/commit/002d3907e29b176630b37d2f9bb3732891b4e3db))
+
 ## [0.67.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.67.0...v0.67.1) (2026-03-11)
 
 ### Bug Fixes
