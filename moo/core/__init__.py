@@ -13,7 +13,7 @@ from django.db.models import Q
 from .code import ContextManager
 from .exceptions import QuotaError, AmbiguousObjectError, UserError
 
-__all__ = ["lookup", "create", "connected_players", "write", "open_editor", "open_paginator", "_publish_to_player", "invoke", "set_task_perms", "context",
+__all__ = ["lookup", "create", "players", "connected_players", "write", "open_editor", "open_paginator", "_publish_to_player", "invoke", "set_task_perms", "context",
            "ObjectDoesNotExist", "VerbDoesNotExist", "PropertyDoesNotExist"]  # pylint: disable=undefined-all-variable
 
 log = logging.getLogger(__name__)
@@ -87,6 +87,17 @@ def connected_players(within=None):
             result.append(prop.origin)
 
     return result
+
+
+def players():
+    """
+    Return a list of all player avatar Objects.
+
+    :return: Objects that are player avatars
+    :rtype: list[Object]
+    """
+    from .models.auth import Player
+    return [p.avatar for p in Player.objects.select_related("avatar").filter(avatar__isnull=False)]
 
 
 def create(name, *a, **kw):
