@@ -49,7 +49,7 @@ def test_open_already_open(t_init: Object, t_wizard: Object):
         printed.append(msg)
 
     with code.ContextManager(t_wizard, _writer) as ctx:
-        box = setup_container(t_wizard)
+        _box = setup_container(t_wizard)
         parse.interpret(ctx, "open wooden box")
         printed.clear()
         parse.interpret(ctx, "open wooden box")
@@ -85,7 +85,7 @@ def test_close_already_closed(t_init: Object, t_wizard: Object):
         printed.append(msg)
 
     with code.ContextManager(t_wizard, _writer) as ctx:
-        box = setup_container(t_wizard)
+        _box = setup_container(t_wizard)
         parse.interpret(ctx, "close wooden box")
         assert printed == ["Container is already closed."]
 
@@ -168,7 +168,7 @@ def test_take_from_open_container(t_init: Object, t_wizard: Object):
 
     with code.ContextManager(t_wizard, _writer) as ctx:
         system = lookup(1)
-        lab = t_wizard.location
+        _lab = t_wizard.location
         box = setup_container(t_wizard)
         tobacco = create("tobacco", parents=[system.thing], location=box)
         parse.interpret(ctx, "open wooden box")
@@ -207,8 +207,8 @@ def test_take_item_not_in_container(t_init: Object, t_wizard: Object):
 
     with code.ContextManager(t_wizard, _writer) as ctx:
         system = lookup(1)
-        box = setup_container(t_wizard)
-        tobacco = create("tobacco", parents=[system.thing], location=t_wizard.location)
+        _box = setup_container(t_wizard)
+        _tobacco = create("tobacco", parents=[system.thing], location=t_wizard.location)
         parse.interpret(ctx, "open wooden box")
         printed.clear()
         parse.interpret(ctx, "take tobacco from wooden box")
@@ -296,7 +296,7 @@ def test_open_locked_container_without_key(t_init: Object, t_wizard: Object):
         parse.interpret(ctx, "open wooden box")
         box.refresh_from_db()
     assert not box.is_open()
-    assert printed == []
+    assert not printed
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)

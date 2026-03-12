@@ -103,11 +103,11 @@ def test_move_player_teleport(t_init: Object, t_wizard: Object):
     system = lookup(1)
     player_npc = lookup("Player")
     with code.ContextManager(t_wizard, lambda _: None) as ctx:
-        second_room = create("Destination", parents=[system.room], location=None)
-        with pytest.warns(RuntimeWarning) as warnings:
+        _second_room = create("Destination", parents=[system.room], location=None)
+        with pytest.warns(RuntimeWarning) as caught:
             parse.interpret(ctx, "@move Wizard to Destination")
         t_wizard.refresh_from_db()
-    messages = [str(w.message) for w in warnings.list]
+    messages = [str(w.message) for w in caught.list]
     assert any("Wizard disappears suddenly" in m and str(player_npc.pk) in m for m in messages)
     assert t_wizard.location.name == "Destination"
 

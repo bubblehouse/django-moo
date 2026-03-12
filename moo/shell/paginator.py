@@ -47,13 +47,12 @@ async def run_paginator(content: str = "", content_type: str = "text") -> None:
 
     @kb.add("q")
     @kb.add("Q")
-    def quit(event):
+    def quit(event):  # pylint: disable=redefined-builtin
         event.app.exit()
 
     content_window = Window(
         content=BufferControl(buffer=buf, lexer=lexer),
         wrap_lines=True,
-        scrollbar=True,
     )
     status_bar = Window(
         FormattedTextControl("Press [Q] to quit"),

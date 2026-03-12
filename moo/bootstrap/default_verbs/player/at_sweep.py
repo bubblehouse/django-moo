@@ -1,6 +1,6 @@
 #!moo verb @sw*eep --on $player
 
-# pylint: disable=return-outside-function,undefined-variable
+# pylint: disable=return-outside-function,undefined-variable,no-name-in-module
 
 """
 This is a player command used to list the objects that are capable of receiving any messages sent out from the player

@@ -35,7 +35,7 @@ def test_read_no_lock(t_init: Object, t_wizard: Object):
         printed.append(msg)
 
     with code.ContextManager(t_wizard, _writer) as ctx:
-        note = setup_note(t_wizard, text="Hello, world!")
+        _note = setup_note(t_wizard, text="Hello, world!")
         parse.interpret(ctx, "read scrap of paper")
         assert printed == ["Hello, world!"]
 
@@ -56,7 +56,7 @@ def test_read_locked_without_key(t_init: Object, t_wizard: Object):
         key = create("brass key", parents=[system.thing], location=lab)
         note.set_property("read_key", key.id)
         parse.interpret(ctx, "read scrap of paper")
-        assert printed == []
+        assert not printed
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)

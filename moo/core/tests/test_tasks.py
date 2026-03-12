@@ -1,3 +1,4 @@
+# pylint: disable=no-value-for-parameter  # Celery task decorator hides positional args from pylint
 import logging
 import warnings
 import pytest
