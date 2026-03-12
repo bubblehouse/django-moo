@@ -1,3 +1,9 @@
+## [0.71.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.70.0...v0.71.0) (2026-03-12)
+
+### Features
+
+* added paginator support to [@show](https://gitlab.com/show) to show verbs and properties ([5f361b7](https://gitlab.com/bubblehouse/django-moo/commit/5f361b7f45df378016391047367f016089d6ed90))
+
 ## [0.70.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.69.0...v0.70.0) (2026-03-12)
 
 ### Features
