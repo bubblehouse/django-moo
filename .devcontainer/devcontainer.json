@@ -1,9 +1,9 @@
 {
 	"name": "django-moo",
 	"dockerComposeFile": [
-		"../docker-compose.yml",
-		"../docker-compose.override.yml",
-		"../docker-compose.devcontainer.yml"
+		"../compose.yml",
+		"../compose.override.yml",
+		"../compose.devcontainer.yml"
 	],
 	"service": "celery",
 	"workspaceFolder": "/usr/src/app",
