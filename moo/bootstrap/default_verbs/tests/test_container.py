@@ -241,8 +241,25 @@ def test_lock_for_open(t_init: Object, t_wizard: Object):
         system = lookup(1)
         box = setup_container(t_wizard)
         key = create("brass key", parents=[system.thing], location=t_wizard.location)
-        parse.interpret(ctx, "lock_for_open wooden box with brass key")
-        assert box.get_property("open_key") == key
+        parse.interpret(ctx, f"lock_for_open wooden box with #{key.id}")
+        assert box.get_property("open_key") == key.id
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_lock_for_open_negation(t_init: Object, t_wizard: Object):
+    """A negated keyexp (anyone but the key object) is stored as a list."""
+    printed = []
+
+    def _writer(msg):
+        printed.append(msg)
+
+    with code.ContextManager(t_wizard, _writer) as ctx:
+        system = lookup(1)
+        box = setup_container(t_wizard)
+        key = create("brass key", parents=[system.thing], location=t_wizard.location)
+        parse.interpret(ctx, f'lock_for_open wooden box with "!#{key.id}"')
+        assert box.get_property("open_key") == ["!", key.id]
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -257,7 +274,7 @@ def test_unlock_for_open(t_init: Object, t_wizard: Object):
         system = lookup(1)
         box = setup_container(t_wizard)
         key = create("brass key", parents=[system.thing], location=t_wizard.location)
-        parse.interpret(ctx, "lock_for_open wooden box with brass key")
+        parse.interpret(ctx, f"lock_for_open wooden box with #{key.id}")
         parse.interpret(ctx, "unlock_for_open wooden box")
         assert box.get_property("open_key") is None
 
