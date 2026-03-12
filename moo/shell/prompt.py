@@ -104,7 +104,7 @@ class MooPrompt:
         return [
             ("class:name", str(caller.name)),
             ("class:at", "@"),
-            ("class:location", str(caller.location.name)),
+            ("class:location", str(caller.location.name) if caller.location else "nowhere"),
             ("class:colon", ":"),
             ("class:pound", "$ "),
         ]
