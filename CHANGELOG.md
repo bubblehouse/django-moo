@@ -1,3 +1,13 @@
+## [0.70.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.69.0...v0.70.0) (2026-03-12)
+
+### Features
+
+* added open_paginator client function ([4cfc1f7](https://gitlab.com/bubblehouse/django-moo/commit/4cfc1f70caa1ed5ae8afa952246ae77329adcb92))
+
+### Bug Fixes
+
+* handle prompt when user is nowhere ([3100626](https://gitlab.com/bubblehouse/django-moo/commit/3100626c3ca5c6090a8a5c084e7383c84b1e2b6f))
+
 ## [0.69.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.68.0...v0.69.0) (2026-03-12)
 
 ### Features
