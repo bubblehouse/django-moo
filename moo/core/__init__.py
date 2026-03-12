@@ -13,7 +13,7 @@ from django.db.models import Q
 from .code import ContextManager
 from .exceptions import QuotaError, AmbiguousObjectError, UserError
 
-__all__ = ["lookup", "create", "write", "open_editor", "_publish_to_player", "invoke", "set_task_perms", "context",
+__all__ = ["lookup", "create", "write", "open_editor", "open_paginator", "_publish_to_player", "invoke", "set_task_perms", "context",
            "ObjectDoesNotExist", "VerbDoesNotExist", "PropertyDoesNotExist"]
 
 log = logging.getLogger(__name__)
@@ -182,6 +182,26 @@ def open_editor(obj, initial_content: str, callback_verb, *args, content_type: s
         "callback_verb_name": callback_verb.invoked_name,
         "caller_id": context.caller.pk,
         "player_id": (context.player or context.caller).pk,
+    })
+
+
+def open_paginator(obj, content: str, content_type: str = "text"):
+    """
+    Request the connected SSH client to open a full-screen read-only paginator.
+    The user can scroll through the content and press Q to quit.
+
+    :param obj: the player Object whose client should open the paginator
+    :param content: text to display
+    :param content_type: "python", "json", or "text" (default); controls syntax highlighting
+    """
+    if content_type not in ("python", "json", "text"):
+        raise UserError(f"content_type must be 'python', 'json', or 'text', not {content_type!r}.")
+    if context.caller and not context.caller.is_wizard():
+        raise UserError("Only verbs owned by wizards can open the paginator.")
+    _publish_to_player(obj, {
+        "event": "paginator",
+        "content": content,
+        "content_type": content_type,
     })
 
 

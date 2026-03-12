@@ -46,6 +46,7 @@ class MooPrompt:
         self.user = user
         self.is_exiting = False
         self.editor_queue = asyncio.Queue()
+        self.paginator_queue = asyncio.Queue()
 
     async def process_commands(self):
         prompt_session = PromptSession()
@@ -55,8 +56,9 @@ class MooPrompt:
                 prompt_task = asyncio.ensure_future(
                     prompt_session.prompt_async(message, style=self.style))
                 editor_task = asyncio.ensure_future(self.editor_queue.get())
+                paginator_task = asyncio.ensure_future(self.paginator_queue.get())
                 done, pending = await asyncio.wait(
-                    [prompt_task, editor_task], return_when=asyncio.FIRST_COMPLETED)
+                    [prompt_task, editor_task, paginator_task], return_when=asyncio.FIRST_COMPLETED)
                 for task in pending:
                     task.cancel()
                     try:
@@ -65,6 +67,8 @@ class MooPrompt:
                         pass
                 if editor_task in done:
                     await self.run_editor_session(editor_task.result())
+                elif paginator_task in done:
+                    await self.run_paginator_session(paginator_task.result())
                 elif prompt_task in done:
                     try:
                         line = prompt_task.result()
@@ -88,6 +92,10 @@ class MooPrompt:
                 this_id=req["callback_this_id"],
                 verb_name=req["callback_verb_name"],
             )
+
+    async def run_paginator_session(self, req: dict):
+        from .paginator import run_paginator
+        await run_paginator(req.get("content", ""), req.get("content_type", "text"))
 
     @sync_to_async
     def generate_prompt(self):
@@ -145,6 +153,8 @@ class MooPrompt:
                         message = content["message"]
                         if isinstance(message, dict) and message.get("event") == "editor":
                             await self.editor_queue.put(message)
+                        elif isinstance(message, dict) and message.get("event") == "paginator":
+                            await self.paginator_queue.put(message)
                         else:
                             await run_in_terminal(lambda: self.writer(message))
                     sb.close()
