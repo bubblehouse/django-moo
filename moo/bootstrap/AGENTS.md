@@ -10,7 +10,6 @@ The bootstrap system initializes the game database with default game objects, cl
 - `default.py`: Creates the `default` game world with rooms, players, and other game entities
 - `test.py`: Creates the `test` dataset used by pytest
 - `default_verbs/`: Directory of verb files that are installed on `default` game objects
-- `test_verbs/`: Directory of verb files used for testing
 
 ### Datasets:
 - **default**: The production game world. Used when running the server normally.
@@ -19,7 +18,6 @@ The bootstrap system initializes the game database with default game objects, cl
 ### Testing:
 - `moo/core/tests` – The core pytest tests for basic functionality shared by all MOO universes
 - `moo/bootstrap/default_verbs/tests/` — pytest integration tests for the verbs installed on the `default` dataset. These are the tests to write when adding or changing a `default_verbs/` verb.
-- `moo/boostrap/test_verbs/` — These are **not** pytest tests; they are verb definitions loaded during `test.py` bootstrap initialisation.
 
 ## Verb Code Format
 
@@ -417,7 +415,7 @@ kitchen.set_property("description", "A cozy kitchen.")
 
 ### Adding Verbs to Bootstrap Datasets
 
-Do: Create verb file in `default_verbs/` or `test_verbs/`
+Do: Create verb file in `default_verbs/`
 
 Do Not: Add verb directly in bootstrap code:
 ```python
@@ -473,6 +471,6 @@ except Exception as e:
 
 ## Additional Resources
 
-- See `default_verbs/` and `test_verbs/` for example verbs in this repository
+- See `default_verbs/` for example verbs in this repository
 - RestrictedPython documentation: https://restrictedpython.readthedocs.io/
 - Django ORM documentation: https://docs.djangoproject.com/en/stable/topics/db/models/
