@@ -38,7 +38,6 @@ The `moo` package is organized as a Django project with the following main compo
 - `default.py`: Creates the production game world with rooms, players, and other game objects
 - `test.py`: Creates a minimal test dataset used by pytest
 - `default_verbs/`: Directory containing verb files for the default dataset
-- `test_verbs/`: Directory containing verb files for the test dataset
 
 ### `/moo/shell` - SSH Server & Terminal Interface
 
