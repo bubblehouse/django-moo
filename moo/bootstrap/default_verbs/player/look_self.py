@@ -23,13 +23,18 @@ from the pronoun list for the player. This means it can vary with the gender of 
 If the player is carrying any objects, a simple list of these is printed.
 """
 
-passthrough()
-print(_.string_utils.pronoun_sub("%S is sleeping."))
+import datetime
+from moo.core import connected_players
 
-# # TODO: implement this
-# if this not in connected_players():
-#     print("He is sleeping.")
-# elif this.idle_time() < 60:
-#     print("He is awake and looks alert.")
-# else:
-#     print(f"He is awake, but has been staring off into space for {this.idle_time()} seconds.")
+passthrough()
+
+now = datetime.datetime.now(datetime.timezone.utc)
+
+if this not in connected_players():
+    print("He is sleeping.")
+else:
+    idle_time = (now - this.get_property("last_connected_time", recurse=False)).total_seconds()
+    if idle_time < 60:
+        print("He is awake and looks alert.")
+    else:
+        print(f"He is awake, but has been staring off into space for {idle_time} seconds.")
