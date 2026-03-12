@@ -247,6 +247,7 @@ prompt-toolkit==3.0.52
     #   click-repl
     #   django-moo
     #   ptpython
+    #   pypager
 protobuf==6.33.5
     # via
     #   googleapis-common-protos
@@ -262,6 +263,7 @@ pycparser==3.0 ; implementation_name != 'PyPy' and platform_python_implementatio
 pygments==2.19.2
     # via
     #   ptpython
+    #   pypager
     #   rich
     #   sphinx
 pylint==3.3.9
@@ -282,6 +284,8 @@ pylint-plugin-utils==0.9.0
 pylint-pytest==1.1.8
 pynacl==1.6.2
     # via paramiko
+pypager==3.0.1
+    # via django-moo
 pytest==8.2.0
     # via
     #   pylint-pytest

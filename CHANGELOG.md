@@ -1,3 +1,9 @@
+## [0.72.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.71.0...v0.72.0) (2026-03-12)
+
+### Features
+
+* replace custom pager with pypager ([c6f1311](https://gitlab.com/bubblehouse/django-moo/commit/c6f1311a6c8d8ecdeaf77fe6217995026f72df3d))
+
 ## [0.71.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.70.0...v0.71.0) (2026-03-12)
 
 ### Features
