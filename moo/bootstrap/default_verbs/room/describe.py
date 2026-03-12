@@ -1,6 +1,6 @@
 #!moo verb describe --on $room --dspec this
 
-# pylint: disable=return-outside-function,undefined-variable
+# pylint: disable=return-outside-function,undefined-variable,no-name-in-module
 
 from moo.core import lookup, context, PropertyDoesNotExist
 

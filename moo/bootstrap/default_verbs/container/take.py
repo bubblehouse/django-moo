@@ -16,19 +16,19 @@ When you look at pipe now you should see:
 from moo.core import context
 
 if args:
-    object = args[0]
-    name = object.title()
+    obj = args[0]
+    name = obj.title()
 else:
     name = context.parser.get_dobj_str()
-    object = this.find(name).first()
+    obj = this.find(name).first()
 
 if not this.is_open():
     print(f"{this.title()} is closed.")
     return
 
-if not object or object.location != this:
+if not obj or obj.location != this:
     print(f"{name} is not in {this.title()}.")
     return
 
-object.moveto(context.player)
+obj.moveto(context.player)
 print(f"You took {name} from {this.title()}")

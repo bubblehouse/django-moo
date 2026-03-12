@@ -717,7 +717,7 @@ wheels = [
 
 [[package]]
 name = "django-moo"
-version = "0.68.0"
+version = "0.69.0"
 source = { editable = "." }
 dependencies = [
     { name = "asyncssh", extra = ["bcrypt"] },
@@ -756,6 +756,7 @@ dev = [
     { name = "coverage" },
     { name = "myst-parser" },
     { name = "pylint" },
+    { name = "pylint-celery" },
     { name = "pylint-django" },
     { name = "pylint-gitlab" },
     { name = "pylint-pytest" },
@@ -808,6 +809,7 @@ dev = [
     { name = "coverage", specifier = ">=7.4.4,<8" },
     { name = "myst-parser", specifier = ">=3.0.1,<4" },
     { name = "pylint", specifier = ">=3.1.0,<4" },
+    { name = "pylint-celery", specifier = ">=0.3" },
     { name = "pylint-django", specifier = ">=2.5.5,<3" },
     { name = "pylint-gitlab", specifier = ">=2.0.0,<3" },
     { name = "pylint-pytest", specifier = ">=1.1.7,<2" },
@@ -1530,6 +1532,17 @@ sdist = { url = "https://files.pythonhosted.org/packages/04/9d/81c84a312d1fa8133
 wheels = [
     { url = "https://files.pythonhosted.org/packages/1a/a7/69460c4a6af7575449e615144aa2205b89408dc2969b87bc3df2f262ad0b/pylint-3.3.9-py3-none-any.whl", hash = "sha256:01f9b0462c7730f94786c283f3e52a1fbdf0494bbe0971a78d7277ef46a751e7", size = 523465 },
 ]
+
+[[package]]
+name = "pylint-celery"
+version = "0.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "astroid" },
+    { name = "pylint" },
+    { name = "pylint-plugin-utils" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d7/11/7241fec486839a853cee783e3a00950d46ee1e3e993884341b1d4208a287/pylint-celery-0.3.tar.gz", hash = "sha256:41e32094e7408d15c044178ea828dd524beedbdbe6f83f712c5e35bde1de4beb", size = 1899 }
 
 [[package]]
 name = "pylint-django"

@@ -4,10 +4,12 @@ Tests for moo/core/models/auth.py — Player.
 """
 
 import pytest
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
 from .. import code, create
 from ..models import Object, Player
+
+User = get_user_model()
 
 
 def _ctx(wizard):

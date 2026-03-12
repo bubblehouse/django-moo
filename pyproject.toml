@@ -86,4 +86,5 @@ dev-dependencies = [
     "pylint-gitlab>=2.0.0,<3",
     "pytest-profiling>=1.7.0,<2",
     "pytest-xdist>=3.8.0,<4",
+    "pylint-celery>=0.3",
 ]

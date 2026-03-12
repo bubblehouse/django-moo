@@ -349,10 +349,10 @@ def test_disfunc_noop_when_already_home(t_init: Object, t_wizard: Object):
         t_wizard.save()
         context.caller.refresh_from_db()
         home_before = system.player_start
-        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
+        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as caught:
             t_wizard.location.disfunc()
         t_wizard.refresh_from_db()
-    messages = [str(w.message) for w in warnings.list]
+    messages = [str(w.message) for w in caught.list]
     assert any(f"(Player)): #{t_wizard.pk} (Wizard) has disconnected." in m for m in messages)
     assert t_wizard.location == home_before
 
@@ -403,9 +403,9 @@ def test_look_missing_object_prints_error(t_init: Object, t_wizard: Object):
 def test_say_delivers_to_caller_and_others(t_init: Object, t_wizard: Object):
     """say sends 'You: msg' to the caller and 'Name: msg' to others in the room."""
     with code.ContextManager(t_wizard, lambda msg: None) as ctx:
-        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
+        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as caught:
             parse.interpret(ctx, "say Hello there!")
-    messages = [str(w.message) for w in warnings.list]
+    messages = [str(w.message) for w in caught.list]
     assert any("(Wizard)): You: Hello there!" in m for m in messages)
     assert any("(Player)): Wizard: Hello there!" in m for m in messages)
 
@@ -418,9 +418,9 @@ def test_say_delivers_to_caller_and_others(t_init: Object, t_wizard: Object):
 def test_emote_caller_sees_own_action(t_init: Object, t_wizard: Object):
     """emote sends 'You <action>' to the caller."""
     with code.ContextManager(t_wizard, lambda msg: None) as ctx:
-        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
+        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as caught:
             parse.interpret(ctx, "emote waves hello.")
-    messages = [str(w.message) for w in warnings.list]
+    messages = [str(w.message) for w in caught.list]
     assert any("(Wizard)): You waves hello." in m for m in messages)
 
 
@@ -429,9 +429,9 @@ def test_emote_caller_sees_own_action(t_init: Object, t_wizard: Object):
 def test_emote_others_see_action(t_init: Object, t_wizard: Object):
     """emote sends the action text to others in the room via announce."""
     with code.ContextManager(t_wizard, lambda msg: None) as ctx:
-        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
+        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as caught:
             parse.interpret(ctx, "emote waves hello.")
-    messages = [str(w.message) for w in warnings.list]
+    messages = [str(w.message) for w in caught.list]
     assert any("(Player)): waves hello." in m for m in messages)
 
 
@@ -535,9 +535,9 @@ def test_announce_all_but_delivers_to_rest(t_init: Object, t_wizard: Object):
 def test_huh_unrecognised_command(t_init: Object, t_wizard: Object):
     """An unrecognised command triggers huh2, which tells the player 'Huh?'."""
     with code.ContextManager(t_wizard, lambda msg: None) as ctx:
-        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
+        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as caught:
             parse.interpret(ctx, "xyzzy")
-    messages = [str(w.message) for w in warnings.list]
+    messages = [str(w.message) for w in caught.list]
     assert any("Huh?" in m for m in messages)
 
 
@@ -743,9 +743,9 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
         printed.clear()
 
     with code.ContextManager(t_player, _writer) as ctx:
-        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
+        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as caught:
             parse.interpret(ctx, "go north")
-        assert [str(x.message) for x in warnings.list] == [
+        assert [str(x.message) for x in caught.list] == [
             f"ConnectionError(#{t_player.pk} (Player)): You leave #{home_location.pk} (The Laboratory).",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): #{t_player.pk} (Player) leaves #{home_location.pk} (The Laboratory).",
             f"ConnectionError(#{t_player.pk} (Player)): [bright_yellow]Another Room[/bright_yellow]",
@@ -757,9 +757,9 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
         printed.clear()
 
     with code.ContextManager(t_wizard, _writer) as ctx:
-        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
+        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as caught:
             parse.interpret(ctx, "go north")
-        assert [str(x.message) for x in warnings.list] == [
+        assert [str(x.message) for x in caught.list] == [
             f"ConnectionError(#{t_wizard.pk} (Wizard)): You leave #{home_location.pk} (The Laboratory).",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): [bright_yellow]Another Room[/bright_yellow]",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): [deep_sky_blue1]There's not much to see here.[/deep_sky_blue1]",
@@ -777,9 +777,9 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
         printed.clear()
 
     with code.ContextManager(t_player, _writer) as ctx:
-        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
+        with pytest.warns(RuntimeWarning, match=r"ConnectionError") as caught:
             parse.interpret(ctx, "go south")
-        assert [str(x.message) for x in warnings.list] == [
+        assert [str(x.message) for x in caught.list] == [
             f"ConnectionError(#{t_player.pk} (Player)): You leave #{another_room.pk} (Another Room).",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): #{t_player.pk} (Player) leaves #{another_room.pk} (Another Room).",
             f"ConnectionError(#{t_player.pk} (Player)): [bright_yellow]The Laboratory[/bright_yellow]",

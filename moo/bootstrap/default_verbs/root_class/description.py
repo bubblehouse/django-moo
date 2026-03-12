@@ -1,6 +1,6 @@
 #!moo verb description --on $root_class
 
-# pylint: disable=return-outside-function,undefined-variable
+# pylint: disable=return-outside-function,undefined-variable,no-name-in-module
 
 """
 The `description` verb on any object is supposed to return a string or list of strings describing the object in the detail
