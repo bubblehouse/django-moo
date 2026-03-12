@@ -14,6 +14,7 @@ asgiref==3.11.1
 astroid==3.3.11
     # via
     #   pylint
+    #   pylint-celery
     #   pylint-gitlab
 async-timeout==5.0.1 ; python_full_version < '3.11.3'
     # via redis
@@ -265,15 +266,19 @@ pygments==2.19.2
     #   sphinx
 pylint==3.3.9
     # via
+    #   pylint-celery
     #   pylint-django
     #   pylint-gitlab
     #   pylint-plugin-utils
     #   pylint-pytest
     #   pytest-pylint
+pylint-celery==0.3
 pylint-django==2.7.0
 pylint-gitlab==2.1.1
 pylint-plugin-utils==0.9.0
-    # via pylint-django
+    # via
+    #   pylint-celery
+    #   pylint-django
 pylint-pytest==1.1.8
 pynacl==1.6.2
     # via paramiko
