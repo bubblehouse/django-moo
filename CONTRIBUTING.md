@@ -7,7 +7,6 @@ Thank you for your interest in contributing to DjangoMOO! This guide is meant to
 - [Contributing to DjangoMOO](#contributing-to-djangomoo)
   - [Table of Contents](#table-of-contents)
   - [Code of Conduct](#code-of-conduct)
-  - [AI Statement](#ai-statement)
   - [Ways to Contribute](#ways-to-contribute)
   - [Reporting Bugs](#reporting-bugs)
   - [Suggesting Features](#suggesting-features)
@@ -46,16 +45,6 @@ Thank you for your interest in contributing to DjangoMOO! This guide is meant to
 ## Code of Conduct
 
 This project follows a simple principle: be respectful, constructive, and collaborative. Harassment, discrimination, or bad-faith behaviour will not be tolerated. If you experience a problem, contact the maintainer at phil@bubblehouse.org.
-
----
-
-## AI Statement
-
-The vast majority of this project was initiated without the support of AI, but there's no question that it's been a helpful assistant in improving unit test covereage and solving difficult-to-find implementation issues. While the industry continues to evolve our standards around AI-assisted development, here's a few soft guidelines this project is attempting to establish:
-
-- *Models Cannot Assume Copyright* – At this time, under US Copyright guidelines, LLMs cannot attain copyright. Code submissions should be largely free of LLM assistance.
-- *Models Cannot Be Authors* – LLM-generated modifications are the contribution of the human being who submitted them or caused them to be submitted.
-- *Models Cannot Bear Responsibility* - To submit code for inclusion in the codebase, you need to be able to explain the what, why, and how.
 
 ---
 
@@ -112,9 +101,6 @@ It helps to discuss significant changes before writing code so you don't spend t
 git clone https://gitlab.com/bubblehouse/django-moo
 cd django-moo
 
-# Install Python dependencies (creates a virtualenv automatically)
-uv sync
-
 # Install pre-commit hooks (runs linting and formatting on every commit)
 pre-commit install --hook-type pre-commit --hook-type commit-msg
 ```
@@ -156,7 +142,6 @@ moo/
   bootstrap/      Database initialisation and default game world
     default_verbs/        Verb source files installed on default objects
     default_verbs/tests/  Integration tests for those verbs
-    test_verbs/           Verb definitions used by the test bootstrap dataset
   shell/          AsyncSSH server and interactive prompt
   settings/       Django configuration (base, dev, test, local)
 docs/             Sphinx source for the user guide and API reference
@@ -371,7 +356,7 @@ Review changelogs carefully before committing major version bumps.
 
 ## Writing Verb Code
 
-Verbs are Python functions that run inside a [RestrictedPython](https://restrictedpython.readthedocs.io/) sandbox. They live under `moo/bootstrap/default_verbs/` (game verbs) or `moo/bootstrap/test_verbs/` (test fixtures).
+Verbs are Python functions that run inside a [RestrictedPython](https://restrictedpython.readthedocs.io/) sandbox. They live under `moo/bootstrap/default_verbs/`.
 
 ### File format
 
@@ -384,7 +369,7 @@ obj.location = this
 print(f"You create {obj.title()}.")
 ```
 
-The `--on` parameter accepts `$<name>` to reference properties on the system object. Optional flags include `--dspec` (`any`, `this`, `either`) to control direct-object matching.
+The `--on` parameter accepts `$<name>` to reference properties on the system object, otherwise it will look up the object by the provided name. Optional flags include `--dspec` (`any`, `this`, `either`) to control direct-object matching.
 
 ### Verb function context
 
@@ -400,11 +385,11 @@ def verb(this, passthrough, _, *args, **kwargs):
     """
 ```
 
-Pylint will warn about `this`, `passthrough`, `_`, `args`, and `kwargs` being undefined — ignore those warnings, they are injected by the runtime.
+Pylance will warn about `this`, `passthrough`, `_`, `args`, and `kwargs` being undefined — ignore those warnings, they are injected by the runtime.
 
 ### Key patterns
 
-- Use `print()` for player-visible output. `return "..."` exits the verb but the string is **not** displayed.
+- Use `print()` for player-visible output. `return "..."` exits the verb but the string is not automatically displayed.
 - Use `context.player` to identify the initiating player when a `--dspec` is set; `this` may be the matched object, not the caller.
 - Use `obj.set_property("key", value)` to persist properties, not bare attribute assignment.
 - Use `obj.parents.all()` to iterate a parent list (it is a `ManyToManyField`).
