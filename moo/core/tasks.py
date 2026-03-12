@@ -41,7 +41,7 @@ def parse_command(self, caller_id: int, line: str) -> list[Any]:
             except (exceptions.UserError, Object.DoesNotExist, Verb.DoesNotExist, Property.DoesNotExist) as e:
                 log.error(f"{caller}: {e}")
                 output.append(f"[bold red]{e}[/bold red]")
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-exception-caught
                 log.exception(f"Error executing command for {caller}: {e}")
                 output.append("[bold red]An error occurred while executing the command.[/bold red]")
                 if caller.is_wizard():
@@ -88,17 +88,17 @@ def invoke_verb(
         caller = Object.objects.get(pk=caller_id)
         player = Object.objects.get(pk=player_id) if player_id else None
         this = Object.objects.get(pk=this_id)
-        verb = this.get_verb(verb_name)
+        verb_obj = this.get_verb(verb_name)
         if player:
             def _player_writer(msg):
                 try:
                     _publish_to_player(player, msg)
-                except Exception:
+                except Exception:  # pylint: disable=broad-exception-caught
                     background_log.info(msg)
             writer = _player_writer
         else:
             writer = background_log.info
         with code.ContextManager(caller, writer, task_id=task_id, player=player):
-            result = verb(*args, **kwargs)
+            result = verb_obj(*args, **kwargs)
             if callback_verb_name and callback_this_id:
                 invoke_verb.delay(result, caller_id=caller_id, this_id=callback_this_id, verb_name=callback_verb_name)

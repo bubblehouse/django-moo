@@ -1,6 +1,6 @@
 #!moo verb move --on $exit
 
-# pylint: disable=return-outside-function,undefined-variable
+# pylint: disable=return-outside-function,undefined-variable,no-name-in-module
 
 """
 This verb is used to move `thing` through the exit. It provides a general mechanism for moving any sort of object

@@ -182,6 +182,9 @@ class Object(models.Model, AccessibleMixin):
     result is ignored; again, it is not an error if `where` does not define a verb named `enterfunc`.
     """
 
+    original_owner = None
+    original_location = None
+
     @classmethod
     def from_db(cls, db, field_names, values):
         instance = super().from_db(db, field_names, values)
@@ -791,11 +794,11 @@ class Object(models.Model, AccessibleMixin):
         if original_owner_id != self.owner_id and self.owner_id:
             # Ownership affects the "owners" group match in is_allowed(), so evict any
             # cached permission results for this object before checking entrust.
-            cache = ContextManager.get_perm_cache()
-            if cache is not None:
-                evict = [k for k in cache if k[0] == "perm" and k[3] == self.kind and k[4] == self.pk]
+            perm_cache = ContextManager.get_perm_cache()
+            if perm_cache is not None:
+                evict = [k for k in perm_cache if k[0] == "perm" and k[3] == self.kind and k[4] == self.pk]
                 for k in evict:
-                    del cache[k]
+                    del perm_cache[k]
             self.can_caller("entrust", self)
         # ACL Check: to change anything else about the object you at least need `write`
         self.can_caller("write", self)
@@ -852,9 +855,9 @@ class Object(models.Model, AccessibleMixin):
         """
         # Per-session cache: only True results are cached so that exact error messages
         # (denied vs. no rules) are preserved on the uncached False path.
-        cache = ContextManager.get_perm_cache()
+        perm_cache = ContextManager.get_perm_cache()
         cache_key = ("perm", self.pk, permission, subject.kind, subject.pk)
-        if cache is not None and cache_key in cache:
+        if perm_cache is not None and cache_key in perm_cache:
             return True
 
         # Resolve permission ids from the process-level cache (Permission table is static).
@@ -876,12 +879,12 @@ class Object(models.Model, AccessibleMixin):
 
         # Cache wizard status to avoid a repeated Player query on every is_allowed() call.
         wizard_key = ("wizard", self.pk)
-        if cache is not None and wizard_key in cache:
-            is_wizard = cache[wizard_key]
+        if perm_cache is not None and wizard_key in perm_cache:
+            is_wizard = perm_cache[wizard_key]
         else:
             is_wizard = Player.objects.filter(avatar=self, wizard=True).exists()
-            if cache is not None:
-                cache[wizard_key] = is_wizard
+            if perm_cache is not None:
+                perm_cache[wizard_key] = is_wizard
 
         # Build OR conditions for all matching rules
         query = subject_filter & Q(permission_id__in=perms) & (
@@ -899,8 +902,8 @@ class Object(models.Model, AccessibleMixin):
                     if fatal:
                         raise exceptions.AccessError(self, permission, subject)
                     return False
-            if cache is not None:
-                cache[cache_key] = True
+            if perm_cache is not None:
+                perm_cache[cache_key] = True
             return True
         elif fatal:
             raise exceptions.AccessError(self, permission, subject)
