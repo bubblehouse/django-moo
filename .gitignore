@@ -9,7 +9,7 @@
 *.sql
 .DS_Store
 .tm_properties
-docker-compose.override.yml
+compose.override.yml
 .reload
 .coverage
 /static
