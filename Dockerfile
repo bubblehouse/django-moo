@@ -72,6 +72,7 @@ RUN chgrp www-data /etc/ssl/private/ \
     && chgrp www-data /etc/ssh/ssh_host_ecdsa_key.pub \
     && chmod ug+rw /etc/ssh/ssh_host_ecdsa_key.pub
 
+RUN usermod -d /usr/app www-data
 
 ADD extras/entrypoint.sh /entrypoint.sh
 ADD extras/uwsgi/uwsgi.ini /etc/uwsgi.ini

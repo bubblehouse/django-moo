@@ -43,7 +43,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: philchristensen/moo:latest
+    image: registry.gitlab.com/bubblehouse/django-moo:latest
     user: www-data
     ports:
       - 8443:8443
@@ -60,7 +60,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: philchristensen/moo:latest
+    image: registry.gitlab.com/bubblehouse/django-moo:latest
     command: [celery]
     user: www-data
     links:
@@ -76,7 +76,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: philchristensen/moo:latest
+    image: registry.gitlab.com/bubblehouse/django-moo:latest
     command: [manage.py, moo_shell]
     user: www-data
     ports:
