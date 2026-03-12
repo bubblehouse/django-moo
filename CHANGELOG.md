@@ -1,3 +1,9 @@
+## [0.69.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.68.0...v0.69.0) (2026-03-12)
+
+### Features
+
+* added $note and $letter classes ([72bad62](https://gitlab.com/bubblehouse/django-moo/commit/72bad6225e4d5e494bf853b5b54921d9c59b51b8))
+
 ## [0.68.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.67.3...v0.68.0) (2026-03-11)
 
 ### Features
