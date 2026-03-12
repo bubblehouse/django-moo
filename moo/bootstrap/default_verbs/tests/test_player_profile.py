@@ -1,3 +1,5 @@
+import datetime
+
 import pytest
 
 from moo.core import code, create, lookup, parse
@@ -26,11 +28,35 @@ def test_describe_sets_description(t_init: Object, t_wizard: Object, setup_item)
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_look_self_shows_sleeping(t_init: Object, t_wizard: Object):
-    """look_self() on a player prints a sleeping status message."""
+    """look_self() on a disconnected player prints a sleeping status message."""
     printed = []
     with code.ContextManager(t_wizard, printed.append):
         t_wizard.look_self()
     assert any("sleeping" in line for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_look_self_shows_alert(t_init: Object, t_wizard: Object):
+    """look_self() on a recently active player prints an alert status message."""
+    now = datetime.datetime.now(datetime.timezone.utc)
+    printed = []
+    with code.ContextManager(t_wizard, printed.append):
+        t_wizard.set_property("last_connected_time", now)
+        t_wizard.look_self()
+    assert any("awake and looks alert" in line for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_look_self_shows_idle(t_init: Object, t_wizard: Object):
+    """look_self() on an idle connected player prints a staring-off message."""
+    two_minutes_ago = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(minutes=2)
+    printed = []
+    with code.ContextManager(t_wizard, printed.append):
+        t_wizard.set_property("last_connected_time", two_minutes_ago)
+        t_wizard.look_self()
+    assert any("staring off into space" in line for line in printed)
 
 
 # --- @password ---

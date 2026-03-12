@@ -43,7 +43,10 @@ ALLOWED_MODULES = (
     "moo.core",
     "hashlib",
     "string",
-    "re"
+    "re",
+    "date",
+    "datetime",
+    "time"
 )
 
 WIZARD_ALLOWED_MODULES = (

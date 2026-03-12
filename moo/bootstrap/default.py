@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timezone
 from time import time
 
 from moo import bootstrap
@@ -48,6 +49,7 @@ with code.ContextManager(wizard, log.info):
     player = create("Generic Player", parents=[root], location=None)
     sys.set_property("player", player)
     player.set_property("last_connect_time", time())
+    player.set_property("last_connected_time", None)
     player.set_property("ownership_quota", 1000)
     player.set_property("ps", "they", inherit_owner=True)
     player.set_property("po", "them", inherit_owner=True)
