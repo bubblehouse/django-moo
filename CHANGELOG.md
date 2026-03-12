@@ -1,3 +1,10 @@
+## [0.74.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.73.0...v0.74.0) (2026-03-12)
+
+### Features
+
+* added remaining room functions ([857feb4](https://gitlab.com/bubblehouse/django-moo/commit/857feb4b198ff8b018c3925130415c20290e3036))
+* created players() primitive and parser.get_search_order() ([1c28792](https://gitlab.com/bubblehouse/django-moo/commit/1c287926e7179040248f9df6d10f126617ea9ff0))
+
 ## [0.73.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.72.0...v0.73.0) (2026-03-12)
 
 ### Features
