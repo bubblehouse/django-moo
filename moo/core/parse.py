@@ -279,6 +279,19 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             return None
         raise AmbiguousObjectError(name, result)
 
+    def get_search_order(self):
+        """
+        Return the canonical list of objects to search for verbs, in priority order:
+        caller, inventory, location, dobj, pobj objects. Last match wins when iterated.
+        """
+        return list(filter(None, more_itertools.collapse([
+            self.caller,
+            list(self.caller.contents.prefetch_related('aliases')),
+            self.caller.location,
+            self.dobj,
+            [[x[2] for x in prep] for prep in self.prepositions.values()]
+        ])))
+
     def get_verb(self):
         """
         For each of these items the parser will look for a verb using the
@@ -297,13 +310,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         if self.verb:
             return self.verb
 
-        search_order_list = list(filter(None, more_itertools.collapse([
-            self.caller,
-            list(self.caller.contents.prefetch_related('aliases')),
-            self.caller.location,
-            self.dobj,
-            [[x[2] for x in prep] for prep in self.prepositions.values()]
-        ])))
+        search_order_list = self.get_search_order()
 
         if getattr(settings, 'MOO_BATCH_VERB_DISPATCH', False):
             winner_this, winner_verb = self._batch_get_verb(search_order_list)
