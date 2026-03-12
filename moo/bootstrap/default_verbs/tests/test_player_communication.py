@@ -81,7 +81,7 @@ def test_whisper_no_caller_echo(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, printed.append) as ctx:
         with pytest.warns(RuntimeWarning, match="whispers to you"):
             parse.interpret(ctx, "whisper Hello to Player")
-    assert printed == []
+    assert not printed
 
 
 # --- page ---

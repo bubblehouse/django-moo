@@ -172,7 +172,8 @@ for frame in context.caller_stack:
 
 def test_context_manager_defaults():
     caller = _mock()
-    writer = lambda s: None
+    def writer(s):
+        pass
     with _ctx(caller, writer):
         assert code.ContextManager.get("caller") is caller
         assert code.ContextManager.get("player") is caller  # defaults to caller
@@ -360,7 +361,7 @@ def test_print_and_print_factory_both_present():
     assert callable(getattr(new_collector, "_call_print", None))
 
     # Initial collector: _call_print routes output to the writer
-    env["_print"]._call_print("routed")
+    env["_print"]._call_print("routed")  # pylint: disable=protected-access
     assert "routed" in collected
 
 
@@ -392,7 +393,7 @@ def test_set_protected_attribute_private_blocked():
     env = code.get_restricted_environment("test", lambda s: None)
     obj = types.SimpleNamespace()
     with pytest.raises(AttributeError):
-        env["_write_"](obj)._private = "value"
+        env["_write_"](obj)._private = "value"  # pylint: disable=protected-access
 
 
 def test_write_setitem_passthrough():

@@ -14,7 +14,7 @@ from .code import ContextManager
 from .exceptions import QuotaError, AmbiguousObjectError, UserError
 
 __all__ = ["lookup", "create", "write", "open_editor", "open_paginator", "_publish_to_player", "invoke", "set_task_perms", "context",
-           "ObjectDoesNotExist", "VerbDoesNotExist", "PropertyDoesNotExist"]
+           "ObjectDoesNotExist", "VerbDoesNotExist", "PropertyDoesNotExist"]  # pylint: disable=undefined-all-variable
 
 log = logging.getLogger(__name__)
 

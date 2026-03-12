@@ -1,6 +1,6 @@
 #!moo verb open close unlock lock --on $exit --dspec any
 
-# pylint: disable=return-outside-function,undefined-variable
+# pylint: disable=return-outside-function,undefined-variable,no-name-in-module
 
 from moo.core import context, PropertyDoesNotExist
 

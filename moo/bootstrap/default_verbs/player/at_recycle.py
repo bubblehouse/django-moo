@@ -19,5 +19,5 @@ name = obj.title()
 try:
     obj.delete()
     print(f"[yellow]Recycled {name}.[/yellow]")
-except Exception:
+except Exception:  # pylint: disable=broad-exception-caught
     print(f"[red]Error recycling {name}.[/red]")

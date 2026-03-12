@@ -7,6 +7,6 @@ This verb is called by open and close, with the arguments `True` and `False` res
 to either `True` (opened) or `False` (closed).
 """
 
-open = bool(args[0])
+is_open_flag = bool(args[0])
 
-this.set_property("open", open)
+this.set_property("open", is_open_flag)

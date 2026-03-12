@@ -131,7 +131,7 @@ def test_reload_nonexistent_verb_no_output(t_init: Object, t_wizard: Object, tmp
         load_verb_source(verb_file, system, repo)
 
         parse.interpret(ctx, "@reload bogusverb on widget")
-    assert printed == []
+    assert not printed
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)

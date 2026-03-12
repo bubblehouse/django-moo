@@ -183,7 +183,7 @@ def test_tell_gagged_suppressed(t_init: Object, t_wizard: Object):
         player_obj = lookup("Player")
         player_obj.gaglist = [t_wizard]
         player_obj.tell("You should not see this")
-    assert printed == []
+    assert not printed
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
