@@ -103,8 +103,12 @@ with code.ContextManager(wizard, log.info):
 
     notes = create("Generic Note", parents=[thing], location=None)
     sys.set_property("note", notes)
+    notes.set_property("text", "")
+    notes.set_property("read_key", None)
+
     letters = create("Generic Letter", parents=[notes], location=None)
     sys.set_property("letter", letters)
+
 
     lock_utils = create("Lock Utilities", location=None)
     sys.set_property("lock_utils", lock_utils)
