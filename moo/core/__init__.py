@@ -13,7 +13,7 @@ from django.db.models import Q
 from .code import ContextManager
 from .exceptions import QuotaError, AmbiguousObjectError, UserError
 
-__all__ = ["lookup", "create", "write", "open_editor", "open_paginator", "_publish_to_player", "invoke", "set_task_perms", "context",
+__all__ = ["lookup", "create", "connected_players", "write", "open_editor", "open_paginator", "_publish_to_player", "invoke", "set_task_perms", "context",
            "ObjectDoesNotExist", "VerbDoesNotExist", "PropertyDoesNotExist"]  # pylint: disable=undefined-all-variable
 
 log = logging.getLogger(__name__)
@@ -44,6 +44,49 @@ def lookup(x: Union[int, str]):
         return qs[0]
     else:
         raise ValueError(f"{x} is not a supported lookup value.")
+
+
+def connected_players(within=None):
+    """
+    Return a list of player avatars whose ``last_connected_time`` property was
+    updated within the given *within* window (default: 5 minutes).
+
+    The ``last_connected_time`` value is precached into the session-level
+    property cache on every returned Object so subsequent ``get_property``
+    calls incur no extra queries.
+
+    :param within: recency window; defaults to ``timedelta(minutes=5)``
+    :type within: timedelta
+    :return: Objects whose avatars have connected recently
+    :rtype: list[Object]
+    """
+    from datetime import datetime, timedelta, timezone
+    from .models.property import Property
+    from . import moojson
+
+    if within is None:
+        within = timedelta(minutes=5)
+
+    threshold = datetime.now(timezone.utc) - within
+
+    # Single query: restrict to player avatars only and eagerly load the
+    # origin Object to avoid per-row SELECT on prop.origin access.
+    props = (
+        Property.objects
+        .filter(name="last_connected_time", origin__player__isnull=False)
+        .select_related("origin")
+    )
+
+    pcache = ContextManager.get_prop_lookup_cache()
+    result = []
+    for prop in props:
+        value = moojson.loads(prop.value)
+        if pcache is not None:
+            pcache[(prop.origin_id, "last_connected_time", True)] = value
+        if value is not None and value >= threshold:
+            result.append(prop.origin)
+
+    return result
 
 
 def create(name, *a, **kw):

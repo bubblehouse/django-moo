@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import asyncio
+from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from prompt_toolkit import ANSI
@@ -21,6 +22,7 @@ def test_init():
     assert prompt.is_exiting is False
     assert isinstance(prompt.editor_queue, asyncio.Queue)
     assert isinstance(prompt.paginator_queue, asyncio.Queue)
+    assert prompt.last_property_write is None
 
 
 def _make_prompt_user(name, location=None):
@@ -127,3 +129,57 @@ def test_run_paginator_session():
     with patch("moo.shell.paginator.run_paginator", new=AsyncMock()) as mock_paginator:
         asyncio.run(prompt.run_paginator_session(req))
     mock_paginator.assert_called_once_with("page text", "python")
+
+
+def _make_handle_command_mocks():
+    """Return (prompt, avatar, parse_task_mock) with patched parse_command and ContextManager."""
+    user, avatar = _make_prompt_user("Wizard")
+    prompt = MooPrompt(user)
+    parse_result = MagicMock()
+    parse_result.get.return_value = []
+    return prompt, avatar, parse_result
+
+
+def test_handle_command_writes_property_on_first_command():
+    """handle_command() writes last_connected_time on the first command (last_property_write is None)."""
+    prompt, avatar, parse_result = _make_handle_command_mocks()
+    with patch("moo.shell.prompt.tasks.parse_command") as mock_task, \
+         patch("moo.shell.prompt.code.ContextManager") as mock_ctx:
+        mock_task.delay.return_value = parse_result
+        mock_ctx.return_value.__enter__ = MagicMock(return_value=None)
+        mock_ctx.return_value.__exit__ = MagicMock(return_value=False)
+        asyncio.run(prompt.handle_command("look"))
+    avatar.set_property.assert_called_once()
+    args = avatar.set_property.call_args[0]
+    assert args[0] == "last_connected_time"
+    assert isinstance(args[1], datetime)
+    assert prompt.last_property_write is not None
+
+
+def test_handle_command_throttles_property_writes():
+    """handle_command() skips the property write when fewer than 15 seconds have elapsed."""
+    prompt, avatar, parse_result = _make_handle_command_mocks()
+    prompt.last_property_write = datetime.now(timezone.utc)
+    with patch("moo.shell.prompt.tasks.parse_command") as mock_task, \
+         patch("moo.shell.prompt.code.ContextManager") as mock_ctx:
+        mock_task.delay.return_value = parse_result
+        mock_ctx.return_value.__enter__ = MagicMock(return_value=None)
+        mock_ctx.return_value.__exit__ = MagicMock(return_value=False)
+        asyncio.run(prompt.handle_command("look"))
+    avatar.set_property.assert_not_called()
+
+
+def test_handle_command_writes_after_15_seconds():
+    """handle_command() writes last_connected_time again after more than 15 seconds have elapsed."""
+    prompt, avatar, parse_result = _make_handle_command_mocks()
+    prompt.last_property_write = datetime.now(timezone.utc) - timedelta(seconds=16)
+    with patch("moo.shell.prompt.tasks.parse_command") as mock_task, \
+         patch("moo.shell.prompt.code.ContextManager") as mock_ctx:
+        mock_task.delay.return_value = parse_result
+        mock_ctx.return_value.__enter__ = MagicMock(return_value=None)
+        mock_ctx.return_value.__exit__ = MagicMock(return_value=False)
+        asyncio.run(prompt.handle_command("look"))
+    avatar.set_property.assert_called_once()
+    args = avatar.set_property.call_args[0]
+    assert args[0] == "last_connected_time"
+    assert isinstance(args[1], datetime)
