@@ -54,7 +54,7 @@ include = [
     "manage.py",
     "CHANGELOG.md",
     "uv.lock",
-    "docker-compose.*",
+    "compose.*",
     "extras",
 ]
 

@@ -142,7 +142,7 @@ This document provides essential context for AI models interacting with the Djan
   - `moo/settings/local.py` - Local/Docker environment overrides
   - `moo/settings/test.py` - Test environment (used by pytest)
   - `pyproject.toml` - uv dependency and project configuration
-  - `docker-compose.yml` - Multi-container orchestration for local development and simple deployments
+  - `compose.yml` - Multi-container orchestration for local development and simple deployments
   - `Dockerfile` - Container image definition for all services
   - `/extras/helm/Chart.yaml` - Kubernetes Helm chart for production deployments
 
