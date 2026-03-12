@@ -717,7 +717,7 @@ wheels = [
 
 [[package]]
 name = "django-moo"
-version = "0.69.0"
+version = "0.71.0"
 source = { editable = "." }
 dependencies = [
     { name = "asyncssh", extra = ["bcrypt"] },
@@ -742,6 +742,7 @@ dependencies = [
     { name = "prompt-toolkit" },
     { name = "psycopg2-binary" },
     { name = "ptpython" },
+    { name = "pypager" },
     { name = "python-redis-cache" },
     { name = "redis" },
     { name = "restrictedpython" },
@@ -795,6 +796,7 @@ requires-dist = [
     { name = "prompt-toolkit", specifier = ">=3.0.39,<4" },
     { name = "psycopg2-binary", specifier = ">=2.9.7,<3" },
     { name = "ptpython", specifier = ">=3.0.23,<4" },
+    { name = "pypager", specifier = ">=3.0.1,<4" },
     { name = "python-redis-cache", specifier = ">=4.0.2" },
     { name = "redis", specifier = ">=5.2.1" },
     { name = "restrictedpython", specifier = ">=7.0" },
@@ -1641,6 +1643,19 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/48/47/e761c254f410c023a469284a9bc210933e18588ca87706ae93002c05114c/pynacl-1.6.2-cp38-abi3-win32.whl", hash = "sha256:5811c72b473b2f38f7e2a3dc4f8642e3a3e9b5e7317266e4ced1fba85cae41aa", size = 227421 },
     { url = "https://files.pythonhosted.org/packages/41/ad/334600e8cacc7d86587fe5f565480fde569dfb487389c8e1be56ac21d8ac/pynacl-1.6.2-cp38-abi3-win_amd64.whl", hash = "sha256:62985f233210dee6548c223301b6c25440852e13d59a8b81490203c3227c5ba0", size = 239754 },
     { url = "https://files.pythonhosted.org/packages/29/7d/5945b5af29534641820d3bd7b00962abbbdfee84ec7e19f0d5b3175f9a31/pynacl-1.6.2-cp38-abi3-win_arm64.whl", hash = "sha256:834a43af110f743a754448463e8fd61259cd4ab5bbedcf70f9dabad1d28a394c", size = 184801 },
+]
+
+[[package]]
+name = "pypager"
+version = "3.0.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "prompt-toolkit" },
+    { name = "pygments" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a2/94/fb3cf81608d8a5aaf5bbac7e8f331e1ccc4501d7351957b72f0a8eb0d9f5/pypager-3.0.1.tar.gz", hash = "sha256:79c1fc8c4f2c9749dd58e5b29bfce48ca864a24898d1a1e0df1e7fe82d86ab44", size = 17152 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/91/a0/00480b4dd4e88a8833a691d219f1ad550d385ed898f0af7564486d5a62c0/pypager-3.0.1-py3-none-any.whl", hash = "sha256:f5169242fa7e46f5ffec225a667af664f8adf31616c84d99bf7ed8e898433930", size = 19196 },
 ]
 
 [[package]]
