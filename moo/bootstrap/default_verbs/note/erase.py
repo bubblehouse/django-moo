@@ -1,0 +1,12 @@
+#!moo verb erase --on $note --dspec this
+
+# pylint: disable=return-outside-function,undefined-variable
+
+"""
+This verb erases all text stored on the note. Only the owner of a note can erase it.
+"""
+
+from moo.core import context
+
+if context.player.owns(this):
+    this.set_property("text", "")
