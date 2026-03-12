@@ -1,3 +1,9 @@
+## [0.73.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.72.0...v0.73.0) (2026-03-12)
+
+### Features
+
+* added last_connection_time property, connected_users() helper function, and use it in look_self on the player object ([413b8b5](https://gitlab.com/bubblehouse/django-moo/commit/413b8b5e7761651d3fd4da8596d4820d4dbfc97c))
+
 ## [0.72.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.71.0...v0.72.0) (2026-03-12)
 
 ### Features
