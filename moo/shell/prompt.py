@@ -5,6 +5,7 @@ Prompt-Toolkit interface
 
 import asyncio
 import logging
+from datetime import datetime, timezone
 
 from asgiref.sync import sync_to_async
 from kombu import Exchange, Queue, simple
@@ -16,7 +17,7 @@ from prompt_toolkit.styles import Style
 from rich.console import Console
 
 from ..celery import app
-from ..core import models, moojson, tasks
+from ..core import code, models, moojson, tasks
 
 log = logging.getLogger(__name__)
 
@@ -47,6 +48,7 @@ class MooPrompt:
         self.is_exiting = False
         self.editor_queue = asyncio.Queue()
         self.paginator_queue = asyncio.Queue()
+        self.last_property_write: datetime | None = None
 
     async def process_commands(self):
         prompt_session = PromptSession()
@@ -115,6 +117,11 @@ class MooPrompt:
         Parse the command and execute it.
         """
         caller = self.user.player.avatar
+        now = datetime.now(timezone.utc)
+        if self.last_property_write is None or (now - self.last_property_write).total_seconds() > 15:
+            with code.ContextManager(caller, lambda x: None):
+                caller.set_property("last_connected_time", now)
+            self.last_property_write = now
         log.info(f"{caller}: {line}")
         ct = tasks.parse_command.delay(caller.pk, line)
         try:
