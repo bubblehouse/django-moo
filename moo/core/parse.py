@@ -507,7 +507,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
                 return matches[0]
         return self.prepositions[prep][0][0]
 
-    def has_dobj(self):
+    def has_dobj(self, lookup=False):
         """
         Was a direct object found?
         """

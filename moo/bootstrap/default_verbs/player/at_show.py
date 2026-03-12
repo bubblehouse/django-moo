@@ -1,4 +1,4 @@
-#!moo verb @s*how --on $player --dspec any
+#!moo verb @s*how --on $player --dspec any --ispec on:any
 
 # pylint: disable=return-outside-function,undefined-variable
 
@@ -8,11 +8,34 @@ This is a player command used to examine other objects in detail. It returns det
 if permissions allow.
 """
 
-from moo.core import context
+from moo.core import context, open_paginator
 
 parser = context.parser
 player = context.player
-obj = parser.get_dobj()
+if not parser.has_pobj_str("on"):
+    obj = parser.get_dobj()
+else:
+    target = parser.get_pobj("on", lookup=True)
+    name = parser.get_dobj_str()
+    obj = None
+    try:
+        obj = target.get_verb(name, recurse=True)
+    except:
+        pass
+    try:
+        obj = target.get_property(name, recurse=True)
+    except:
+        pass
+    if obj is None:
+        print(f"Couldn't find a verb or property named '{name}' on {target}.")
+        return
+
+if obj.kind == "verb":
+    open_paginator(context.player, obj.code, content_type="python")
+    return
+elif obj.kind == "property":
+    open_paginator(context.player, obj.value, content_type="json")
+    return
 
 print(f"Details for {obj}:")
 print(f"  Owner: {obj.owner}")
