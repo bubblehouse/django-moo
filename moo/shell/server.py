@@ -40,6 +40,13 @@ async def server(port=8022):
     await asyncssh.create_server(
         lambda: SSHServer(interact), "", port,
         server_host_keys=["/etc/ssh/ssh_host_ecdsa_key"],
+        kex_algs=[
+            "mlkem768x25519-sha256",
+            "sntrup761x25519-sha512@openssh.com",
+            "curve25519-sha256",
+            "ecdh-sha2-nistp256",
+            "diffie-hellman-group14-sha256",
+        ],
         line_editor=False,
     )
     await asyncio.Future()
