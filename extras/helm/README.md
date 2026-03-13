@@ -1,6 +1,6 @@
 # django-moo-chart
 
-![Version: 0.74.0](https://img.shields.io/badge/Version-0.74.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.74.0](https://img.shields.io/badge/AppVersion-0.74.0-informational?style=flat-square)
+![Version: 0.76.0](https://img.shields.io/badge/Version-0.76.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.76.0](https://img.shields.io/badge/AppVersion-0.76.0-informational?style=flat-square)
 
 A Helm chart for Kubernetes
 
@@ -8,6 +8,7 @@ A Helm chart for Kubernetes
 
 | Repository | Name | Version |
 |------------|------|---------|
+| oci://registry-1.docker.io/bitnamicharts | postgresql | 18.5.6 |
 | oci://registry-1.docker.io/bitnamicharts | redis | 25.3.2 |
 
 ## Values
@@ -38,8 +39,10 @@ A Helm chart for Kubernetes
 | nodeSelector | object | `{}` |  |
 | podAnnotations | object | `{}` |  |
 | podSecurityContext.fsGroup | int | `33` |  |
+| postgresql.enabled | bool | `false` |  |
 | redis.architecture | string | `"standalone"` |  |
 | redis.auth.enabled | bool | `false` |  |
+| redis.enabled | bool | `true` |  |
 | replicaCount.beat | int | `1` |  |
 | replicaCount.shell | int | `2` |  |
 | replicaCount.webapp | int | `2` |  |
