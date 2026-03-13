@@ -1,3 +1,9 @@
+## [0.77.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.77.2...v0.77.3) (2026-03-13)
+
+### Bug Fixes
+
+* enable post-quantum key exchange in SSH server ([ddc945b](https://gitlab.com/bubblehouse/django-moo/commit/ddc945be3452cb1958b50da7a7e1cd69c6df64cb))
+
 ## [0.77.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.77.1...v0.77.2) (2026-03-13)
 
 ### Bug Fixes
