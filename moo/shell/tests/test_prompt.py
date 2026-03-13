@@ -5,13 +5,51 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from prompt_toolkit import ANSI
+from prompt_toolkit.document import Document
+from prompt_toolkit.key_binding import KeyBindings
 
-from moo.shell.prompt import MooPrompt
+import moo.shell.prompt as prompt_module
+from moo.shell.prompt import MooPrompt, PROMPT_SHORTCUTS, _make_key_bindings
 
 
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
+
+def test_make_key_bindings_returns_keybindings():
+    """_make_key_bindings() returns a KeyBindings with one binding per PROMPT_SHORTCUT entry."""
+    kb = _make_key_bindings()
+    assert isinstance(kb, KeyBindings)
+    registered_keys = {b.keys[0] for b in kb.bindings}
+    for char in PROMPT_SHORTCUTS:
+        assert char in registered_keys
+
+
+def test_shortcut_handler_expands_with_cursor_at_percent():
+    """Shortcut handler replaces the buffer with the template text and places the cursor at the % position."""
+    kb = _make_key_bindings()
+    binding = next(b for b in kb.bindings if b.keys[0] == '"')
+    event = MagicMock()
+    binding.handler(event)
+    template = PROMPT_SHORTCUTS['"']
+    expected_text = template.replace('%', '')
+    expected_pos = template.find('%')
+    event.app.current_buffer.set_document.assert_called_once_with(Document(expected_text, expected_pos))
+
+
+def test_shortcut_handler_cursor_at_end_when_no_percent():
+    """Shortcut handler places the cursor at the end of the text when the template contains no %."""
+    original = prompt_module.PROMPT_SHORTCUTS.copy()
+    prompt_module.PROMPT_SHORTCUTS = {'!': 'emote'}
+    try:
+        kb = _make_key_bindings()
+        binding = next(b for b in kb.bindings if b.keys[0] == '!')
+        event = MagicMock()
+        binding.handler(event)
+        event.app.current_buffer.set_document.assert_called_once_with(Document('emote', 5))
+    finally:
+        prompt_module.PROMPT_SHORTCUTS = original
 
 
 def test_init():

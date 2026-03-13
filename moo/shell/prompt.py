@@ -11,6 +11,10 @@ from asgiref.sync import sync_to_async
 from kombu import Exchange, Queue, simple
 from prompt_toolkit import ANSI
 from prompt_toolkit.application import run_in_terminal
+from prompt_toolkit.application.current import get_app
+from prompt_toolkit.document import Document
+from prompt_toolkit.filters import Condition
+from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.shortcuts import print_formatted_text
 from prompt_toolkit.shortcuts.prompt import PromptSession
 from prompt_toolkit.styles import Style
@@ -20,6 +24,27 @@ from ..celery import app
 from ..core import code, models, moojson, tasks
 
 log = logging.getLogger(__name__)
+
+PROMPT_SHORTCUTS = {
+    '"': 'say "%"',
+    "'": "say '%'",
+}
+
+
+def _make_key_bindings() -> KeyBindings:
+    kb = KeyBindings()
+    buffer_is_empty = Condition(lambda: get_app().current_buffer.text == "")
+    for char, template in PROMPT_SHORTCUTS.items():
+        def make_handler(ch, tmpl):
+            @kb.add(ch, filter=buffer_is_empty)
+            def handler(event):
+                text = tmpl.replace('%', '')
+                pos = tmpl.find('%')
+                if pos == -1:
+                    pos = len(text)
+                event.app.current_buffer.set_document(Document(text, pos))
+        make_handler(char, template)
+    return kb
 
 
 async def embed(
@@ -80,7 +105,7 @@ class MooPrompt:
         paginator request. Whichever arrives first is handled; the others are
         cancelled. Exits cleanly on EOF or KeyboardInterrupt.
         """
-        prompt_session = PromptSession()
+        prompt_session = PromptSession(key_bindings=_make_key_bindings())
         try:
             while not self.is_exiting:
                 message = await self.generate_prompt()
