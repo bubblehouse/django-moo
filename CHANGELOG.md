@@ -1,3 +1,10 @@
+## [0.76.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.75.0...v0.76.0) (2026-03-13)
+
+### Features
+
+* replace Django model exceptions with custom ones that are formatted by the parser task ([5c2f384](https://gitlab.com/bubblehouse/django-moo/commit/5c2f384d871d8253d8d50ccf2b6baad4a18b9eed))
+* use the redis result backend when not in testing ([5404537](https://gitlab.com/bubblehouse/django-moo/commit/5404537de7c567a5d08925e8ccb471b295abcc3e))
+
 ## [0.75.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.74.0...v0.75.0) (2026-03-13)
 
 ### Features
