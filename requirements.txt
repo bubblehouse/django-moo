@@ -95,7 +95,6 @@ django-appconf==1.2.0
 django-celery-beat==2.9.0
     # via django-moo
 django-celery-results==2.6.0
-    # via django-moo
 django-compressor==4.6.0
     # via django-moo
 django-cte==3.0.0
