@@ -1,35 +1,12 @@
 ---
 repos:
-  - repo: https://github.com/PyCQA/pylint
-    rev: v4.0.5
+  - repo: local
     hooks:
       - id: pylint
-        entry: env DJANGO_SETTINGS_MODULE=moo.settings.test pylint
-        additional_dependencies:
-          - pylint-django
-          - django
-          - pylint-gitlab
-          - pylint-pytest
-          - pytest-django
-          - pytest-spec
-          - pytest-cov
-          - coverage
-          - django-simplesshkey
-          - django-cte
-          - opentelemetry-exporter-otlp
-          - opentelemetry-sdk
-          - opentelemetry-instrumentation-celery
-          - opentelemetry-instrumentation-django
-          - opentelemetry-instrumentation-psycopg2
-          - opentelemetry-instrumentation-redis
-          - RestrictedPython
-          - psycopg2-binary
-          - redis
-          - django_ace
-          - celery
-          - django_celery_results
-          - django_celery_beat
-          - more_itertools
+        name: pylint
+        entry: env DJANGO_SETTINGS_MODULE=moo.settings.test uv run pylint
+        language: system
+        types: [python]
   - repo: https://github.com/pryorda/dockerfilelint-precommit-hooks
     rev: v0.1.0
     hooks:
