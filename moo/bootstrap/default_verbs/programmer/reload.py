@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb is used to reload the source code for a filesystem-resident verb.
+Reload the source code for a filesystem-resident verb.
 """
 
 from moo.core import context, VerbDoesNotExist

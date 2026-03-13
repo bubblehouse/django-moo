@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb will lock the note with `object`. The note can only be read if the player is holding `object`, or
+Lock the note with `object`. The note can only be read if the player is holding `object`, or
 the `object` is the player trying to read the note. The note will remained locked until it is unlocked.
 """
 

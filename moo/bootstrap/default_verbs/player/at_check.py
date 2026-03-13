@@ -5,11 +5,11 @@
 """
 This is a player command used to check the origin of the last few messages received by the player. The `args` list can
 contain the number of lines to print as the first element, followed by a list of player names. Each player name in the
-list is a person to be trusted, unless the name is prefixed by an exclamation point, `!', in which case the person is
+list is a person to be trusted, unless the name is prefixed by an exclamation point, ``!``, in which case the person is
 not to be trusted.
 
 The verb starts by building up a list of trusted and mistrusted individuals based on the names given on the command
-line. Then it runs through last `n` messages in the player's `responsible` property list, checking the origin of the
+line. Then it runs through last `n`` messages in the player``s `responsible` property list, checking the origin of the
 messages using the `this.whodunnit` verb with the `trust` and `mistrust` lists.
 
 Any dubious messages found are printed, along with details of who sent them.

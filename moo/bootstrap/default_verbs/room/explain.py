@@ -3,8 +3,8 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb is used to provide helpful information to the player should s/he fail to enter a command correctly. It is
-called by the `huh2` verb as a last resort to process the player command. The verb follows the parser's search path
+Provide helpful information to the player should s/he fail to enter a command correctly. It is
+called by the `huh2`` verb as a last resort to process the player command. The verb follows the parser``s search path
 for verbs looking for a match with `verb`. If one is found, this means that the parser rejected the match because
 the arguments did not match.
 

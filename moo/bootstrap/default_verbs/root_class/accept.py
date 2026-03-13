@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb is used to control what objects are permitted to be placed inside other objects. If this verb returns
+Control what objects are permitted to be placed inside other objects. If this verb returns
 `False`, then the object where cannot be moved into this object. Conversely, if the verb returns a non-zero value, the
 object is allowed to be placed inside this object. The verb is called by the server when it changes the `location`
 property of an object.

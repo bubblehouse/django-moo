@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb is a player command used to change the player's password.
+Change the player's password.
 """
 
 print("@password is not yet implemented.")

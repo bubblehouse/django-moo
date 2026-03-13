@@ -3,8 +3,8 @@
 # pylint: disable=return-outside-function,undefined-variable,no-name-in-module
 
 """
-This verb performs the opposite function to the `add_exit` verb. It removes `exit` from the room's list of exits. If it is
-not possible to remove `exit` from the room's exit list (normally because the object that invoked the verb does not have
+Perform the opposite function to the `add_exit` verb. It removes `exit`` from the room``s list of exits. If it is
+not possible to remove `exit`` from the room``s exit list (normally because the object that invoked the verb does not have
 the required permission) then the verb returns `False`. Otherwise, a successful addition returns `True`.
 """
 

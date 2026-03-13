@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb is normally invoked by the player as a command. The home of a player is the room where s/he goes to when they
+Move the player to their home location. The home of a player is the room where s/he goes to when they
 disconnect. Unlike some flavours of MUD, MOO does not cause you to lose all your possessions if you go home.
 
 The `home` verb performs a simple sequence. It first checks whether the player is already at home, and tells him/her so

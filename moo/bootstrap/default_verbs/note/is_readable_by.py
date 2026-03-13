@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb uses the `$lock_utils.eval_key` verb to evaluate the key, stored in the `read_key` property, and determine if
+Use the `$lock_utils.eval_key` verb to evaluate the key, stored in the `read_key` property, and determine if
 the note is readable or not by the player. This verb will return `True` if it is readable, or `False` if it is not.
 """
 
