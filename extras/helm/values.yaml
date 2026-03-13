@@ -10,9 +10,13 @@ moo:
     settings: moo.settings.dev
 
 redis:
+  enabled: true
   architecture: standalone
   auth:
     enabled: false
+
+postgresql:
+  enabled: false
 
 replicaCount:
   webapp: 2
