@@ -8,7 +8,7 @@ The verb or property to edit is determined by the dobj of the command, and the
 object to edit is determined by the pobj of the command.
 """
 
-from moo.core import context, open_editor, VerbDoesNotExist, PropertyDoesNotExist
+from moo.core import context, open_editor, NoSuchVerbError, NoSuchPropertyError
 
 if verb_name == "@edit":
     attribute = context.parser.get_dobj_str()
@@ -18,13 +18,13 @@ if verb_name == "@edit":
         obj = target.get_verb(attribute, recurse=False)
         content = obj.code
         content_type = "python"
-    except VerbDoesNotExist:
+    except NoSuchVerbError:
         pass
     try:
         obj = target.get_property(attribute, recurse=False, original=True)
         content = obj.value
         content_type = "json"
-    except PropertyDoesNotExist:
+    except NoSuchPropertyError:
         pass
     if not obj:
         print(f"{attribute} is not a verb or property on {target}")

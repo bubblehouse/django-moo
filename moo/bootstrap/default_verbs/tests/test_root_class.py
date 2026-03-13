@@ -203,10 +203,10 @@ def test_match_finds_object_by_name(t_init: Object, t_wizard: Object):
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_match_raises_does_not_exist(t_init: Object, t_wizard: Object):
-    """match() raises Object.DoesNotExist when no matching object is found."""
+    """match() raises NoSuchObjectError when no matching object is found."""
     with code.ContextManager(t_wizard, lambda msg: None):
         lab = t_wizard.location
-        with pytest.raises(Object.DoesNotExist):
+        with pytest.raises(exceptions.NoSuchObjectError):
             lab.match("nonexistent thing")
 
 
