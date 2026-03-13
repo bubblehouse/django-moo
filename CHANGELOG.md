@@ -1,3 +1,9 @@
+## [0.75.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.74.0...v0.75.0) (2026-03-13)
+
+### Features
+
+* prompt shortcuts, like " to trigger say "" ([f5960d9](https://gitlab.com/bubblehouse/django-moo/commit/f5960d9dfdf2c3b5e979fa7aab811232e1c2251a))
+
 ## [0.74.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.73.0...v0.74.0) (2026-03-12)
 
 ### Features
