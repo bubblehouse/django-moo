@@ -112,7 +112,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_ace",
     "simplesshkey",
-    "django_celery_results",
     "django_celery_beat",
     "moo.core",
     "moo.shell",
