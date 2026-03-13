@@ -1,3 +1,9 @@
+## [0.77.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.76.0...v0.77.0) (2026-03-13)
+
+### Features
+
+* added support for postgresql subchart ([82fd19d](https://gitlab.com/bubblehouse/django-moo/commit/82fd19dae254406af2ba3958e9a5f7ff744b3416))
+
 ## [0.76.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.75.0...v0.76.0) (2026-03-13)
 
 ### Features
