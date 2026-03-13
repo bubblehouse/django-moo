@@ -14,7 +14,7 @@ from django.db import transaction
 from moo.core.models import verb
 
 from . import code, exceptions, parse
-from .models import Object, Verb, Property
+from .models import Object
 
 log = get_task_logger(__name__)
 background_log = logging.getLogger(f"{__name__}.background")
@@ -38,7 +38,7 @@ def parse_command(self, caller_id: int, line: str) -> list[Any]:
             try:
                 log.info(f"{caller}: {line}")
                 parse.interpret(ctx, line)
-            except (exceptions.UserError, Object.DoesNotExist, Verb.DoesNotExist, Property.DoesNotExist) as e:
+            except exceptions.UserError as e:
                 log.error(f"{caller}: {e}")
                 output.append(f"[bold red]{e}[/bold red]")
                 if caller.is_wizard():

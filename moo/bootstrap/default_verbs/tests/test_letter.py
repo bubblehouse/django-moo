@@ -1,6 +1,6 @@
 import pytest
 
-from moo.core import code, create, lookup, parse
+from moo.core import code, create, exceptions, lookup, parse
 from moo.core.models import Object
 
 
@@ -28,7 +28,7 @@ def test_burn_readable(t_init: Object, t_wizard: Object):
 
     messages = [str(w.message) for w in warning_list]
     assert any(f"{name} burns with a smokeless flame, and leaves no ash." in m for m in messages)
-    with pytest.raises(Object.DoesNotExist):
+    with pytest.raises(exceptions.NoSuchObjectError):
         lookup("sealed letter")
 
 

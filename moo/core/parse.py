@@ -60,7 +60,7 @@ def interpret(ctx, line):
     ctx.set_parser(parser)
     try:
         verb = parser.get_verb()
-    except Verb.DoesNotExist:
+    except NoSuchVerbError:
         if context.player.location and context.player.location.has_verb("huh"):
             verb = context.player.location.get_verb("huh")
         else:
@@ -323,11 +323,11 @@ class Parser:  # pylint: disable=too-many-instance-attributes
                     if verb := obj.parse_verb(self):
                         self.this = obj
                         self.verb = verb
-                except Verb.DoesNotExist:
+                except NoSuchVerbError:
                     continue
 
         if not self.this:
-            raise Verb.DoesNotExist("parser: " + self.words[0])
+            raise NoSuchVerbError(self.words[0])
 
         self.verb.invoked_name = self.words[0]
         self.verb.invoked_object = self.this
@@ -440,13 +440,13 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             from moo.core import lookup
             return lookup(self.dobj_str)
         if not (self.dobj):
-            raise Object.DoesNotExist(self.dobj_str)
+            raise NoSuchObjectError(self.dobj_str)
         return self.dobj
 
     def get_pobj(self, *preps, lookup=False):
         """
         Get the object(s) for the given preposition(s). If there was no
-        object found, raise a Object.DoesNotExist; if the preposition
+        object found, raise a NoSuchObjectError; if the preposition
         was not found, raise a NoSuchPrepositionError.
         """
         matches = []
@@ -463,7 +463,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             raise AmbiguousObjectError(','.join(preps), matches)
         if not (matches):
             prep = list(self.prepositions.keys())[0]
-            raise Object.DoesNotExist(self.prepositions[prep][0][1])
+            raise NoSuchObjectError(self.prepositions[prep][0][1])
         return matches[0]
 
     def get_dobj_str(self):
@@ -472,7 +472,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         direct object **string** found, raise a NoSuchObjectError
         """
         if not (self.dobj_str):
-            raise Object.DoesNotExist("direct object")
+            raise NoSuchObjectError("direct object")
         return self.dobj_str
 
     def get_pobj_str(self, prep, return_list=False):
@@ -493,7 +493,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             else:
                 raise matches[0]
         elif not (matches):
-            raise Object.DoesNotExist(self.prepositions[prep][0][1])
+            raise NoSuchObjectError(self.prepositions[prep][0][1])
         return self.prepositions[prep][0][1]
 
     def get_pobj_spec_str(self, prep, return_list=False):

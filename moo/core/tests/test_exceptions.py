@@ -17,7 +17,7 @@ Section 3: Integration tests for exceptions raised directly by core framework
 import pytest
 
 from moo.core import code, create, exceptions, parse, tasks
-from moo.core.models import Object, Property
+from moo.core.models import Object
 from moo.core.models.verb import Verb, VerbName
 
 
@@ -254,13 +254,41 @@ def test_access_error_raised_by_is_allowed(t_init, t_wizard):
 
 
 # =============================================================================
-# Section 4 — DoesNotExist exceptions through parse.interpret /
-#             tasks.parse_command
+# Section 4 — NoSuch*Error exceptions (replacing Django DoesNotExist)
+#             through parse.interpret / tasks.parse_command
 # =============================================================================
 
+def test_no_such_object_error_is_user_error():
+    """NoSuchObjectError is a UserError subclass and str() contains the name."""
+    err = exceptions.NoSuchObjectError("ghost")
+    assert isinstance(err, exceptions.UserError)
+    assert "ghost" in str(err)
+
+
+def test_no_such_verb_error_is_user_error():
+    """NoSuchVerbError is a UserError subclass; .data stores the verb name."""
+    err = exceptions.NoSuchVerbError("xyzzy")
+    assert isinstance(err, exceptions.UserError)
+    assert err.data == "xyzzy"
+
+
+def test_no_such_property_error_is_user_error():
+    """NoSuchPropertyError is a UserError subclass and str() contains the name."""
+    err = exceptions.NoSuchPropertyError("color")
+    assert isinstance(err, exceptions.UserError)
+    assert "color" in str(err)
+
+
+def test_no_such_property_error_with_origin():
+    """NoSuchPropertyError with origin includes origin in str()."""
+    err = exceptions.NoSuchPropertyError("color", origin="the lamp")
+    assert "color" in str(err)
+    assert "the lamp" in str(err)
+
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
-def test_object_does_not_exist_raised_by_get_dobj(t_init, t_wizard):
-    """Object.DoesNotExist is raised naturally when verb code calls get_dobj()
+def test_no_such_object_error_raised_by_get_dobj(t_init, t_wizard):
+    """NoSuchObjectError is raised when verb code calls get_dobj()
     but no object by that name exists in scope."""
     _add_verb(
         t_wizard,
@@ -270,14 +298,14 @@ def test_object_does_not_exist_raised_by_get_dobj(t_init, t_wizard):
         direct_object="any",
     )
     with code.ContextManager(t_wizard, lambda _: None) as ctx:
-        with pytest.raises(Object.DoesNotExist) as exc_info:
+        with pytest.raises(exceptions.NoSuchObjectError) as exc_info:
             parse.interpret(ctx, "test-get-dobj ghost")
     assert "ghost" in str(exc_info.value)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
-def test_object_does_not_exist_caught_by_parse_command(t_init, t_wizard):
-    """tasks.parse_command catches Object.DoesNotExist and formats it as bold red."""
+def test_no_such_object_error_caught_by_parse_command(t_init, t_wizard):
+    """tasks.parse_command catches NoSuchObjectError and formats it as bold red."""
     _add_verb(
         t_wizard,
         "test-get-dobj",
@@ -291,34 +319,33 @@ def test_object_does_not_exist_caught_by_parse_command(t_init, t_wizard):
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
-def test_verb_does_not_exist_raised_by_parser(t_init, t_wizard):
-    """Verb.DoesNotExist is raised by the parser when no object has a matching
+def test_no_such_verb_error_raised_by_parser(t_init, t_wizard):
+    """NoSuchVerbError is raised by the parser when no object has a matching
     verb and the location has no huh verb to fall back to."""
     room = Object.objects.create(name="test room")
     room.add_verb("accept", code="return True")
     t_wizard.location = room
     t_wizard.save()
     with code.ContextManager(t_wizard, lambda _: None) as ctx:
-        with pytest.raises(Verb.DoesNotExist) as exc_info:
+        with pytest.raises(exceptions.NoSuchVerbError) as exc_info:
             parse.interpret(ctx, "xyzzy-no-such-verb")
-    assert "xyzzy-no-such-verb" in str(exc_info.value)
+    assert exc_info.value.data == "xyzzy-no-such-verb"
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
-def test_verb_does_not_exist_caught_by_parse_command(t_init, t_wizard):
-    """tasks.parse_command catches Verb.DoesNotExist and formats it as bold red."""
+def test_no_such_verb_error_caught_by_parse_command(t_init, t_wizard):
+    """tasks.parse_command catches NoSuchVerbError and formats it as bold red."""
     room = Object.objects.create(name="test room")
     room.add_verb("accept", code="return True")
     t_wizard.location = room
     t_wizard.save()
     result = tasks.parse_command(t_wizard.pk, "xyzzy-no-such-verb")
     assert any("[bold red]" in line for line in result)
-    assert any("xyzzy-no-such-verb" in line for line in result)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
-def test_property_does_not_exist_raised_by_get_property(t_init, t_wizard):
-    """Property.DoesNotExist is raised naturally when verb code calls get_property()
+def test_no_such_property_error_raised_by_get_property(t_init, t_wizard):
+    """NoSuchPropertyError is raised when verb code calls get_property()
     for a property that does not exist on this or any ancestor."""
     _add_verb(
         t_wizard,
@@ -327,13 +354,14 @@ def test_property_does_not_exist_raised_by_get_property(t_init, t_wizard):
         t_wizard,
     )
     with code.ContextManager(t_wizard, lambda _: None) as ctx:
-        with pytest.raises(Property.DoesNotExist):
+        with pytest.raises(exceptions.NoSuchPropertyError) as exc_info:
             parse.interpret(ctx, "test-get-prop")
+    assert "nonexistent_xyz_prop_qwerty" in str(exc_info.value)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
-def test_property_does_not_exist_caught_by_parse_command(t_init, t_wizard):
-    """tasks.parse_command catches Property.DoesNotExist and formats it as bold red."""
+def test_no_such_property_error_caught_by_parse_command(t_init, t_wizard):
+    """tasks.parse_command catches NoSuchPropertyError and formats it as bold red."""
     _add_verb(
         t_wizard,
         "test-get-prop",

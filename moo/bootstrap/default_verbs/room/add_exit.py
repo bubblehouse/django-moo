@@ -9,13 +9,13 @@ the interface so that different implementations of the exits concept can be used
 class.
 """
 
-from moo.core import PropertyDoesNotExist
+from moo.core import NoSuchPropertyError
 
 exit_obj = args[0]
 
 try:
     exits = this.get_property("exits")
-except PropertyDoesNotExist:
+except NoSuchPropertyError:
     exits = []
 
 exits.append(exit_obj)

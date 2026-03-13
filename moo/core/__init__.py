@@ -11,10 +11,10 @@ from typing import Union
 from django.db.models import Q
 
 from .code import ContextManager
-from .exceptions import QuotaError, AmbiguousObjectError, UserError
+from .exceptions import QuotaError, AmbiguousObjectError, UserError, NoSuchObjectError, NoSuchVerbError, NoSuchPropertyError
 
 __all__ = ["lookup", "create", "players", "connected_players", "write", "open_editor", "open_paginator", "_publish_to_player", "invoke", "set_task_perms", "context",
-           "ObjectDoesNotExist", "VerbDoesNotExist", "PropertyDoesNotExist"]  # pylint: disable=undefined-all-variable
+           "NoSuchObjectError", "NoSuchVerbError", "NoSuchPropertyError"]
 
 log = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ def lookup(x: Union[int, str]):
     :param x: lookup value
     :return: the result of the lookup
     :rtype: Object
-    :raises Object.DoesNotExist: when a result cannot be found
+    :raises NoSuchObjectError: when a result cannot be found
     """
     from .models import Object
 
@@ -40,7 +40,7 @@ def lookup(x: Union[int, str]):
             Q(name__iexact=x) | Q(aliases__alias__iexact=x)
         ).distinct()
         if not qs:
-            raise Object.DoesNotExist(x)
+            raise NoSuchObjectError(x)
         return qs[0]
     else:
         raise ValueError(f"{x} is not a supported lookup value.")
@@ -145,7 +145,7 @@ def create(name, *a, **kw):
                 context.caller.set_property("ownership_quota", quota - 1)
             else:
                 raise QuotaError(f"{context.caller} has run out of quota.")
-        except Property.DoesNotExist:
+        except NoSuchPropertyError:
             pass
         if "owner" not in kw:
             kw["owner"] = context.caller
@@ -366,18 +366,3 @@ class _Context:
 
 
 context = _Context()
-
-_EXCEPTION_ALIASES = {
-    "ObjectDoesNotExist": ("models.object", "Object"),
-    "VerbDoesNotExist": ("models.verb", "Verb"),
-    "PropertyDoesNotExist": ("models.property", "Property"),
-}
-
-
-def __getattr__(name):
-    if name in _EXCEPTION_ALIASES:
-        module_path, class_name = _EXCEPTION_ALIASES[name]
-        import importlib
-        mod = importlib.import_module(f".{module_path}", package=__name__)
-        return getattr(mod, class_name).DoesNotExist
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

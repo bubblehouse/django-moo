@@ -345,7 +345,7 @@ def test_object_get_property_no_recurse_raises(t_init, t_wizard):
         child = create("nr child", parents=[parent])
         parent.set_property("secret", "hidden")
     with _ctx(t_wizard):
-        with pytest.raises(Property.DoesNotExist):
+        with pytest.raises(exceptions.NoSuchPropertyError):
             child.get_property("secret", recurse=False)
 
 
