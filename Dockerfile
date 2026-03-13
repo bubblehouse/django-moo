@@ -1,4 +1,4 @@
-FROM python:3.11.12-slim-bullseye AS builder
+FROM python:3.11.12-slim-bookworm AS builder
 LABEL Maintainer="Phil Christensen <phil@bubblehouse.org>"
 LABEL Name="django-moo"
 LABEL Version="0.77.3"
@@ -7,8 +7,21 @@ LABEL Version="0.77.3"
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
        apt-transport-https curl unzip gnupg2 gcc g++ libc-dev libssl-dev libpq-dev \
-       python3-pip ca-certificates \
+       python3-pip ca-certificates cmake make \
     && rm -rf /var/lib/apt/lists/*
+
+# Build liboqs shared library for post-quantum SSH key exchange
+ARG LIBOQS_VERSION=0.12.0
+RUN curl -L "https://github.com/open-quantum-safe/liboqs/archive/refs/tags/${LIBOQS_VERSION}.tar.gz" \
+      | tar -xz \
+    && cmake -S liboqs-${LIBOQS_VERSION} -B liboqs-build \
+         -DOQS_BUILD_ONLY_LIB=ON \
+         -DBUILD_SHARED_LIBS=ON \
+         -DCMAKE_BUILD_TYPE=Release \
+         -DCMAKE_INSTALL_PREFIX=/usr/local \
+    && cmake --build liboqs-build --parallel \
+    && cmake --install liboqs-build \
+    && rm -rf liboqs-${LIBOQS_VERSION} liboqs-build
 
 # Install uv, the build tool.
 ARG TARGETARCH
@@ -47,7 +60,7 @@ RUN --mount=type=cache,target=/root/.cache \
 RUN export SITE_PACKAGES=`../bin/python -c 'import sys; print(sys.path[-1])'` \
     && cp /usr/app/src/extras/webssh/index.html $SITE_PACKAGES/webssh/templates/index.html
 
-FROM python:3.11.12-slim-bullseye
+FROM python:3.11.12-slim-bookworm
 
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
@@ -78,6 +91,9 @@ ADD extras/entrypoint.sh /entrypoint.sh
 ADD extras/uwsgi/uwsgi.ini /etc/uwsgi.ini
 ADD extras/healthchecks/*ness.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/*ness.sh
+
+COPY --from=builder /usr/local/lib/liboqs.so* /usr/local/lib/
+RUN ldconfig
 
 COPY --from=builder /usr/app /usr/app
 
