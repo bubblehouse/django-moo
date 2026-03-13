@@ -17,6 +17,7 @@ from django_cte import CTE, with_cte
 
 from moo import bootstrap
 from .. import exceptions, invoke, utils
+from ..exceptions import NoSuchVerbError, NoSuchPropertyError
 from ..code import ContextManager
 from .acl import Access, AccessibleMixin, Permission, _get_permission_id
 from .auth import Player
@@ -441,7 +442,7 @@ class Object(models.Model, AccessibleMixin):
         self.can_caller("read", self)
         try:
             self._lookup_verb(name, recurse)
-        except Verb.DoesNotExist:
+        except NoSuchVerbError:
             return False
         return True
 
@@ -502,7 +503,7 @@ class Object(models.Model, AccessibleMixin):
         if vcache is not None and cache_key in vcache:
             cached = vcache[cache_key]
             if cached is None:
-                raise Verb.DoesNotExist(f"No such verb `{name}`.")
+                raise NoSuchVerbError(name)
             return cached
 
         # Cross-session Redis cache — stores comma-separated verb PKs to avoid the
@@ -516,7 +517,7 @@ class Object(models.Model, AccessibleMixin):
                 if raw == _CACHE_VERB_MISSING:
                     if vcache is not None:
                         vcache[cache_key] = None
-                    raise Verb.DoesNotExist(f"No such verb `{name}`.")
+                    raise NoSuchVerbError(name)
                 pks = [int(p) for p in raw.split(",")]
                 result = list(
                     Verb.objects.filter(pk__in=pks)
@@ -546,7 +547,7 @@ class Object(models.Model, AccessibleMixin):
                 vcache[cache_key] = None
             if redis_key is not None:
                 cache.set(redis_key, _CACHE_VERB_MISSING, timeout=_cache_ttl)
-            raise Verb.DoesNotExist(f"No such verb `{name}`.")
+            raise NoSuchVerbError(name)
 
         result = list(
             Verb.objects.filter(
@@ -566,7 +567,7 @@ class Object(models.Model, AccessibleMixin):
                 vcache[cache_key] = None
             if redis_key is not None:
                 cache.set(redis_key, _CACHE_VERB_MISSING, timeout=_cache_ttl)
-            raise Verb.DoesNotExist(f"No such verb `{name}`.")
+            raise NoSuchVerbError(name)
         if return_first:
             first = result[0]
             result = [
@@ -635,7 +636,7 @@ class Object(models.Model, AccessibleMixin):
         if session_key is not None and session_key in pcache:
             cached = pcache[session_key]
             if cached is _PROP_MISSING:
-                raise Property.DoesNotExist(f"No such property `{name}`.")
+                raise NoSuchPropertyError(name)
             return cached
 
         # Cross-session cache — stores raw moojson text to avoid serialization
@@ -651,7 +652,7 @@ class Object(models.Model, AccessibleMixin):
                 if raw == _CACHE_PROP_MISSING:
                     if session_key is not None:
                         pcache[session_key] = _PROP_MISSING
-                    raise Property.DoesNotExist(f"No such property `{name}`.")
+                    raise NoSuchPropertyError(name)
                 value = moojson.loads(raw)
                 if session_key is not None:
                     pcache[session_key] = value
@@ -672,7 +673,7 @@ class Object(models.Model, AccessibleMixin):
                 pcache[session_key] = _PROP_MISSING
             if cache_key is not None:
                 cache.set(cache_key, _CACHE_PROP_MISSING, timeout=_cache_ttl)
-            raise Property.DoesNotExist(f"No such property `{name}`.")
+            raise NoSuchPropertyError(name)
 
         prop = (
             Property.objects.filter(
@@ -691,7 +692,7 @@ class Object(models.Model, AccessibleMixin):
                 pcache[session_key] = _PROP_MISSING
             if cache_key is not None:
                 cache.set(cache_key, _CACHE_PROP_MISSING, timeout=_cache_ttl)
-            raise Property.DoesNotExist(f"No such property `{name}`.")
+            raise NoSuchPropertyError(name)
         value = prop if original else moojson.loads(prop.value)
         if session_key is not None:
             pcache[session_key] = value
@@ -729,7 +730,7 @@ class Object(models.Model, AccessibleMixin):
                 .first()
             )
             if prop is None:
-                raise Property.DoesNotExist(f"No such property `{name}`.")
+                raise NoSuchPropertyError(name)
         raw = json.loads(prop.value)
         if not isinstance(raw, list):
             from .. import moojson
@@ -771,7 +772,7 @@ class Object(models.Model, AccessibleMixin):
             quota = self.owner.get_property("ownership_quota", recurse=False)
             if quota is not None:
                 self.owner.set_property("ownership_quota", quota + 1)
-        except Property.DoesNotExist:
+        except NoSuchPropertyError:
             pass
         super().delete(*args, **kwargs)
 
@@ -829,11 +830,11 @@ class Object(models.Model, AccessibleMixin):
             raise AttributeError(name)
         try:
             return self.get_verb(name, recurse=True)
-        except Verb.DoesNotExist:
+        except NoSuchVerbError:
             pass
         try:
             return self.get_property(name, recurse=True)
-        except Property.DoesNotExist:
+        except NoSuchPropertyError:
             pass
         raise AttributeError(f"{self} has no attribute `{name}`")
 

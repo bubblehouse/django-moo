@@ -8,13 +8,13 @@ not possible to remove `exit`` from the room``s exit list (normally because the 
 the required permission) then the verb returns `False`. Otherwise, a successful addition returns `True`.
 """
 
-from moo.core import PropertyDoesNotExist
+from moo.core import NoSuchPropertyError
 
 exit_obj = args[0]
 
 try:
     exits = this.get_property("exits")
-except PropertyDoesNotExist:
+except NoSuchPropertyError:
     exits = []
 
 exits.remove(exit_obj)

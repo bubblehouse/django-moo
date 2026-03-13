@@ -16,7 +16,7 @@ as found in the player's `last_connected_time` property.
 
 from datetime import datetime, timedelta, timezone
 
-from moo.core import context, players, PropertyDoesNotExist
+from moo.core import context, players, NoSuchPropertyError
 
 player = context.player
 parser = context.parser
@@ -29,7 +29,7 @@ if parser.has_dobj_str():
         obj = parser.get_dobj(lookup=True)
     try:
         last_time = obj.get_property("last_connected_time")
-    except PropertyDoesNotExist:
+    except NoSuchPropertyError:
         last_time = None
     if last_time is None:
         print(f"{obj.name}: has never connected.")
@@ -45,7 +45,7 @@ else:
     for avatar in players():
         try:
             last_time = avatar.get_property("last_connected_time")
-        except PropertyDoesNotExist:
+        except NoSuchPropertyError:
             last_time = None
 
         if last_time is None:

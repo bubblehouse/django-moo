@@ -451,10 +451,10 @@ def test_match_object_found_in_room(t_init: Object, t_wizard: Object):
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_match_object_not_found_raises(t_init: Object, t_wizard: Object):
-    """match_object() raises DoesNotExist when nothing matches the name."""
+    """match_object() raises NoSuchObjectError when nothing matches the name."""
     with code.ContextManager(t_wizard, lambda msg: None):
         room = setup_room(t_wizard)
-        with pytest.raises(Object.DoesNotExist):
+        with pytest.raises(exceptions.NoSuchObjectError):
             room.match_object("invisible thing")
 
 

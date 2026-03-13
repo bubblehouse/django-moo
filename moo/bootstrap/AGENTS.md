@@ -252,16 +252,16 @@ When a verb is invoked via the command parser, `context.parser` is a `moo.core.p
 
 | Method | Returns | Raises if missing |
 |--------|---------|-------------------|
-| `get_dobj()` | The direct object as an **Object** (DB lookup) | `Object.DoesNotExist` |
-| `get_dobj_str()` | The direct object as a **raw string** | `Object.DoesNotExist` |
+| `get_dobj()` | The direct object as an **Object** (DB lookup) | `NoSuchObjectError` |
+| `get_dobj_str()` | The direct object as a **raw string** | `NoSuchObjectError` |
 | `has_dobj()` | `True` if dobj resolved to an Object | — |
 | `has_dobj_str()` | `True` if dobj string is present | — |
-| `get_pobj(prep)` | Indirect object as an **Object** for given prep | `Object.DoesNotExist`, `NoSuchPrepositionError` |
-| `get_pobj_str(prep)` | Indirect object as a **raw string** for given prep | `Object.DoesNotExist`, `NoSuchPrepositionError` |
+| `get_pobj(prep)` | Indirect object as an **Object** for given prep | `NoSuchObjectError`, `NoSuchPrepositionError` |
+| `get_pobj_str(prep)` | Indirect object as a **raw string** for given prep | `NoSuchObjectError`, `NoSuchPrepositionError` |
 | `has_pobj(prep)` | `True` if iobj resolved to an Object | — |
 | `has_pobj_str(prep)` | `True` if iobj string is present | — |
 
-**Key distinction**: `get_dobj()` / `get_pobj()` attempt a database lookup and raise `DoesNotExist` if the string doesn't match a real object. Use the `_str` variants when the argument is a plain string (a message, a name to create, etc.), not a reference to an existing game object.
+**Key distinction**: `get_dobj()` / `get_pobj()` attempt a database lookup and raise `NoSuchObjectError` if the string doesn't match a real object. Use the `_str` variants when the argument is a plain string (a message, a name to create, etc.), not a reference to an existing game object.
 
 **Note on naming**: The methods are `get_dobj_str` and `has_pobj_str` — there are no `…_string` variants.
 
@@ -433,7 +433,7 @@ obj.add_verb("my_verb", code='return "verb result"')
 - Create objects in loops without considering performance
 - Modify `args` or `kwargs` directly (they're read-only)
 - Use `if player != this:` as a permission guard — `this` is the *last matched object* in dispatch order (often the dobj), not the caller. This check will incorrectly fire on every normal invocation of a verb with `--dspec any`.
-- Call `context.parser.get_dobj()` when you want a string message — it performs a DB lookup and raises `Object.DoesNotExist` if the string isn't a real object. Use `get_dobj_str()` for plain strings.
+- Call `context.parser.get_dobj()` when you want a string message — it performs a DB lookup and raises `NoSuchObjectError` if the string isn't a real object. Use `get_dobj_str()` for plain strings.
 - Use `get_pobj_string()` / `has_pobj_string()` — these methods do not exist; the correct names are `get_pobj_str()` / `has_pobj_str()`.
 
 ### ✓ Do:

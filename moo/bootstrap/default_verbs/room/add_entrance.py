@@ -12,13 +12,13 @@ If it is not possible to add entrance to the room's entrance list (normally beca
 does not have the required permission) then the verb returns ``0``. Otherwise, a successful addition returns ``1``.
 """
 
-from moo.core import PropertyDoesNotExist
+from moo.core import NoSuchPropertyError
 
 entrance = args[0]
 
 try:
     entrances = this.get_property("entrances")
-except PropertyDoesNotExist:
+except NoSuchPropertyError:
     entrances = []
 
 entrances.append(entrance)

@@ -2,7 +2,7 @@
 
 # pylint: disable=return-outside-function,undefined-variable,no-name-in-module
 
-from moo.core import lookup, context, PropertyDoesNotExist
+from moo.core import lookup, context, NoSuchPropertyError
 
 obj = this
 
@@ -10,7 +10,7 @@ response = ""
 
 try:
     response += obj.get_property('description')
-except PropertyDoesNotExist:
+except NoSuchPropertyError:
     response += "[deep_sky_blue1]No description available.[/deep_sky_blue1]"
 
 contents = obj.contents.filter(obvious=True)

@@ -6,13 +6,13 @@
 Reload the source code for a filesystem-resident verb.
 """
 
-from moo.core import context, VerbDoesNotExist
+from moo.core import context, NoSuchVerbError
 
 verb_name = context.parser.get_dobj_str() if context.parser else args[0]
 target = context.parser.get_pobj("on", lookup=True) if context.parser else args[1]
 
 try:
     verb = target.get_verb(verb_name)
-except VerbDoesNotExist:
+except NoSuchVerbError:
     return "That verb doesn't exist on %i(on)"
 verb.reload()

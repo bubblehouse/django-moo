@@ -19,7 +19,7 @@ destination of the exit. Once this has been done, the arrive messages for the ex
 destination room's occupants.
 """
 
-from moo.core import context, PropertyDoesNotExist
+from moo.core import context, NoSuchPropertyError
 
 thing = args[0]
 source = this.get_property("source")
@@ -35,7 +35,7 @@ if this.is_locked():
 # the destination simply has free_entry=True and no lock.
 try:
     free_entry = dest.get_property("free_entry")
-except PropertyDoesNotExist:
+except NoSuchPropertyError:
     free_entry = False
 
 if free_entry:

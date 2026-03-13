@@ -264,7 +264,7 @@ uv run pytest --pdb
    - **Tier 2 — Redis**: Cross-session store keyed by `moo:verb:<pk>:<name>:…` / `moo:prop:<pk>:<name>:…`, TTL controlled by `MOO_ATTRIB_CACHE_TTL`. Do not add separate caching for verb or property values.
    - **Tier 3 — `AncestorCache` table**: A denormalized flat table that replaces recursive CTEs in the hot-path inheritance JOIN. Maintained automatically by the `relationship_changed` signal; rebuild manually with `manage.py rebuild_ancestor_cache` after bulk data changes.
    - See `docs/source/guide/03b_caching.md` for the full architecture.
-2. **Avoid redundant property lookups**: `has_property(name)` + `get_property(name)` is always two DB queries for the same data. Use `try: get_property(name) except PropertyDoesNotExist: ...` instead. Assign results to locals when a value is used more than once.
+2. **Avoid redundant property lookups**: `has_property(name)` + `get_property(name)` is always two DB queries for the same data. Use `try: get_property(name) except NoSuchPropertyError: ...` instead. Assign results to locals when a value is used more than once.
 3. **Caching**: Use Redis for other frequently accessed data (room contents, player locations, etc.)
 4. **Lazy Loading**: Use `.defer()` and `.only()` to load only needed fields
 5. **Aggregation**: Use Django's aggregation functions instead of Python loops
