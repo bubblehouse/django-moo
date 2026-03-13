@@ -726,7 +726,6 @@ dependencies = [
     { name = "django" },
     { name = "django-ace" },
     { name = "django-celery-beat" },
-    { name = "django-celery-results" },
     { name = "django-compressor" },
     { name = "django-cte" },
     { name = "django-simplesshkey" },
@@ -755,6 +754,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "coverage" },
+    { name = "django-celery-results" },
     { name = "myst-parser" },
     { name = "pylint" },
     { name = "pylint-celery" },
@@ -780,7 +780,6 @@ requires-dist = [
     { name = "django", specifier = ">=5,<5.1" },
     { name = "django-ace", specifier = ">=1.32.4,<2" },
     { name = "django-celery-beat", specifier = ">=2.6.0,<3" },
-    { name = "django-celery-results", specifier = ">=2.5.1,<3" },
     { name = "django-compressor", specifier = ">=4.6.0" },
     { name = "django-cte", specifier = ">=3.0.0" },
     { name = "django-simplesshkey", specifier = ">=2.1.0,<3" },
@@ -809,6 +808,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "coverage", specifier = ">=7.4.4,<8" },
+    { name = "django-celery-results", specifier = ">=2.5.1,<3" },
     { name = "myst-parser", specifier = ">=3.0.1,<4" },
     { name = "pylint", specifier = ">=3.1.0,<4" },
     { name = "pylint-celery", specifier = ">=0.3" },
