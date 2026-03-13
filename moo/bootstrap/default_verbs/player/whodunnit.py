@@ -3,9 +3,9 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb runs through the list of callers until it finds an object reference that is not a wizard, is not in the list
+Run through the list of callers until finding an object reference that is not a wizard, is not in the list
 `trust`, or is in the list `mistrust`. The verb is used by `$player:tell` to locate the originator of a message. It
-returns dictionary of several elements, in a similar format as that saved in `context.caller_stack`:
+returns dictionary of several elements, in a similar format as that saved in ``context.caller_stack``::
 
     dict(
         caller           # Player with whose permissions the verb is running

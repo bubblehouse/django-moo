@@ -50,11 +50,15 @@
 ```{eval-rst}
 .. py:currentmodule:: moo.core.models
 .. autoattribute:: Verb.code
+   :no-index:
 .. autoattribute:: Verb.repo
+   :no-index:
 .. autoattribute:: Verb.filename
+   :no-index:
 .. autoattribute:: Verb.ref
+   :no-index:
 .. autoattribute:: Verb.owner
+   :no-index:
 .. autoattribute:: Verb.origin
-.. autoattribute:: Verb.ability
-.. autoattribute:: Verb.method
+   :no-index:
 ```

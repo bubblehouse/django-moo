@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb is a player command used to remove objects from rooms or the player's inventory. The indirect object is used
+Remove objects from rooms or the player's inventory. The indirect object is used
 to specify what the direct object is to be ejected from.
 
 If neither of the special cases match, the direct and indirect object are matched on, to give an object reference to

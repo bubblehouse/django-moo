@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb is a player command used to lock an object with a specified key. It first matches the direct object to get an
+Lock an object with a specified key. It first matches the direct object to get an
 object reference number. If that succeeds, the `$lock_utils:parse_keyexp()` verb is called to parse the key expression
 given for the lock. If that fails, a suitable error message is printed. Otherwise, the `key` property of the object
 being locked is set to the returned value from the parsing verb. Again, any errors are reported to the invoking player.

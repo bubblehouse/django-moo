@@ -3,15 +3,15 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb is called when the player connects to the LambdaMOO server. It can be used to perform actions that should be
+Called when the player connects to the LambdaMOO server. It can be used to perform actions that should be
 done every time the player logs in to the MUD. This is much the same idea as having a ~/.cshrc or ~/.kshrc file that is
-activated when you log into a UN*X account. An example verb for the player class is listed below:
+activated when you log into a UN*X account. An example verb for the player class is listed below::
 
-$news:check(this);
-for x in this.messages:
-  if x[1] > this.current_message:
-    this:tell("You have new mail.  Type 'help mail' for info on reading it.");
-    return;
+    $news:check(this);
+    for x in this.messages:
+      if x[1] > this.current_message:
+        this:tell("You have new mail.  Type 'help mail' for info on reading it.");
+        return;
 
 This performs a couple of actions. First it calls `$news:check` to see whether the news has been updated since this
 player last looked at it. Then it checks through the MOO Mail list on the player to see if any mail has arrived since

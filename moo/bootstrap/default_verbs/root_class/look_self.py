@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-The `look_self` verb on any object is used to tell another object what this object looks like, in detail.
+Tell another object what this object looks like, in detail.
 
 This verb makes use of the `description` verb on the object to obtain a string or list of strings to print.
 It would be possible to override this verb to produce a special description for an object. However, any

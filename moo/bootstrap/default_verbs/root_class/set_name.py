@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb sets the name of the object to value. It returns `True` if the name was set to the value successfully,
+Set the name of the object to value. It returns `True` if the name was set to the value successfully,
 otherwise it returns `False`. This verb and the `title` verb are used to control access to the name property of an
 object.
 """

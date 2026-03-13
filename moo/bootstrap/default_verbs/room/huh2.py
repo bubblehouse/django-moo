@@ -3,9 +3,9 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb is called by the `huh` verb to provide default handling of unrecognized commands given to players
+Called by the `huh` verb to provide default handling of unrecognized commands given to players
 in this room. You can override this verb to provide custom handling of such commands. If you wish to
-fall back to the default behavior, you can use `passthrough()` to call the parent room's `huh2` verb.
+fall back to the default behavior, you can use `passthrough()`` to call the parent room``s `huh2` verb.
 
 This verb is called by the huh verb to handle commands that the parser couldn't sensibly pass to another object. In the
 case of a room, the verb covers a number of different possibilities. First, the sentence is checked to see if it
@@ -13,7 +13,7 @@ matches any of the exits that lead out of the room. This is done using the `matc
 found then the `invoke` verb for the exit is called, which causes it to be activated. This provides for a flexible
 approach to handling exits.
 
-If this does not produce a sensible match, then the verb is treated in one of two ways. If it starts with an `at' (@)
+If this does not produce a sensible match, then the verb is treated in one of two ways. If it starts with an ``at`` (@)
 character, then we attempt to match the remainder of the verb in the sentence with a message field on the direct object.
 A message field is a property whose name ends in "_msg". If a match is found, then this is treated as a field setting
 command. This approach is used to avoid having to define a verb for every message field that can exist on an object.
@@ -22,7 +22,7 @@ For example, if you define a message on an object called `foobar_msg` then you c
 
 @foobar <object> is <message text>
 
-If the verb does not start with an `at' (@) character, then we call the `explain` verb. This tries to match the verb
+If the verb does not start with an ``at`` (@) character, then we call the `explain` verb. This tries to match the verb
 with a verb defined on the player, room, direct object (if any) and indirect object (if any). If a match is found,
 the syntax of the verb (ie, number and type of arguments and prepositions) is checked, and a useful message sent to the
 player.

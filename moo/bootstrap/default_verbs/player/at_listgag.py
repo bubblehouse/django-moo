@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb is used as a player command to list the objects in the player's gag lists. If the gag lists are not empty, a
+List the objects in the player's gag lists. If the gag lists are not empty, a
 list of the names of the players in the `gaglist` property on the player, and the objects in the `object_gaglist`
 property are produced.
 

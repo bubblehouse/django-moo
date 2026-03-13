@@ -6,6 +6,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.abspath("../.."))
+sys.path.insert(0, os.path.abspath("_ext"))
 os.environ["DJANGO_SETTINGS_MODULE"] = "moo.settings.local"
 
 import django  # pylint: disable=wrong-import-position
@@ -28,6 +29,7 @@ extensions = [
     'myst_parser',
     'sphinx_rtd_theme',
     'sphinx_autodoc_typehints',
+    'verb_autodoc',
 ]
 
 source_suffix = {
@@ -39,6 +41,7 @@ templates_path = ['_templates']
 exclude_patterns = []
 
 autosummary_generate = True
+autodoc_mock_imports = ["moo.bootstrap.default", "moo.bootstrap.test"]
 
 intersphinx_mapping = {
     "django": ("https://django.readthedocs.io/en/5.0/", None),

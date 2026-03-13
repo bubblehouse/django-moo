@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb tells us what things are visible in the room. It goes through the contents list of the room, and if it is not
+Tell the player what things are visible in the room. It goes through the contents list of the room, and if it is not
 dark, prints the name of the object in a nicely formatted way. Three different formats are available depending on the
 value of the `content_list_type` property of the room. These are best illustrated by example.
 

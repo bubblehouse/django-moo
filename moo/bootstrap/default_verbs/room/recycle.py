@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb is called by the LambdaMOO server when a room is recycled. When a room is recycled, something has to be done
+Called by the LambdaMOO server when a room is recycled. When a room is recycled, something has to be done
 with the room's contents, both players and objects, to stop them ending up in `$nothing`. This is done by trying to move
 everything home.
 

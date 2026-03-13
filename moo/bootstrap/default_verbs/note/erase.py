@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb erases all text stored on the note. Only the owner of a note can erase it.
+Erase all text stored on the note. Only the owner of a note can erase it.
 """
 
 from moo.core import context
