@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb is used to change the location of an object to be `where`. This verb is intended to be used by any other verbs
+Change the location of an object to be `where`. This verb is intended to be used by any other verbs
 that must move an object to another location.
 
 One important point to note is that this uses the set_task_perms() primitive to set the task permissions to those of

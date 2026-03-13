@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb overrides the `$root_class` definition to provide an indication to other players of whether this player is
+Override the `$root_class` definition to provide an indication to other players of whether this player is
 currently active or not. It uses `passthrough()` to allow the parent class to print a description, and then looks at
 the `connected_players()` list to determine if this player is currently connected. If not, then the text
 

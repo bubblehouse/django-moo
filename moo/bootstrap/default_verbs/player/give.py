@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb is a player command used to exchange objects between players. It performs a `moveto` on the direct object to
+Exchange objects between players. It performs a `moveto` on the direct object to
 the inventory of the indirect object. If, after the move, the object is still in the possession of the donor, then it
 is obvious that the recipient has rejected the gift. If this is the case, a suitable message is printed to the donor.
 """

@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb is invoked by the LambdaMOO server when an object is moved out of a room, as part of the action of the `move`
+Called by the LambdaMOO server when an object is moved out of a room, as part of the action of the `move`
 primitive. The action defined for the `$room` class is to do nothing.
 
 This verb, and the `enterfunc` verb, can be used for a variety of effects that need to take note of objects moving in

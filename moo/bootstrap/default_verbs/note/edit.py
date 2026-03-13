@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb is used to edit a note's text.
+Edit a note's text.
 """
 
 from moo.core import context, open_editor

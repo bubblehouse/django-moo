@@ -3,10 +3,10 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb is used to substitute the pronoun properties of `who` in all occurances of `%s`, `%o`, `%p`, `%r` in text.
-`who` is optional, and defaults to player. Also `%n', `%d', `%i(prep)', `%t', `%%' are substituted by player, dobj,
-pobj, this and % respectively. Further, `%x(propname)' is substituted by `who.propname`. Capitalised versions of each of
-these are: `%S', `%O', `%P', `%R', `%N',`%D', `%I', `%T' and `%X(propname)'. The full list is given below:
+Substitute the pronoun properties of `who` in all occurances of `%s`, `%o`, `%p`, `%r` in text.
+`who` is optional, and defaults to player. Also ``%n``, ``%d``, ``%i(prep)``, ``%t``, ``%%`` are substituted by player, dobj,
+pobj, this and % respectively. Further, ``%x(propname)`` is substituted by `who.propname`. Capitalised versions of each of
+these are: ``%S``, ``%O``, ``%P``, ``%R``, ``%N``,``%D``, ``%I``, ``%T`` and ``%X(propname)``. The full list is given below:
 
 Code       Property      Pronoun       Defaults
 ----       --------      -------       -------

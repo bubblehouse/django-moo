@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb is a player command used to look at various things in the player's current location. It can be used
+Look at various things in the player's current location. It can be used
 meaningfully in other verbs, however, if the verb is called with no arguments. In this case, it calls the `look_self`
 on the room which the verb was invoked on. You could use this verb to print the description of a room you are not in,
 but it is stylistically better to use the `look_self()` verb of the room.
@@ -13,12 +13,12 @@ the verb attempts to match the direct object with something in the room. If the 
 the matched object is called to tell the player what the object looks like.
 
 If an `on` or `in` preposition was used, then the player wishes to look inside a container of some sort, be it a member of
-the `$container` class, or in a player's inventory, for example. An attempt is made to match the indirect object with
+the `$container`` class, or in a player``s inventory, for example. An attempt is made to match the indirect object with
 something in the room. If it succeeds, then an attempt is made to match the direct object with something inside the
 container previously matched. If this final match is made, the `look_self` verb of the matched object is invoked to
 print its description.
 
-If the direct object is the empty string, `""`, then the container's `look_self` verb is called to print its description.
+If the direct object is the empty string, `""``, then the container``s `look_self` verb is called to print its description.
 
 Any ambiguous or failed matches produce suitable error messages.
 """

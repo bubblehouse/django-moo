@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb is used to modify a verb or property in a full-screen editor.
+Modify a verb or property in a full-screen editor.
 The verb or property to edit is determined by the dobj of the command, and the
 object to edit is determined by the pobj of the command.
 """

@@ -13,7 +13,7 @@ When the opacity is set to 0, you can see the contents when the pipe is open or 
 you can only see the contents when the container is open. If opacity is set to 2, you can never see the contents when
 looking at the container.
 
-The syntax for `@opacity' is:
+The syntax for ``@opacity`` is:
 
     @opacity container is #
 

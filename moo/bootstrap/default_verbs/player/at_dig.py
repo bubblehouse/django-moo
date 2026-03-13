@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This is a player command used to create a room or exit, (that is, instances of the class `$room` or `$exit'. The verb
+This is a player command used to create a room or exit, (that is, instances of the class `$room` or ``$exit``. The verb
 parses the arguments to determine the type and number of objects that are to be created. It uses the `create()` primitive,
 with `$room` as a parent to create a room. Note that you can only use the `@dig` command to dig an exit from within a
 room.

@@ -42,17 +42,22 @@ Verbs also have some attributes of their own:
 ```{eval-rst}
 .. py:currentmodule:: moo.core.models
 .. autoattribute:: Verb.pk
+   :no-index:
 
     The unique identifying number of this Verb
 
 .. autoattribute:: Verb.code
+   :no-index:
 .. autoattribute:: Verb.repo
+   :no-index:
 .. autoattribute:: Verb.filename
+   :no-index:
 .. autoattribute:: Verb.ref
+   :no-index:
 .. autoattribute:: Verb.owner
+   :no-index:
 .. autoattribute:: Verb.origin
-.. autoattribute:: Verb.ability
-.. autoattribute:: Verb.method
+   :no-index:
 ```
 
 > In addition to an owner and some permission bits, every verb has three 'argument specifiers', one each for the direct object, the preposition, and the indirect object. The direct and indirect specifiers are each drawn from this set: `this`, `any`, or `none`. The preposition specifier is `none`, `any`, or one of the items in this list:

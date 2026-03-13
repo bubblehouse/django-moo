@@ -6,5 +6,6 @@ API
    :toctree: generated
 
    moo
+   moo.bootstrap
    moo.core
    moo.shell

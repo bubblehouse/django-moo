@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb is used to set the gender of a player object. Without any arguments, it prints the player's gender, currently
+Set the gender of a player object. Without any arguments, it prints the player's gender, currently
 set pronouns and the available genders stored on `$gender_utils.genders`.
 
 If a gender is given as the argument, gender, then the `$gender_utils.set` verb is called to actually change the
@@ -15,7 +15,7 @@ pronouns was denied, or some other problem existed. If a value of `None` is retu
 gender of the player is set, but the pronouns are left unchanged.
 
 The gender of a player is used in the `$string_utils.pronoun_sub` verb to insert the appropriate pronouns in places
-where `%' substitutions have been used. When the gender of a player is changed, it results in a set of 10 properties
+where ``%`` substitutions have been used. When the gender of a player is changed, it results in a set of 10 properties
 being assigned on the player, one for every type of possible pronoun substitution. A further property, containing the
 gender of the player, is also set, for example, to either "male", "female", or "neuter", depending on the argument
 given to the `@gender` command.
