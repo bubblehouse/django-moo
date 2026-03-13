@@ -9,13 +9,13 @@ that invoked the verb does not have the required permission) then the verb retur
 addition returns `True`.
 """
 
-from moo.core import PropertyDoesNotExist
+from moo.core import NoSuchPropertyError
 
 entrance = args[0]
 
 try:
     entrances = this.get_property("entrances")
-except PropertyDoesNotExist:
+except NoSuchPropertyError:
     entrances = []
 
 entrances.remove(entrance)

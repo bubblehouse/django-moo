@@ -15,7 +15,7 @@ allow other room subclasses to provide more specific help for certain verbs defi
 make an error trying to use one of them.
 """
 
-from moo.core import context, VerbDoesNotExist
+from moo.core import context, NoSuchVerbError
 
 verb_name = args[0]
 parser = context.parser
@@ -28,7 +28,7 @@ found_verb = None
 for obj in search_order:
     try:
         found_verb = obj.get_verb(verb_name, recurse=True)
-    except VerbDoesNotExist:
+    except NoSuchVerbError:
         continue
 
 if not found_verb:

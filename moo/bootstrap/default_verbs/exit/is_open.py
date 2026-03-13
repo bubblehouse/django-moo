@@ -2,7 +2,7 @@
 
 # pylint: disable=return-outside-function,undefined-variable,no-name-in-module
 
-from moo.core import PropertyDoesNotExist
+from moo.core import NoSuchPropertyError
 
 door = this
 
@@ -16,5 +16,5 @@ else:
 
 try:
     return bool(door.get_property(prop_name))
-except PropertyDoesNotExist:
+except NoSuchPropertyError:
     return False

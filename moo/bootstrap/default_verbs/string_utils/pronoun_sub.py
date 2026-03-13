@@ -32,7 +32,7 @@ Code       Property      Pronoun       Defaults
 """
 
 import re
-from moo.core import context, PropertyDoesNotExist
+from moo.core import context, NoSuchPropertyError
 
 text = args[0]
 who = args[1] if len(args) > 1 else context.player
@@ -73,7 +73,7 @@ for match in re.finditer(r'%(\w|%)(\((\w+)\))?', text):
         try:
             value = who.get_property(arg)
             result = value.capitalize() if vartype.isupper() else value
-        except PropertyDoesNotExist:
+        except NoSuchPropertyError:
             if hasattr(who, arg):
                 try:
                     value = getattr(who, arg).title()
@@ -85,7 +85,7 @@ for match in re.finditer(r'%(\w|%)(\((\w+)\))?', text):
         prop = substitutions[vartype]
         try:
             result = who.get_property(prop)
-        except PropertyDoesNotExist:
+        except NoSuchPropertyError:
             if prop == 'name':
                 result = who.name
     if not result:

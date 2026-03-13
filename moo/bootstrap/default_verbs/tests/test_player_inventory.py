@@ -1,6 +1,6 @@
 import pytest
 
-from moo.core import code, lookup, parse
+from moo.core import code, exceptions, lookup, parse
 from moo.core.models import Object
 
 
@@ -141,7 +141,7 @@ def test_recycle_object(t_init: Object, t_wizard: Object, setup_item):
     with code.ContextManager(t_wizard, lambda _: None) as ctx:
         setup_item(t_wizard.location, "widget")
         parse.interpret(ctx, "@recycle widget")
-    with pytest.raises(Object.DoesNotExist):
+    with pytest.raises(exceptions.NoSuchObjectError):
         lookup("widget")
 
 
