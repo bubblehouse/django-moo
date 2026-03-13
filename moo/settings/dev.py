@@ -28,12 +28,12 @@ COMPRESS_URL = STATIC_URL
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
+POSTGRES_HOSTNAME = os.environ.get("POSTGRES_HOSTNAME", "bubblehouse-dev-moo-db.cluster-cbepmog7ejmj.us-east-2.rds.amazonaws.com")
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "moo",
-        "HOST": "krustylu-db.dev.shacklyn.net",
-        # "HOST": "bubblehouse-dev-moo-db.cluster-cbepmog7ejmj.us-east-2.rds.amazonaws.com",
+        "HOST": POSTGRES_HOSTNAME,
         "USER": "moo",
         "PASSWORD": os.getenv("DB_PASSWORD", "moo"),
         "CONN_MAX_AGE": 60,
