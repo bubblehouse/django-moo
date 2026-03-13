@@ -1,3 +1,9 @@
+## [0.77.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.77.1...v0.77.2) (2026-03-13)
+
+### Bug Fixes
+
+* force release ([2076afb](https://gitlab.com/bubblehouse/django-moo/commit/2076afb933bef50e29b7dde7e858a6c7c1d9e8b4))
+
 ## [0.77.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.77.0...v0.77.1) (2026-03-13)
 
 ### Bug Fixes
