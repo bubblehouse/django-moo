@@ -1,7 +1,7 @@
 #!moo verb @messages --on $player --dspec any
 
 """
-This is a player command used to list the possible message properties (those that end in `_msg') on the dobjstr
+This is a player command used to list the possible message properties (those that end in ``_msg``) on the dobjstr
 supplied. The names of the messages, along with their current values, are displayed.
 """
 

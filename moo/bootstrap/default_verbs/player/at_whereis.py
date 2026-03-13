@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb is a player command used to locate a player in the virtual world. The code, shown below, allows any player to
+Locate a player in the virtual world. The code, shown below, allows any player to
 locate any other player. If no argument is given, a list of the locations of all the currently connected players is
 printed.
 

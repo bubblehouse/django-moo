@@ -3,18 +3,18 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb is used to control what objects are permitted to be placed inside other objects. If this verb returns
+Control what objects are permitted to be placed inside other objects. If this verb returns
 `False`, then the object where cannot be moved into this object. Conversely, if the verb returns a non-zero value, the
 object is allowed to be placed inside this object. The verb is called by the server when it changes the `location`
 property of an object.
 
-The `$room` class definition provides for a flexible scheme using various different criteria, as shown in the following code:
+The ``$room`` class definition provides for a flexible scheme using various different criteria, as shown in the following code::
 
-       what = args[0]
-       return this.is_unlocked_for(what) and (
-              this.free_entry or
-              what.owner == this.owner or
-              what in this.residents)
+    what = args[0]
+    return this.is_unlocked_for(what) and (
+           this.free_entry or
+           what.owner == this.owner or
+           what in this.residents)
 
 Starting at the top of the conditional expression, we see the locking condition being checked. If the room lock
 forbids this object to enter the room, then the :accept verb returns zero.

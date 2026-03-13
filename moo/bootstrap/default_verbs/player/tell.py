@@ -3,11 +3,11 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb should be used to send a message to a player. The `$player.tell` filters messages in two different ways, as
+Send a message to a player. The `$player.tell` filters messages in two different ways, as
 shown below. Remember that the player referred to in the code is the player sending the message. `this` refers to the
 player receiving the message.
 
-The verb `$player:gag_p` returns `True` if the player sending the message is in the recipient's gag list. For this
+The verb `$player:gag_p` returns `True`` if the player sending the message is in the recipient``s gag list. For this
 verb, the output from any gagged player is ignored, and not printed to the recipient's terminal.
 
 If the `paranoid` level of the recipient is `2`, this means that they wish to see who has sent them a message. The

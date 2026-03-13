@@ -10,8 +10,8 @@ lists have as their first element a string drawn from the following set:
 
 For the first two of these, the list should be three elements long; the second and third elements are the
 representations of the key expressions on the left- and right-hand sides of the appropriate operator. In the third
-case, `!', the list should be two elements long; the second element is again a representation of the operand. Finally,
-in the `?' case, the list is also two elements long but the second element must be an object number.
+case, ``!``, the list should be two elements long; the second element is again a representation of the operand. Finally,
+in the ``?`` case, the list is also two elements long but the second element must be an object number.
 
 As an example, the key expression
 

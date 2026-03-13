@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb is a player command used to list the times that players last connected to the MOO. If `player` is supplied, by
+List the times that players last connected to the MOO. If `player` is supplied, by
 invoking the verb as a command, only the last connect time for that player is shown.
 
 If no argument is supplied, the verb uses the players() primitive to return a list of all players in the database. It

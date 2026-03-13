@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb will lock the container with `object`. The container can only be opened if the player is holding `object`, or
+Lock the container with `object`. The container can only be opened if the player is holding `object`, or
 the `object` is the player trying to open the container. The container will remained locked until it is unlocked.
 """
 

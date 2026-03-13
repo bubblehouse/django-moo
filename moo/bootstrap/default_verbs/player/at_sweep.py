@@ -4,14 +4,14 @@
 
 """
 This is a player command used to list the objects that are capable of receiving any messages sent out from the player
-in the current room. It gathers a list of the objects in the current room, from the `contents` property of the player's
+in the current room. It gathers a list of the objects in the current room, from the `contents`` property of the player``s
 location. If any element in the list is a connected player, the message
 
     blip (#42) is listening.
 
 is printed, for example.
 
-If an element has a `sweep_msg` verb defined, the returned string from this verb is printed, prepended by the object's
+If an element has a `sweep_msg`` verb defined, the returned string from this verb is printed, prepended by the object``s
 name.
 
 If an element has a `tell` verb defined, and the owner is not the invoking player or a wizard, then this object is a
@@ -19,7 +19,7 @@ potential snooper, and is reported by a phrase such as:
 
     The Fruitbat (#999) has been taught to listen by blip (#42).
 
-The verbs `announce', `announce_all', `announce_all_but', `say', `emote', `huh', `huh2' and `whisper' are checked to
+The verbs ``announce``, ``announce_all``, ``announce_all_but``, ``say``, ``emote``, ``huh``, ``huh2`` and ``whisper`` are checked to
 see if the current room has a definition not owned by the invoking player or a wizard. If any of these are found, a
 message such as:
 
@@ -27,7 +27,7 @@ message such as:
 
 if the player's location was The Venue Hallway.
 
-If no potential bugs are found, the the message `Communications are secure.' is printed, and the player can breathe
+If no potential bugs are found, the the message ``Communications are secure.`` is printed, and the player can breathe
 easily (ish).
 """
 from moo.core import context, VerbDoesNotExist

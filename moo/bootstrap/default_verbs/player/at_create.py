@@ -3,9 +3,9 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb is a player command used to create an instance of an object or class. It parses the arguments to extract the
+Create an instance of an object or class. It parses the arguments to extract the
 parent object we wish to create an instance of, along with the name we wish to give to the created object. The
-`create()` primitive is called, with the derived parent added afterwards. The resulting object is moved to the player's
+`create()`` primitive is called, with the derived parent added afterwards. The resulting object is moved to the player``s
 inventory, using the `move()` primitive.
 """
 

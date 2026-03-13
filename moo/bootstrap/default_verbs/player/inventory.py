@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb is used to tell a player what s/he has in his/her pockets.
+Tell a player what s/he has in his/her pockets.
 """
 
 contents = list(this.contents.all())

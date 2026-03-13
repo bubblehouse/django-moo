@@ -3,7 +3,8 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb will open the container and allow objects to be put into it (via the put verb).
+Open the container and allow objects to be put into it.
+
 This verb sets the property `opened` to `True`.
 """
 

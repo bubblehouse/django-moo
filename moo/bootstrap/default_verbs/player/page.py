@@ -3,7 +3,7 @@
 # pylint: disable=undefined-variable,return-outside-function
 
 """
-This verb is a player command used to send messages between players who are not physically located in the same room in
+Send messages between players who are not physically located in the same room in
 the virtual world. You can imagine a page to be a worldwide form of whispering. Without an argument, a message like:
 
     You sense that blip is looking for you in The Venue Hallway.
@@ -28,7 +28,7 @@ then the message is extracted from the argument list and sent to the recipient, 
 string returned by the recipient's `page_echo_msg` verb is printed to the sending player.
 
 An interesting piece of coding is used to stop the line containing the message from duplicating the sender's name if it
-has already been sent as part of the `page_origin_msg`. For example, if "blip" page's "Ezeke", Ezeke might see the
+has already been sent as part of the `page_origin_msg``. For example, if "blip" page``s "Ezeke", Ezeke might see the
 following:
 
     You sense that blip is looking for you in The Venue Hallway
@@ -43,7 +43,7 @@ The code in question is shown below:
 
     who.tell(player.psc if player.name in message else player.name, " pages, \"", msg, "\"")
 
-Here, `in` is used to check if the player's name occurs in the string we sent to the recipient as `pagemsg`. If it
+Here, `in`` is used to check if the player``s name occurs in the string we sent to the recipient as `pagemsg`. If it
 does, then we print the player's subjective pronoun, capitalised. If it doesn't, we print the player's name.
 """
 

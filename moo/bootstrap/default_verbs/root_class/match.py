@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb is used to find things that are located within this object.
+Find things that are located within this object.
 
 It tries to match name to something in the contents list of this object, using object names and object aliases. This
 verb uses the `obj.find()` method to do the actual searching. If a match is found, the object that matched is

@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb is called by the LambdaMOO server when a player disconnects from the game.
+Called by the LambdaMOO server when a player disconnects from the game.
 
 The $room class definition of this verb moves the player home if s/he is not already there, using the :moveto verb on
 the player. One possible enhancement of this verb, already implemented in some MOOs, is to include a time delay

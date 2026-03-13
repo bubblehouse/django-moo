@@ -3,7 +3,7 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This verb displays the contents of the container. If the container is empty, the message `It is empty' is displayed.
+Display the contents of the container. If the container is empty, the message ``It is empty`` is displayed.
 """
 
 contents = list(this.contents.all())
