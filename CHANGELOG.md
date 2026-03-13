@@ -1,3 +1,9 @@
+## [0.77.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.77.0...v0.77.1) (2026-03-13)
+
+### Bug Fixes
+
+* the DB hostname should be overrideable ([71f24de](https://gitlab.com/bubblehouse/django-moo/commit/71f24de902710af88af59086bc20bc3f7b4cbea9))
+
 ## [0.77.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.76.0...v0.77.0) (2026-03-13)
 
 ### Features
