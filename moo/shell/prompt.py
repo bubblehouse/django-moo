@@ -25,11 +25,28 @@ log = logging.getLogger(__name__)
 async def embed(
     user: models.User,
 ) -> None:
+    """
+    Start the interactive MOO shell for the given user.
+
+    Creates a MooPrompt instance and runs the command and message processing
+    coroutines concurrently until either exits.
+
+    :param user: the authenticated Django user whose avatar will be the active player
+    """
     repl = MooPrompt(user)
     await asyncio.wait([asyncio.ensure_future(f()) for f in (repl.process_commands, repl.process_messages)])
 
 
 class MooPrompt:
+    """
+    Interactive prompt session for a connected MOO user.
+
+    Manages two concurrent async loops: one that reads user input and dispatches
+    commands, and one that polls the message queue and prints output sent to the
+    user from the MOO world. Editor and paginator requests are routed through
+    dedicated asyncio queues so they can interrupt the input prompt cleanly.
+    """
+
     style = Style.from_dict(
         {
             # User input (default text).
@@ -44,6 +61,11 @@ class MooPrompt:
     )
 
     def __init__(self, user, *a, **kw):
+        """
+        Initialize the prompt session for the given Django user.
+
+        :param user: the authenticated Django user whose avatar will be the active player
+        """
         self.user = user
         self.is_exiting = False
         self.editor_queue = asyncio.Queue()
@@ -51,6 +73,13 @@ class MooPrompt:
         self.last_property_write: datetime | None = None
 
     async def process_commands(self):
+        """
+        Read and dispatch user input in a loop.
+
+        Waits simultaneously for a typed command, an editor request, or a
+        paginator request. Whichever arrives first is handled; the others are
+        cancelled. Exits cleanly on EOF or KeyboardInterrupt.
+        """
         prompt_session = PromptSession()
         try:
             while not self.is_exiting:
@@ -83,6 +112,16 @@ class MooPrompt:
         log.debug("REPL is exiting, stopping main thread...")
 
     async def run_editor_session(self, req: dict):
+        """
+        Open the full-screen editor for the given request dict.
+
+        After the user saves or cancels, invokes the callback verb (if
+        specified) with the edited text so the MOO world receives the result.
+
+        :param req: editor request dict with keys ``content``, ``content_type``,
+            ``callback_this_id``, ``callback_verb_name``, ``caller_id``,
+            ``player_id``, and optional ``args``
+        """
         from .editor import run_editor
         edited_text = await run_editor(req.get("content", ""), req.get("content_type", "text"))
         if edited_text is not None and req.get("callback_this_id") and req.get("callback_verb_name"):
@@ -96,11 +135,22 @@ class MooPrompt:
             )
 
     async def run_paginator_session(self, req: dict):
+        """
+        Display the given content in the full-screen paginator.
+
+        :param req: paginator request dict with keys ``content`` and ``content_type``
+        """
         from .paginator import run_paginator
         await run_paginator(req.get("content", ""), req.get("content_type", "text"))
 
     @sync_to_async
     def generate_prompt(self):
+        """
+        Build the prompt_toolkit message tuple for the current location.
+
+        :returns: list of ``(style_class, text)`` pairs showing the avatar's name
+            and current location, e.g. ``Wizard@The Void:$ ``
+        """
         caller = self.user.player.avatar
         caller.refresh_from_db()
         return [
@@ -115,6 +165,12 @@ class MooPrompt:
     def handle_command(self, line: str) -> object:
         """
         Parse the command and execute it.
+
+        Updates ``last_connected_time`` on the avatar at most once every 15 seconds
+        to avoid excessive property writes. Any exception from the Celery task is
+        caught and rendered as a red traceback in the terminal.
+
+        :param line: raw input string typed by the user
         """
         caller = self.user.player.avatar
         now = datetime.now(timezone.utc)
@@ -134,6 +190,15 @@ class MooPrompt:
             self.writer(f"[bold red]{traceback.format_exc()}[/bold red]")
 
     def writer(self, s, is_error=False):
+        """
+        Render a Rich markup string to the terminal via prompt_toolkit.
+
+        Captures Rich's ANSI output and passes it through print_formatted_text
+        so it prints above the active input prompt without clobbering it.
+
+        :param s: Rich markup string to render
+        :param is_error: reserved for future use; currently unused
+        """
         console = Console(color_system="truecolor")
         with console.capture() as capture:
             console.print(s)
@@ -141,6 +206,13 @@ class MooPrompt:
         print_formatted_text(ANSI(content))
 
     async def process_messages(self) -> None:
+        """
+        Poll the Kombu message queue and display incoming MOO output.
+
+        Runs in a loop alongside process_commands. Messages that carry an
+        ``editor`` or ``paginator`` event are forwarded to the appropriate
+        asyncio queue; all other messages are printed via writer().
+        """
         await asyncio.sleep(1)
         try:
             with app.default_connection() as conn:
