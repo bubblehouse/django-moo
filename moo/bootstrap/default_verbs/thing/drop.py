@@ -16,13 +16,13 @@ from moo.core import context
 
 title = this.title()
 if this.location != context.player:
-    print("You check your pockets, but can't find {}.".format(title))
+    print(f"You check your pockets, but can't find {title}.")
 elif this.location.accept(this):
     this.moveto(context.player.location)
-    print(this.drop_succeeded_msg(title).format(actor="You", subject=this))
+    print(this.drop_succeeded_msg(title))
     if msg := this.odrop_succeeded_msg(title):
-        this.location.announce(msg.format(actor=context.player, subject=this))
+        this.location.announce(msg)
 else:
-    print(this.drop_failed_msg(title).format(actor="You", subject=this))
+    print(this.drop_failed_msg(title))
     if msg := this.odrop_failed_msg(title):
-        this.location.announce(msg.format(actor=context.player, subject=this))
+        this.location.announce(msg)

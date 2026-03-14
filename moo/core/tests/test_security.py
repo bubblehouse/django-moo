@@ -401,3 +401,176 @@ def test_getitem_normal_keys_still_work():
     """Normal (non-underscore) key reads must continue to work."""
     printed = _exec("d = dict(a=1)\nprint(d['a'])")
     assert printed == [1]
+
+
+# ---------------------------------------------------------------------------
+# Fix 9: str.format() / str.format_map() must not be accessible
+# ---------------------------------------------------------------------------
+
+def test_str_format_dunder_blocked():
+    """
+    str.format() is blocked to prevent C-level dunder traversal.
+    '{0.__class__}'.format(obj) bypasses _getattr_ entirely because Python's
+    format engine resolves attribute chains using the real C-level getattr.
+    Blocking access to .format on string instances closes this vector.
+    """
+    _raises("print('{0.__class__}'.format('hello'))", AttributeError)
+
+
+def test_str_format_map_dunder_blocked():
+    """str.format_map() is blocked for the same reason as str.format()."""
+    _raises("print('{key}'.format_map({'key': 'ok'}))", AttributeError)
+
+
+def test_str_format_blocked_even_via_variable():
+    """
+    The format string can be constructed at runtime to defeat static scanning.
+    The block must be on the .format attribute itself, not on the string content.
+    """
+    _raises("fmt = '{0.' + '__class__' + '}'\nprint(fmt.format('hello'))", AttributeError)
+
+
+def test_str_normal_methods_still_work():
+    """Blocking .format must not affect other string methods."""
+    printed = _exec("print('hello'.upper())")
+    assert printed == ["HELLO"]
+    printed = _exec("print('a,b'.split(','))")
+    assert printed == [["a", "b"]]
+
+
+def test_str_replace_still_works():
+    """
+    str.replace() is the safe substitution method used by message verbs.
+    It must remain accessible.
+    """
+    printed = _exec("print('hello {name}'.replace('{name}', 'world'))")
+    assert printed == ["hello world"]
+
+
+# ---------------------------------------------------------------------------
+# Fix 10: Verb.save() must require write permission
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_verb_save_requires_write_permission(t_init, t_wizard):
+    """
+    A non-wizard with only read access must not be able to overwrite verb code
+    by getting a Verb model instance and calling .save() directly.
+    Verb.save() now calls can_caller("write", self) for updates.
+    """
+    from moo.core import create
+    from moo.core.models.object import Object
+    from moo.core.exceptions import AccessError
+
+    # create a target object owned by wizard, with a verb on it
+    with _ctx(t_wizard):
+        target = create("target_obj")
+        target.add_verb("secret_verb", code='print("original")')
+
+    # create a plain caller that has read but not write on target
+    with _ctx(t_wizard):
+        plain = create("plain_caller")
+        target.allow(plain, "read")
+
+    verb = target.get_verb("secret_verb")
+    with _ctx(plain):
+        verb.code = "print('hacked')"
+        with pytest.raises((PermissionError, AccessError)):
+            verb.save()
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_verb_save_allowed_for_owner(t_init, t_wizard):
+    """The owner of an object can still save changes to a verb on it."""
+    from moo.core import create
+
+    with _ctx(t_wizard):
+        target = create("target_obj2")
+        target.add_verb("a_verb", code='print("v1")')
+
+    verb = target.get_verb("a_verb")
+    with _ctx(t_wizard):
+        verb.code = 'print("v2")'
+        verb.save()  # must not raise
+
+    verb.refresh_from_db()
+    assert verb.code == 'print("v2")'
+
+
+# ---------------------------------------------------------------------------
+# Fix 11: Property.save() must require write permission
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_property_save_requires_write_permission(t_init, t_wizard):
+    """
+    A non-wizard with read access must not be able to overwrite a property value
+    by obtaining the Property model instance via obj.properties and calling .save().
+    Property.save() now calls can_caller("write", self.origin) for updates.
+    """
+    from moo.core import create
+    from moo.core.exceptions import AccessError
+
+    with _ctx(t_wizard):
+        target = create("prop_target")
+        target.set_property("secret", "original_value")
+
+    with _ctx(t_wizard):
+        plain = create("plain_caller2")
+        target.allow(plain, "read")
+
+    prop = target.properties.filter(name="secret").first()
+    assert prop is not None
+    with _ctx(plain):
+        prop.value = '"hacked"'
+        with pytest.raises((PermissionError, AccessError)):
+            prop.save()
+
+
+# ---------------------------------------------------------------------------
+# Fix 12: Object.delete() must require write permission
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_object_delete_requires_write_permission(t_init, t_wizard):
+    """
+    A non-wizard with read access must not be able to delete an arbitrary object.
+    Object.delete() now calls can_caller("write", self) before proceeding.
+    """
+    from moo.core import create
+    from moo.core.exceptions import AccessError
+
+    with _ctx(t_wizard):
+        target = create("delete_target")
+
+    with _ctx(t_wizard):
+        plain = create("plain_caller3")
+        target.allow(plain, "read")
+
+    with _ctx(plain):
+        with pytest.raises((PermissionError, AccessError)):
+            target.delete()
+
+    # object must still exist
+    target.refresh_from_db()
+    assert target.pk is not None
+
+
+# ---------------------------------------------------------------------------
+# Known gap: dict.update() + dict.get() bypass _write_/__getitem__ guards
+# ---------------------------------------------------------------------------
+
+def test_dict_update_bypasses_write_guard():
+    """
+    dict.update({'__class__': x}) inserts underscore keys at C level,
+    bypassing _write_.__setitem__. The key can then be retrieved via
+    dict.get() or .items()/.values(), bypassing _getitem_.
+
+    This is a known policy gap. dict subclassing would be needed to close it
+    fully; for now this test documents the inconsistency.
+    """
+    # _write_.__setitem__ blocks this:
+    _raises("d = {}\nd['__class__'] = 'x'", KeyError)
+    # but dict.update() slips through at C level:
+    printed = _exec("d = {}\nd.update({'__class__': 'gap'})\nprint(d.get('__class__'))")
+    assert printed == ["gap"], "Known gap: dict.update() bypasses _write_.__setitem__"
