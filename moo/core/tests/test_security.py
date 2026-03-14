@@ -256,7 +256,7 @@ def test_invoke_oneshot_allowed_for_nonwizard():
 
 
 # ---------------------------------------------------------------------------
-# Fix 1: context attributes must be read-only (descriptor shadowing guard)
+# context attributes must be read-only (descriptor shadowing guard)
 # ---------------------------------------------------------------------------
 
 def test_context_caller_is_read_only_directly():
@@ -282,7 +282,7 @@ def test_context_caller_shadowing_blocked_in_verb():
 
 
 # ---------------------------------------------------------------------------
-# Fix 2: string module must not be importable
+# string module must not be importable
 # ---------------------------------------------------------------------------
 
 def test_string_module_not_importable():
@@ -302,7 +302,7 @@ def test_string_formatter_bypass_blocked():
 
 
 # ---------------------------------------------------------------------------
-# Fix 5: invoke() must check execute permission on the verb
+# invoke() must check execute permission on the verb
 # ---------------------------------------------------------------------------
 
 def test_invoke_checks_execute_permission():
@@ -330,7 +330,7 @@ def test_invoke_checks_execute_permission():
 
 
 # ---------------------------------------------------------------------------
-# Fix 6: _write_.__setitem__ must block underscore keys
+# _write_.__setitem__ must block underscore keys
 # ---------------------------------------------------------------------------
 
 def test_write_setitem_underscore_key_blocked():
@@ -343,7 +343,7 @@ def test_write_setitem_underscore_key_blocked():
 
 
 # ---------------------------------------------------------------------------
-# Fix 7: moo.core submodules must not be importable (ORM access via models)
+# moo.core submodules must not be importable (ORM access via models)
 # ---------------------------------------------------------------------------
 
 def test_models_submodule_not_importable():
@@ -383,7 +383,7 @@ def test_code_submodule_not_importable():
 
 
 # ---------------------------------------------------------------------------
-# Fix 8: _getitem_ must block underscore keys (read side)
+# _getitem_ must block underscore keys (read side)
 # ---------------------------------------------------------------------------
 
 def test_getitem_underscore_key_blocked():
@@ -404,7 +404,7 @@ def test_getitem_normal_keys_still_work():
 
 
 # ---------------------------------------------------------------------------
-# Fix 9: str.format() / str.format_map() must not be accessible
+# str.format() / str.format_map() must not be accessible
 # ---------------------------------------------------------------------------
 
 def test_str_format_dunder_blocked():
@@ -448,7 +448,7 @@ def test_str_replace_still_works():
 
 
 # ---------------------------------------------------------------------------
-# Fix 10: Verb.save() must require write permission
+# Verb.save() must require write permission
 # ---------------------------------------------------------------------------
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -498,7 +498,7 @@ def test_verb_save_allowed_for_owner(t_init, t_wizard):
 
 
 # ---------------------------------------------------------------------------
-# Fix 11: Property.save() must require write permission
+# Property.save() must require write permission
 # ---------------------------------------------------------------------------
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -528,7 +528,7 @@ def test_property_save_requires_write_permission(t_init, t_wizard):
 
 
 # ---------------------------------------------------------------------------
-# Fix 12: Object.delete() must require write permission
+# Object.delete() must require write permission
 # ---------------------------------------------------------------------------
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -574,3 +574,225 @@ def test_dict_update_bypasses_write_guard():
     # but dict.update() slips through at C level:
     printed = _exec("d = {}\nd.update({'__class__': 'gap'})\nprint(d.get('__class__'))")
     assert printed == ["gap"], "Known gap: dict.update() bypasses _write_.__setitem__"
+
+
+# ---------------------------------------------------------------------------
+# QuerySet.model must not expose raw ORM
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_queryset_model_exposes_orm_via_parents(t_init: Object, t_wizard: Object):
+    """
+    QuerySet.model is blocked by get_protected_attribute and safe_getattr.
+    obj.parents.all().model raises AttributeError in verb code, closing the
+    raw ORM access path via RelatedManagers.
+    """
+    src = """
+from moo.core import lookup
+obj = lookup(1)
+cls = obj.parents.all().model
+"""
+    with _ctx(t_wizard):
+        w = code.ContextManager.get("writer")
+        g = code.get_default_globals()
+        g.update(code.get_restricted_environment("__main__", w))
+        with pytest.raises(AttributeError):
+            code.r_exec(src, {}, g)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_queryset_model_exposes_orm_via_verbs(t_init: Object, t_wizard: Object):
+    """
+    Same guard via the obj.verbs RelatedManager. Confirms that blocking .model
+    on QuerySet instances covers all RelatedManager paths.
+    """
+    src = """
+from moo.core import lookup
+obj = lookup(1)
+cls = obj.verbs.all().model
+"""
+    with _ctx(t_wizard):
+        w = code.ContextManager.get("writer")
+        g = code.get_default_globals()
+        g.update(code.get_restricted_environment("__main__", w))
+        with pytest.raises(AttributeError):
+            code.r_exec(src, {}, g)
+
+
+# ---------------------------------------------------------------------------
+# Property.value must enforce read permission in verb code
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_property_value_read_bypasses_permission_via_relatedmanager(t_init: Object, t_wizard: Object):
+    """
+    get_protected_attribute and safe_getattr enforce can_caller('read') when
+    verb code accesses prop.value. Since all verbs run inside RestrictedPython,
+    this guard fires on any prop.value access in verb code by a non-privileged caller.
+    """
+    from moo.core import create
+    from moo.core.exceptions import AccessError
+
+    with _ctx(t_wizard):
+        target = create("prop_read_bypass_target")
+        target.set_property("confidential", "top_secret_value")
+        plain = create("prop_read_bypass_plain")
+        prop = target.properties.filter(name="confidential").first()
+        prop.deny(plain, "read")
+
+    prop = target.properties.filter(name="confidential").first()
+    assert prop is not None
+
+    # In restricted verb code, a non-privileged caller denied read cannot access prop.value.
+    with _ctx(plain):
+        w = code.ContextManager.get("writer")
+        g = code.get_default_globals()
+        g.update(code.get_restricted_environment("__main__", w))
+        g["prop"] = prop
+        with pytest.raises((PermissionError, AccessError)):
+            code.r_exec("_ = prop.value", {}, g)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_property_value_read_allowed_for_owner(t_init: Object, t_wizard: Object):
+    """The owner's context can still read Property.value."""
+    from moo.core import create
+
+    with _ctx(t_wizard):
+        target = create("prop_owner_read_target")
+        target.set_property("public", "expected_value")
+
+    prop = target.properties.filter(name="public").first()
+    assert prop is not None
+    with _ctx(t_wizard):
+        assert "expected_value" in prop.value
+
+
+# ---------------------------------------------------------------------------
+# Verb.__call__() must check execute permission
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_verb_direct_call_bypasses_execute_permission(t_init: Object, t_wizard: Object):
+    """
+    Verb.__call__() checks can_caller('execute', self) when an active session
+    is present. When execute is explicitly denied for a caller, the check
+    raises AccessError instead of running the verb.
+    """
+    from moo.core import create
+    from moo.core.exceptions import AccessError
+
+    with _ctx(t_wizard):
+        target = create("verb_exec_bypass_target")
+        target.add_verb("privileged_verb", code='print("privileged ran")')
+        plain = create("verb_exec_bypass_plain")
+        verb_obj = target.verbs.filter(names__name="privileged_verb").first()
+        verb_obj.deny(plain, "execute")
+
+    verb_obj = target.verbs.filter(names__name="privileged_verb").first()
+    assert verb_obj is not None
+
+    with _ctx(plain):
+        with pytest.raises((PermissionError, AccessError)):
+            verb_obj(target, None, None)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_passthrough_still_works_after_execute_check(t_init: Object, t_wizard: Object):
+    """
+    passthrough() must not be blocked by the execute check in Verb.__call__().
+    It passes _bypass_execute_check=True so the parent verb call skips the
+    redundant permission check.
+    """
+    from moo.core import create
+
+    with _ctx(t_wizard):
+        parent = create("passthrough_parent")
+        parent.add_verb("greet", code='print("hello from parent")')
+        child = create("passthrough_child", parents=[parent])
+        child.add_verb("greet", code='passthrough()')
+
+    printed = []
+    with _ctx(t_wizard, printed.append):
+        child.invoke_verb("greet")
+    assert "hello from parent" in printed
+
+
+# ---------------------------------------------------------------------------
+# ACL rules must not be enumerable without grant permission
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_acl_enumeration_via_relatedmanager(t_init: Object, t_wizard: Object):
+    """
+    get_protected_attribute and safe_getattr check can_caller('grant') before
+    returning the acl RelatedManager on AccessibleMixin instances. Since all
+    verbs run in RestrictedPython, verb code accessing obj.acl as a non-privileged
+    caller gets AccessError instead of the ACL queryset.
+    """
+    from moo.core import create
+    from moo.core.exceptions import AccessError
+
+    with _ctx(t_wizard):
+        target = create("acl_enum_target")
+        reader = create("acl_enum_reader")
+        target.allow(reader, "read")
+        plain = create("acl_enum_plain")
+
+    with _ctx(plain):
+        w = code.ContextManager.get("writer")
+        g = code.get_default_globals()
+        g.update(code.get_restricted_environment("__main__", w))
+        g["target"] = target
+        with pytest.raises((PermissionError, AccessError)):
+            code.r_exec("_ = target.acl", {}, g)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_acl_enumeration_allowed_for_wizard(t_init: Object, t_wizard: Object):
+    """A wizard caller can still access obj.acl, since can_caller('grant') always passes for wizards."""
+    from moo.core import create
+
+    with _ctx(t_wizard):
+        target = create("acl_wizard_target")
+        reader = create("acl_wizard_reader")
+        target.allow(reader, "read")
+
+    with _ctx(t_wizard):
+        entries = list(target.acl.all())
+    assert len(entries) > 0
+
+
+# ---------------------------------------------------------------------------
+# context.caller_stack items expose previous caller references (known info disclosure)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.skip(reason="info disclosure only — not scheduled for remediation")
+def test_caller_stack_previous_caller_reference_accessible():
+    """
+    Known gap (information disclosure): context.caller_stack returns a copy of
+    the live stack (preventing mutation), but each frame dict contains
+    'previous_caller' — a live Object reference. Verb code can read this via
+    frame.get('previous_caller') since 'previous_caller' has no underscore
+    prefix and dict.get() bypasses _getitem_.
+
+    In a scenario where a wizard verb uses set_task_perms(plain) to run as
+    plain, the inner verb sees the wizard Object on the caller stack and can
+    call methods like is_wizard() on it. This is information disclosure; it
+    does not allow privilege escalation because context.caller is a read-only
+    data descriptor that cannot be overwritten.
+    """
+    wizard_caller = _mock(is_wizard=True)
+    non_wizard = _mock(is_wizard=False)
+
+    with _ctx(wizard_caller):
+        code.ContextManager.override_caller(non_wizard)
+        stack = code.ContextManager.get("caller_stack")
+        assert len(stack) == 1
+        frame = stack[0]
+        # 'previous_caller' has no underscore — _getitem_ does not block it
+        prev = frame.get("previous_caller")
+        assert prev is wizard_caller, (
+            "Known gap: previous_caller is readable from caller_stack copy"
+        )
+        code.ContextManager.pop_caller()
