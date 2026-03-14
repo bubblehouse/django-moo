@@ -42,9 +42,12 @@ exclude_patterns = []
 
 autosummary_generate = True
 autodoc_mock_imports = ["moo.bootstrap.default", "moo.bootstrap.test"]
+autodoc_default_options = {
+    "exclude-members": "connection_requested,tap_requested,tun_requested,unix_connection_requested",
+}
 
 intersphinx_mapping = {
-    "django": ("https://django.readthedocs.io/en/5.0/", None),
+    "django": ("https://docs.djangoproject.com/en/stable/", None),
 }
 
 # We recommend adding the following config value.

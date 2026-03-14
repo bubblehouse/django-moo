@@ -52,14 +52,20 @@ Every property has the following attributes:
     The unique identifying number of this Property
 
 .. autoattribute:: Property.name
+   :no-index:
 .. autoattribute:: Property.value
+   :no-index:
 .. autoattribute:: Property.type
+   :no-index:
 .. autoattribute:: Property.owner
+   :no-index:
 .. autoattribute:: Property.origin
+   :no-index:
 .. autoattribute:: Property.inherit_owner
+   :no-index:
 ```
 
-#### Property Inheritance
+## Property Inheritance
 
 This section is complicated enough to call out in a separate heading. In LambdaMOO, there was a third permission bit `c` ... that wasn't really a permission bit.
 

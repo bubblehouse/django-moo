@@ -1,8 +1,8 @@
-## MOO Tasks
+# MOO Tasks
 
 Each task in the DjangoMOO environment is executed asynchronously by the Celery workers.
 
-### Available Tasks
+## Available Tasks
 
 Most of these tasks aren't used by Verb code, the exception is `invoke_verb` which is actually
 callable via the `moo.core.invoke` function.
@@ -14,7 +14,7 @@ callable via the `moo.core.invoke` function.
 .. autofunction:: invoke_verb
 ```
 
-### Task Security
+## Task Security
 
 The running of a task is kept reasonably secure and isolated in a few ways:
 
