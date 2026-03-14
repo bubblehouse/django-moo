@@ -69,21 +69,21 @@ if ctype == 3:
     to_be = ('is', 'are')[int(len(players) > 1)]
     if items:
         if len(items) == 1:
-            print("You see {} here.".format(items[0]))
+            print(f"You see {items[0]} here.")
         else:
-            print("You see {} and {} here.".format(", ".join(items[:-1]),  items[-1]))
+            print(f"You see {', '.join(items[:-1])} and {items[-1]} here.")
     if players:
         if len(players) == 1:
-            print("You see {} here.".format(players[0]))
+            print(f"You see {players[0]} here.")
         else:
-            print("{} and {} {} here.".format(", ".join(players[:-1]),  players[-1], to_be))
+            print(f"{', '.join(players[:-1])} and {players[-1]} {to_be} here.")
 elif ctype == 2:
     items = players + items
     if items:
         if len(items) == 1:
-            print("You see {} here.".format(items[0]))
+            print(f"You see {items[0]} here.")
         else:
-            print("You see {} and {} here.".format(", ".join(items[:-1]),  items[-1]))
+            print(f"You see {', '.join(items[:-1])} and {items[-1]} here.")
 elif ctype == 1:
     for item in players:
         print(f"{item} is here")
