@@ -16,10 +16,10 @@ This case is included simply to speed up processing for certain common cases.
 from moo.core import context
 
 player = context.player
-exit = this.match_exit(verb_name)
-if exit is None:
+exit_obj = this.match_exit(verb_name)
+if exit_obj is None:
     player.tell("You can't go that way.")
-elif isinstance(exit, list):
+elif isinstance(exit_obj, list):
     player.tell(f"I don't know which '{verb_name}' you mean.")
 else:
-    exit.invoke(player)
+    exit_obj.invoke(player)

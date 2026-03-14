@@ -93,7 +93,7 @@ class Verb(models.Model, AccessibleMixin):
     def save(self, *args, **kwargs):
         needs_default_permissions = self.pk is None
         if not needs_default_permissions:
-            self.origin.can_caller("write", self)
+            self.origin.can_caller("write", self)  # pylint: disable=no-member
         super().save(*args, **kwargs)
         if not needs_default_permissions:
             return
@@ -155,7 +155,7 @@ class Verb(models.Model, AccessibleMixin):
 
     def __call__(self, *args, _bypass_execute_check=False, **kwargs):
         if ContextManager.is_active() and not _bypass_execute_check:
-            self.origin.can_caller("execute", self)
+            self.origin.can_caller("execute", self)  # pylint: disable=no-member
         this = None
         name = "__main__"
         if self.is_bound():
