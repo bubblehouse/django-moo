@@ -100,8 +100,10 @@ def get_restricted_environment(name, writer):
 
         def __setitem__(self, key, value):
             """
-            Passthrough property access.
+            Passthrough property access, with underscore key protection.
             """
+            if isinstance(key, str) and key.startswith("_"):
+                raise KeyError(key)
             self.obj[key] = value  # pylint: disable=no-member
 
     def restricted_import(name, gdict, ldict, fromlist, level=-1):
@@ -109,6 +111,11 @@ def get_restricted_environment(name, writer):
         Used to drastically limit the importable modules.
         """
         if name in settings.ALLOWED_MODULES:
+            blocked = settings.BLOCKED_IMPORTS.get(name, set())
+            if fromlist:
+                for item in fromlist:
+                    if item in blocked:
+                        raise ImportError("Restricted: cannot import %s from %s" % (item, name))
             return __builtins__["__import__"](name, gdict, ldict, fromlist, level)
         caller = ContextManager.get("caller")
         if name in settings.WIZARD_ALLOWED_MODULES and caller and caller.is_wizard():
@@ -125,29 +132,46 @@ def get_restricted_environment(name, writer):
             raise AttributeError(name)
         return s(obj, name, value)
 
+    def guarded_getitem(obj, key):
+        if isinstance(key, str) and key.startswith("_"):
+            raise KeyError(key)
+        return obj[key]
+
     def inplace_var_modification(operator, a, b):
         if operator == "+=":
             return a + b
         raise NotImplementedError("In-place modification with %s not supported." % operator)
 
-    safe_builtins["__import__"] = restricted_import
+    def safe_getattr(obj, name, *args):
+        if isinstance(name, str) and name.startswith("_"):
+            raise AttributeError(name)
+        return getattr(obj, name, *args) if args else getattr(obj, name)
+
+    def safe_hasattr(obj, name):
+        if isinstance(name, str) and name.startswith("_"):
+            return False
+        return hasattr(obj, name)
+
+    restricted_builtins = dict(safe_builtins)
+    restricted_builtins["__import__"] = restricted_import
 
     for n in settings.ALLOWED_BUILTINS:
-        safe_builtins[n] = __builtins__[n]
+        restricted_builtins[n] = __builtins__[n]
+    restricted_builtins["getattr"] = safe_getattr
+    restricted_builtins["hasattr"] = safe_hasattr
     env = dict(
         _apply_=lambda f, *a, **kw: f(*a, **kw),
         _print_=lambda x: _print_(),
         _print=_print_(),
         _write_=_write_,
         _getattr_=get_protected_attribute,
-        _getitem_=lambda obj, key: obj[key],
+        _getitem_=guarded_getitem,
         _getiter_=iter,
         _inplacevar_=inplace_var_modification,
         _unpack_sequence_=guarded_unpack_sequence,
         _iter_unpack_sequence_=guarded_iter_unpack_sequence,
         __import__=restricted_import,
-        __builtins__=safe_builtins,
-        __metaclass__=type,
+        __builtins__=restricted_builtins,
         __name__=name,
         __package__=None,
         __doc__=None,
@@ -197,8 +221,8 @@ class ContextManager:
             return _active_task_id.get()
         if name == "caller_stack":
             stack = _active_caller_stack.get()
-            # Return an empty list outside a session rather than exposing the sentinel.
-            return [] if stack is _UNSET else stack
+            # Return a copy so callers cannot mutate the live stack.
+            return [] if stack is _UNSET else list(stack)
         raise NotImplementedError(f"Unknown ContextManager variable: {name}")
 
     @classmethod
