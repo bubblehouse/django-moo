@@ -45,7 +45,7 @@ class Property(models.Model, AccessibleMixin):
     def save(self, *args, **kwargs):
         needs_default_permissions = self.pk is None
         if not needs_default_permissions:
-            self.origin.can_caller("write", self)
+            self.origin.can_caller("write", self)  # pylint: disable=no-member
         super().save(*args, **kwargs)
         if self.inherit_owner and not self.__original_inherit_owner:
             for child in self.origin.get_descendents():  # pylint: disable=no-member
