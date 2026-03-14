@@ -208,7 +208,7 @@ class Object(models.Model, AccessibleMixin):
 
     def is_wizard(self) -> bool:
         """
-        Check if this object is a player avatar.
+        Check if this object is a wizard player avatar.
         """
         return Player.objects.filter(avatar=self, wizard=True).exists()
 
@@ -239,7 +239,13 @@ class Object(models.Model, AccessibleMixin):
             Q(name__iexact=name) | Q(aliases__alias__iexact=name)
         ).distinct()
 
-    def contains(self, obj: "Object"):
+    def contains(self, obj: "Object") -> bool:
+        """
+        Check if this object contains the given object anywhere in its content tree.
+
+        :param obj: the object to search for
+        :return: True if `obj` is found in the content tree of this object
+        """
         return self.get_contents().filter(pk=obj.pk).exists()
 
     def is_a(self, obj: "Object") -> bool:
