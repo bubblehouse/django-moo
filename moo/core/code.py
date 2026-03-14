@@ -125,6 +125,8 @@ def get_restricted_environment(name, writer):
     def get_protected_attribute(obj, name, g=getattr):
         if name.startswith("_"):
             raise AttributeError(name)
+        if isinstance(obj, str) and name in ("format", "format_map"):
+            raise AttributeError(name)
         return g(obj, name)
 
     def set_protected_attribute(obj, name, value, s=setattr):
@@ -144,6 +146,8 @@ def get_restricted_environment(name, writer):
 
     def safe_getattr(obj, name, *args):
         if isinstance(name, str) and name.startswith("_"):
+            raise AttributeError(name)
+        if isinstance(obj, str) and name in ("format", "format_map"):
             raise AttributeError(name)
         return getattr(obj, name, *args) if args else getattr(obj, name)
 

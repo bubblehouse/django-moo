@@ -345,10 +345,12 @@ def test_get_restricted_environment_exact_keys():
 
 def test_print_and_print_factory_both_present():
     """
-    RestrictedPython transforms `print(x)` into `_print_(_print)._call_print(x)`.
+    RestrictedPython transforms ``print(x)`` into ``_print_(_print)._call_print(x)``.
+
     Both keys must be present:
-      _print_  — factory callable, receives the current collector, returns a new one
-      _print   — initial collector instance; its _call_print() routes to the writer
+
+    - ``_print_`` -- factory callable, receives the current collector, returns a new one
+    - ``_print`` -- initial collector instance; its _call_print() routes to the writer
     """
     collected = []
     env = code.get_restricted_environment("test", collected.append)

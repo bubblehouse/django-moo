@@ -18,12 +18,12 @@ from moo.core import context
 
 title = this.title()
 if this.location == context.player:
-    print("You already have {} in your inventory.".format(title))
+    print(f"You already have {title} in your inventory.")
 elif this.moveto(context.player):
-    print(this.take_succeeded_msg(title).format(actor="You", subject=this))
+    print(this.take_succeeded_msg(title))
     if msg := this.otake_succeeded_msg(title):
-        this.location.announce(msg.format(actor=context.player, subject=this))
+        this.location.announce(msg)
 else:
-    print(this.take_failed_msg(title).format(actor="You", subject=this))
+    print(this.take_failed_msg(title))
     if msg := this.otake_failed_msg(title):
-        this.location.announce(msg.format(actor=context.player, subject=this))
+        this.location.announce(msg)
