@@ -1,3 +1,9 @@
+## [0.78.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.77.4...v0.78.0) (2026-03-14)
+
+### Features
+
+* use correct hostname in webssh when deployed ([ee3b9ad](https://gitlab.com/bubblehouse/django-moo/commit/ee3b9ad00bd69c92cd5e6b1d297c103ec7e72a5a))
+
 ## [0.77.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.77.3...v0.77.4) (2026-03-14)
 
 ### Bug Fixes
