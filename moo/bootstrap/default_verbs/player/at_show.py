@@ -20,11 +20,11 @@ else:
     obj = None
     try:
         obj = target.get_verb(name, recurse=True)
-    except:
+    except Exception:  # pylint: disable=broad-except
         pass
     try:
         obj = target.get_property(name, recurse=True)
-    except:
+    except Exception:  # pylint: disable=broad-except
         pass
     if obj is None:
         print(f"Couldn't find a verb or property named '{name}' on {target}.")
