@@ -147,13 +147,15 @@ class Verb(models.Model, AccessibleMixin):
                 verb.invoked_object = self.invoked_object
                 verb.invoked_name = self.invoked_name
                 assert verb != self, "Infinite passthrough loop detected."
-                return verb(*args, **kwargs)
+                return verb(*args, _bypass_execute_check=True, **kwargs)
         warnings.warn(
             "Passthrough ignored: no parent has verb %s" % self.invoked_name,
             RuntimeWarning,
         )
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, _bypass_execute_check=False, **kwargs):
+        if ContextManager.is_active() and not _bypass_execute_check:
+            self.origin.can_caller("execute", self)
         this = None
         name = "__main__"
         if self.is_bound():
