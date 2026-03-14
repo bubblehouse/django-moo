@@ -1,4 +1,5 @@
-baseURL = 'https://example.org/'
+baseURL = 'https://bubblehouse.gitlab.io/django-moo/'
 languageCode = 'en-us'
-title = 'My New Hugo Project'
+title = 'django-moo'
 theme = 'ananke'
+contentDir = "content"
