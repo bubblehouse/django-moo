@@ -57,7 +57,7 @@ def test_eval_simple_command(t_init: Object, t_wizard: Object):
         writer = code.ContextManager.get("writer")
         globals = code.get_default_globals()  # pylint: disable=redefined-builtin
         globals.update(code.get_restricted_environment("__main__", writer))
-        result = code.do_eval("dir()", {}, globals)
+        result = code.do_eval("list()", {}, globals)
         assert result == []
 
 
@@ -335,7 +335,7 @@ def test_get_restricted_environment_exact_keys():
         "_apply_", "_print_", "_print", "_write_",
         "_getattr_", "_getitem_", "_getiter_", "_inplacevar_",
         "_unpack_sequence_", "_iter_unpack_sequence_",
-        "__import__", "__builtins__", "__metaclass__",
+        "__import__", "__builtins__",
         "__name__", "__package__", "__doc__", "verb_name",
     }
     assert set(env.keys()) == expected

@@ -1,0 +1,403 @@
+# -*- coding: utf-8 -*-
+"""
+Security tests for the verb execution sandbox.
+
+Each test documents a specific attack surface. Passing tests confirm that a
+hole has been sealed. Any test added here as a failing test indicates a hole
+that requires further work to close.
+"""
+
+import types
+
+import pytest
+
+from moo.core.models.object import Object
+
+from .. import code
+
+
+# ---------------------------------------------------------------------------
+# Helpers (mirrors test_code.py conventions)
+# ---------------------------------------------------------------------------
+
+def _mock(is_wizard=False):
+    return types.SimpleNamespace(is_wizard=lambda: is_wizard)
+
+
+def _ctx(caller, writer=None):
+    return code.ContextManager(caller, writer or (lambda s: None))
+
+
+def _exec(src, caller=None, writer=None):
+    """Run verb source in the restricted environment, return printed output."""
+    caller = caller or _mock()
+    printed = []
+    with _ctx(caller, printed.append):
+        w = code.ContextManager.get("writer")
+        g = code.get_default_globals()
+        g.update(code.get_restricted_environment("__main__", w))
+        code.r_exec(src, {}, g)
+    return printed
+
+
+def _raises(src, exc, caller=None):
+    """Assert that running src raises the given exception."""
+    caller = caller or _mock()
+    with _ctx(caller):
+        w = code.ContextManager.get("writer")
+        g = code.get_default_globals()
+        g.update(code.get_restricted_environment("__main__", w))
+        with pytest.raises(exc):
+            code.r_exec(src, {}, g)
+
+
+# ---------------------------------------------------------------------------
+# __metaclass__ must not expose type
+# ---------------------------------------------------------------------------
+
+def test_metaclass_not_in_globals():
+    """__metaclass__ was a Python 2 artifact; it must not appear in the sandbox globals."""
+    caller = _mock()
+    with _ctx(caller):
+        w = code.ContextManager.get("writer")
+        g = code.get_default_globals()
+        g.update(code.get_restricted_environment("__main__", w))
+        assert "__metaclass__" not in g
+
+
+# ---------------------------------------------------------------------------
+# dir() must not be available
+# ---------------------------------------------------------------------------
+
+def test_dir_builtin_removed():
+    """dir() is not in ALLOWED_BUILTINS and must raise NameError in verb code."""
+    _raises("dir()", NameError)
+
+
+# ---------------------------------------------------------------------------
+# getattr() / hasattr() must not allow underscore names
+# ---------------------------------------------------------------------------
+
+def test_getattr_underscore_blocked():
+    """getattr(obj, '__class__') must raise AttributeError, not return the class."""
+    _raises("getattr('hello', '__class__')", AttributeError)
+
+
+def test_getattr_normal_names_still_work():
+    """getattr on a normal (non-underscore) name must still work."""
+    printed = _exec("print(getattr('hello', 'upper')())")
+    assert printed == ["HELLO"]
+
+
+def test_hasattr_underscore_returns_false():
+    """hasattr(obj, '__class__') must return False, not True."""
+    printed = _exec("print(hasattr('hello', '__class__'))")
+    assert printed == [False]
+
+
+def test_hasattr_normal_names_still_work():
+    """hasattr on a normal name must still work."""
+    printed = _exec("print(hasattr('hello', 'upper'))")
+    assert printed == [True]
+
+
+# ---------------------------------------------------------------------------
+# ORM access via getattr chain must be blocked
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_no_orm_access_via_getattr_chain(t_init: Object, t_wizard: Object):
+    """
+    An attacker cannot reach Object.objects by walking __class__ → objects.
+    getattr(obj, '__class__') is blocked, so the chain never starts.
+    """
+    src = """
+from moo.core import lookup
+obj = lookup(1)
+cls = getattr(obj, '__class__')
+mgr = getattr(cls, 'objects')
+print(mgr.count())
+"""
+    with _ctx(t_wizard):
+        w = code.ContextManager.get("writer")
+        g = code.get_default_globals()
+        g.update(code.get_restricted_environment("__main__", w))
+        with pytest.raises(AttributeError):
+            code.r_exec(src, {}, g)
+
+
+# ---------------------------------------------------------------------------
+# Dunder attribute syntax must remain blocked (regression guard)
+# ---------------------------------------------------------------------------
+
+def test_dunder_syntax_blocked():
+    """
+    Dunder attribute syntax (obj.__class__) is rejected at compile time by
+    RestrictedPython — code.code is None, so exec raises TypeError.
+    Either way, access is denied.
+    """
+    _raises("x = ''.__class__", (AttributeError, TypeError))
+
+
+# ---------------------------------------------------------------------------
+# ContextManager must not be importable via moo.core
+# ---------------------------------------------------------------------------
+
+def test_context_manager_not_importable():
+    """
+    ContextManager is in BLOCKED_IMPORTS for moo.core.
+    Verb code must not be able to call override_caller() to impersonate another player.
+    """
+    _raises("from moo.core import ContextManager", ImportError)
+
+
+# ---------------------------------------------------------------------------
+# set_task_perms must require wizard (regression guard)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_set_task_perms_requires_wizard(t_init: Object, t_wizard: Object):
+    """
+    set_task_perms() raises UserError when called by a non-wizard.
+    This is already enforced; test guards against regression.
+    """
+    from moo.core import set_task_perms
+    from moo.core.exceptions import UserError
+
+    # Create a plain (non-wizard) object to act as caller
+    from moo.core import create
+    plain = create("plain_user")
+
+    with _ctx(plain):
+        with pytest.raises(UserError):
+            with set_task_perms(t_wizard):
+                pass
+
+
+# ---------------------------------------------------------------------------
+# _publish_to_player must not be importable via moo.core
+# ---------------------------------------------------------------------------
+
+def test_publish_to_player_not_importable():
+    """
+    _publish_to_player must not be accessible from verb code.
+    RestrictedPython rejects _-prefixed names at compile time (TypeError on exec),
+    and BLOCKED_IMPORTS provides defense-in-depth at the import level.
+    """
+    _raises("from moo.core import _publish_to_player", (ImportError, TypeError))
+
+
+# ---------------------------------------------------------------------------
+# context.caller_stack must return a copy, not the live list
+# ---------------------------------------------------------------------------
+
+def test_caller_stack_returns_copy():
+    """
+    ContextManager.get('caller_stack') must return a copy of the stack list.
+    Mutating the returned list must not affect the live _active_caller_stack.
+    """
+    caller = _mock()
+    with _ctx(caller):
+        stack_copy = code.ContextManager.get("caller_stack")
+        stack_copy.append({"previous_caller": "FAKE"})
+        live = code.ContextManager.get("caller_stack")
+        assert "FAKE" not in [f.get("previous_caller") for f in live]
+
+
+# ---------------------------------------------------------------------------
+# invoke() must require wizard for persistent (periodic/cron) tasks
+# ---------------------------------------------------------------------------
+
+def test_invoke_periodic_requires_wizard():
+    """invoke(..., periodic=True) raises UserError when called by a non-wizard."""
+    from unittest.mock import MagicMock
+    from moo.core import invoke
+    from moo.core.exceptions import UserError
+
+    non_wizard = MagicMock()
+    non_wizard.is_wizard.return_value = False
+    verb = MagicMock()
+
+    with _ctx(non_wizard):
+        with pytest.raises(UserError):
+            invoke(verb=verb, delay=60, periodic=True)
+
+
+def test_invoke_cron_requires_wizard():
+    """invoke(..., cron=...) raises UserError when called by a non-wizard."""
+    from unittest.mock import MagicMock
+    from moo.core import invoke
+    from moo.core.exceptions import UserError
+
+    non_wizard = MagicMock()
+    non_wizard.is_wizard.return_value = False
+    verb = MagicMock()
+
+    with _ctx(non_wizard):
+        with pytest.raises(UserError):
+            invoke(verb=verb, cron="* * * * *")
+
+
+def test_invoke_oneshot_allowed_for_nonwizard():
+    """invoke() without periodic/cron must not raise for non-wizards."""
+    from unittest.mock import MagicMock, patch
+    from moo.core import invoke
+
+    non_wizard = MagicMock()
+    non_wizard.is_wizard.return_value = False
+    non_wizard.pk = 42
+    verb = MagicMock()
+    verb.invoked_object.pk = 1
+    verb.invoked_name = "test"
+
+    with _ctx(non_wizard):
+        with patch("moo.core.tasks.invoke_verb.apply_async"):
+            invoke(verb=verb)
+
+
+# ---------------------------------------------------------------------------
+# Fix 1: context attributes must be read-only (descriptor shadowing guard)
+# ---------------------------------------------------------------------------
+
+def test_context_caller_is_read_only_directly():
+    """
+    Directly assigning context.caller must raise AttributeError.
+    The _Context.descriptor is a data descriptor; instance attributes cannot shadow it.
+    """
+    from moo.core import context
+
+    with pytest.raises(AttributeError):
+        context.caller = _mock(is_wizard=True)
+
+
+def test_context_caller_shadowing_blocked_in_verb():
+    """
+    Verb code must not be able to shadow context.caller via _write_ assignment.
+    Previously, setattr(context, 'caller', wizard_obj) silently shadowed the
+    non-data descriptor, making context.caller.is_wizard() return True for all
+    subsequent code in the same worker process.
+    """
+    # Does not need DB — just tests that setattr on the context singleton is rejected.
+    _raises("from moo.core import context\ncontext.caller = None", AttributeError)
+
+
+# ---------------------------------------------------------------------------
+# Fix 2: string module must not be importable
+# ---------------------------------------------------------------------------
+
+def test_string_module_not_importable():
+    """
+    'string' was removed from ALLOWED_MODULES because string.Formatter.get_field
+    calls CPython's real getattr internally, bypassing safe_getattr and allowing
+    dunder attribute access (e.g. __class__) to reach the Django ORM.
+    """
+    _raises("import string", ImportError)
+
+
+def test_string_formatter_bypass_blocked():
+    """
+    Confirming that the string.Formatter bypass path is closed end-to-end.
+    """
+    _raises("from string import Formatter", ImportError)
+
+
+# ---------------------------------------------------------------------------
+# Fix 5: invoke() must check execute permission on the verb
+# ---------------------------------------------------------------------------
+
+def test_invoke_checks_execute_permission():
+    """
+    invoke() must call can_caller("execute", verb) before dispatching.
+    Previously the check was missing; a caller with only read access could
+    enqueue any verb they could look up.  The test uses mocks so that the
+    denial is deterministic regardless of default ACL state.
+    """
+    from unittest.mock import MagicMock, patch
+    from moo.core import invoke
+
+    caller = MagicMock()
+    caller.is_wizard.return_value = False
+    caller.pk = 42
+
+    verb = MagicMock()
+    verb.invoked_name = "test"
+    verb.invoked_object.can_caller.side_effect = PermissionError("no execute")
+
+    with _ctx(caller):
+        with pytest.raises(PermissionError):
+            with patch("moo.core.tasks.invoke_verb.apply_async"):
+                invoke(verb=verb)
+
+
+# ---------------------------------------------------------------------------
+# Fix 6: _write_.__setitem__ must block underscore keys
+# ---------------------------------------------------------------------------
+
+def test_write_setitem_underscore_key_blocked():
+    """
+    obj['__class__'] = x must raise KeyError in restricted code.
+    _write_.__setitem__ now checks for underscore-prefixed keys consistently
+    with __setattr__.
+    """
+    _raises("d = dict()\nd['__class__'] = 'hacked'", KeyError)
+
+
+# ---------------------------------------------------------------------------
+# Fix 7: moo.core submodules must not be importable (ORM access via models)
+# ---------------------------------------------------------------------------
+
+def test_models_submodule_not_importable():
+    """
+    `from moo.core import models` must raise ImportError.
+    moo.core.models exposes Django ORM model classes (Object.objects,
+    User.objects, etc.) with no permission checks.  'models' is now in
+    BLOCKED_IMPORTS for moo.core.
+    """
+    _raises("from moo.core import models", ImportError)
+
+
+def test_auth_submodule_not_importable():
+    """
+    `from moo.core import auth` must raise ImportError.
+    moo.core.auth re-exports Player and User ORM models.
+    """
+    _raises("from moo.core import auth", ImportError)
+
+
+def test_tasks_submodule_not_importable():
+    """
+    `from moo.core import tasks` must raise ImportError.
+    moo.core.tasks exposes raw Celery task functions that bypass the invoke()
+    permission guards.
+    """
+    _raises("from moo.core import tasks", ImportError)
+
+
+def test_code_submodule_not_importable():
+    """
+    `from moo.core import code` must raise ImportError.
+    moo.core.code exposes ContextManager, providing an indirect path to
+    override_caller() even though ContextManager itself is blocked by name.
+    """
+    _raises("from moo.core import code", ImportError)
+
+
+# ---------------------------------------------------------------------------
+# Fix 8: _getitem_ must block underscore keys (read side)
+# ---------------------------------------------------------------------------
+
+def test_getitem_underscore_key_blocked():
+    """
+    Reading d['__class__'] in restricted code must raise KeyError.
+    dict() (a C builtin) can construct a mapping with underscore keys without
+    going through _write_.__setitem__; _getitem_ must guard the read side too.
+    """
+    # Build the dict with an underscore key via the C-level dict constructor,
+    # bypassing _write_.__setitem__, then attempt to read the key.
+    _raises("d = dict([('__class__', 'x')])\nprint(d['__class__'])", KeyError)
+
+
+def test_getitem_normal_keys_still_work():
+    """Normal (non-underscore) key reads must continue to work."""
+    printed = _exec("d = dict(a=1)\nprint(d['a'])")
+    assert printed == [1]

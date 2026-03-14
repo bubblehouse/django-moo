@@ -116,9 +116,12 @@ def test_run_editor_session_invokes_callback():
         "callback_verb_name": "edit_callback",
         "args": ["extra"],
     }
+    wizard_caller = MagicMock()
+    wizard_caller.is_wizard.return_value = True
     with patch("moo.shell.editor.run_editor", new=AsyncMock(return_value="edited text")):
-        with patch("moo.shell.prompt.tasks.invoke_verb") as mock_task:
-            asyncio.run(prompt.run_editor_session(req))
+        with patch("moo.shell.prompt.models.Object.objects.get", return_value=wizard_caller):
+            with patch("moo.shell.prompt.tasks.invoke_verb") as mock_task:
+                asyncio.run(prompt.run_editor_session(req))
     mock_task.delay.assert_called_once_with(
         "edited text",
         "extra",
@@ -127,6 +130,26 @@ def test_run_editor_session_invokes_callback():
         this_id=3,
         verb_name="edit_callback",
     )
+
+
+def test_run_editor_session_rejects_non_wizard_caller_id():
+    """run_editor_session() must not invoke the callback when caller_id is not a wizard (forged event guard)."""
+    prompt = MooPrompt(MagicMock())
+    req = {
+        "content": "hello\nworld",
+        "content_type": "text",
+        "caller_id": 99,
+        "player_id": 99,
+        "callback_this_id": 3,
+        "callback_verb_name": "edit_callback",
+    }
+    non_wizard_caller = MagicMock()
+    non_wizard_caller.is_wizard.return_value = False
+    with patch("moo.shell.editor.run_editor", new=AsyncMock(return_value="edited text")):
+        with patch("moo.shell.prompt.models.Object.objects.get", return_value=non_wizard_caller):
+            with patch("moo.shell.prompt.tasks.invoke_verb") as mock_task:
+                asyncio.run(prompt.run_editor_session(req))
+    mock_task.delay.assert_not_called()
 
 
 def test_run_editor_session_no_invoke_when_cancelled():

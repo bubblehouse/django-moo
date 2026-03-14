@@ -42,12 +42,32 @@ DEFAULT_PERMISSIONS = (
 ALLOWED_MODULES = (
     "moo.core",
     "hashlib",
-    "string",
     "re",
-    "date",
     "datetime",
-    "time"
+    "time",
 )
+
+BLOCKED_IMPORTS = {
+    "moo.core": {
+        "ContextManager",
+        "_publish_to_player",
+        # Submodules — prevent reaching Django ORM or internal machinery directly.
+        # Verb code imports exception classes via `from moo.core import NoSuchObjectError`
+        # (which is not blocked); these block access to the submodule objects themselves.
+        "models",
+        "acl",
+        "auth",
+        "object",
+        "verb",
+        "property",
+        "moojson",
+        "tasks",
+        "code",
+        # "exceptions" is intentionally NOT blocked — verb code uses
+        # `from moo.core import exceptions` to raise NoSuchObjectError etc.
+        # The module only contains exception class definitions; no ORM access.
+    },
+}
 
 WIZARD_ALLOWED_MODULES = (
     "moo.core.models.object",
@@ -57,14 +77,12 @@ WIZARD_ALLOWED_MODULES = (
 
 ALLOWED_BUILTINS = (
     "dict",
-    "dir",
     "enumerate",
     "getattr",
     "hasattr",
     "list",
     "set",
     "sorted",
-    "type",
 )
 
 # Here are all our supported prepositions
