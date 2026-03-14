@@ -2,25 +2,40 @@
 ```{eval-rst}
 .. py:currentmodule:: moo.core
 .. autofunction:: moo.core.connected_players()
+   :no-index:
 .. autofunction:: moo.core.create()
+   :no-index:
 .. autofunction:: moo.core.invoke()
+   :no-index:
 .. autofunction:: moo.core.lookup()
+   :no-index:
 .. autofunction:: moo.core.open_editor()
+   :no-index:
 .. autofunction:: moo.core.open_paginator()
+   :no-index:
 .. autofunction:: moo.core.players()
+   :no-index:
 .. autofunction:: moo.core.set_task_perms()
+   :no-index:
 .. autofunction:: moo.core.write()
+   :no-index:
 ```
 
 ## Object Attributes
 ```{eval-rst}
 .. py:currentmodule:: moo.core.models
 .. autoattribute:: Object.name
+   :no-index:
 .. autoattribute:: Object.unique_name
+   :no-index:
 .. autoattribute:: Object.obvious
+   :no-index:
 .. autoattribute:: Object.owner
+   :no-index:
 .. autoattribute:: Object.parents
+   :no-index:
 .. autoattribute:: Object.location
+   :no-index:
 ```
 
 ## Object Methods
@@ -52,11 +67,17 @@
 ```{eval-rst}
 .. py:currentmodule:: moo.core.models
 .. autoattribute:: Property.name
+   :no-index:
 .. autoattribute:: Property.value
+   :no-index:
 .. autoattribute:: Property.type
+   :no-index:
 .. autoattribute:: Property.owner
+   :no-index:
 .. autoattribute:: Property.origin
+   :no-index:
 .. autoattribute:: Property.inherit_owner
+   :no-index:
 ```
 
 ## Verb Attributes
