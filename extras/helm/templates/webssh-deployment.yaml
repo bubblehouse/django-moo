@@ -39,6 +39,8 @@ spec:
             value: {{ .Values.moo.aws.region }}
           - name: AWS_STS_REGIONAL_ENDPOINTS
             value: regional
+          - name: WEBSSH_HOSTNAME
+            value: {{ .Values.webssh.hostname }}
           {{- with .Values.env }}
             {{- toYaml . | nindent 10 }}
           {{- end }}

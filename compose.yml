@@ -38,6 +38,8 @@ services:
       - 8422:8422
     links:
       - shell
+    environment:
+      WEBSSH_HOSTNAME: shell
   # The `webapp` container is where the Django front-end runs. So far this is only needed for access to the Django admin.
   webapp:
     build:

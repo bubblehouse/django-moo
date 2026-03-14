@@ -1,6 +1,6 @@
 # django-moo-chart
 
-![Version: 0.76.0](https://img.shields.io/badge/Version-0.76.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.76.0](https://img.shields.io/badge/AppVersion-0.76.0-informational?style=flat-square)
+![Version: 0.77.4](https://img.shields.io/badge/Version-0.77.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.77.4](https://img.shields.io/badge/AppVersion-0.77.4-informational?style=flat-square)
 
 A Helm chart for Kubernetes
 
@@ -59,6 +59,7 @@ A Helm chart for Kubernetes
 | sshService.port | int | `8022` |  |
 | sshService.type | string | `"ClusterIP"` |  |
 | tolerations | list | `[]` |  |
+| webssh.hostname | string | `"shell"` |  |
 | websshService.port | int | `8422` |  |
 | websshService.type | string | `"ClusterIP"` |  |
 
