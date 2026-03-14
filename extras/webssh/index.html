@@ -54,7 +54,7 @@
           </div>
         </div>
         <input type="hidden" name="port" value="8022">
-        <input type="hidden" name="hostname" value="shell">
+        <input type="hidden" name="hostname" value="${WEBSSH_HOSTNAME}">
         <input type="hidden" id="term" name="term" value="xterm-256color">
         {% module xsrf_form_html() %}
         <button type="submit" class="btn btn-primary">Connect</button>

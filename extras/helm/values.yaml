@@ -9,6 +9,9 @@ moo:
   django:
     settings: moo.settings.dev
 
+webssh:
+  hostname: shell
+
 redis:
   enabled: true
   architecture: standalone

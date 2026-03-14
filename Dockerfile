@@ -60,13 +60,13 @@ RUN --mount=type=cache,target=/root/.cache \
         --no-binary-package uwsgi
 
 RUN export SITE_PACKAGES=`../bin/python -c 'import sys; print(sys.path[-1])'` \
-    && cp /usr/app/src/extras/webssh/index.html $SITE_PACKAGES/webssh/templates/index.html
+    && cp /usr/app/src/extras/webssh/index.html $SITE_PACKAGES/webssh/templates/index.html.tmpl
 
 FROM python:3.11.12-slim-bookworm
 
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-       git ssl-cert ssh net-tools \
+       git ssl-cert ssh net-tools gettext-base \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -99,6 +99,8 @@ COPY --from=builder /usr/local/lib/liboqs.so* /usr/local/lib/
 RUN ldconfig
 
 COPY --from=builder /usr/app /usr/app
+
+RUN chown -R www-data /usr/app/lib/python3.11/site-packages/webssh/templates/
 
 # Custom entrypoint for improved ad-hoc command support
 ENTRYPOINT ["/entrypoint.sh"]
