@@ -63,7 +63,7 @@ packages = ["moo"]
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "moo.settings.test"
 python_files = ["tests/*.py"]
-addopts = "--spec"
+addopts = "--spec --ds=moo.settings.test"
 spec_test_format = "{result} {docstring_summary}"
 
 [tool.black]

@@ -790,13 +790,14 @@ class Object(models.Model, AccessibleMixin):
             caller = ContextManager.get("caller")
             if caller and self.owner != caller:
                 raise PermissionError("Can't change owner at creation time.")
+        # Recursion Check: must run BEFORE super().save() so the loop never reaches the DB;
+        # a new object (unsaved) cannot yet contain anything, so skip it there.
+        if not unsaved and self.location and self.contains(self.location):
+            raise exceptions.RecursiveError(f"{self} already contains {self.location}")
         super().save(*args, **kwargs)
         # after saving, new objects need default permissions
         if unsaved:
             utils.apply_default_permissions(self)
-        # Recursion Check: note that this leaves a broken object behind unless run in a transaction
-        if self.location and self.contains(self.location):
-            raise exceptions.RecursiveError(f"{self} already contains {self.location}")
         # ACL Check: to change owner, caller must be allowed to `entrust` on this object
         original_owner_id = getattr(self, "original_owner", None)
         if original_owner_id != self.owner_id and self.owner_id:
