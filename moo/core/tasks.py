@@ -105,6 +105,6 @@ def invoke_verb(
         else:
             writer = background_log.info
         with code.ContextManager(caller, writer, task_id=task_id, player=player):
-            result = verb_obj(*args, **kwargs)
+            result = verb_obj(*args, _bypass_execute_check=True, **kwargs)
             if callback_verb_name and callback_this_id:
                 invoke_verb.delay(result, caller_id=caller_id, this_id=callback_this_id, verb_name=callback_verb_name)
