@@ -19,7 +19,7 @@ RUN curl -L "https://github.com/open-quantum-safe/liboqs/archive/refs/tags/${LIB
          -DBUILD_SHARED_LIBS=ON \
          -DCMAKE_BUILD_TYPE=Release \
          -DCMAKE_INSTALL_PREFIX=/usr/local \
-    && cmake --build liboqs-build --parallel \
+    && cmake --build liboqs-build \
     && cmake --install liboqs-build \
     && rm -rf liboqs-${LIBOQS_VERSION} liboqs-build
 
