@@ -21,16 +21,27 @@ There are several fundamental attributes to every object, defined by `moo.core.m
     The unique identifying number of this Object
 
 .. autoattribute:: Object.name
+   :no-index:
 .. autoattribute:: Object.unique_name
+   :no-index:
 .. autoattribute:: Object.obvious
+   :no-index:
 .. autoattribute:: Object.owner
+   :no-index:
 .. autoattribute:: Object.parents
+   :no-index:
 .. autoattribute:: Object.location
+   :no-index:
 .. autoattribute:: Object.aliases
+
     :class:`Alias` instances can be created to give additional names for an instance.
+
 .. autoattribute:: Object.contents
+
     This is the :class:`ReverseManyToOneDescriptor` of the `location` field above
+
 .. autoattribute:: Object.children
+
     This is the :class:`ReverseManyToOneDescriptor` of the `parent` field above
 ```
 
