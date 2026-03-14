@@ -47,7 +47,8 @@ RUN --mount=type=cache,target=/root/.cache \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     uv sync \
         --frozen \
-        --no-install-project
+        --no-install-project \
+        --no-binary-package uwsgi
 
 COPY . /usr/app/src
 WORKDIR /usr/app/src
@@ -55,7 +56,8 @@ RUN --mount=type=cache,target=/root/.cache \
     uv sync \
         --frozen \
         --no-dev \
-        --no-editable
+        --no-editable \
+        --no-binary-package uwsgi
 
 RUN export SITE_PACKAGES=`../bin/python -c 'import sys; print(sys.path[-1])'` \
     && cp /usr/app/src/extras/webssh/index.html $SITE_PACKAGES/webssh/templates/index.html
