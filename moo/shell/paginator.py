@@ -118,8 +118,8 @@ async def run_paginator(content: str = "", content_type: str = "text") -> None:
     pager = Pager(input=session.input, output=session.output)
 
     kb = pager.application.key_bindings
-    kb._bindings[:] = [b for b in kb._bindings if b.handler.__name__ not in _DISABLED_HANDLERS]
-    kb._clear_cache()
+    kb._bindings[:] = [b for b in kb._bindings if b.handler.__name__ not in _DISABLED_HANDLERS]  # pylint: disable=protected-access
+    kb._clear_cache()  # pylint: disable=protected-access
 
     pager.add_source(source)
     await pager.run_async()

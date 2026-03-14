@@ -62,11 +62,11 @@ else:
     def print_group(label, group):
         if group:
             print(f"[bold]{label}[/bold]")
-            for avatar, last_time in group:
-                if last_time:
-                    print(f"  {avatar.name}: {last_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+            for entry_avatar, entry_time in group:
+                if entry_time:
+                    print(f"  {entry_avatar.name}: {entry_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
                 else:
-                    print(f"  {avatar.name}: never connected")
+                    print(f"  {entry_avatar.name}: never connected")
 
     print_group("Connected within the last day:", today)
     print_group("Connected within the last week:", this_week)

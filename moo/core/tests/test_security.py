@@ -459,7 +459,6 @@ def test_verb_save_requires_write_permission(t_init, t_wizard):
     Verb.save() now calls can_caller("write", self) for updates.
     """
     from moo.core import create
-    from moo.core.models.object import Object
     from moo.core.exceptions import AccessError
 
     # create a target object owned by wizard, with a verb on it

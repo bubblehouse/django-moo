@@ -41,12 +41,12 @@ parser = context.parser
 verb = args[0]
 
 # Step 1: Check if the verb matches an exit
-exit = this.match_exit(verb)
-if exit is not None:
-    if isinstance(exit, list):
+exit_obj = this.match_exit(verb)
+if exit_obj is not None:
+    if isinstance(exit_obj, list):
         player.tell(f"I don't know which '{verb}' you mean.")
     else:
-        exit.invoke(player)
+        exit_obj.invoke(player)
     return
 
 # Step 2: If verb starts with '@', try to handle it as a _msg property setter
