@@ -772,6 +772,7 @@ class Object(models.Model, AccessibleMixin):
         ).exists()
 
     def delete(self, *args, **kwargs):
+        self.can_caller("write", self)
         if self.has_verb("recycle", recurse=False):
             self.invoke_verb("recycle")
         try:

@@ -92,6 +92,8 @@ class Verb(models.Model, AccessibleMixin):
 
     def save(self, *args, **kwargs):
         needs_default_permissions = self.pk is None
+        if not needs_default_permissions:
+            self.origin.can_caller("write", self)
         super().save(*args, **kwargs)
         if not needs_default_permissions:
             return

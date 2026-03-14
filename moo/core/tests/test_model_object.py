@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 Tests for moo/core/models/object.py — Object, Relationship, Alias, AncestorCache.
+
 Only objects from bootstrap.initialize_dataset() are treated as pre-existing:
-  System Object (pk=1), container class, Wizard, Permissions, Prepositions.
+System Object (pk=1), container class, Wizard, Permissions, Prepositions.
 All other objects, verbs, and properties are created within each test.
 """
 
