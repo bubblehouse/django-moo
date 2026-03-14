@@ -1,7 +1,5 @@
 #!/bin/bash
 
-export PATH="/bin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/app/bin"
-
 cd /usr/app/src
 
 if [ "$1" = '' ]; then
