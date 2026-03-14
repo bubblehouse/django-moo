@@ -9,9 +9,12 @@ import logging
 import warnings
 
 from django.conf import settings
+from django.db.models.manager import BaseManager
+from django.db.models.query import QuerySet
 from RestrictedPython import compile_restricted, compile_restricted_function
 from RestrictedPython.Guards import (guarded_iter_unpack_sequence,
                                      guarded_unpack_sequence, safe_builtins)
+
 
 log = logging.getLogger(__name__)
 
@@ -83,6 +86,8 @@ def get_restricted_environment(name, writer):
     """
     Construct an environment dictionary.
     """
+    from moo.core.models.acl import AccessibleMixin
+    from moo.core.models.property import Property
 
     class _print_:
         def _call_print(self, s):
@@ -127,6 +132,16 @@ def get_restricted_environment(name, writer):
             raise AttributeError(name)
         if isinstance(obj, str) and name in ("format", "format_map"):
             raise AttributeError(name)
+        if isinstance(obj, (QuerySet, BaseManager)) and name in ("model", "query", "db"):
+            raise AttributeError(name)
+        if name == "acl" and isinstance(obj, AccessibleMixin):
+            caller = ContextManager.get("caller")
+            if caller is not None:
+                obj.can_caller("grant", obj)
+        if name == "value" and isinstance(obj, Property):
+            caller = ContextManager.get("caller")
+            if caller is not None:
+                obj.origin.can_caller("read", obj)
         return g(obj, name)
 
     def set_protected_attribute(obj, name, value, s=setattr):
@@ -149,6 +164,16 @@ def get_restricted_environment(name, writer):
             raise AttributeError(name)
         if isinstance(obj, str) and name in ("format", "format_map"):
             raise AttributeError(name)
+        if isinstance(obj, (QuerySet, BaseManager)) and name in ("model", "query", "db"):
+            raise AttributeError(name)
+        if name == "acl" and isinstance(obj, AccessibleMixin):
+            caller = ContextManager.get("caller")
+            if caller is not None:
+                obj.can_caller("grant", obj)
+        if name == "value" and isinstance(obj, Property):
+            caller = ContextManager.get("caller")
+            if caller is not None:
+                obj.origin.can_caller("read", obj)
         return getattr(obj, name, *args) if args else getattr(obj, name)
 
     def safe_hasattr(obj, name):
