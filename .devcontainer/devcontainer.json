@@ -5,15 +5,22 @@
 		"../compose.override.yml",
 		"../compose.devcontainer.yml"
 	],
+	"mounts": [
+		"source=${localEnv:HOME}/.claude,target=/usr/app/.claude,type=bind,consistency=cached"
+	],
+	"containerEnv": {
+		"SHELL": "/usr/bin/bash"
+	},
+	"remoteUser": "www-data",
 	"service": "celery",
-	"workspaceFolder": "/usr/src/app",
+	"workspaceFolder": "/usr/app/src",
 	"shutdownAction": "stopCompose",
 	"overrideCommand": true,
 	"otherPortsAttributes": { "onAutoForward" : "ignore" },
 	"customizations": {
 		"vscode": {
 			"settings": {
-				"python.defaultInterpreterPath": "/usr/localbin/python",
+				"python.defaultInterpreterPath": "/usr/app/bin/python",
 				"python.testing.unittestEnabled": true,
 				"python.testing.pytestEnabled": true,
 				"python.testing.pytestArgs": ["--ds=moo.settings.test"],

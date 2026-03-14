@@ -55,7 +55,6 @@ WORKDIR /usr/app/src
 RUN --mount=type=cache,target=/root/.cache \
     uv sync \
         --frozen \
-        --no-dev \
         --no-editable \
         --no-binary-package uwsgi
 
@@ -77,11 +76,13 @@ RUN chgrp www-data /etc/ssl/private/ \
     && chmod g+rx /etc/ssl/private/ \
     && chgrp www-data /etc/ssl/private/ssl-cert-snakeoil.key \
     && chmod g+r /etc/ssl/private/ssl-cert-snakeoil.key \
-    && mkdir -p /usr/src/app \
-    && chgrp www-data /usr/src/app \
-    && mkdir -p /usr/src/app/static \
-    && chgrp www-data /usr/src/app/static/ \
-    && chmod ug+rwx /usr/src/app/static/ \
+    && mkdir -p /usr/app \
+    && chown www-data:www-data /usr/app \
+    && mkdir -p /usr/app/src \
+    && chgrp www-data /usr/app/src \
+    && mkdir -p /usr/app/static \
+    && chgrp www-data /usr/app/static/ \
+    && chmod ug+rwx /usr/app/static/ \
     && chgrp www-data /etc/ssh/ssh_host_ecdsa_key \
     && chmod ug+rw /etc/ssh/ssh_host_ecdsa_key \
     && chgrp www-data /etc/ssh/ssh_host_ecdsa_key.pub \
@@ -101,6 +102,8 @@ RUN ldconfig
 COPY --from=builder /usr/app /usr/app
 
 RUN chown -R www-data /usr/app/lib/python3.11/site-packages/webssh/templates/
+
+ENV PATH="/bin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/app/bin"
 
 # Custom entrypoint for improved ad-hoc command support
 ENTRYPOINT ["/entrypoint.sh"]
