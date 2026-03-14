@@ -1,6 +1,9 @@
 *
 !docs
-!extras
+!extras/entrypoint.sh
+!extras/uwsgi/
+!extras/healthchecks/
+!extras/webssh/
 !LICENSE
 !manage.py
 !moo
