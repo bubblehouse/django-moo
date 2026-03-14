@@ -150,6 +150,10 @@ class MooPrompt:
         from .editor import run_editor
         edited_text = await run_editor(req.get("content", ""), req.get("content_type", "text"))
         if edited_text is not None and req.get("callback_this_id") and req.get("callback_verb_name"):
+            caller = await sync_to_async(models.Object.objects.get)(pk=req["caller_id"])
+            if not await sync_to_async(caller.is_wizard)():
+                log.warning("run_editor_session: rejected callback with non-wizard caller_id=%s", req["caller_id"])
+                return
             tasks.invoke_verb.delay(
                 edited_text,
                 *req.get("args", []),
