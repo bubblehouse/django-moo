@@ -1,3 +1,16 @@
+## [0.77.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.77.3...v0.77.4) (2026-03-14)
+
+### Bug Fixes
+
+* don't use parallel cmake builds if you like your homelab ([b6bc052](https://gitlab.com/bubblehouse/django-moo/commit/b6bc0526bc3a9de5745f8a7b9da4b5ad2de5a8f5))
+* enable post-quantum key exchange in SSH server ([8a11104](https://gitlab.com/bubblehouse/django-moo/commit/8a111042bd3053526f9b2bfca650b7665a7bfb5c))
+* extend job timeout ([592d679](https://gitlab.com/bubblehouse/django-moo/commit/592d679f4915cfb557f604f1f3c7ddb880792426))
+* many sandbox escape vectors identified and sealed ([d73786a](https://gitlab.com/bubblehouse/django-moo/commit/d73786a3195badcc178195831d44a114dd4fda74))
+* more sandbox escapes for ORM ([d8f6311](https://gitlab.com/bubblehouse/django-moo/commit/d8f6311b06226004623fc0771497856bada607fe))
+* remove some other sandbox escapes ([3d50323](https://gitlab.com/bubblehouse/django-moo/commit/3d50323fbe1e78bca3d57f728cc1fdfc735ffde0))
+* set default dir to /usr/app [ci skip] ([364c315](https://gitlab.com/bubblehouse/django-moo/commit/364c3155518e51129ef1d0cd722147efb1fad42c))
+* uwsgi platform fix ([d7e9ff6](https://gitlab.com/bubblehouse/django-moo/commit/d7e9ff6d604db72d477bdf26dc73797163907254))
+
 ## [0.77.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.77.2...v0.77.3) (2026-03-13)
 
 ### Bug Fixes
