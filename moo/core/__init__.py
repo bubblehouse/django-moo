@@ -277,6 +277,12 @@ def invoke(*args, verb=None, callback=None, delay: int = 0, periodic: bool = Fal
     :returns: a :class:`.PeriodicTask` instance or `None` if the task is a one-shot
     :rtype: Optional[:class:`.PeriodicTask`]
     """
+    if (periodic or cron) and context.caller and not context.caller.is_wizard():
+        raise UserError("Only verbs owned by wizards can create persistent scheduled tasks.")
+    if verb is not None and context.caller:
+        exec_obj = verb.invoked_object if verb.invoked_object is not None else verb.origin
+        exec_obj.can_caller("execute", verb)
+
     from django_celery_beat.models import CrontabSchedule, IntervalSchedule, PeriodicTask
 
     from moo.core import tasks
@@ -349,6 +355,11 @@ class _Context:
     class descriptor:
         """
         Used to perform dynamic lookups of contextvars.
+
+        Defined as a data descriptor (implements both __get__ and __set__) so that
+        Python's attribute lookup always invokes __get__ and never allows an instance
+        attribute to shadow it.  Verb code must not be able to overwrite context.caller
+        (or any other context attribute) with a forged object.
         """
 
         def __init__(self, name):
@@ -356,6 +367,15 @@ class _Context:
 
         def __get__(self, obj, objtype=None):
             return ContextManager.get(self.name)
+
+        def __set__(self, obj, value):
+            raise AttributeError("context attributes are read-only")
+
+        def __delete__(self, obj):
+            raise AttributeError("context attributes are read-only")
+
+    def __setattr__(self, name, value):
+        raise AttributeError("context attributes are read-only")
 
     caller = descriptor("caller")  # Code runs with the permission of this object
     player = descriptor("player")  # This object that originally invoked this session, defaults to original caller
