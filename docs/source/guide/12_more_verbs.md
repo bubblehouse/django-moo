@@ -1,4 +1,6 @@
-### Calling Other Verbs
+# More Verb Patterns
+
+## Calling Other Verbs
 
 Like properties, the default Django ORM doesn't honor inheritance, so there's a few custom methods on Object instances to help out.
 
@@ -23,6 +25,7 @@ into multiple Verb calls, which you can invoke asynchronously using the `invoke(
 ```{eval-rst}
 .. py:currentmodule:: moo.core
 .. autofunction:: invoke
+   :no-index:
 ```
 
 Using `invoke()` let's create a bad example of a talking parrot:
@@ -63,7 +66,7 @@ value = kwargs['value'] + 1
 return f"A parrot squawks {value}."
 ```
 
-### Returning a Value from a Verb
+## Returning a Value from a Verb
 
 > The MOO program in a verb is just a sequence of statements. Normally, when the verb is called, those statements are simply executed in order and then the integer 0 is returned as the value of the verb-call expression. Using the `return` statement, one can change this behavior. The `return` statement has one of the following two forms:
 >
@@ -110,7 +113,7 @@ if not obj.can_caller("read"):
 return f"Object: {obj.name}\nDescription: {obj.get_property('description')}"
 ```
 
-### Handling Verb Errors
+## Handling Verb Errors
 
 DjangoMOO defines a number of custom exceptions, but there's still a lot of inconsistency where they're used. At this
 time raising any of them from verb code will rollback the transaction as if the verb never executed.
@@ -118,14 +121,23 @@ time raising any of them from verb code will rollback the transaction as if the 
 ```{eval-rst}
 .. py:currentmodule:: moo.core.exceptions
 .. autoclass:: UsageError
+   :no-index:
 .. autoclass:: UserError
+   :no-index:
 .. autoclass:: AccessError
+   :no-index:
 .. autoclass:: AmbiguousObjectError
+   :no-index:
 .. autoclass:: AmbiguousVerbError
+   :no-index:
 .. autoclass:: ExecutionError
+   :no-index:
 .. autoclass:: NoSuchPrepositionError
+   :no-index:
 .. autoclass:: QuotaError
+   :no-index:
 .. autoclass:: RecursiveError
+   :no-index:
 ```
 
 ## Best Practices for Verb Development

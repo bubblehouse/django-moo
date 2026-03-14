@@ -26,12 +26,14 @@ These steps are handled by `moo.bootstrap.initialize_dataset()`:
 ```{eval-rst}
 .. py:currentmodule:: moo.bootstrap
 .. autofunction:: initialize_dataset
+   :no-index:
 ```
 
 Once all the objects are created and necessary properties created, the `moo.bootstrap.load_verbs()` function can load all the verb code
 
 ```{eval-rst}
 .. autofunction:: load_verbs
+   :no-index:
 ```
 
 ## Bootstrap File Organization

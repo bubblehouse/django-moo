@@ -22,6 +22,7 @@ There's no equivalent concept to the LambdaMOO object notation, the only way to 
 
 ```{eval-rst}
 .. autofunction:: moo.core.lookup()
+   :no-index:
 ```
 
 ## The DjangoMOO `context` Variable
