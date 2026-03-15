@@ -1,3 +1,9 @@
+## [0.80.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.79.2...v0.80.0) (2026-03-15)
+
+### Features
+
+* added additional syntaxes to [@reload](https://gitlab.com/reload) ([adc7c26](https://gitlab.com/bubblehouse/django-moo/commit/adc7c26ee5e275c03a986a6a7b41f4ca191b2653))
+
 ## [0.79.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.79.1...v0.79.2) (2026-03-15)
 
 ### Bug Fixes
