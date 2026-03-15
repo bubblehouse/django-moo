@@ -329,8 +329,8 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         if not self.this:
             raise NoSuchVerbError(self.words[0])
 
-        self.verb.invoked_name = self.words[0]
-        self.verb.invoked_object = self.this
+        self.verb._invoked_name = self.words[0]  # pylint: disable=protected-access
+        self.verb._invoked_object = self.this  # pylint: disable=protected-access
         return self.verb
 
     def _batch_get_verb(self, search_order_list):

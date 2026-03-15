@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=protected-access
 """
 Security tests for the verb execution sandbox.
 
@@ -226,8 +227,8 @@ def test_invoke_oneshot_allowed_for_nonwizard():
     non_wizard.is_wizard.return_value = False
     non_wizard.pk = 42
     verb = MagicMock()
-    verb.invoked_object.pk = 1
-    verb.invoked_name = "test"
+    verb._invoked_object.pk = 1
+    verb._invoked_name = "test"
 
     with _ctx(non_wizard):
         with patch("moo.core.tasks.invoke_verb.apply_async"):
@@ -292,8 +293,8 @@ def test_invoke_checks_execute_permission():
     caller.pk = 42
 
     verb = MagicMock()
-    verb.invoked_name = "test"
-    verb.invoked_object.can_caller.side_effect = PermissionError("no execute")
+    verb._invoked_name = "test"
+    verb._invoked_object.can_caller.side_effect = PermissionError("no execute")
 
     with _ctx(caller):
         with pytest.raises(PermissionError):
@@ -1037,13 +1038,13 @@ def test_verb_reload_requires_write_permission(t_init: Object, t_wizard: Object)
 
 
 # ---------------------------------------------------------------------------
-# Verb.invoked_object / invoked_name must be inaccessible
+# Verb._invoked_object / _invoked_name must be inaccessible
 # ---------------------------------------------------------------------------
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def testinvoked_object_write_blocked(t_init: Object, t_wizard: Object):
     """
-    Verb.invoked_object is an underscore-prefixed instance attribute.
+    Verb._invoked_object is an underscore-prefixed instance attribute.
     _write_.__setattr__ must block verb code from overwriting it, preventing
     an attacker from redirecting the 'this' context to an arbitrary object
     before calling the verb.
@@ -1066,13 +1067,13 @@ def testinvoked_object_write_blocked(t_init: Object, t_wizard: Object):
         g["verb_obj"] = verb_obj
         g["other"] = other
         with pytest.raises((AttributeError, TypeError)):
-            code.r_exec("verb_obj.invoked_object = other", {}, g)
+            code.r_exec("verb_obj._invoked_object = other", {}, g)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def testinvoked_name_write_blocked(t_init: Object, t_wizard: Object):
     """
-    Verb.invoked_name is an underscore-prefixed instance attribute.
+    Verb._invoked_name is an underscore-prefixed instance attribute.
     _write_.__setattr__ must block verb code from overwriting it, preventing
     an attacker from redirecting passthrough() to an arbitrary verb name.
     RestrictedPython rejects _-prefixed attribute names at compile time
@@ -1093,13 +1094,13 @@ def testinvoked_name_write_blocked(t_init: Object, t_wizard: Object):
         g.update(code.get_restricted_environment("__main__", w))
         g["verb_obj"] = verb_obj
         with pytest.raises((AttributeError, TypeError)):
-            code.r_exec("verb_obj.invoked_name = 'hijacked'", {}, g)
+            code.r_exec("verb_obj._invoked_name = 'hijacked'", {}, g)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def testinvoked_object_read_blocked(t_init: Object, t_wizard: Object):
     """
-    Verb.invoked_object is underscore-prefixed; get_protected_attribute must
+    Verb._invoked_object is underscore-prefixed; get_protected_attribute must
     block read access from verb code, preventing information disclosure about
     the dispatch target. RestrictedPython rejects _-prefixed attribute names
     at compile time, so exec raises TypeError; either way access is denied.
@@ -1111,7 +1112,7 @@ def testinvoked_object_read_blocked(t_init: Object, t_wizard: Object):
         target.add_verb("test_verb3", code='print("ok")')
 
     verb_obj = target.verbs.filter(names__name="test_verb3").first()
-    verb_obj.invoked_object = target
+    verb_obj._invoked_object = target
 
     with _ctx(t_wizard):
         w = code.ContextManager.get("writer")
@@ -1119,7 +1120,7 @@ def testinvoked_object_read_blocked(t_init: Object, t_wizard: Object):
         g.update(code.get_restricted_environment("__main__", w))
         g["verb_obj"] = verb_obj
         with pytest.raises((AttributeError, TypeError)):
-            code.r_exec("_ = verb_obj.invoked_object", {}, g)
+            code.r_exec("_ = verb_obj._invoked_object", {}, g)
 
 
 # ---------------------------------------------------------------------------

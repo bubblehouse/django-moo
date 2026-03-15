@@ -207,8 +207,8 @@ def open_editor(obj, initial_content: str, callback_verb, *args, content_type: s
         "content": initial_content,
         "content_type": content_type,
         "args": list(args),
-        "callback_this_id": callback_verb.invoked_object.pk,
-        "callback_verb_name": callback_verb.invoked_name,
+        "callback_this_id": callback_verb._invoked_object.pk,  # pylint: disable=protected-access
+        "callback_verb_name": callback_verb._invoked_name,  # pylint: disable=protected-access
         "caller_id": context.caller.pk,
         "player_id": (context.player or context.caller).pk,
     })
@@ -256,7 +256,7 @@ def invoke(*args, verb=None, callback=None, delay: int = 0, periodic: bool = Fal
     if (periodic or cron) and context.caller and not context.caller.is_wizard():
         raise UserError("Only verbs owned by wizards can create persistent scheduled tasks.")
     if verb is not None and context.caller:
-        exec_obj = verb.invoked_object if verb.invoked_object is not None else verb.origin
+        exec_obj = verb._invoked_object if verb._invoked_object is not None else verb.origin  # pylint: disable=protected-access
         exec_obj.can_caller("execute", verb)
 
     from django_celery_beat.models import CrontabSchedule, IntervalSchedule, PeriodicTask
@@ -266,10 +266,10 @@ def invoke(*args, verb=None, callback=None, delay: int = 0, periodic: bool = Fal
         dict(
             caller_id=context.caller.pk,
             player_id=context.player.pk if context.player else None,
-            this_id=verb.invoked_object.pk,
-            verb_name=verb.invoked_name,
-            callback_this_id=callback.invoked_object.pk if callback else None,
-            callback_verb_name=callback.invoked_name if callback else None,
+            this_id=verb._invoked_object.pk,  # pylint: disable=protected-access
+            verb_name=verb._invoked_name,  # pylint: disable=protected-access
+            callback_this_id=callback._invoked_object.pk if callback else None,  # pylint: disable=protected-access
+            callback_verb_name=callback._invoked_name if callback else None,  # pylint: disable=protected-access
         )
     )
     if delay and periodic:
