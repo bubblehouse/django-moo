@@ -170,6 +170,8 @@ def get_restricted_environment(name, writer):
     def set_protected_attribute(obj, name, value, s=setattr):
         if name.startswith("_"):
             raise AttributeError(name)
+        if isinstance(obj, AccessibleMixin):
+            obj.can_caller("write", obj)
         return s(obj, name, value)
 
     def guarded_getitem(obj, key):

@@ -1208,6 +1208,79 @@ def test_access_delete_requires_grant(t_init: Object, t_wizard: Object):
     assert protected.acl.filter(group="everyone").exists()
 
 
+# ---------------------------------------------------------------------------
+# set_protected_attribute must enforce write ACL, not just underscore blocking
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_set_protected_attribute_shadows_moo_property_without_acl(t_init: Object, t_wizard: Object):
+    """
+    set_protected_attribute() only checks for underscore prefixes before calling
+    setattr(). For Object instances, this sets a Python __dict__ entry that
+    shadows a DB-backed MOO property — without any can_caller("write") check.
+
+    Attack path: verb code does ``target.secret = "injected"``. RestrictedPython
+    transforms that to ``_write_(target).__setattr__('secret', 'injected')``,
+    which calls ``set_protected_attribute(target, 'secret', 'injected')``,
+    which calls ``setattr(target, 'secret', 'injected')``. Since Object has no
+    custom __setattr__, this lands directly in target.__dict__. Python's MRO
+    finds __dict__ values before calling __getattr__, so subsequent reads return
+    the injected value without ever passing through get_property() or its
+    can_caller("read") check.
+    """
+    from moo.sdk import create
+    from moo.core.exceptions import AccessError
+
+    with _ctx(t_wizard):
+        target = create("shadow_target")
+        target.set_property("secret_flag", False)
+        plain = create("shadow_plain")
+        target.allow(plain, "read")   # read-only — no write permission
+
+    # Verify the correct path (set_property) rejects plain as expected.
+    with _ctx(plain):
+        with pytest.raises((PermissionError, AccessError)):
+            target.set_property("secret_flag", True)
+
+    # _write_ path bypasses the ACL: sets target.__dict__['secret_flag'] directly.
+    with _ctx(plain):
+        w = code.ContextManager.get("writer")
+        g = code.get_default_globals()
+        g.update(code.get_restricted_environment("__main__", w))
+        g["target"] = target
+        with pytest.raises((PermissionError, AttributeError, AccessError)):
+            code.r_exec("target.secret_flag = True", {}, g)
+
+    # Confirm the DB-backed value is unchanged.
+    target.refresh_from_db()
+    assert target.get_property("secret_flag") is False
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_set_protected_attribute_on_system_object_requires_write(t_init: Object, t_wizard: Object):
+    """
+    The system object (pk=1) is passed as ``_`` to every verb. Without an ACL
+    check in set_protected_attribute, non-wizard verb code can shadow its MOO
+    properties in-memory (e.g. ``_.root_class = evil_obj``), affecting any SDK
+    code that reuses the cached system object within the same session.
+    """
+    from moo.sdk import create
+    from moo.core.exceptions import AccessError
+
+    with _ctx(t_wizard):
+        plain = create("system_shadow_plain")
+
+    system = Object.objects.get(pk=1)
+
+    with _ctx(plain):
+        w = code.ContextManager.get("writer")
+        g = code.get_default_globals()
+        g.update(code.get_restricted_environment("__main__", w))
+        g["system"] = system
+        with pytest.raises((PermissionError, AttributeError, AccessError)):
+            code.r_exec("system.root_class = system", {}, g)
+
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_repository_save_requires_wizard(t_init: Object, t_wizard: Object):
     """
@@ -1236,3 +1309,101 @@ def test_repository_save_requires_wizard(t_init: Object, t_wizard: Object):
         with pytest.raises((PermissionError, AccessError)):
             verb.repo.url = "https://attacker.example.com/evil.git"
             verb.repo.save()
+
+
+# ---------------------------------------------------------------------------
+# Verb.delete() must require write permission
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_verb_delete_requires_write_permission(t_init: Object, t_wizard: Object):
+    """
+    Verb.delete() previously had no permission check. A non-wizard with read
+    access could get a Verb instance via obj.verbs.filter(...).first() and call
+    .delete() to destroy the verb, breaking dispatch. Verb.delete() now calls
+    origin.can_caller("write", self) before delegating to super().delete().
+    """
+    from moo.sdk import create
+    from moo.core.exceptions import AccessError
+
+    with _ctx(t_wizard):
+        target = create("verb_del_target")
+        target.add_verb("important_verb", code='print("hi")')
+        plain = create("verb_del_plain")
+        target.allow(plain, "read")
+
+    verb = target.verbs.filter(names__name="important_verb").first()
+    assert verb is not None
+
+    with _ctx(plain):
+        with pytest.raises((PermissionError, AccessError)):
+            verb.delete()
+
+    assert target.verbs.filter(names__name="important_verb").exists()
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_verb_delete_allowed_for_owner(t_init: Object, t_wizard: Object):
+    """The owner can delete a verb on their own object."""
+    from moo.sdk import create
+
+    with _ctx(t_wizard):
+        target = create("verb_del_owner_target")
+        target.add_verb("deletable_verb", code='print("bye")')
+
+    verb = target.verbs.filter(names__name="deletable_verb").first()
+    assert verb is not None
+
+    with _ctx(t_wizard):
+        verb.delete()
+
+    assert not target.verbs.filter(names__name="deletable_verb").exists()
+
+
+# ---------------------------------------------------------------------------
+# Property.delete() must require write permission
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_property_delete_requires_write_permission(t_init: Object, t_wizard: Object):
+    """
+    Property.delete() previously had no permission check. A non-wizard with
+    read access could get a Property instance via obj.properties.filter(...).first()
+    and call .delete() to destroy the property. Property.delete() now calls
+    origin.can_caller("write", self) before delegating to super().delete().
+    """
+    from moo.sdk import create
+    from moo.core.exceptions import AccessError
+
+    with _ctx(t_wizard):
+        target = create("prop_del_target")
+        target.set_property("critical_prop", "important_value")
+        plain = create("prop_del_plain")
+        target.allow(plain, "read")
+
+    prop = target.properties.filter(name="critical_prop").first()
+    assert prop is not None
+
+    with _ctx(plain):
+        with pytest.raises((PermissionError, AccessError)):
+            prop.delete()
+
+    assert target.properties.filter(name="critical_prop").exists()
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_property_delete_allowed_for_owner(t_init: Object, t_wizard: Object):
+    """The owner can delete a property on their own object."""
+    from moo.sdk import create
+
+    with _ctx(t_wizard):
+        target = create("prop_del_owner_target")
+        target.set_property("deletable_prop", "bye")
+
+    prop = target.properties.filter(name="deletable_prop").first()
+    assert prop is not None
+
+    with _ctx(t_wizard):
+        prop.delete()
+
+    assert not target.properties.filter(name="deletable_prop").exists()

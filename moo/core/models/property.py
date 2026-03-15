@@ -69,3 +69,7 @@ class Property(models.Model, AccessibleMixin):
         if not needs_default_permissions:
             return
         utils.apply_default_permissions(self)
+
+    def delete(self, *args, **kwargs):
+        self.origin.can_caller("write", self)  # pylint: disable=no-member
+        super().delete(*args, **kwargs)
