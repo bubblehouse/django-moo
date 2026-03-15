@@ -202,7 +202,9 @@ This document provides essential context for AI models interacting with the Djan
   - **Running Tests**:
     ```bash
     uv run pytest -n auto --cov
+    uv run pylint moo --load-plugins pylint_django --django-settings-module=moo.settings.test
     ```
+    Always run pylint immediately after pytest. Both must pass before a change is considered complete.
   - **Test Coverage**: Must not decrease with new code. Target: >= 80% coverage
   - **New Features**: Every feature or bug fix must include corresponding unit tests
   - **Django Settings**: Tests automatically use `moo.settings.test` (set in pyproject.toml)
@@ -337,8 +339,8 @@ uv run pytest -n auto --cov
 # Run specific test file
 uv run pytest -n auto moo/core/tests/test_parser.py
 
-# Run linting
-DJANGO_SETTINGS_MODULE=moo.settings.test uv run pylint moo
+# Run linting (always run after pytest)
+uv run pylint moo --load-plugins pylint_django --django-settings-module=moo.settings.test
 
 # View coverage report
 uv run coverage report
@@ -371,8 +373,8 @@ docker compose run webapp manage.py moo_enableuser wizard Wizard
 2. Make code changes following style guidelines
 3. Add tests for new functionality
 4. Run tests locally: `uv run pytest -n auto --cov`
-5. Run linting: `DJANGO_SETTINGS_MODULE=moo.settings.test uv run pylint moo`
-6. Fix any linting issues
+5. Immediately run linting: `uv run pylint moo --load-plugins pylint_django --django-settings-module=moo.settings.test`
+6. Fix any issues — repeat steps 4–5 until both pass cleanly
 7. Commit with Conventional Commits: `git commit -m "feat(core): add new feature"`
 8. Push and create merge request targeting `main`
 9. Address review feedback
