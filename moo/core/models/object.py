@@ -423,6 +423,26 @@ class Object(models.Model, AccessibleMixin):
                             cache.delete(f"moo:verb:{self.pk}:{item}:{int(recurse_flag)}:{int(return_first_flag)}")
         return verb
 
+    def add_alias(self, alias: str):
+        """
+        Add an alias to this object if it does not already exist.
+
+        :param alias: the alias string to add
+        """
+        if not self.aliases.filter(alias=alias).exists():
+            Alias(object=self, alias=alias).save()
+
+    def add_parent(self, parent: "Object"):
+        """
+        Add a parent to this object's inheritance chain.
+
+        :param parent: the parent Object to add
+        :raises PermissionError: if the caller does not have derive permission on the parent
+        """
+        self.can_caller("write", self)
+        parent.can_caller("derive", parent)
+        self.parents.add(parent)
+
     def invoke_verb(self, name, *args, **kwargs):
         """
         Invoke a :class:`.Verb` defined on the given object, traversing the inheritance tree until it's found.

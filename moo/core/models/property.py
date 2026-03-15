@@ -44,7 +44,10 @@ class Property(models.Model, AccessibleMixin):
 
     def save(self, *args, **kwargs):
         needs_default_permissions = self.pk is None
-        if not needs_default_permissions:
+        if needs_default_permissions:
+            # New property: check write on the origin object (no ACL rows exist yet for self)
+            self.origin.can_caller("write", self.origin)  # pylint: disable=no-member
+        else:
             self.origin.can_caller("write", self)  # pylint: disable=no-member
         super().save(*args, **kwargs)
         if self.inherit_owner and not self.__original_inherit_owner:

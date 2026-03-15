@@ -10,7 +10,7 @@ import warnings
 from contextlib import contextmanager
 from typing import Union
 
-from .core.code import ContextManager
+from .core.code import ContextManager as _ContextManager
 from .core.exceptions import (
     QuotaError, AmbiguousObjectError, UserError,
     NoSuchObjectError, NoSuchVerbError, NoSuchPropertyError,
@@ -86,7 +86,7 @@ def connected_players(within=None):
         .select_related("origin")
     )
 
-    pcache = ContextManager.get_prop_lookup_cache()
+    pcache = _ContextManager.get_prop_lookup_cache()
     result = []
     for prop in props:
         value = moojson.loads(prop.value)
@@ -139,7 +139,7 @@ def create(name, *a, **kw):
     """
     from .core.models.object import Object, Property
     _SYSTEM_KEY = "__system_object__"
-    cache = ContextManager.get_perm_cache()
+    cache = _ContextManager.get_perm_cache()
     if cache is not None and _SYSTEM_KEY in cache:
         system = cache[_SYSTEM_KEY]
     else:
@@ -315,14 +315,14 @@ def set_task_perms(who):
     if context.caller and not context.caller.is_wizard():
         raise UserError("Only verbs owned by wizards can modify the task permissions..")
 
-    if not ContextManager.is_active() or who is None:
+    if not _ContextManager.is_active() or who is None:
         yield
         return
-    ContextManager.override_caller(who)
+    _ContextManager.override_caller(who)
     try:
         yield
     finally:
-        ContextManager.pop_caller()
+        _ContextManager.pop_caller()
 
 
 class _Context:
@@ -344,7 +344,7 @@ class _Context:
             self.name = name
 
         def __get__(self, obj, objtype=None):
-            return ContextManager.get(self.name)
+            return _ContextManager.get(self.name)
 
         def __set__(self, obj, value):
             raise AttributeError("context attributes are read-only")
