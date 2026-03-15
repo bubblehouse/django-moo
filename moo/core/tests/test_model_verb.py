@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=protected-access
 """
 Tests for moo/core/models/verb.py — Verb, VerbName, Preposition, PrepositionName,
 PrepositionSpecifier, Repository.
@@ -95,8 +96,8 @@ def test_verb_is_bound_true(t_init, t_wizard):
         obj = create("bindable obj")
     v = Verb.objects.create(origin=obj, owner=t_wizard, code="pass")
     VerbName.objects.create(verb=v, name="bv")
-    v.invoked_object = obj
-    v.invoked_name = "bv"
+    v._invoked_object = obj
+    v._invoked_name = "bv"
     assert v.is_bound()
 
 

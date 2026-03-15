@@ -1,0 +1,9 @@
+{
+    "python.testing.pytestArgs": [
+        "-n", "auto",
+        "--ds=moo.settings.test",
+        "moo"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}
