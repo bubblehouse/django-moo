@@ -9,9 +9,6 @@ everything for backward compatibility with internal framework code.
 import logging
 import warnings
 
-from .code import ContextManager
-from .exceptions import QuotaError, AmbiguousObjectError, UserError, NoSuchObjectError, NoSuchVerbError, NoSuchPropertyError
-
 # Re-export the public SDK so that internal framework files that do
 # ``from moo.core import context, lookup, ...`` continue to work
 # without modification.
@@ -22,6 +19,8 @@ from moo.sdk import (
     NoSuchObjectError, NoSuchVerbError, NoSuchPropertyError,
     AmbiguousObjectError,
 )
+
+from .code import ContextManager
 
 __all__ = [
     "_publish_to_player",

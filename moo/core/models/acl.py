@@ -142,6 +142,27 @@ class Access(models.Model):
         else:
             return self.property.origin  # pylint: disable=no-member
 
+    def _get_entity(self):
+        if self.object_id:
+            return self.object
+        if self.verb_id:
+            return self.verb
+        if self.property_id:
+            return self.property
+        return None
+
+    def save(self, *args, **kwargs):
+        entity = self._get_entity()
+        if entity is not None:
+            entity.can_caller("grant", entity)
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        entity = self._get_entity()
+        if entity is not None:
+            entity.can_caller("grant", entity)
+        super().delete(*args, **kwargs)
+
     def __str__(self):
         return "%(rule)s %(actor)s %(permission)s on %(entity)s (%(weight)s)" % dict(
             rule=self.rule,
