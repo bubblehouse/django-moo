@@ -1,0 +1,165 @@
+body {
+  background-color: #F6D797;
+}
+
+nav {
+  background-color: #514732;
+}
+
+nav a {
+  color: black !important;
+}
+
+nav .flex-l > a {
+  font-weight: 300;
+  color: #fff !important;
+}
+
+.is-home nav {
+  display: none;
+}
+
+.site-nav-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: black !important;
+}
+
+.site-nav-logo-wrap {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  border-width: .5px;
+  border-color: #000;
+  border-style: solid;
+  flex-shrink: 0;
+  background-color: #F6D797;
+  background-size: 58px 58px;
+  background-position: 2px -4px;
+  background-repeat: no-repeat;
+}
+
+nav a:hover {
+  color: black !important;
+}
+
+footer {
+  background-color: transparent !important;
+}
+
+footer a {
+  color: black !important;
+}
+
+footer a:hover {
+  color: black !important;
+}
+
+/* Header background */
+header > div.bg-black {
+  background-color: #514732 !important;
+}
+
+/* Hero section */
+.site-hero {
+  display: flex;
+  justify-content: center;
+}
+
+.site-hero-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  max-width: 48rem;
+  width: 100%;
+}
+
+@media (min-width: 60em) {
+  .site-hero-brand {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+.site-hero-logo {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 1rem;
+  flex-shrink: 0;
+}
+
+.site-hero-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+@media (min-width: 60em) {
+  .site-hero-info {
+    align-items: flex-start;
+  }
+}
+
+.site-hero-title {
+  font-size: 2.5rem;
+  font-weight: 300;
+  color: white;
+  margin: 0;
+  line-height: 1.1;
+}
+
+@media (min-width: 60em) {
+  .site-hero-title {
+    font-size: 3.5rem;
+  }
+}
+
+.site-hero-tagline {
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0.25rem 0 1rem;
+  font-size: 1rem;
+}
+
+.site-hero-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+@media (min-width: 60em) {
+  .site-hero-links {
+    justify-content: flex-start;
+  }
+}
+
+.site-hero-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  border-radius: 2rem;
+  color: rgba(255, 255, 255, 0.85) !important;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.site-hero-link-btn:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.6);
+  color: white !important;
+}
+
+.site-hero-link-btn svg {
+  width: 15px;
+  height: 15px;
+  fill: currentColor;
+}
