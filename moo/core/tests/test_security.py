@@ -908,3 +908,330 @@ target.parents.add(extra)
         g.update(code.get_restricted_environment("__main__", w))
         with pytest.raises(AttributeError):
             code.r_exec(src, {}, g)
+
+
+# ---------------------------------------------------------------------------
+# VerbName.save() must require write permission
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_verbname_save_requires_write_permission(t_init: Object, t_wizard: Object):
+    """
+    VerbName.save() previously had no permission check. A non-wizard with only
+    read access could rename a verb by fetching its VerbName via verb.names.all()
+    and calling .save() on it directly. VerbName.save() now calls
+    verb.can_caller('write', verb) before delegating to super().save().
+    """
+    from moo.sdk import create
+    from moo.core.exceptions import AccessError
+
+    with _ctx(t_wizard):
+        target = create("verbname_save_target")
+        target.add_verb("secret_verb", code='print("hi")')
+        plain = create("verbname_save_plain")
+        target.allow(plain, "read")
+
+    verb = target.verbs.filter(names__name="secret_verb").first()
+    vname = verb.names.first()
+    assert vname is not None
+
+    with _ctx(plain):
+        vname.name = "hijacked"
+        with pytest.raises((PermissionError, AccessError)):
+            vname.save()
+
+    # Name must be unchanged.
+    vname.refresh_from_db()
+    assert vname.name == "secret_verb"
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_verbname_delete_requires_write_permission(t_init: Object, t_wizard: Object):
+    """
+    VerbName.delete() previously had no permission check. A non-wizard with read
+    access could remove a verb's names (breaking dispatch) by calling .delete()
+    on a VerbName instance. VerbName.delete() now calls can_caller('write', verb).
+    """
+    from moo.sdk import create
+    from moo.core.exceptions import AccessError
+
+    with _ctx(t_wizard):
+        target = create("verbname_del_target")
+        target.add_verb("named_verb", code='print("hi")')
+        plain = create("verbname_del_plain")
+        target.allow(plain, "read")
+
+    verb = target.verbs.filter(names__name="named_verb").first()
+    vname = verb.names.first()
+    assert vname is not None
+
+    with _ctx(plain):
+        with pytest.raises((PermissionError, AccessError)):
+            vname.delete()
+
+    # VerbName must still exist.
+    assert verb.names.filter(name="named_verb").exists()
+
+
+# ---------------------------------------------------------------------------
+# Alias.delete() must require write permission
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_alias_delete_requires_write_permission(t_init: Object, t_wizard: Object):
+    """
+    Alias.save() was already permission-checked, but Alias.delete() was not.
+    A non-wizard with read access could delete an object's alias (altering how
+    it is found by lookup()) by calling .delete() on an Alias instance.
+    Alias.delete() now calls can_caller('write', self.object).
+    """
+    from moo.sdk import create
+    from moo.core.exceptions import AccessError
+    from moo.core.models.object import Alias
+
+    with _ctx(t_wizard):
+        target = create("alias_del_target")
+        target.add_alias("my_alias")
+        plain = create("alias_del_plain")
+        target.allow(plain, "read")
+
+    alias = Alias.objects.filter(object=target, alias="my_alias").first()
+    assert alias is not None
+
+    with _ctx(plain):
+        with pytest.raises((PermissionError, AccessError)):
+            alias.delete()
+
+    # Alias must still exist.
+    assert Alias.objects.filter(object=target, alias="my_alias").exists()
+
+
+# ---------------------------------------------------------------------------
+# Verb.reload() must require write permission
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_verb_reload_requires_write_permission(t_init: Object, t_wizard: Object):
+    """
+    Verb.reload() previously had no permission check. A non-wizard with read
+    access could call verb.reload() to trigger a repo fetch and overwrite verb
+    code. Verb.reload() now calls origin.can_caller('write', self) first.
+    The check fires even when repo/filename are None, so AccessError is raised
+    before the RuntimeError for missing repo config.
+    """
+    from moo.sdk import create
+    from moo.core.exceptions import AccessError
+
+    with _ctx(t_wizard):
+        target = create("verb_reload_target")
+        target.add_verb("reload_verb", code='print("original")')
+        plain = create("verb_reload_plain")
+        target.allow(plain, "read")
+
+    verb = target.verbs.filter(names__name="reload_verb").first()
+    assert verb is not None
+
+    with _ctx(plain):
+        with pytest.raises((PermissionError, AccessError)):
+            verb.reload()
+
+
+# ---------------------------------------------------------------------------
+# Verb.invoked_object / invoked_name must be inaccessible
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def testinvoked_object_write_blocked(t_init: Object, t_wizard: Object):
+    """
+    Verb.invoked_object is an underscore-prefixed instance attribute.
+    _write_.__setattr__ must block verb code from overwriting it, preventing
+    an attacker from redirecting the 'this' context to an arbitrary object
+    before calling the verb.
+    """
+    from moo.sdk import create
+    from moo.core.exceptions import AccessError
+
+    with _ctx(t_wizard):
+        target = create("invoked_obj_write_target")
+        target.add_verb("test_verb", code='print("ok")')
+        other = create("invoked_obj_other")
+
+    verb_obj = target.verbs.filter(names__name="test_verb").first()
+    assert verb_obj is not None
+
+    with _ctx(t_wizard):
+        w = code.ContextManager.get("writer")
+        g = code.get_default_globals()
+        g.update(code.get_restricted_environment("__main__", w))
+        g["verb_obj"] = verb_obj
+        g["other"] = other
+        with pytest.raises((AttributeError, TypeError)):
+            code.r_exec("verb_obj.invoked_object = other", {}, g)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def testinvoked_name_write_blocked(t_init: Object, t_wizard: Object):
+    """
+    Verb.invoked_name is an underscore-prefixed instance attribute.
+    _write_.__setattr__ must block verb code from overwriting it, preventing
+    an attacker from redirecting passthrough() to an arbitrary verb name.
+    RestrictedPython rejects _-prefixed attribute names at compile time
+    (code.code is None), so exec raises TypeError; either way access is denied.
+    """
+    from moo.sdk import create
+
+    with _ctx(t_wizard):
+        target = create("invoked_name_write_target")
+        target.add_verb("test_verb2", code='print("ok")')
+
+    verb_obj = target.verbs.filter(names__name="test_verb2").first()
+    assert verb_obj is not None
+
+    with _ctx(t_wizard):
+        w = code.ContextManager.get("writer")
+        g = code.get_default_globals()
+        g.update(code.get_restricted_environment("__main__", w))
+        g["verb_obj"] = verb_obj
+        with pytest.raises((AttributeError, TypeError)):
+            code.r_exec("verb_obj.invoked_name = 'hijacked'", {}, g)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def testinvoked_object_read_blocked(t_init: Object, t_wizard: Object):
+    """
+    Verb.invoked_object is underscore-prefixed; get_protected_attribute must
+    block read access from verb code, preventing information disclosure about
+    the dispatch target. RestrictedPython rejects _-prefixed attribute names
+    at compile time, so exec raises TypeError; either way access is denied.
+    """
+    from moo.sdk import create
+
+    with _ctx(t_wizard):
+        target = create("invoked_obj_read_target")
+        target.add_verb("test_verb3", code='print("ok")')
+
+    verb_obj = target.verbs.filter(names__name="test_verb3").first()
+    verb_obj.invoked_object = target
+
+    with _ctx(t_wizard):
+        w = code.ContextManager.get("writer")
+        g = code.get_default_globals()
+        g.update(code.get_restricted_environment("__main__", w))
+        g["verb_obj"] = verb_obj
+        with pytest.raises((AttributeError, TypeError)):
+            code.r_exec("_ = verb_obj.invoked_object", {}, g)
+
+
+# ---------------------------------------------------------------------------
+# Access.save() / Access.delete() must require grant permission
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_access_save_requires_grant(t_init: Object, t_wizard: Object):
+    """
+    Access.save() previously had no permission check. A non-wizard with grant
+    on their own object could obtain an Access row, reassign its object FK to
+    a wizard-owned object, then call save() to inject an ACL entry without
+    having grant on the target. Access.save() now calls can_caller("grant")
+    against the entity the row belongs to.
+    """
+    from moo.sdk import create
+    from moo.core.exceptions import AccessError
+
+    with _ctx(t_wizard):
+        attacker = create("acl_save_attacker")
+        target = create("acl_save_target")
+        attacker.allow(attacker, "grant")
+        attacker.allow("everyone", "read")
+
+    access = attacker.acl.filter(group="everyone").first()
+    assert access is not None
+
+    access.object = target
+
+    with _ctx(attacker):
+        with pytest.raises((PermissionError, AccessError)):
+            access.save()
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_access_save_new_entry_requires_grant(t_init: Object, t_wizard: Object):
+    """
+    Creating a new Access row directly (bypassing allow()/deny()) must require
+    grant on the target entity. Previously Access.save() had no check, so any
+    caller could insert arbitrary ACL rows.
+    """
+    from moo.sdk import create
+    from moo.core.exceptions import AccessError
+    from moo.core.models.acl import Access, Permission
+
+    with _ctx(t_wizard):
+        plain = create("acl_new_plain")
+        protected = create("acl_new_protected")
+
+    perm = Permission.objects.get(name="read")
+
+    with _ctx(plain):
+        with pytest.raises((PermissionError, AccessError)):
+            Access(
+                object=protected,
+                rule="allow",
+                permission=perm,
+                type="group",
+                group="everyone",
+            ).save()
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_access_delete_requires_grant(t_init: Object, t_wizard: Object):
+    """
+    Access.delete() previously had no permission check. Without it an attacker
+    could delete ACL entries on objects they have no grant over. Access.delete()
+    now calls can_caller("grant") on the entity the row belongs to.
+    """
+    from moo.sdk import create
+    from moo.core.exceptions import AccessError
+
+    with _ctx(t_wizard):
+        plain = create("acl_del_plain")
+        protected = create("acl_del_protected")
+        protected.allow("everyone", "read")
+
+    access = protected.acl.filter(group="everyone").first()
+    assert access is not None
+
+    with _ctx(plain):
+        with pytest.raises((PermissionError, AccessError)):
+            access.delete()
+
+    assert protected.acl.filter(group="everyone").exists()
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_repository_save_requires_wizard(t_init: Object, t_wizard: Object):
+    """
+    Repository.save() previously had no permission check. A non-wizard with
+    read access to a verb could reach verb.repo and overwrite the URL,
+    redirecting future verb.reload() fetches to an attacker-controlled source.
+    Repository.save() now raises AccessError for non-wizard callers.
+    """
+    from moo.sdk import create
+    from moo.core.exceptions import AccessError
+    from moo.core.models.verb import Repository
+
+    with _ctx(t_wizard):
+        plain = create("repo_save_plain")
+        target = create("repo_save_target")
+        repo = Repository(slug="test-repo", url="https://gitlab.com/test/repo.git", prefix="verbs/")
+        repo.save()
+        target.add_verb("repo_verb", code='print("ok")', repo=repo, filename="verbs/repo_verb.py")
+        target.allow(plain, "read")
+
+    verb = target.verbs.filter(names__name="repo_verb").first()
+    assert verb is not None
+    assert verb.repo is not None
+
+    with _ctx(plain):
+        with pytest.raises((PermissionError, AccessError)):
+            verb.repo.url = "https://attacker.example.com/evil.git"
+            verb.repo.save()
