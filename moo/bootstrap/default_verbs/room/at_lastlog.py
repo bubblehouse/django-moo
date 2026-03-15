@@ -16,7 +16,7 @@ as found in the player's `last_connected_time` property.
 
 from datetime import datetime, timedelta, timezone
 
-from moo.core import context, players, NoSuchPropertyError
+from moo.sdk import context, players, NoSuchPropertyError
 
 player = context.player
 parser = context.parser

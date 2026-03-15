@@ -8,7 +8,7 @@ nonsensical thing to do, it is not allowed. Suitable messages are sent to the ob
 the player object.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 player = context.player
 target = context.parser.get_dobj()

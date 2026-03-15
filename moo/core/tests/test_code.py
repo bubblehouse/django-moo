@@ -88,7 +88,7 @@ def test_printing_imported_caller(t_init: Object, t_wizard: Object):
         writer = code.ContextManager.get("writer")
         globals = code.get_default_globals()  # pylint: disable=redefined-builtin
         globals.update(code.get_restricted_environment("__main__", writer))
-        src = "from moo.core import context\nprint(context.caller)"
+        src = "from moo.sdk import context\nprint(context.caller)"
         code.r_exec(src, {}, globals)
         assert printed == [t_wizard]
 
@@ -100,7 +100,7 @@ def test_caller_stack(t_init: Object, t_wizard: Object):
         printed.append(msg)
 
     with code.ContextManager(t_wizard, _writer):
-        from moo.core import context, create
+        from moo.sdk import context, create
 
         player = create("Player")
 
@@ -115,35 +115,35 @@ def test_caller_stack(t_init: Object, t_wizard: Object):
         # automatically by apply_default_permissions during Verb.save() on creation.
 
         v1 = player.add_verb("test-caller-chain-1", code="""
-from moo.core import context
+from moo.sdk import context
 this.invoke_verb("test-caller-chain-2")
 """)
         v1.owner = t_wizard
         v1.save()
 
         v2 = player.add_verb("test-caller-chain-2", code="""
-from moo.core import context
+from moo.sdk import context
 this.invoke_verb("test-caller-chain-3")
 """)
         v2.owner = player
         v2.save()
 
         v3 = player.add_verb("test-caller-chain-3", code="""
-from moo.core import context
+from moo.sdk import context
 this.invoke_verb("test-caller-chain-4")
 """)
         v3.owner = p3
         v3.save()
 
         v4 = player.add_verb("test-caller-chain-4", code="""
-from moo.core import context
+from moo.sdk import context
 this.invoke_verb("test-caller-chain-5")
 """)
         v4.owner = p4
         v4.save()
 
         v5 = player.add_verb("test-caller-chain-5", code="""
-from moo.core import context
+from moo.sdk import context
 for frame in context.caller_stack:
     print(frame)
 """)

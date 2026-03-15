@@ -7,7 +7,7 @@ These verbs return a pronoun substituted version of the corresponding properties
 used by `$exit.move`.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 prop_name = verb_name
 prop_value = this.get_property(prop_name)

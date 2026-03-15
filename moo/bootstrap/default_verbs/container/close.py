@@ -6,7 +6,7 @@
 This is the opposite of open. If the pipe is already close, an error message is printed.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 if not this.is_open():
     print("Container is already closed.")

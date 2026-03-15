@@ -1,6 +1,7 @@
 import pytest
 
-from moo.core import code, create, lookup
+from moo.core import code
+from moo.sdk import create, lookup
 from moo.core.models import Object
 
 

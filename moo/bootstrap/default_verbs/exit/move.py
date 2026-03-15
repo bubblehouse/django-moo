@@ -19,7 +19,7 @@ destination of the exit. Once this has been done, the arrive messages for the ex
 destination room's occupants.
 """
 
-from moo.core import context, NoSuchPropertyError
+from moo.sdk import context, NoSuchPropertyError
 
 thing = args[0]
 source = this.get_property("source")

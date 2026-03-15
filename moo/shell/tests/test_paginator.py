@@ -2,7 +2,8 @@
 
 import pytest
 
-from moo.core import code, create, lookup, open_paginator
+from moo.core import code
+from moo.sdk import create, lookup, open_paginator
 from moo.core.exceptions import UserError
 from moo.core.models import Object
 
@@ -12,12 +13,12 @@ from moo.core.models import Object
 # ---------------------------------------------------------------------------
 
 _TRIGGER_VERB = """\
-from moo.core import context, open_paginator
+from moo.sdk import context, open_paginator
 open_paginator(context.player, "hello\\nworld")
 """
 
 _TRIGGER_VERB_PYTHON = """\
-from moo.core import context, open_paginator
+from moo.sdk import context, open_paginator
 open_paginator(context.player, "def foo():\\n    pass", content_type="python")
 """
 

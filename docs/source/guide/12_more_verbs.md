@@ -31,7 +31,7 @@ into multiple Verb calls, which you can invoke asynchronously using the `invoke(
 Using `invoke()` let's create a bad example of a talking parrot:
 
 ```python
-from moo.core import context, invoke
+from moo.sdk import context, invoke
 if context.parser is not None:
     invoke(context.parser.verb, delay=30, periodic=True)
     return
@@ -43,7 +43,7 @@ Right now it's just repeating every thirty seconds, but we can make it slightly 
 by handling our own repeating Verbs:
 
 ```python
-from moo.core import context, invoke
+from moo.sdk import context, invoke
 if context.parser is not None:
     invoke(context.parser.verb, delay=30, value=0)
     return
@@ -57,7 +57,7 @@ Let's say we didn't want to handle writing ourselves (we shouldn't) and wanted i
 to re-use the `say` Verb.
 
 ```python
-from moo.core import context, invoke
+from moo.sdk import context, invoke
 if context.parser is not None:
     say = context.caller.get_verb('say', recurse=True)
     invoke(verb=context.parser.verb, callback=say, delay=30, value=0)
@@ -91,7 +91,7 @@ One key difference in this approach is that `return` can be used from anywhere i
 ```python
 #!moo verb check_object --on $room
 
-from moo.core import context
+from moo.sdk import context
 
 # Early return for empty arguments
 if not args:
@@ -145,7 +145,7 @@ time raising any of them from verb code will rollback the transaction as if the 
 ### 1. Always Check Permissions First
 
 ```python
-from moo.core import context
+from moo.sdk import context
 
 if not this.can_caller("write"):
     return "Permission denied."
@@ -161,7 +161,7 @@ if len(args) < 2:
 ### 3. Use the MOO Context
 
 ```python
-from moo.core import context
+from moo.sdk import context
 
 # context.caller is the effective caller (usually verb owner)
 # context.player is the player executing the command
@@ -188,7 +188,7 @@ return None
 Each verb execution (including synchronous calls to other verbs) should complete in less than 3 seconds, or Celery will terminate the task. If you need complex logic:
 
 ```python
-from moo.core import context, invoke
+from moo.sdk import context, invoke
 
 player = context.player
 # Invoke async verb operations

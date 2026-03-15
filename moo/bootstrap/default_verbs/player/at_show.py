@@ -8,7 +8,7 @@ This is a player command used to examine other objects in detail. It returns det
 if permissions allow.
 """
 
-from moo.core import context, open_paginator
+from moo.sdk import context, open_paginator
 
 parser = context.parser
 player = context.player

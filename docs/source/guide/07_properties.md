@@ -2,7 +2,7 @@
 
 While there's been lots of syntactic sugar added to reduce this kind of boilerplate, it's notable that DjangoMOO instances are largely normal Django ORM objects:
 
-    from moo.core import context
+    from moo.sdk import context
 
     obj = context.caller.location
     description = obj.properties.filter(name="description")
@@ -11,7 +11,7 @@ While there's been lots of syntactic sugar added to reduce this kind of boilerpl
 
 It's usually better to make use of the various helper methods, e.g.:
 
-    from moo.core import context
+    from moo.sdk import context
 
     obj = context.caller.location
     if obj.has_property('description'):
@@ -19,7 +19,7 @@ It's usually better to make use of the various helper methods, e.g.:
 
 `Object` has a number of helper methods for using properties, so you don't necessarily have to use the `Property` class directly. For example, it supports `__getattr__` for direct property access:
 
-    from moo.core import context
+    from moo.sdk import context
 
     obj = context.caller.location
     if obj.has_property('description'):

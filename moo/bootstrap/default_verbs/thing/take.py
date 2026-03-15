@@ -14,7 +14,7 @@ may place a notion of strength onto a player, and add weight to objects. If an o
 then the object cannot be taken by the player. This sort of condition should be added to the `take` verb for the object
 """
 
-from moo.core import context
+from moo.sdk import context
 
 title = this.title()
 if this.location == context.player:

@@ -6,7 +6,7 @@
 Edit a note's text.
 """
 
-from moo.core import context, open_editor
+from moo.sdk import context, open_editor
 
 if verb_name == "@edit":
     if not context.player.owns(this):

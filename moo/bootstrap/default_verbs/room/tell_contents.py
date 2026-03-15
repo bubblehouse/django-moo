@@ -52,7 +52,7 @@ hide objects, for example, as part of a puzzle, or to vary how objects are seen,
 water at something.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 items = []
 players = []

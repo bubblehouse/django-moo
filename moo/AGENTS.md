@@ -97,7 +97,7 @@ Verbs are stored as `Verb` model instances with code compiled by RestrictedPytho
 
 # pylint: disable=return-outside-function,undefined-variable
 
-from moo.core import context
+from moo.sdk import context
 
 if context.parser.words:
     message = " ".join(context.parser.words[1:])
@@ -116,7 +116,7 @@ When executing a verb:
   - `args` - if the verb is invoked as a function, this contains any positional arguments
   - `kwargs` - if the verb is invoked as a function, this contains any named arguments
   - `verb_name` - a verb can have multiple names; this is the particular name used to invoke this verb.
-- Many verbs include `from moo.core import context`; the `context` object has a number of helpful properties:
+- Many verbs include `from moo.sdk import context`; the `context` object has a number of helpful properties:
   - `caller` - When a verb begins to execute, `caller` is set to the owner of the verb; calls to `set_task_perms` can change this.
   - `player` - This is always a reference to the current player who should receive all output from the running verb. Use this (not `this`) to identify who initiated a command.
   - `writer()` - This callable is used to write directly to an object's player terminal, if connected.
@@ -131,7 +131,7 @@ Three mechanisms exist for sending messages; they behave differently:
 
 - **`print()`** – Print a message directly to (and only to) the player who executed this verb
 - **`obj.tell(msg)`** — Goes through `$player.tell`, which applies gag-list filtering and paranoia tracking before calling `write()`. Use this for normal in-game messages so that player preferences are respected.
-- **`write(obj, msg)`** (from `moo.core`) — Low-level connection write, can only be used by Wizard-owned verbs; bypasses all filtering. Use sparingly, if at all.
+- **`write(obj, msg)`** (from `moo.sdk`) — Low-level connection write, can only be used by Wizard-owned verbs; bypasses all filtering. Use sparingly, if at all.
 
 In tests (where `CELERY_BROKER_URL = "memory://"`), the second two paths ultimately call `write()`, which emits `RuntimeWarning(f"ConnectionError({obj}): {msg}")` instead of sending to a real connection. Wrap test commands that trigger `write()` with `pytest.warns(RuntimeWarning)`.
 
@@ -161,7 +161,7 @@ These test models and the verb execution engine directly, without a full bootstr
 
 ```python
 import pytest
-from moo.core import create, lookup
+from moo.sdk import create, lookup
 from moo.core.exceptions import PermissionDenied
 
 @pytest.mark.django_db
@@ -189,7 +189,8 @@ Capture player output with a `_writer` callback. Run commands through `parse.int
 
 ```python
 import pytest
-from moo.core import code, create, lookup, parse
+from moo.core import code, parse
+from moo.sdk import create, lookup
 from moo.core.models import Object
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)

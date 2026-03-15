@@ -8,7 +8,7 @@ the variable `this``, or if a non-player object mentioned in the gag list is in 
 `context.caller_stack` list.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 player = context.player
 gaglist = this.gaglist

@@ -14,7 +14,7 @@ the object gag list. If this fails, the command is aborted with an error message
 If a valid match is found, it is removed from the relevant list, and the player informed.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 player = context.player
 target = context.parser.get_dobj_str()

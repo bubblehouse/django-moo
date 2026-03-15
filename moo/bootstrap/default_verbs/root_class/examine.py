@@ -18,7 +18,7 @@ contents list is printed out, too. If the object has verbs defined on it, then t
 they are readable.
 """
 
-from moo.core import context
+from moo.sdk import context
 obj = context.parser.get_dobj()
 
 print(f"{obj.name} (#{obj.id} ) is owned by {obj.owner.name} (#{obj.owner.id}).")

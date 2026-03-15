@@ -2,7 +2,7 @@
 
 # pylint: disable=return-outside-function,undefined-variable,no-name-in-module
 
-from moo.core import context, NoSuchPropertyError
+from moo.sdk import context, NoSuchPropertyError
 
 door_description = context.parser.get_dobj_str()
 door = context.caller.location.match_exit(door_description)

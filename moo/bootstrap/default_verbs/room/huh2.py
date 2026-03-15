@@ -33,7 +33,7 @@ augmentation of the basic `huh` action to log failed commands in a list somewher
 MUDs, can provide a builder with an idea of what other players have tried (and failed) to do in his or her areas.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 player = context.player
 parser = context.parser

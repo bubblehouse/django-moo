@@ -8,7 +8,7 @@ defined, and the player is in a valid location. It is used by noisy objects in p
 broadcast messages to both the player, and others in the surrounding room.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 location = context.player.location
 if location and location.has_verb(verb_name):

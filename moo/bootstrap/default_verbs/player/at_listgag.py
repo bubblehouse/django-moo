@@ -16,7 +16,7 @@ TODO: invoked the command is listed in anyone else's gag list. If this is the ca
 TODO: gagging is printed.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 player = context.player
 

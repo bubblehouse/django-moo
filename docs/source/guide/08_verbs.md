@@ -6,7 +6,7 @@
 
 Just like properties, verb instances are largely normal Django ORM objects:
 
-    from moo.core import context
+    from moo.sdk import context
 
     obj = context.caller
     for verb in obj.verbs.all():
@@ -14,7 +14,7 @@ Just like properties, verb instances are largely normal Django ORM objects:
 
 This wouldn't work for verbs inherited from parents, so `Object` defines a number of helper methods, including `get_verb()`:
 
-    from moo.core import context
+    from moo.sdk import context
 
     obj = context.caller
     title = obj.get_verb('title')
@@ -22,7 +22,7 @@ This wouldn't work for verbs inherited from parents, so `Object` defines a numbe
 
 `Object` also supports `__getattr__` for direct verb access:
 
-    from moo.core import context
+    from moo.sdk import context
 
     obj = context.caller
     print(obj.title())

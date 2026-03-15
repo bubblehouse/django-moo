@@ -8,7 +8,7 @@ Open the container and allow objects to be put into it.
 This verb sets the property `opened` to `True`.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 if this.is_open():
     print("Container is already open.")

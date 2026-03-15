@@ -11,6 +11,6 @@ around this, and allow you to use passthrough() to get the default `huh` behavio
 `huh2` if you wish to be able to use passthrough() to get the default `huh` behaviour.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 return this.huh2(context.parser.words[0])

@@ -6,7 +6,7 @@
 Erase all text stored on the note. Only the owner of a note can erase it.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 if context.player.owns(this):
     this.set_property("text", "")

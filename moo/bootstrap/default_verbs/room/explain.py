@@ -15,7 +15,7 @@ allow other room subclasses to provide more specific help for certain verbs defi
 make an error trying to use one of them.
 """
 
-from moo.core import context, NoSuchVerbError
+from moo.sdk import context, NoSuchVerbError
 
 verb_name = args[0]
 parser = context.parser
