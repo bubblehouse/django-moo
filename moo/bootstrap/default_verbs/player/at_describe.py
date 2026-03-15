@@ -7,7 +7,7 @@ This is a player command used to set the description of an object. It takes the 
 object. If a match is found, then the object's `describe` verb is invoked, with the iobjstr as an argument.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 if not (context.parser.has_dobj_str()):
     print("[red]What do you want to describe?[/red]")

@@ -63,7 +63,7 @@ One historical artifact was also removed: the `__metaclass__=type` entry that Py
 `ALLOWED_MODULES` in `moo/settings/base.py` lists modules verb code may import:
 
     ALLOWED_MODULES = (
-        "moo.core",
+        "moo.sdk",
         "hashlib",
         "re",
         "datetime",
@@ -77,26 +77,16 @@ One historical artifact was also removed: the `__metaclass__=type` entry that Py
 Even within an allowed module, specific names can be blocked. `BLOCKED_IMPORTS` is checked after the module is loaded; if the requested name appears in the block list for that module, the import is refused:
 
     BLOCKED_IMPORTS = {
-        "moo.core": {
+        "moo.sdk": {
             "ContextManager",
-            "_publish_to_player",
-            "models",
-            "acl",
-            "auth",
-            "object",
-            "verb",
-            "property",
-            "moojson",
-            "tasks",
-            "code",
         },
     }
 
-The submodule names (`models`, `acl`, etc.) are blocked because `from moo.core import models` would immediately expose `models.Object.objects.all()`, `models.User.objects.values("password")`, and `models.Verb.objects.update(code=...)` — full ORM access with no permission checks.
+`moo.core` is not in `ALLOWED_MODULES` at all — verb code cannot reach Django ORM model classes (`Object.objects`, `User.objects`, etc.) or internal framework machinery.
 
-`ContextManager` is blocked because it exposes `override_caller()`, which can impersonate a wizard within a verb execution. `_publish_to_player` is blocked because it lacks a wizard check and its caller_id parameter is an escalation vector.
+`ContextManager` is blocked from `moo.sdk` because it exposes `override_caller()`, which can impersonate a wizard within a verb execution. `_publish_to_player` is not exposed by `moo.sdk` (it remains internal to `moo.core`).
 
-`exceptions` is intentionally not blocked. Verb code legitimately uses `from moo.core import exceptions` to catch `NoSuchObjectError`, `NoSuchVerbError`, and `NoSuchPropertyError`. That module contains only exception class definitions with no ORM access.
+`NoSuchObjectError`, `NoSuchVerbError`, and `NoSuchPropertyError` are directly available in `moo.sdk.__all__` — import them with `from moo.sdk import NoSuchObjectError` etc.
 
 ### Wizard-only modules
 
@@ -196,11 +186,11 @@ A few patterns to avoid in verb code, and what to use instead:
 
 **Property access.** `has_property(name)` followed by `get_property(name)` is two queries. Use `get_property` inside a `try`/`except NoSuchPropertyError` block:
 
-    from moo.core import exceptions
+    from moo.sdk import NoSuchPropertyError
 
     try:
         desc = this.get_property("description")
-    except exceptions.NoSuchPropertyError:
+    except NoSuchPropertyError:
         desc = "You see nothing special."
 
 **Attribute access.** Dotted access via `__getattr__` on an `Object` costs two queries (verb miss + property lookup). Assign to a local variable if the value is used more than once:

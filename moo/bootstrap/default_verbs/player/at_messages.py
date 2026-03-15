@@ -5,7 +5,7 @@ This is a player command used to list the possible message properties (those tha
 supplied. The names of the messages, along with their current values, are displayed.
 """
 
-from moo.core import context, lookup
+from moo.sdk import context, lookup
 
 parser = context.parser
 if parser.has_dobj():

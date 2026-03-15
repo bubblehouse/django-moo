@@ -23,7 +23,7 @@ If the direct object is the empty string, `""``, then the container``s `look_sel
 Any ambiguous or failed matches produce suitable error messages.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 if context.parser.has_pobj_str("in"):
     container = context.parser.get_pobj("in")

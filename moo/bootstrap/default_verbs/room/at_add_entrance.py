@@ -11,7 +11,7 @@ Otherwise, if the object found is a descendant of the `$exit` class, then the ex
 this room. If this is the case, then the exit is added as an entrance using the room's `add_entrance` verb.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 door = context.parser.get_dobj()
 if not door.is_a(_.exit):

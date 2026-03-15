@@ -9,7 +9,7 @@ The action coded into the $room class simply shows the player what the room look
 the room) and tells everyone else in the room that the player has connected.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 this.look_self()
 this.announce(f"{context.player} has connected.")

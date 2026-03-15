@@ -15,7 +15,7 @@ The result returned by the indirect object's `oejection_msg` verb is printed to 
 Finally, the indirect object's `eject` verb is called to remove the victim.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 parser = context.parser
 player = context.player

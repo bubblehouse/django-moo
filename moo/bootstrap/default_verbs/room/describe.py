@@ -2,7 +2,7 @@
 
 # pylint: disable=return-outside-function,undefined-variable,no-name-in-module
 
-from moo.core import lookup, context, NoSuchPropertyError
+from moo.sdk import lookup, context, NoSuchPropertyError
 
 obj = this
 

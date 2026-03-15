@@ -16,7 +16,8 @@ Section 3: Integration tests for exceptions raised directly by core framework
 
 import pytest
 
-from moo.core import code, create, exceptions, parse, tasks
+from moo.core import code, exceptions, parse, tasks
+from moo.sdk import create
 from moo.core.models import Object
 from moo.core.models.verb import Verb, VerbName
 
@@ -141,7 +142,7 @@ def test_ambiguous_object_error_caught_by_parse_command(t_init, t_wizard):
 def test_quota_error_raised_by_create(t_init, t_wizard):
     """QuotaError is raised by create() when the caller's quota is exhausted."""
     t_wizard.set_property("ownership_quota", 0)
-    _add_verb(t_wizard, "test-quota", 'from moo.core import create; create("quota test object")', t_wizard)
+    _add_verb(t_wizard, "test-quota", 'from moo.sdk import create; create("quota test object")', t_wizard)
 
     with code.ContextManager(t_wizard, lambda _: None) as ctx:
         with pytest.raises(exceptions.QuotaError) as exc_info:
@@ -154,7 +155,7 @@ def test_quota_error_raised_by_create(t_init, t_wizard):
 def test_quota_error_caught_by_parse_command(t_init, t_wizard):
     """tasks.parse_command catches QuotaError and formats it as bold red."""
     t_wizard.set_property("ownership_quota", 0)
-    _add_verb(t_wizard, "test-quota", 'from moo.core import create; create("quota test object")', t_wizard)
+    _add_verb(t_wizard, "test-quota", 'from moo.sdk import create; create("quota test object")', t_wizard)
 
     result = tasks.parse_command(t_wizard.pk, "test-quota")
 
@@ -169,7 +170,7 @@ def test_no_such_preposition_error_raised_by_verb(t_init, t_wizard):
     _add_verb(
         t_wizard,
         "test-prep",
-        'from moo.core import context; context.parser.get_pobj_str("on")',
+        'from moo.sdk import context; context.parser.get_pobj_str("on")',
         t_wizard,
     )
 
@@ -186,7 +187,7 @@ def test_no_such_preposition_error_caught_by_parse_command(t_init, t_wizard):
     _add_verb(
         t_wizard,
         "test-prep",
-        'from moo.core import context; context.parser.get_pobj_str("on")',
+        'from moo.sdk import context; context.parser.get_pobj_str("on")',
         t_wizard,
     )
 
@@ -293,7 +294,7 @@ def test_no_such_object_error_raised_by_get_dobj(t_init, t_wizard):
     _add_verb(
         t_wizard,
         "test-get-dobj",
-        'from moo.core import context; context.parser.get_dobj()',
+        'from moo.sdk import context; context.parser.get_dobj()',
         t_wizard,
         direct_object="any",
     )
@@ -309,7 +310,7 @@ def test_no_such_object_error_caught_by_parse_command(t_init, t_wizard):
     _add_verb(
         t_wizard,
         "test-get-dobj",
-        'from moo.core import context; context.parser.get_dobj()',
+        'from moo.sdk import context; context.parser.get_dobj()',
         t_wizard,
         direct_object="any",
     )

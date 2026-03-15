@@ -8,7 +8,7 @@ delete() method to recycle the object. The returned value, in the case of an err
 a suitable success message is sent.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 if not context.parser.has_dobj_str():
     print("[yellow]What do you want to recycle?[/yellow]")

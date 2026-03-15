@@ -9,7 +9,7 @@ the interface so that different implementations of the exits concept can be used
 class.
 """
 
-from moo.core import NoSuchPropertyError
+from moo.sdk import NoSuchPropertyError
 
 exit_obj = args[0]
 

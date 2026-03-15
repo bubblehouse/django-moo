@@ -2,7 +2,8 @@
 
 import pytest
 
-from moo.core import code, create, lookup, open_editor
+from moo.core import code
+from moo.sdk import create, lookup, open_editor
 from moo.core.exceptions import UserError
 from moo.core.models import Object
 
@@ -14,21 +15,21 @@ from moo.core.models import Object
 # Trigger verb: opens an editor pre-filled with "hello\nworld", wiring the
 # callback verb on the same object to receive the saved text.
 _TRIGGER_VERB = """\
-from moo.core import context, open_editor
+from moo.sdk import context, open_editor
 callback = this.get_verb("edit_callback")
 open_editor(context.player, "hello\\nworld", callback)
 """
 
 # Trigger verb variant that passes content_type="python".
 _TRIGGER_VERB_PYTHON = """\
-from moo.core import context, open_editor
+from moo.sdk import context, open_editor
 callback = this.get_verb("edit_callback")
 open_editor(context.player, "def foo():\\n    pass", callback, content_type="python")
 """
 
 # Trigger verb variant that passes extra args to the callback.
 _TRIGGER_VERB_EXTRA_ARGS = """\
-from moo.core import context, open_editor
+from moo.sdk import context, open_editor
 callback = this.get_verb("edit_callback")
 open_editor(context.player, "hello\\nworld", callback, "extra1", 42)
 """

@@ -10,7 +10,7 @@ home, a suitable message is printed to inform the user of this fact. Otherwise, 
 the player's current location.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 player = context.player
 if not player.location.accept(player):

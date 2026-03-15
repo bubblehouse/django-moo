@@ -11,7 +11,7 @@ between disconnection and movement of the player to his/her home. This would all
 due to network problems.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 home = context.player.get_property("home") or _.player_start
 if context.player.location != home:

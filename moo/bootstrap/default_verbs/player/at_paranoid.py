@@ -16,7 +16,7 @@ available:
     is the immediate mode of the anti-spoofer mechanism.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 level = context.parser.get_dobj_str()
 if level not in ("0", "1", "2"):

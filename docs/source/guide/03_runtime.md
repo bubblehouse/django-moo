@@ -51,7 +51,7 @@ with code.ContextManager(caller, output.append, task_id=task_id) as ctx:
 ### Typical Usage in a Verb
 
 ```python
-from moo.core import context
+from moo.sdk import context
 
 player = context.player               # who sent the command
 target = context.parser.get_dobj()   # the direct object

@@ -12,7 +12,7 @@ Otherwise, if the destination of the exit is readable and leads to a valid room,
 using the room's `add_exit` verb. If this fails, a suitable error message is sent to the user.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 door = context.parser.get_dobj()
 if not door.is_a(_.exit):

@@ -7,7 +7,7 @@ Check if the note can be read by the person who is attempting to read it. If the
 permission to read it, the note text, which is stored in the property `text`, is shown to the player.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 if this.is_readable_by(context.player):
     print(this.get_property("text"))

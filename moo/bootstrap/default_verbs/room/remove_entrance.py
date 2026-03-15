@@ -9,7 +9,7 @@ that invoked the verb does not have the required permission) then the verb retur
 addition returns `True`.
 """
 
-from moo.core import NoSuchPropertyError
+from moo.sdk import NoSuchPropertyError
 
 entrance = args[0]
 

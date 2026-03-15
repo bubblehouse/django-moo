@@ -10,7 +10,7 @@ has moved into using the `$room.look_self` verb on the room. If the object is th
 description of `$room.bless_for_entry`.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 thing = args[0]
 if thing.is_player():

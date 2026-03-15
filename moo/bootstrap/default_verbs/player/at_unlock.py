@@ -7,7 +7,7 @@ Unlock an object. The direct object string is matched to try and find an object
 to unlock. If a match is found, the `key` property is reset to ``None``. Any errors are reported to the invoking player.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 parser = context.parser
 

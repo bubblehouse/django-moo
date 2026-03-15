@@ -13,7 +13,7 @@ When you look at pipe now you should see:
     It is empty.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 if args:
     obj = args[0]

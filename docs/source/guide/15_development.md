@@ -125,7 +125,7 @@ Core tests exercise models and the verb execution engine without needing a full 
 
 ```python
 import pytest
-from moo.core import create, lookup
+from moo.sdk import create, lookup
 from moo.core.exceptions import PermissionDenied
 
 @pytest.mark.django_db
@@ -160,7 +160,8 @@ Output sent to the player is captured via a `_writer` callback passed to `code.C
 ```python
 import pytest
 
-from moo.core import code, create, lookup, parse
+from moo.core import code, parse
+from moo.sdk import create, lookup
 from moo.core.models import Object
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -246,7 +247,7 @@ uv run black moo --line-length 120
 ```python
 python manage.py shell
 
->>> from moo.core import lookup, create
+>>> from moo.sdk import lookup, create
 >>> obj = lookup("root")
 >>> obj.name
 'Root Class'
