@@ -454,8 +454,8 @@ class Object(models.Model, AccessibleMixin):
         qs = self._lookup_verb(name, recurse=True)
         verb = qs[0]
         self.can_caller("execute", verb)
-        verb.invoked_name = name
-        verb.invoked_object = self
+        verb._invoked_name = name  # pylint: disable=protected-access
+        verb._invoked_object = self  # pylint: disable=protected-access
         return verb(*args, **kwargs)
 
     def has_verb(self, name, recurse=True):
@@ -485,8 +485,8 @@ class Object(models.Model, AccessibleMixin):
         if len(verbs) > 1 and not allow_ambiguous:
             raise exceptions.AmbiguousVerbError(name, verbs)
         for v in verbs:
-            v.invoked_name = name
-            v.invoked_object = self
+            v._invoked_name = name  # pylint: disable=protected-access
+            v._invoked_object = self  # pylint: disable=protected-access
         if allow_ambiguous:
             return verbs
         v = verbs[0]

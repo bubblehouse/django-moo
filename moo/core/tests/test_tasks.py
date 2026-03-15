@@ -1,4 +1,4 @@
-# pylint: disable=no-value-for-parameter  # Celery task decorator hides positional args from pylint
+# pylint: disable=no-value-for-parameter,protected-access  # Celery task decorator hides positional args from pylint
 import logging
 import warnings
 import pytest
@@ -28,8 +28,8 @@ if counter < 10:
     v.save()
 
     verb = Verb.objects.get(names__name="test-async-verbs")
-    verb.invoked_name = "test-async-verbs"
-    verb.invoked_object = verb.origin
+    verb._invoked_name = "test-async-verbs"
+    verb._invoked_object = verb.origin
     with caplog.at_level(logging.INFO, "moo.core.tasks.background"):
         with code.ContextManager(t_wizard, _writer):
             with warnings.catch_warnings():

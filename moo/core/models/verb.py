@@ -60,8 +60,8 @@ class Verb(models.Model, AccessibleMixin):
     indirect_objects = models.ManyToManyField(PrepositionSpecifier, related_name="+", blank=True)
 
     do_not_call_in_templates = True
-    invoked_object = None
-    invoked_name = None
+    _invoked_object = None
+    _invoked_name = None
 
     def __str__(self):
         return "%s {#%s on %s}" % (self.annotated(), self.id, self.origin)
@@ -110,7 +110,7 @@ class Verb(models.Model, AccessibleMixin):
         bootstrap.load_verb_source(pathlib.Path(self.filename), lookup(1), self.repo, replace=True)
 
     def is_bound(self):
-        return self.invoked_object is not None and self.invoked_name is not None
+        return self._invoked_object is not None and self._invoked_name is not None
 
     def passthrough(self, *args, **kwargs):
         """
@@ -146,14 +146,14 @@ class Verb(models.Model, AccessibleMixin):
         # the origin is where the verb is defined, not where it was found
         parents = self.origin.parents.all()
         for parent in parents:
-            if parent.has_verb(self.invoked_name):
-                verb = parent.get_verb(self.invoked_name)
-                verb.invoked_object = self.invoked_object
-                verb.invoked_name = self.invoked_name
+            if parent.has_verb(self._invoked_name):
+                verb = parent.get_verb(self._invoked_name)
+                verb._invoked_object = self._invoked_object  # pylint: disable=protected-access
+                verb._invoked_name = self._invoked_name  # pylint: disable=protected-access
                 assert verb != self, "Infinite passthrough loop detected."
                 return verb(*args, _bypass_execute_check=True, **kwargs)
         warnings.warn(
-            "Passthrough ignored: no parent has verb %s" % self.invoked_name,
+            "Passthrough ignored: no parent has verb %s" % self._invoked_name,
             RuntimeWarning,
         )
 
@@ -163,8 +163,8 @@ class Verb(models.Model, AccessibleMixin):
         this = None
         name = "__main__"
         if self.is_bound():
-            this = self.invoked_object
-            name = self.invoked_name
+            this = self._invoked_object
+            name = self._invoked_name
         else:
             this = self.origin
             name = self.name()
