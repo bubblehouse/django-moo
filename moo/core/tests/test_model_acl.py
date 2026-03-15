@@ -10,10 +10,7 @@ import pytest
 from .. import code, create, exceptions, lookup
 from ..models import Access, Object, Permission, Player
 from ..models.acl import _get_permission_id
-
-
-def _ctx(wizard):
-    return code.ContextManager(wizard, lambda m: None)
+from .utils import ctx as _ctx
 
 
 # ---------------------------------------------------------------------------

@@ -1,10 +1,9 @@
-import warnings
-
 import pytest
 
 from moo.core import code, parse
 from moo.sdk import context, create, lookup
 from moo.core.models import Object
+from .utils import save_quietly
 
 
 def setup_exit(t_wizard: Object):
@@ -14,9 +13,7 @@ def setup_exit(t_wizard: Object):
     source = create("Source Room", parents=[rooms])
     door = create("wooden door", parents=[exits], location=source)
     t_wizard.location = source
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", RuntimeWarning)
-        t_wizard.save()
+    save_quietly(t_wizard)
     context.caller.refresh_from_db()
     return source, door
 
@@ -299,9 +296,7 @@ def test_move_through_exit(t_init: Object, t_wizard: Object):
         source, _ = setup_exit(t_wizard)
         player = lookup("Player")
         player.location = source
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", RuntimeWarning)
-            player.save()
+        save_quietly(player)
         parse.interpret(ctx, "@dig north to Destination Room through wooden door")
         dest = lookup("Destination Room")
         with pytest.warns(RuntimeWarning, match=r"ConnectionError") as w:
@@ -399,9 +394,7 @@ def test_invoke_moves_player(t_init: Object, t_wizard: Object):
         dest = lookup("Destination Room")
         player = lookup("Player")
         player.location = dest
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", RuntimeWarning)
-            player.save()
+        save_quietly(player)
         door = source.match_exit("north")
         with pytest.warns(RuntimeWarning, match=r"ConnectionError") as w:
             door.invoke(t_wizard)

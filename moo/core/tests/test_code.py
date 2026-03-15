@@ -22,26 +22,7 @@ import pytest
 from moo.core.models.object import Object
 
 from .. import code
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-def _mock(is_wizard=False):
-    """Minimal caller/player stand-in that satisfies is_wizard() checks."""
-    return types.SimpleNamespace(is_wizard=lambda: is_wizard)
-
-
-def _ctx(caller, writer=None):
-    return code.ContextManager(caller, writer or (lambda s: None))
-
-
-def _make_globals(writer):
-    """Build a restricted execution globals dict for the given writer."""
-    g = code.get_default_globals()  # pylint: disable=redefined-builtin
-    g.update(code.get_restricted_environment("__main__", writer))
-    return g
+from .utils import ctx as _ctx, make_restricted_globals as _make_globals, mock_caller as _mock
 
 
 # ---------------------------------------------------------------------------
