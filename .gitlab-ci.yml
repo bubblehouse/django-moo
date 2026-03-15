@@ -17,6 +17,9 @@ lint:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       changes:
         - moo/**/*.py
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - moo/**/*.py
   before_script:
     - mkdir -p public/badges public/lint
     - echo undefined > public/badges/$CI_JOB_NAME.score
@@ -51,6 +54,9 @@ test:
     PYTHONUNBUFFERED: 1
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - moo/**/*.py
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       changes:
         - moo/**/*.py
   script:
@@ -109,13 +115,20 @@ pages:
   stage: deploy
   tags:
     - shacklyn
-  image: alpine:latest
+  image: hugomods/hugo:exts
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+  needs:
+    - job: lint
+      artifacts: true
+      optional: true
+    - job: test
+      artifacts: true
+      optional: true
   rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      changes:
-        - moo/**/*.py
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   script:
-    - echo
+    - hugo -s extras/pages --destination ../../public
   artifacts:
     paths:
       - public
