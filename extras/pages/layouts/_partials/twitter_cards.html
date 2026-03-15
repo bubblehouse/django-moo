@@ -1,0 +1,13 @@
+{{- $title := cond .IsHome .Site.Title (printf "%s | %s" .Title .Site.Title) -}}
+{{- $desc := or .Description (cond .IsPage .Summary (.Site.Params.description | default "")) -}}
+{{- $image := partial "func/GetFeaturedImage.html" . -}}
+{{- if not $image }}{{- with .Site.Params.og_image }}{{- $image = . | absURL }}{{- end }}{{- end -}}
+<meta name="twitter:card" content="{{ if $image }}summary_large_image{{ else }}summary{{ end }}" />
+<meta name="twitter:title" content="{{ $title }}" />
+<meta name="twitter:description" content="{{ $desc | plainify | truncate 200 }}" />
+{{ with $image -}}
+<meta name="twitter:image" content="{{ . }}" />
+{{ end -}}
+{{ with .Site.Params.twitter -}}
+<meta name="twitter:site" content="@{{ . }}" />
+{{ end -}}
