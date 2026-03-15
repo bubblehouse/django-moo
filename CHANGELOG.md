@@ -1,3 +1,9 @@
+## [0.80.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.80.0...v0.80.1) (2026-03-15)
+
+### Bug Fixes
+
+* short term fix to ssh hostname issue ([c95788c](https://gitlab.com/bubblehouse/django-moo/commit/c95788c9af2bfa384ef2455ca0d362760f1b95c3))
+
 ## [0.80.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.79.2...v0.80.0) (2026-03-15)
 
 ### Features
