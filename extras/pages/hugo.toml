@@ -7,3 +7,5 @@ contentDir = "content"
 [params]
   body_classes = "avenir"
   custom_css = ["custom.css"]
+  description = "A reimagining of LambdaMOO built on Django"
+  og_image = "unicow.jpg"
