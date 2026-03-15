@@ -183,14 +183,14 @@ class Object(models.Model, AccessibleMixin):
     result is ignored; again, it is not an error if `where` does not define a verb named `enterfunc`.
     """
 
-    original_owner = None
-    original_location = None
+    _original_owner = None
+    _original_location = None
 
     @classmethod
     def from_db(cls, db, field_names, values):
         instance = super().from_db(db, field_names, values)
-        instance.original_owner = values[field_names.index("owner_id")]
-        instance.original_location = values[field_names.index("location_id")]
+        instance._original_owner = values[field_names.index("owner_id")]
+        instance._original_location = values[field_names.index("location_id")]
         return instance
 
     def __str__(self):
@@ -819,7 +819,7 @@ class Object(models.Model, AccessibleMixin):
         if unsaved:
             utils.apply_default_permissions(self)
         # ACL Check: to change owner, caller must be allowed to `entrust` on this object
-        original_owner_id = getattr(self, "original_owner", None)
+        original_owner_id = self._original_owner
         if original_owner_id != self.owner_id and self.owner_id:
             # Ownership affects the "owners" group match in is_allowed(), so evict any
             # cached permission results for this object before checking entrust.
@@ -832,7 +832,7 @@ class Object(models.Model, AccessibleMixin):
         # ACL Check: to change anything else about the object you at least need `write`
         self.can_caller("write", self)
         # ACL Check: to change the location, caller must be allowed to `move` on this object
-        original_location_id = getattr(self, "original_location", None)
+        original_location_id = self._original_location
         if original_location_id != self.location_id and self.location_id:
             self.can_caller("move", self)
             # the new location must define an `accept` verb that returns True for this obejct
@@ -849,7 +849,7 @@ class Object(models.Model, AccessibleMixin):
             # the optional `enterfunc` Verb will be called asyncronously
             if self.location and self.location.has_verb("enterfunc"):
                 invoke(self, verb=self.location.get_verb("enterfunc"))
-            self.original_location = self.location_id
+            self._original_location = self.location_id
 
     # Django gets upset if this meddles with anything in RESERVED_NAMES
     # but otherwise this seems to work, including in the admin interface
@@ -945,8 +945,6 @@ RESERVED_NAMES = [
     "resolve_expression",
     "get_source_expressions",
     "_prefetched_objects_cache",
-    "original_owner",
-    "original_location",
 ]
 
 
