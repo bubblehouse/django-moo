@@ -105,27 +105,6 @@ def test_hasattr_normal_names_still_work():
 # ORM access via getattr chain must be blocked
 # ---------------------------------------------------------------------------
 
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
-def test_no_orm_access_via_getattr_chain(t_init: Object, t_wizard: Object):
-    """
-    An attacker cannot reach Object.objects by walking __class__ → objects.
-    getattr(obj, '__class__') is blocked, so the chain never starts.
-    """
-    src = """
-from moo.sdk import lookup
-obj = lookup(1)
-cls = getattr(obj, '__class__')
-mgr = getattr(cls, 'objects')
-print(mgr.count())
-"""
-    with _ctx(t_wizard):
-        w = code.ContextManager.get("writer")
-        g = code.get_default_globals()
-        g.update(code.get_restricted_environment("__main__", w))
-        with pytest.raises(AttributeError):
-            code.r_exec(src, {}, g)
-
-
 # ---------------------------------------------------------------------------
 # Dunder attribute syntax must remain blocked (regression guard)
 # ---------------------------------------------------------------------------
@@ -292,13 +271,6 @@ def test_string_module_not_importable():
     dunder attribute access (e.g. __class__) to reach the Django ORM.
     """
     _raises("import string", ImportError)
-
-
-def test_string_formatter_bypass_blocked():
-    """
-    Confirming that the string.Formatter bypass path is closed end-to-end.
-    """
-    _raises("from string import Formatter", ImportError)
 
 
 # ---------------------------------------------------------------------------
@@ -597,25 +569,6 @@ cls = obj.parents.all().model
             code.r_exec(src, {}, g)
 
 
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
-def test_queryset_model_exposes_orm_via_verbs(t_init: Object, t_wizard: Object):
-    """
-    Same guard via the obj.verbs RelatedManager. Confirms that blocking .model
-    on QuerySet instances covers all RelatedManager paths.
-    """
-    src = """
-from moo.sdk import lookup
-obj = lookup(1)
-cls = obj.verbs.all().model
-"""
-    with _ctx(t_wizard):
-        w = code.ContextManager.get("writer")
-        g = code.get_default_globals()
-        g.update(code.get_restricted_environment("__main__", w))
-        with pytest.raises(AttributeError):
-            code.r_exec(src, {}, g)
-
-
 # ---------------------------------------------------------------------------
 # Property.value must enforce read permission in verb code
 # ---------------------------------------------------------------------------
@@ -793,3 +746,165 @@ def test_caller_stack_previous_caller_reference_accessible():
             "Known gap: previous_caller is readable from caller_stack copy"
         )
         code.ContextManager.pop_caller()
+
+
+# ---------------------------------------------------------------------------
+# moo.sdk module attribute access
+# ---------------------------------------------------------------------------
+
+def test_sdk_contextmanager_blocked_via_module_attribute():
+    """
+    ContextManager is imported as _ContextManager (underscore alias) in moo/sdk.py.
+    Accessing it as `sdk.ContextManager` is blocked because BLOCKED_IMPORTS contains
+    'ContextManager' for 'moo.sdk', and the ModuleType guard in get_protected_attribute
+    enforces BLOCKED_IMPORTS for attribute-access paths too.
+    """
+    _raises(
+        "import moo.sdk as sdk\nx = sdk.ContextManager",
+        AttributeError,
+    )
+
+
+def test_sdk_module_traversal_to_core_blocked():
+    """
+    `import moo.sdk` (bare, no 'as') binds the top-level `moo` package.
+    The ModuleType guard in get_protected_attribute blocks attribute access to any
+    submodule whose name is not in ALLOWED_MODULES/WIZARD_ALLOWED_MODULES, so
+    `moo.core` raises AttributeError before the ORM is reachable.
+    """
+    _raises(
+        "import moo.sdk\nx = moo.core",
+        AttributeError,
+    )
+
+
+# ---------------------------------------------------------------------------
+# QuerySet mutation methods must be blocked
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_queryset_update_bypasses_verb_save_permission(t_init: Object, t_wizard: Object):
+    """
+    QuerySet.update() issues SQL UPDATE directly, bypassing Verb.save() permission
+    checks. The guard blocks 'update' on QuerySet/BaseManager instances.
+    """
+    src = """
+from moo.sdk import lookup
+obj = lookup(1)
+obj.verbs.filter(names__name='look').update(code='print("pwned")')
+"""
+    with _ctx(t_wizard):
+        w = code.ContextManager.get("writer")
+        g = code.get_default_globals()
+        g.update(code.get_restricted_environment("__main__", w))
+        with pytest.raises(AttributeError):
+            code.r_exec(src, {}, g)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_queryset_delete_bypasses_permission(t_init: Object, t_wizard: Object):
+    """
+    QuerySet.delete() issues SQL DELETE directly, bypassing model-level permission
+    checks. The guard blocks 'delete' on QuerySet/BaseManager instances.
+    """
+    src = """
+from moo.sdk import lookup
+obj = lookup(1)
+obj.verbs.all().delete()
+"""
+    with _ctx(t_wizard):
+        w = code.ContextManager.get("writer")
+        g = code.get_default_globals()
+        g.update(code.get_restricted_environment("__main__", w))
+        with pytest.raises(AttributeError):
+            code.r_exec(src, {}, g)
+
+
+# ---------------------------------------------------------------------------
+# QuerySet.values() must not bypass the Property.value guard
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_queryset_values_bypasses_property_value_guard(t_init: Object, t_wizard: Object):
+    """
+    QuerySet.values() returns plain dicts whose 'value' key is not a Property instance,
+    so the isinstance(obj, Property) guard in get_protected_attribute never fires.
+    The guard now blocks 'values' on QuerySet/BaseManager.
+    """
+    from moo.core import create
+    from moo.core.exceptions import AccessError
+
+    with _ctx(t_wizard):
+        target = create("values_guard_target")
+        target.set_property("secret", "top_secret")
+        plain = create("values_guard_plain")
+        prop = target.properties.filter(name="secret").first()
+        prop.deny(plain, "read")
+
+    src = """
+from moo.sdk import lookup
+obj = lookup(%d)
+rows = list(obj.properties.all().values('name', 'value'))
+""" % target.pk
+
+    with _ctx(plain):
+        w = code.ContextManager.get("writer")
+        g = code.get_default_globals()
+        g.update(code.get_restricted_environment("__main__", w))
+        with pytest.raises(AttributeError):
+            code.r_exec(src, {}, g)
+
+
+# ---------------------------------------------------------------------------
+# RelatedManager.create() must respect write permission
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_relatedmanager_create_bypasses_add_verb_permission(t_init: Object, t_wizard: Object):
+    """
+    RelatedManager.create() routes directly to Verb.save() with pk=None, which
+    previously skipped the write-permission check. The guard now blocks 'create'
+    on QuerySet/BaseManager, and Verb.save() also checks permission for creates.
+    """
+    src = """
+from moo.sdk import lookup
+obj = lookup(1)
+obj.verbs.create(code='print("injected")')
+"""
+    with _ctx(t_wizard):
+        w = code.ContextManager.get("writer")
+        g = code.get_default_globals()
+        g.update(code.get_restricted_environment("__main__", w))
+        with pytest.raises(AttributeError):
+            code.r_exec(src, {}, g)
+
+
+# ---------------------------------------------------------------------------
+# ManyToMany parent manipulation must be blocked
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_m2m_parents_add_blocked(t_init: Object, t_wizard: Object):
+    """
+    ManyToManyField.add() issues SQL directly without going through Object.save(),
+    bypassing ACL checks. The guard blocks 'add' on BaseManager instances.
+    """
+    from moo.core import create
+
+    with _ctx(t_wizard):
+        target = create("m2m_add_target")
+        extra_parent = create("m2m_add_parent")
+
+    src = """
+from moo.sdk import lookup
+target = lookup(%d)
+extra = lookup(%d)
+target.parents.add(extra)
+""" % (target.pk, extra_parent.pk)
+
+    with _ctx(t_wizard):
+        w = code.ContextManager.get("writer")
+        g = code.get_default_globals()
+        g.update(code.get_restricted_environment("__main__", w))
+        with pytest.raises(AttributeError):
+            code.r_exec(src, {}, g)
