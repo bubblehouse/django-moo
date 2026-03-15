@@ -37,6 +37,18 @@
             "env": {
                 "DJANGO_SETTINGS_MODULE": "moo.settings.local"
             }
+        },
+        {
+            "name": "Hugo Server",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "hugo server",
+            "cwd": "${workspaceFolder}/extras/pages",
+            "serverReadyAction": {
+                "pattern": "Web Server is available",
+                "uriFormat": "http://localhost:1313/django-moo/",
+                "action": "openExternally"
+            }
         }
     ]
 }
