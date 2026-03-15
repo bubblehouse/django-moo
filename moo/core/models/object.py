@@ -975,6 +975,10 @@ class Alias(models.Model):
         self.object.can_caller("write", self.object)
         super().save(*args, **kwargs)
 
+    def delete(self, *args, **kwargs):
+        self.object.can_caller("write", self.object)
+        super().delete(*args, **kwargs)
+
 
 class AncestorCache(models.Model):
     """
