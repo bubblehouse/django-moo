@@ -1,3 +1,12 @@
+## [0.79.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.79.0...v0.79.1) (2026-03-15)
+
+### Bug Fixes
+
+* more sandbox escapes ([083df3b](https://gitlab.com/bubblehouse/django-moo/commit/083df3b67cd079d0292d5fd5bbf3ec4db1f7a5e4))
+* sandbox escape fix for original_owner, original_location ([e21162b](https://gitlab.com/bubblehouse/django-moo/commit/e21162b518df1bbcbef1798348864a45c9b7159e))
+* vscode configuration, sandbox escapes ([96a055b](https://gitlab.com/bubblehouse/django-moo/commit/96a055b22ed5792192b60b2519d94bde4dce45b1))
+* yet more sandbox escapes ([5387270](https://gitlab.com/bubblehouse/django-moo/commit/5387270b86734415168d68eb498bb8538968c9c8))
+
 ## [0.79.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.78.1...v0.79.0) (2026-03-15)
 
 ### Features
