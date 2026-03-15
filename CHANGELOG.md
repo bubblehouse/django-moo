@@ -1,3 +1,13 @@
+## [0.79.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.78.1...v0.79.0) (2026-03-15)
+
+### Features
+
+* refactor moo.core into moo.sdk for verb isolation purposes ([908831a](https://gitlab.com/bubblehouse/django-moo/commit/908831a9720f7501ab494af9e1c77a8e47c87e5b))
+
+### Bug Fixes
+
+* more sandbox escapes, removed some superflous tests ([ed7e25e](https://gitlab.com/bubblehouse/django-moo/commit/ed7e25e126c884fa681008a82fd631995616c6f2))
+
 ## [0.78.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.78.0...v0.78.1) (2026-03-14)
 
 ### Bug Fixes
