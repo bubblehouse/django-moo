@@ -406,6 +406,13 @@ def test_write_setitem_passthrough():
 
 
 def test_apply_calls_function():
+    """
+    RestrictedPython still generates _apply_ for star-expansion calls
+    (``f(*args)``) in Python 3 — it is not the Python 2 ``apply()`` builtin
+    artifact we initially assumed. The current implementation is an unrestricted
+    pass-through (``lambda f, *a, **kw: f(*a, **kw)``), which is correct because
+    all argument access is already guarded at the call-site level.
+    """
     env = code.get_restricted_environment("test", lambda s: None)
     assert env["_apply_"](len, [1, 2, 3]) == 3
 

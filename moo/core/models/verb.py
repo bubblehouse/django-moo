@@ -102,6 +102,10 @@ class Verb(models.Model, AccessibleMixin):
             return
         utils.apply_default_permissions(self)
 
+    def delete(self, *args, **kwargs):
+        self.origin.can_caller("write", self)  # pylint: disable=no-member
+        super().delete(*args, **kwargs)
+
     def reload(self):
         self.origin.can_caller("write", self)  # pylint: disable=no-member
         if self.repo is None or self.filename is None:
