@@ -36,15 +36,15 @@ else:
         count = 0
         errors = []
         for verb in verbs:
-            context.player.caller.tell(f"  Reloading {verb}...")
+            context.player.tell(f"  Reloading {verb}...")
             try:
                 verb.reload()
                 count += 1
             except Exception as e:  # pylint: disable=broad-except
                 errors.append(f"  {verb}: {e}")
-        context.player.caller.tell(f"Reloaded {count} verb(s).")
+        context.player.tell(f"Reloaded {count} verb(s).")
         for err in errors:
-            context.player.caller.tell(err)
+            context.player.tell(err)
     else:
         try:
             target = context.parser.get_dobj(lookup=True)
@@ -58,12 +58,12 @@ else:
         count = 0
         errors = []
         for verb in verbs:
-            context.player.caller.tell(f"  Reloading {verb}...")
+            context.player.tell(f"  Reloading {verb}...")
             try:
                 verb.reload()
                 count += 1
             except Exception as e:  # pylint: disable=broad-except
                 errors.append(f"  {verb}: {e}")
-        context.player.caller.tell(f"Reloaded {count} verb(s) on {target.name}.")
+        context.player.tell(f"Reloaded {count} verb(s) on {target.name}.")
         for err in errors:
-            context.player.caller.tell(err)
+            context.player.tell(err)
