@@ -15,7 +15,7 @@ def test_simple_async_verb(t_init: Object, t_wizard: Object, caplog: pytest.LogC
         printed.append(msg)
 
     v = t_wizard.add_verb("test-async-verbs", code="""\
-from moo.core import context, invoke
+from moo.sdk import context, invoke
 counter = 1
 if args and len(args):
     counter = args[0] + 1
@@ -52,7 +52,7 @@ if counter < 10:
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_simple_async_verb_callback(t_init: Object, t_wizard: Object, caplog: pytest.LogCaptureFixture):
     t_wizard.add_verb("test-async-verb", code="""\
-from moo.core import context, invoke
+from moo.sdk import context, invoke
 counter = 1
 if args and len(args):
     counter = args[0] + 1
@@ -85,12 +85,12 @@ print(args[0])
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_basic_rollback(t_init: Object, t_wizard: Object):
     tasks.parse_code(
-        t_wizard.pk, 'from moo.core import create;create(name="CreatedObjectWithAUniqueName", unique_name=True)'
+        t_wizard.pk, 'from moo.sdk import create;create(name="CreatedObjectWithAUniqueName", unique_name=True)'
     )
     with pytest.raises(RuntimeError):
         tasks.parse_code(
             t_wizard.pk,
-            """from moo.core import create
+            """from moo.sdk import create
 o = create(name="ErroredObjectWithAUniqueName", unique_name=True)
 raise RuntimeError()
 """,

@@ -19,7 +19,7 @@ If the `paranoid` level of the recipient is `1`, then the message and its origin
 processing by the `@check` command.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 player = context.player
 callers = context.caller_stack + [{"caller": player, "verb_name": "", "this": player}]

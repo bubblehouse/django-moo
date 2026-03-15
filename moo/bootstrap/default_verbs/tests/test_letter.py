@@ -1,6 +1,7 @@
 import pytest
 
-from moo.core import code, create, exceptions, lookup, parse
+from moo.core import code, exceptions, parse
+from moo.sdk import create, lookup
 from moo.core.models import Object
 
 

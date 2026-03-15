@@ -15,7 +15,7 @@ messages using the `this.whodunnit` verb with the `trust` and `mistrust` lists.
 Any dubious messages found are printed, along with details of who sent them.
 """
 
-from moo.core import context, lookup
+from moo.sdk import context, lookup
 
 player = context.player
 args = context.parser.words[1:] if context.parser else args

@@ -14,7 +14,7 @@ found, and the user is a wizard, then the value of that player's `ownership_quot
 ``permission denied`` message is returned.
 """
 
-from moo.core import context, lookup
+from moo.sdk import context, lookup
 
 if args:
     player_name = args[0]

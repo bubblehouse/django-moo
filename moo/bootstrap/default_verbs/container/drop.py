@@ -16,7 +16,7 @@ If pipe is open, then tobacco will be put into the pipe. If you look at pipe you
         tobacco
 """
 
-from moo.core import context
+from moo.sdk import context
 
 obj = args[0] if args else context.parser.get_dobj()
 

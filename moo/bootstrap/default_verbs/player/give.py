@@ -8,7 +8,7 @@ the inventory of the indirect object. If, after the move, the object is still in
 is obvious that the recipient has rejected the gift. If this is the case, a suitable message is printed to the donor.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 player = context.player
 

@@ -82,7 +82,7 @@ Attempting to import or use other modules will result in a security error.
 
 As mentioned above, DjangoMOO uses Python as its in-game programming language. We usually need to start by importing one essential variable:
 
-    from moo.core import context
+    from moo.sdk import context
 
 The `context` object has a variety of attributes that are useful in verbs:
 

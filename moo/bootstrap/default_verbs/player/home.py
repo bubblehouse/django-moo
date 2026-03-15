@@ -17,7 +17,7 @@ after the move - then for some reason the player's home location has not allowed
 is printed, and no further action is taken.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 player = context.player
 home = player.get_property("home")

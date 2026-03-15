@@ -112,7 +112,7 @@ def test_no_orm_access_via_getattr_chain(t_init: Object, t_wizard: Object):
     getattr(obj, '__class__') is blocked, so the chain never starts.
     """
     src = """
-from moo.core import lookup
+from moo.sdk import lookup
 obj = lookup(1)
 cls = getattr(obj, '__class__')
 mgr = getattr(cls, 'objects')
@@ -145,10 +145,10 @@ def test_dunder_syntax_blocked():
 
 def test_context_manager_not_importable():
     """
-    ContextManager is in BLOCKED_IMPORTS for moo.core.
+    ContextManager is in BLOCKED_IMPORTS for moo.sdk.
     Verb code must not be able to call override_caller() to impersonate another player.
     """
-    _raises("from moo.core import ContextManager", ImportError)
+    _raises("from moo.sdk import ContextManager", ImportError)
 
 
 # ---------------------------------------------------------------------------
@@ -161,11 +161,11 @@ def test_set_task_perms_requires_wizard(t_init: Object, t_wizard: Object):
     set_task_perms() raises UserError when called by a non-wizard.
     This is already enforced; test guards against regression.
     """
-    from moo.core import set_task_perms
+    from moo.sdk import set_task_perms
     from moo.core.exceptions import UserError
 
     # Create a plain (non-wizard) object to act as caller
-    from moo.core import create
+    from moo.sdk import create
     plain = create("plain_user")
 
     with _ctx(plain):
@@ -184,7 +184,7 @@ def test_publish_to_player_not_importable():
     RestrictedPython rejects _-prefixed names at compile time (TypeError on exec),
     and BLOCKED_IMPORTS provides defense-in-depth at the import level.
     """
-    _raises("from moo.core import _publish_to_player", (ImportError, TypeError))
+    _raises("from moo.sdk import _publish_to_player", (ImportError, TypeError))
 
 
 # ---------------------------------------------------------------------------
@@ -211,7 +211,7 @@ def test_caller_stack_returns_copy():
 def test_invoke_periodic_requires_wizard():
     """invoke(..., periodic=True) raises UserError when called by a non-wizard."""
     from unittest.mock import MagicMock
-    from moo.core import invoke
+    from moo.sdk import invoke
     from moo.core.exceptions import UserError
 
     non_wizard = MagicMock()
@@ -226,7 +226,7 @@ def test_invoke_periodic_requires_wizard():
 def test_invoke_cron_requires_wizard():
     """invoke(..., cron=...) raises UserError when called by a non-wizard."""
     from unittest.mock import MagicMock
-    from moo.core import invoke
+    from moo.sdk import invoke
     from moo.core.exceptions import UserError
 
     non_wizard = MagicMock()
@@ -241,7 +241,7 @@ def test_invoke_cron_requires_wizard():
 def test_invoke_oneshot_allowed_for_nonwizard():
     """invoke() without periodic/cron must not raise for non-wizards."""
     from unittest.mock import MagicMock, patch
-    from moo.core import invoke
+    from moo.sdk import invoke
 
     non_wizard = MagicMock()
     non_wizard.is_wizard.return_value = False
@@ -264,7 +264,7 @@ def test_context_caller_is_read_only_directly():
     Directly assigning context.caller must raise AttributeError.
     The _Context.descriptor is a data descriptor; instance attributes cannot shadow it.
     """
-    from moo.core import context
+    from moo.sdk import context
 
     with pytest.raises(AttributeError):
         context.caller = _mock(is_wizard=True)
@@ -278,7 +278,7 @@ def test_context_caller_shadowing_blocked_in_verb():
     subsequent code in the same worker process.
     """
     # Does not need DB — just tests that setattr on the context singleton is rejected.
-    _raises("from moo.core import context\ncontext.caller = None", AttributeError)
+    _raises("from moo.sdk import context\ncontext.caller = None", AttributeError)
 
 
 # ---------------------------------------------------------------------------
@@ -313,7 +313,7 @@ def test_invoke_checks_execute_permission():
     denial is deterministic regardless of default ACL state.
     """
     from unittest.mock import MagicMock, patch
-    from moo.core import invoke
+    from moo.sdk import invoke
 
     caller = MagicMock()
     caller.is_wizard.return_value = False
@@ -343,43 +343,41 @@ def test_write_setitem_underscore_key_blocked():
 
 
 # ---------------------------------------------------------------------------
-# moo.core submodules must not be importable (ORM access via models)
+# moo.sdk must not expose internal framework names
 # ---------------------------------------------------------------------------
 
-def test_models_submodule_not_importable():
+def test_models_not_in_sdk():
     """
-    `from moo.core import models` must raise ImportError.
-    moo.core.models exposes Django ORM model classes (Object.objects,
-    User.objects, etc.) with no permission checks.  'models' is now in
-    BLOCKED_IMPORTS for moo.core.
+    `from moo.sdk import models` must raise ImportError.
+    Django ORM model classes (Object.objects, User.objects, etc.) must not be
+    reachable from verb code via the public SDK.
     """
-    _raises("from moo.core import models", ImportError)
+    _raises("from moo.sdk import models", ImportError)
 
 
-def test_auth_submodule_not_importable():
+def test_auth_not_in_sdk():
     """
-    `from moo.core import auth` must raise ImportError.
-    moo.core.auth re-exports Player and User ORM models.
+    `from moo.sdk import auth` must raise ImportError.
+    auth re-exports Player and User ORM models and must not be verb-accessible.
     """
-    _raises("from moo.core import auth", ImportError)
+    _raises("from moo.sdk import auth", ImportError)
 
 
-def test_tasks_submodule_not_importable():
+def test_tasks_not_in_sdk():
     """
-    `from moo.core import tasks` must raise ImportError.
-    moo.core.tasks exposes raw Celery task functions that bypass the invoke()
-    permission guards.
+    `from moo.sdk import tasks` must raise ImportError.
+    tasks exposes raw Celery task functions that bypass the invoke() permission guards.
     """
-    _raises("from moo.core import tasks", ImportError)
+    _raises("from moo.sdk import tasks", ImportError)
 
 
-def test_code_submodule_not_importable():
+def test_code_not_in_sdk():
     """
-    `from moo.core import code` must raise ImportError.
-    moo.core.code exposes ContextManager, providing an indirect path to
-    override_caller() even though ContextManager itself is blocked by name.
+    `from moo.sdk import code` must raise ImportError.
+    code exposes ContextManager, providing an indirect path to override_caller()
+    even though ContextManager itself is blocked by name.
     """
-    _raises("from moo.core import code", ImportError)
+    _raises("from moo.sdk import code", ImportError)
 
 
 # ---------------------------------------------------------------------------
@@ -458,7 +456,7 @@ def test_verb_save_requires_write_permission(t_init, t_wizard):
     by getting a Verb model instance and calling .save() directly.
     Verb.save() now calls can_caller("write", self) for updates.
     """
-    from moo.core import create
+    from moo.sdk import create
     from moo.core.exceptions import AccessError
 
     # create a target object owned by wizard, with a verb on it
@@ -481,7 +479,7 @@ def test_verb_save_requires_write_permission(t_init, t_wizard):
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_verb_save_allowed_for_owner(t_init, t_wizard):
     """The owner of an object can still save changes to a verb on it."""
-    from moo.core import create
+    from moo.sdk import create
 
     with _ctx(t_wizard):
         target = create("target_obj2")
@@ -507,7 +505,7 @@ def test_property_save_requires_write_permission(t_init, t_wizard):
     by obtaining the Property model instance via obj.properties and calling .save().
     Property.save() now calls can_caller("write", self.origin) for updates.
     """
-    from moo.core import create
+    from moo.sdk import create
     from moo.core.exceptions import AccessError
 
     with _ctx(t_wizard):
@@ -536,7 +534,7 @@ def test_object_delete_requires_write_permission(t_init, t_wizard):
     A non-wizard with read access must not be able to delete an arbitrary object.
     Object.delete() now calls can_caller("write", self) before proceeding.
     """
-    from moo.core import create
+    from moo.sdk import create
     from moo.core.exceptions import AccessError
 
     with _ctx(t_wizard):
@@ -587,7 +585,7 @@ def test_queryset_model_exposes_orm_via_parents(t_init: Object, t_wizard: Object
     raw ORM access path via RelatedManagers.
     """
     src = """
-from moo.core import lookup
+from moo.sdk import lookup
 obj = lookup(1)
 cls = obj.parents.all().model
 """
@@ -606,7 +604,7 @@ def test_queryset_model_exposes_orm_via_verbs(t_init: Object, t_wizard: Object):
     on QuerySet instances covers all RelatedManager paths.
     """
     src = """
-from moo.core import lookup
+from moo.sdk import lookup
 obj = lookup(1)
 cls = obj.verbs.all().model
 """
@@ -629,7 +627,7 @@ def test_property_value_read_bypasses_permission_via_relatedmanager(t_init: Obje
     verb code accesses prop.value. Since all verbs run inside RestrictedPython,
     this guard fires on any prop.value access in verb code by a non-privileged caller.
     """
-    from moo.core import create
+    from moo.sdk import create
     from moo.core.exceptions import AccessError
 
     with _ctx(t_wizard):
@@ -655,7 +653,7 @@ def test_property_value_read_bypasses_permission_via_relatedmanager(t_init: Obje
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_property_value_read_allowed_for_owner(t_init: Object, t_wizard: Object):
     """The owner's context can still read Property.value."""
-    from moo.core import create
+    from moo.sdk import create
 
     with _ctx(t_wizard):
         target = create("prop_owner_read_target")
@@ -678,7 +676,7 @@ def test_verb_direct_call_bypasses_execute_permission(t_init: Object, t_wizard: 
     is present. When execute is explicitly denied for a caller, the check
     raises AccessError instead of running the verb.
     """
-    from moo.core import create
+    from moo.sdk import create
     from moo.core.exceptions import AccessError
 
     with _ctx(t_wizard):
@@ -703,7 +701,7 @@ def test_passthrough_still_works_after_execute_check(t_init: Object, t_wizard: O
     It passes _bypass_execute_check=True so the parent verb call skips the
     redundant permission check.
     """
-    from moo.core import create
+    from moo.sdk import create
 
     with _ctx(t_wizard):
         parent = create("passthrough_parent")
@@ -729,7 +727,7 @@ def test_acl_enumeration_via_relatedmanager(t_init: Object, t_wizard: Object):
     verbs run in RestrictedPython, verb code accessing obj.acl as a non-privileged
     caller gets AccessError instead of the ACL queryset.
     """
-    from moo.core import create
+    from moo.sdk import create
     from moo.core.exceptions import AccessError
 
     with _ctx(t_wizard):
@@ -750,7 +748,7 @@ def test_acl_enumeration_via_relatedmanager(t_init: Object, t_wizard: Object):
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_acl_enumeration_allowed_for_wizard(t_init: Object, t_wizard: Object):
     """A wizard caller can still access obj.acl, since can_caller('grant') always passes for wizards."""
-    from moo.core import create
+    from moo.sdk import create
 
     with _ctx(t_wizard):
         target = create("acl_wizard_target")

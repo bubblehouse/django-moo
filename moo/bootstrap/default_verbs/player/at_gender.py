@@ -21,7 +21,7 @@ gender of the player, is also set, for example, to either "male", "female", or "
 given to the `@gender` command.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 player = context.player
 if context.parser.has_dobj_str():

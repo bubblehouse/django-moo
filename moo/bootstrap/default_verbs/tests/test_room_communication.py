@@ -2,7 +2,8 @@ import warnings
 
 import pytest
 
-from moo.core import context, code, create, lookup, parse
+from moo.core import code, parse
+from moo.sdk import context, create, lookup
 from moo.core.models import Object
 
 

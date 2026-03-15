@@ -34,7 +34,7 @@ would be represented as follows:
     ["&&", ["&&", #45, ["?", #46]], ["||", #47, ["!", #48]]]
 """
 
-from moo.core import lookup
+from moo.sdk import lookup
 
 key, who = args
 

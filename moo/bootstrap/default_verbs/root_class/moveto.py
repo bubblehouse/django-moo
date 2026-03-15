@@ -14,7 +14,7 @@ For example, you could keep a list of places visited by simply recording the whe
 function is called.
 """
 
-from moo.core import set_task_perms
+from moo.sdk import set_task_perms
 
 where = args[0]
 

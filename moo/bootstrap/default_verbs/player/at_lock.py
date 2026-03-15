@@ -9,7 +9,7 @@ given for the lock. If that fails, a suitable error message is printed. Otherwis
 being locked is set to the returned value from the parsing verb. Again, any errors are reported to the invoking player.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 parser = context.parser
 

@@ -13,7 +13,7 @@ suitable message is sent to the player.
 This case is included simply to speed up processing for certain common cases.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 player = context.player
 exit_obj = this.match_exit(verb_name)

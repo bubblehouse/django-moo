@@ -212,6 +212,6 @@ def test_write_to_caller(t_init, t_wizard):
     with code.ContextManager(t_wizard, lambda m: None):
         with pytest.warns(RuntimeWarning, match=r"ConnectionError"):
             code.interpret(
-                "from moo.core import context, write\nwrite(context.caller, 'TEST_STRING')",
+                "from moo.sdk import context, write\nwrite(context.caller, 'TEST_STRING')",
                 "__main__",
             )

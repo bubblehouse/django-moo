@@ -7,7 +7,7 @@ the one that is invoked. The message — everything following the verb — is pr
 surrounding it to indicate that is it a whisper.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 source = context.player.title()
 target = context.parser.get_pobj('to')

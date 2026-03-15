@@ -8,7 +8,7 @@ The verb or property to edit is determined by the dobj of the command, and the
 object to edit is determined by the pobj of the command.
 """
 
-from moo.core import context, open_editor, NoSuchVerbError, NoSuchPropertyError
+from moo.sdk import context, open_editor, NoSuchVerbError, NoSuchPropertyError
 
 if verb_name == "@edit":
     attribute = context.parser.get_dobj_str()

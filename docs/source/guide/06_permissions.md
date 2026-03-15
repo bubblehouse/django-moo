@@ -24,7 +24,7 @@ The `transmute` bit specifies whether or not the subject can create new objects 
 To improve the player experience, it's helpful to check permissions before allowing operations. The `can_caller()` method is one:
 
 ```python
-from moo.core import context
+from moo.sdk import context
 
 obj = context.player.location
 if not obj.can_caller("write"):
@@ -41,7 +41,7 @@ The `can_caller()` method checks if the current task's caller has the specified 
 The `caller` is usually the correct object to check for permissions, but very rarely you actually want to know if the current `player` is able to do something. In those cases, you can emulate `can_caller()` with:
 
 ```python
-from moo.core import context
+from moo.sdk import context
 # can the player object edit the room object?
 context.player.is_allowed("write", context.player.location)
 ```
@@ -73,7 +73,7 @@ if obj.can_caller("entrust"):
 Whenever a new object is created, DjangoMOO invokes the `set_default_permission(new_obj)` verb on the "System Object", the Object with `pk=1`. The default version of this verb sets the initial permissions for the new object:
 
 ```python
-from moo.core import context, set_task_perms
+from moo.sdk import context, set_task_perms
 
 obj = args[0]
 with set_task_perms(context.player):

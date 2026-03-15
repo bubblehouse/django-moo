@@ -9,7 +9,7 @@ This verb first checks to see if the letter is readable by the person who is att
 letter will be completely destroyed. If it is not readable, the command will fail.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 name = this.title()
 if this.is_readable_by(context.player):
