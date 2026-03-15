@@ -11,14 +11,7 @@ import pytest
 
 from .. import code, create, exceptions, lookup
 from ..models import Alias, AncestorCache, Object, Player, Property, Verb
-
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-def _ctx(wizard):
-    return code.ContextManager(wizard, lambda m: None)
+from .utils import ctx as _ctx
 
 
 # ---------------------------------------------------------------------------

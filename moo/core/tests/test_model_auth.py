@@ -6,14 +6,11 @@ Tests for moo/core/models/auth.py — Player.
 import pytest
 from django.contrib.auth import get_user_model
 
-from .. import code, create
+from .. import create
 from ..models import Object, Player
+from .utils import ctx as _ctx
 
 User = get_user_model()
-
-
-def _ctx(wizard):
-    return code.ContextManager(wizard, lambda m: None)
 
 
 # ---------------------------------------------------------------------------
