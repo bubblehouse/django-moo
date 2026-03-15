@@ -5,11 +5,9 @@ Tests for moo/core/models/property.py — Property.
 
 import pytest
 
-from .. import code, create
+from .. import create
 from ..models import Access, Object
-
-def _ctx(wizard):
-    return code.ContextManager(wizard, lambda m: None)
+from .utils import ctx as _ctx
 
 
 # ---------------------------------------------------------------------------

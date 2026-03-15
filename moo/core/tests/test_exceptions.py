@@ -19,13 +19,7 @@ import pytest
 from moo.core import code, exceptions, parse, tasks
 from moo.sdk import create
 from moo.core.models import Object
-from moo.core.models.verb import Verb, VerbName
-
-
-def _add_verb(obj, name, code_str, owner, **kwargs):
-    v = Verb.objects.create(origin=obj, owner=owner, code=code_str, **kwargs)
-    VerbName.objects.create(verb=v, name=name)
-    return v
+from moo.core.tests.utils import add_verb as _add_verb
 
 
 # =============================================================================

@@ -1,29 +1,9 @@
-import warnings
-
 import pytest
 
 from moo.core import code, parse
 from moo.sdk import context, create, lookup
 from moo.core.models import Object
-
-
-def setup_room(t_wizard: Object, name: str = "Test Room", description: str = "A plain test room."):
-    """Create a Generic Room, describe it, and move the wizard into it."""
-    rooms = lookup("Generic Room")
-    room = create(name, parents=[rooms])
-    room.describe(description)
-    t_wizard.location = room
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", RuntimeWarning)
-        t_wizard.save()
-    context.caller.refresh_from_db()
-    return room
-
-
-def setup_item(location: Object, name: str = "red ball"):
-    """Create a plain root_class child object in the given location."""
-    system = lookup(1)
-    return create(name, parents=[system.root_class], location=location)
+from .utils import save_quietly, setup_room, setup_root_item
 
 
 # --- look (player command) ---
@@ -47,7 +27,7 @@ def test_look_at_named_object(t_init: Object, t_wizard: Object):
     printed = []
     with code.ContextManager(t_wizard, printed.append) as ctx:
         room = setup_room(t_wizard)
-        coin = setup_item(room, "gold coin")
+        coin = setup_root_item(room, "gold coin")
         coin.describe("A shiny gold coin minted in ancient times.")
         parse.interpret(ctx, "look gold coin")
     assert any("ancient times" in line for line in printed)
@@ -100,7 +80,7 @@ def test_huh2_msg_setter_sets_property(t_init: Object, t_wizard: Object):
     """huh2 sets a _msg property when @<name> <obj> is <value> is typed."""
     printed = []
     with code.ContextManager(t_wizard, printed.append) as ctx:
-        widget = setup_item(t_wizard.location, "widget")
+        widget = setup_root_item(t_wizard.location, "widget")
         widget.set_property("foobar_msg", "original")
         parse.interpret(ctx, "@foobar widget is Hello world")
         widget.refresh_from_db()
@@ -113,7 +93,7 @@ def test_huh2_msg_setter_sets_property(t_init: Object, t_wizard: Object):
 def test_huh2_msg_setter_unknown_property_says_huh(t_init: Object, t_wizard: Object):
     """huh2 falls through to 'Huh?' when the @<name>_msg property doesn't exist."""
     with code.ContextManager(t_wizard, lambda msg: None) as ctx:
-        setup_item(t_wizard.location, "widget")
+        setup_root_item(t_wizard.location, "widget")
         with pytest.warns(RuntimeWarning, match=r"ConnectionError") as caught:
             parse.interpret(ctx, "@frobnitz widget is value")
     messages = [str(w.message) for w in caught.list]
@@ -225,15 +205,11 @@ def test_at_entrances_lists_entrances(t_init: Object, t_wizard: Object):
     printed = []
     with code.ContextManager(t_wizard, printed.append) as ctx:
         home = t_wizard.location
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", RuntimeWarning)
-            setup_room(t_wizard, name="Far Room")
+        setup_room(t_wizard, name="Far Room")
         parse.interpret(ctx, f"@tunnel south to {home.name}")
         # @tunnel added the entrance to `home`, so move back there before querying
         t_wizard.location = home
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", RuntimeWarning)
-            t_wizard.save()
+        save_quietly(t_wizard)
         context.caller.refresh_from_db()
         printed.clear()
         parse.interpret(ctx, "@entrances")

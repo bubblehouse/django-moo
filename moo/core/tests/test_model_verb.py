@@ -12,10 +12,7 @@ from django.db import IntegrityError
 
 from .. import code, create
 from ..models import Object, Repository, Verb, VerbName
-
-
-def _ctx(wizard):
-    return code.ContextManager(wizard, lambda m: None)
+from .utils import ctx as _ctx
 
 
 # ---------------------------------------------------------------------------

@@ -1,23 +1,9 @@
-import warnings
-
 import pytest
 
 from moo.core import code, parse
-from moo.sdk import context, create, lookup
+from moo.sdk import lookup
 from moo.core.models import Object
-
-
-def setup_room(t_wizard: Object, name: str = "Test Room", description: str = "A plain test room."):
-    """Create a Generic Room, describe it, and move the wizard into it."""
-    rooms = lookup("Generic Room")
-    room = create(name, parents=[rooms])
-    room.describe(description)
-    t_wizard.location = room
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", RuntimeWarning)
-        t_wizard.save()
-    context.caller.refresh_from_db()
-    return room
+from .utils import save_quietly, setup_room
 
 
 # --- say ---
@@ -82,9 +68,7 @@ def test_announce_delivers_to_others(t_init: Object, t_wizard: Object):
         room = setup_room(t_wizard)
         player = lookup("Player")
         player.location = room
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", RuntimeWarning)
-            player.save()
+        save_quietly(player)
         with pytest.warns(RuntimeWarning, match=r"ConnectionError") as w:
             room.announce("broadcast message")
     messages = [str(x.message) for x in w.list]
@@ -103,9 +87,7 @@ def test_announce_all_delivers_to_everyone(t_init: Object, t_wizard: Object):
         room = setup_room(t_wizard)
         player = lookup("Player")
         player.location = room
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", RuntimeWarning)
-            player.save()
+        save_quietly(player)
         with pytest.warns(RuntimeWarning, match=r"ConnectionError") as w:
             room.announce_all("all hands message")
     messages = [str(x.message) for x in w.list]
@@ -124,9 +106,7 @@ def test_announce_all_but_skips_specified_object(t_init: Object, t_wizard: Objec
         room = setup_room(t_wizard)
         player = lookup("Player")
         player.location = room
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", RuntimeWarning)
-            player.save()
+        save_quietly(player)
         with pytest.warns(RuntimeWarning, match=r"ConnectionError") as w:
             room.announce_all_but(player, "exclusive message")
     messages = [str(x.message) for x in w.list]
@@ -142,9 +122,7 @@ def test_announce_all_but_delivers_to_rest(t_init: Object, t_wizard: Object):
         room = setup_room(t_wizard)
         player = lookup("Player")
         player.location = room
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", RuntimeWarning)
-            player.save()
+        save_quietly(player)
         with pytest.warns(RuntimeWarning, match=r"ConnectionError") as w:
             room.announce_all_but(t_wizard, "player only message")
     messages = [str(x.message) for x in w.list]

@@ -5,25 +5,7 @@ import pytest
 from moo.core import code, exceptions, parse
 from moo.sdk import context, create, lookup
 from moo.core.models import Object, Player
-
-
-def setup_room(t_wizard: Object, name: str = "Test Room", description: str = "A plain test room."):
-    """Create a Generic Room, describe it, and move the wizard into it."""
-    rooms = lookup("Generic Room")
-    room = create(name, parents=[rooms])
-    room.describe(description)
-    t_wizard.location = room
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", RuntimeWarning)
-        t_wizard.save()
-    context.caller.refresh_from_db()
-    return room
-
-
-def setup_item(location: Object, name: str = "red ball"):
-    """Create a plain root_class child object in the given location."""
-    system = lookup(1)
-    return create(name, parents=[system.root_class], location=location)
+from .utils import save_quietly, setup_room, setup_root_item
 
 
 # --- look_self ---
@@ -58,7 +40,7 @@ def test_look_self_includes_contents(t_init: Object, t_wizard: Object):
     printed = []
     with code.ContextManager(t_wizard, printed.append):
         room = setup_room(t_wizard)
-        setup_item(room, "gold coin")
+        setup_root_item(room, "gold coin")
         room.look_self()
     assert any("gold coin" in line for line in printed)
 
@@ -88,7 +70,7 @@ def test_tell_contents_ctype3_single_item(t_init: Object, t_wizard: Object):
         rooms = lookup("Generic Room")
         room = create("One Item Room", parents=[rooms])
         room.set_property("content_list_type", 3)
-        setup_item(room, "red ball")
+        setup_root_item(room, "red ball")
         room.tell_contents()
     assert printed == ["You see red ball here."]
 
@@ -102,8 +84,8 @@ def test_tell_contents_ctype3_multiple_items(t_init: Object, t_wizard: Object):
         rooms = lookup("Generic Room")
         room = create("Multi Item Room", parents=[rooms])
         room.set_property("content_list_type", 3)
-        setup_item(room, "red ball")
-        setup_item(room, "blue box")
+        setup_root_item(room, "red ball")
+        setup_root_item(room, "blue box")
         room.tell_contents()
     assert printed == ["You see red ball and blue box here."]
 
@@ -118,15 +100,11 @@ def test_tell_contents_ctype3_single_player(t_init: Object, t_wizard: Object):
         room = create("Player Room", parents=[rooms])
         room.set_property("content_list_type", 3)
         t_wizard.location = room
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", RuntimeWarning)
-            t_wizard.save()
+        save_quietly(t_wizard)
         context.caller.refresh_from_db()
         player = lookup("Player")
         player.location = room
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", RuntimeWarning)
-            player.save()
+        save_quietly(player)
         room.tell_contents()
     assert printed == ["You see Player here."]
 
@@ -168,7 +146,7 @@ def test_tell_contents_ctype3_mixed(t_init: Object, t_wizard: Object):
             t_wizard.location = room
             t_wizard.save()
             context.caller.refresh_from_db()
-            setup_item(room, "red ball")
+            setup_root_item(room, "red ball")
             player = lookup("Player")
             player.location = room
             player.save()
@@ -188,7 +166,7 @@ def test_tell_contents_ctype2_single_item(t_init: Object, t_wizard: Object):
         rooms = lookup("Generic Room")
         room = create("Ctype2 Room", parents=[rooms])
         room.set_property("content_list_type", 2)
-        setup_item(room, "red ball")
+        setup_root_item(room, "red ball")
         room.tell_contents()
     assert printed == ["You see red ball here."]
 
@@ -202,15 +180,13 @@ def test_tell_contents_ctype2_mixed(t_init: Object, t_wizard: Object):
         rooms = lookup("Generic Room")
         room = create("Ctype2 Mixed Room", parents=[rooms])
         room.set_property("content_list_type", 2)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", RuntimeWarning)
-            t_wizard.location = room
-            t_wizard.save()
-            context.caller.refresh_from_db()
-            player = lookup("Player")
-            player.location = room
-            player.save()
-        setup_item(room, "red ball")
+        t_wizard.location = room
+        save_quietly(t_wizard)
+        context.caller.refresh_from_db()
+        player = lookup("Player")
+        player.location = room
+        save_quietly(player)
+        setup_root_item(room, "red ball")
         room.tell_contents()
     assert printed == ["You see Player and red ball here."]
 
@@ -227,15 +203,13 @@ def test_tell_contents_ctype1(t_init: Object, t_wizard: Object):
         rooms = lookup("Generic Room")
         room = create("Ctype1 Room", parents=[rooms])
         room.set_property("content_list_type", 1)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", RuntimeWarning)
-            t_wizard.location = room
-            t_wizard.save()
-            context.caller.refresh_from_db()
-            player = lookup("Player")
-            player.location = room
-            player.save()
-        setup_item(room, "red ball")
+        t_wizard.location = room
+        save_quietly(t_wizard)
+        context.caller.refresh_from_db()
+        player = lookup("Player")
+        player.location = room
+        save_quietly(player)
+        setup_root_item(room, "red ball")
         room.tell_contents()
     assert printed == ["Player is here", "You see red ball here"]
 
@@ -252,12 +226,10 @@ def test_tell_contents_ctype0(t_init: Object, t_wizard: Object):
         rooms = lookup("Generic Room")
         room = create("Ctype0 Room", parents=[rooms])
         room.set_property("content_list_type", 0)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", RuntimeWarning)
-            t_wizard.location = room
-            t_wizard.save()
+        t_wizard.location = room
+        save_quietly(t_wizard)
         context.caller.refresh_from_db()
-        setup_item(room, "red ball")
+        setup_root_item(room, "red ball")
         room.tell_contents()
     assert printed == ["Contents:", "red ball"]
 
@@ -274,7 +246,7 @@ def test_tell_contents_ctype_out_of_range(t_init: Object, t_wizard: Object):
         rooms = lookup("Generic Room")
         room = create("Silent Room", parents=[rooms])
         room.set_property("content_list_type", 99)
-        setup_item(room, "red ball")
+        setup_root_item(room, "red ball")
         room.tell_contents()
     assert not printed
 
@@ -302,9 +274,7 @@ def test_confunc_announces_connection_to_others(t_init: Object, t_wizard: Object
         room = setup_room(t_wizard)
         player = lookup("Player")
         player.location = room
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", RuntimeWarning)
-            player.save()
+        save_quietly(player)
         with pytest.warns(RuntimeWarning, match=r"ConnectionError") as w:
             room.confunc()
     messages = [str(x.message) for x in w.list]
@@ -323,13 +293,9 @@ def test_disfunc_moves_player_to_home(t_init: Object, t_wizard: Object):
         away = create("Away Room", parents=[rooms])
         t_player = lookup("Player")
         t_player.location = away
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", RuntimeWarning)
-            t_player.save()
+        save_quietly(t_player)
         t_wizard.location = away
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", RuntimeWarning)
-            t_wizard.save()
+        save_quietly(t_wizard)
         context.caller.refresh_from_db()
         with pytest.warns(RuntimeWarning, match=r"ConnectionError") as w:
             t_wizard.location.disfunc()
@@ -369,7 +335,7 @@ def test_accept_free_entry_allows_any_object(t_init: Object, t_wizard: Object):
         rooms = lookup("Generic Room")
         room = create("Open Room", parents=[rooms])
         room.set_property("free_entry", True)
-        item = setup_item(t_wizard.location)
+        item = setup_root_item(t_wizard.location)
         assert room.accept(item) is True
 
 
@@ -382,7 +348,7 @@ def test_accept_owner_match_allows_entry(t_init: Object, t_wizard: Object):
         room = create("Owned Room", parents=[rooms])
         room.set_property("free_entry", False)
         # wizard owns both the room and the item by default
-        item = setup_item(t_wizard.location)
+        item = setup_root_item(t_wizard.location)
         assert room.accept(item) is True
 
 
@@ -394,7 +360,7 @@ def test_accept_locked_room_denies_entry(t_init: Object, t_wizard: Object):
         rooms = lookup("Generic Room")
         room = create("Locked Room", parents=[rooms])
         room.set_property("free_entry", False)
-        item = setup_item(t_wizard.location)
+        item = setup_root_item(t_wizard.location)
         # Point the key at the room itself — the item won't satisfy that lock
         room.set_property("key", room)
         assert room.accept(item) is False
@@ -444,7 +410,7 @@ def test_match_object_found_in_room(t_init: Object, t_wizard: Object):
     """match_object() returns the object when it is in the room."""
     with code.ContextManager(t_wizard, lambda msg: None):
         room = setup_room(t_wizard)
-        coin = setup_item(room, "silver coin")
+        coin = setup_root_item(room, "silver coin")
         result = room.match_object("silver coin")
     assert result == coin
 
@@ -465,7 +431,7 @@ def test_match_object_ambiguous_raises(t_init: Object, t_wizard: Object):
     """match_object() raises AmbiguousObjectError when multiple objects share a name."""
     with code.ContextManager(t_wizard, lambda msg: None):
         room = setup_room(t_wizard)
-        setup_item(room, "red key")
-        setup_item(room, "red key")
+        setup_root_item(room, "red key")
+        setup_root_item(room, "red key")
         with pytest.raises(exceptions.AmbiguousObjectError):
             room.match_object("red key")

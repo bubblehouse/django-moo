@@ -1,11 +1,10 @@
-import warnings
-
 import pytest
 
 from moo.core import code, parse
 from moo.sdk import create, lookup
 from moo.core.models import Object
 from moo.core.models.verb import Verb, VerbName
+from .utils import save_quietly
 
 
 # --- whodunnit ---
@@ -76,9 +75,7 @@ def test_eject_victim_from_container(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, printed.append) as ctx:
         container = create("Vault", parents=[system.room], location=t_wizard.location)
         player_npc.location = container
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", RuntimeWarning)
-            player_npc.save()
+        save_quietly(player_npc)
         for name, code_str in [
             ("victim_ejection_msg", 'return "You have been ejected!"'),
             ("ejection_msg",        'return "You ejected them."'),
