@@ -103,6 +103,7 @@ class Verb(models.Model, AccessibleMixin):
         utils.apply_default_permissions(self)
 
     def reload(self):
+        self.origin.can_caller("write", self)  # pylint: disable=no-member
         if self.repo is None or self.filename is None:
             raise RuntimeError("Cannot reload a verb without an associated repo and filename.")
         import pathlib
@@ -200,6 +201,14 @@ class VerbName(models.Model):
     def __str__(self):
         return "%s {#%s on %s}" % (self.name, self.verb.id, self.verb.origin)
 
+    def save(self, *args, **kwargs):
+        self.verb.can_caller("write", self.verb)
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        self.verb.can_caller("write", self.verb)
+        super().delete(*args, **kwargs)
+
 
 # TODO: add support for additional URL types and connection details
 class URLField(models.CharField):
@@ -210,3 +219,17 @@ class Repository(models.Model):
     slug = models.SlugField()
     url = URLField(max_length=255)
     prefix = models.CharField(max_length=255)
+
+    def save(self, *args, **kwargs):
+        from ..exceptions import AccessError
+        caller = ContextManager.get("caller")
+        if caller is not None and not caller.is_wizard():
+            raise AccessError(caller, "modify", self)
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        from ..exceptions import AccessError
+        caller = ContextManager.get("caller")
+        if caller is not None and not caller.is_wizard():
+            raise AccessError(caller, "delete", self)
+        super().delete(*args, **kwargs)

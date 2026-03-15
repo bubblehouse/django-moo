@@ -114,7 +114,7 @@ def test_verb_call_executes_code(t_init, t_wizard):
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
-def test_verb_call_this_is_invoked_object(t_init, t_wizard):
+def test_verb_call_this_isinvoked_object(t_init, t_wizard):
     with _ctx(t_wizard):
         obj = create("this obj")
         obj.add_verb("selfcheck", code="return this.pk")
