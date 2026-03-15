@@ -9,10 +9,7 @@ import pytest
 
 from .. import code, connected_players, create
 from ..models import Player
-
-
-def _ctx(wizard):
-    return code.ContextManager(wizard, lambda m: None)
+from .utils import ctx as _ctx
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
