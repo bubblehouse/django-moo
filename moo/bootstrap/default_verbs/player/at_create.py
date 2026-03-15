@@ -21,7 +21,7 @@ print("[yellow]Created %s[/yellow]" % new_obj)
 
 if context.parser.has_pobj_str("from"):
     parent = context.parser.get_pobj("from", lookup=True)
-    new_obj.parents.add(parent)
+    new_obj.add_parent(parent)
     print("[yellow]Transmuted %s to %s[/yellow]" % (new_obj, parent))
 
 new_obj.moveto(context.player)

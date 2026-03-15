@@ -24,11 +24,10 @@ if context.parser.has_pobj("through"):
     if not door.is_a(_.exit):
         print("[red]The specified object is not an exit.[/red]")
         return
-    if not door.aliases.filter(alias=direction):
-        door.aliases.create(alias=direction)
+    door.add_alias(direction)
 else:
     door = create(f"{direction} from {source.name}", parents=[_.exit], location=None)
-    door.aliases.create(alias=direction)
+    door.add_alias(direction)
 
 if verb_name == "@dig":
     action = "Dug"
