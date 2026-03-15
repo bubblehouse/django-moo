@@ -1,8 +1,12 @@
 html {
-  background-color: #514732;
+  background-color: #F6D797;
 }
 
 body {
+  background-color: #514732;
+}
+
+main {
   background-color: #F6D797;
 }
 
@@ -50,7 +54,7 @@ nav a:hover {
 }
 
 footer {
-  background-color: transparent !important;
+  background-color: #F6D797 !important;
 }
 
 footer a {
