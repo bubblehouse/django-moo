@@ -1,3 +1,9 @@
+## [0.79.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.79.1...v0.79.2) (2026-03-15)
+
+### Bug Fixes
+
+* uwsgi path fix ([bb4d468](https://gitlab.com/bubblehouse/django-moo/commit/bb4d468c61480445971115696d0675822eda1ff0))
+
 ## [0.79.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.79.0...v0.79.1) (2026-03-15)
 
 ### Bug Fixes
