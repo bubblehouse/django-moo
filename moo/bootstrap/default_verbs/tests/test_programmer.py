@@ -4,7 +4,7 @@ import pytest
 
 from moo.core import code, parse
 from moo.sdk import create, lookup
-from moo.core.models import Object
+from moo.core.models import Object, Player
 from moo.core.models.verb import Repository, Verb, VerbName
 from moo.bootstrap import load_verb_source
 
@@ -146,3 +146,107 @@ def test_reload_verb_without_filename_raises(t_init: Object, t_wizard: Object):
         VerbName.objects.create(verb=v, name="myverb")
         with pytest.raises(RuntimeError):
             parse.interpret(ctx, "@reload myverb on widget")
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_reload_object_reloads_all_verbs(t_init: Object, t_wizard: Object, tmp_path):
+    """@reload <object> updates all filesystem verbs on that object."""
+    system = lookup(1)
+    repo = Repository.objects.create(slug="test-repo", prefix="test", url="http://example.com")
+
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        create("widget", parents=[system.root_class], location=t_wizard.location)
+
+        verb_file1 = tmp_path / "verb1.py"
+        _write_verb_file(verb_file1, "widget", "verb1", 'print("original1")')
+        load_verb_source(verb_file1, system, repo)
+
+        verb_file2 = tmp_path / "verb2.py"
+        _write_verb_file(verb_file2, "widget", "verb2", 'print("original2")')
+        load_verb_source(verb_file2, system, repo)
+
+        _write_verb_file(verb_file1, "widget", "verb1", 'print("updated1")')
+        _write_verb_file(verb_file2, "widget", "verb2", 'print("updated2")')
+        parse.interpret(ctx, "@reload widget")
+
+    obj = lookup("widget")
+    assert "updated1" in obj.get_verb("verb1").code
+    assert "updated2" in obj.get_verb("verb2").code
+    assert any("2 verb(s) on widget" in str(m) for m in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_reload_all_reloads_all_verbs(t_init: Object, t_wizard: Object, tmp_path):
+    """@reload all updates all filesystem verbs across all objects."""
+    system = lookup(1)
+    repo = Repository.objects.create(slug="test-repo", prefix="test", url="http://example.com")
+
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        create("widgetA", parents=[system.root_class], location=t_wizard.location)
+        create("widgetB", parents=[system.root_class], location=t_wizard.location)
+
+        verb_file1 = tmp_path / "verbA.py"
+        _write_verb_file(verb_file1, "widgetA", "verbA", 'print("originalA")')
+        load_verb_source(verb_file1, system, repo)
+
+        verb_file2 = tmp_path / "verbB.py"
+        _write_verb_file(verb_file2, "widgetB", "verbB", 'print("originalB")')
+        load_verb_source(verb_file2, system, repo)
+
+        _write_verb_file(verb_file1, "widgetA", "verbA", 'print("updatedA")')
+        _write_verb_file(verb_file2, "widgetB", "verbB", 'print("updatedB")')
+        parse.interpret(ctx, "@reload all")
+
+    assert "updatedA" in lookup("widgetA").get_verb("verbA").code
+    assert "updatedB" in lookup("widgetB").get_verb("verbB").code
+    assert any("Reloaded" in str(m) for m in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_reload_object_not_found_prints_error(t_init: Object, t_wizard: Object):
+    """@reload <unknown-object> prints an error message."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, "@reload nonexistent_thing_xyz")
+    assert any("nonexistent_thing_xyz" in str(m) for m in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_reload_object_permission_denied(t_init: Object, t_wizard: Object, tmp_path):
+    """@reload <object> is denied for a non-wizard player who doesn't own the object."""
+    system = lookup(1)
+    repo = Repository.objects.create(slug="test-repo", prefix="test", url="http://example.com")
+
+    with code.ContextManager(t_wizard, lambda _: None):
+        create("widget", parents=[system.root_class], location=t_wizard.location)
+        verb_file = tmp_path / "myverb.py"
+        _write_verb_file(verb_file, "widget", "myverb", 'print("original")')
+        load_verb_source(verb_file, system, repo)
+        non_wiz = create("NonWizProg", parents=[system.programmer], location=t_wizard.location)
+        Player.objects.create(avatar=non_wiz, wizard=False)
+
+    printed = []
+    with code.ContextManager(non_wiz, printed.append) as ctx:
+        parse.interpret(ctx, "@reload widget")
+    assert any("Permission denied" in str(m) for m in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_reload_all_permission_denied(t_init: Object, t_wizard: Object):
+    """@reload all is denied for a non-wizard player."""
+    system = lookup(1)
+    with code.ContextManager(t_wizard, lambda _: None):
+        non_wiz = create("NonWizProg", parents=[system.programmer], location=t_wizard.location)
+        Player.objects.create(avatar=non_wiz, wizard=False)
+
+    printed = []
+    with code.ContextManager(non_wiz, printed.append) as ctx:
+        parse.interpret(ctx, "@reload all")
+    assert any("Permission denied" in str(m) for m in printed)

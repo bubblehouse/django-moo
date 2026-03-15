@@ -56,6 +56,7 @@ BLOCKED_IMPORTS = {
 }
 
 WIZARD_ALLOWED_MODULES = (
+    "moo.core.models",
     "moo.core.models.object",
     "moo.core.models.verb",
     "moo.core.models.property",
