@@ -102,7 +102,7 @@ This document provides essential context for AI models interacting with the Djan
   - **Style:** Primarily object-oriented with some procedural patterns. The game API exposes through:
     - Django ORM for database operations (query sets, model instantiation)
     - Verb code execution via `code.interpret()` and `code.compile_verb_code()`
-    - Access to current user context (current player and current verb caller) through the public `moo.core.context` module
+    - Access to current user context (current player and current verb caller) through the public `moo.sdk.context` object
   - **Abstraction:** The API abstracts away database details through Django models. Verb code execution is sandboxed through RestrictedPython.
   - **Extensibility:**
     - New verbs can be added to objects dynamically via the Verb model
@@ -312,7 +312,7 @@ This document provides essential context for AI models interacting with the Djan
   - **Attribute Caching**: Verb and property lookups are automatically cached at three levels — do not implement separate caching for these. See `docs/source/guide/03b_caching.md` for the full architecture.
   - **Caching**: Redis is available for caching other frequently accessed data (room contents, player locations, etc.)
   - **Celery Tasks**: All code and command-parser invocations are executed as tasks inside Celery workers. Creating new Celery Tasks is uncommon.
-  - **Verb Time Limits**: Verbs called with `__getattr__` syntax (`obj.someverb()`) add to the total execution time for a verb, which is limited to 3 seconds. For verbs with effective runtimes that are longer than this, the `moo.core.invoke()` command can be used to asynchronously execute another verb with its own 3-second time limit.
+  - **Verb Time Limits**: Verbs called with `__getattr__` syntax (`obj.someverb()`) add to the total execution time for a verb, which is limited to 3 seconds. For verbs with effective runtimes that are longer than this, the `moo.sdk.invoke()` command can be used to asynchronously execute another verb with its own 3-second time limit.
   - **Indexing**: Add database indexes to frequently queried fields (Django `db_index=True`)
 
 * **Testing Best Practices:**

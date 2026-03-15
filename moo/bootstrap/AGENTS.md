@@ -120,7 +120,7 @@ def verb(this, passthrough, _, *args, **kwargs):
 Access is limited to (from settings):
 
 **`ALLOWED_MODULES`**:
-- `moo.core` - Core game API
+- `moo.sdk` - Public verb API (lookup, create, context, invoke, exceptions, etc.)
 - `hashlib` - Hashing functions
 - `string` - String constants and utilities
 
@@ -164,7 +164,7 @@ other objects in the room of the pose action. This provides a two stage mechanis
 overridden to provide special effects.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 if context.parser.words:
     message = " ".join(context.parser.words[1:])
@@ -188,7 +188,7 @@ Additionally, verbs can use the `return` keyword from anywhere, not just inside 
 
 # pylint: disable=return-outside-function,undefined-variable
 
-from moo.core import context, write
+from moo.sdk import context, write
 
 if not args and not context.parser.has_dobj_str():  # pylint: disable=undefined-variable  # type: ignore
     print("What do you want to say?")
@@ -229,7 +229,7 @@ Import and use the game context within verbs:
 #!moo verb create_item --on $player
 
 """Create a new object."""
-from moo.core import context, create
+from moo.sdk import context, create
 
 if not args:
     print("Usage: create_item <name>")
@@ -242,9 +242,9 @@ print(f"Created {new_obj.name}")
 ```
 
 Common imports:
-- `from moo.core import create, lookup` - Create/find objects
+- `from moo.sdk import create, lookup` - Create/find objects
 - `from moo.core.models import Object, Verb, Property` - Models
-- `from moo.core import context` - Access the caller and other context
+- `from moo.sdk import context` - Access the caller and other context
 
 ### Parser Method Reference
 
@@ -273,7 +273,8 @@ For quick tests of isolated logic, create a verb inline with `add_verb` and invo
 
 ```python
 import pytest
-from moo.core import code, create
+from moo.core import code
+from moo.sdk import create
 from moo.core.models import Object
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -302,7 +303,8 @@ Capture output via a `_writer` callback; run player commands with `parse.interpr
 
 ```python
 import pytest
-from moo.core import code, create, lookup, parse
+from moo.core import code, parse
+from moo.sdk import create, lookup
 from moo.core.models import Object
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -395,7 +397,7 @@ except ValueError:
 If a verb needs to do something time-consuming:
 
 ```python
-from moo.core import context, invoke
+from moo.sdk import context, invoke
 
 invoke("Hello, finally.", verb=context.player.tell, delay=10, periodic=False)
 return "Task started in background."
@@ -406,7 +408,7 @@ return "Task started in background."
 ### Adding Objects to `default.py`
 
 ```python
-from moo.core import create, lookup
+from moo.sdk import create, lookup
 
 # Create a new room
 kitchen = create("Kitchen", parents=[rooms], location=None)
@@ -451,7 +453,7 @@ obj.add_verb("my_verb", code='return "verb result"')
 
 ### In Django Shell
 ```python
-from moo.core import lookup
+from moo.sdk import lookup
 
 obj = lookup("some object")
 result = obj.my_verb()

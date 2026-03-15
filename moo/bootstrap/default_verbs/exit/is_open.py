@@ -2,7 +2,7 @@
 
 # pylint: disable=return-outside-function,undefined-variable,no-name-in-module
 
-from moo.core import NoSuchPropertyError
+from moo.sdk import NoSuchPropertyError
 
 door = this
 

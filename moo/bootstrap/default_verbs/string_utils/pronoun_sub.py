@@ -32,7 +32,7 @@ Code       Property      Pronoun       Defaults
 """
 
 import re
-from moo.core import context, NoSuchPropertyError
+from moo.sdk import context, NoSuchPropertyError
 
 text = args[0]
 who = args[1] if len(args) > 1 else context.player

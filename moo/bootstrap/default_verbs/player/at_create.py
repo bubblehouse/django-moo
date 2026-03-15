@@ -9,7 +9,7 @@ parent object we wish to create an instance of, along with the name we wish to g
 inventory, using the `move()` primitive.
 """
 
-from moo.core import context, create, lookup
+from moo.sdk import context, create, lookup
 
 if not (context.parser.has_dobj_str()):
     print("[yellow]What do you want to create?[/yellow]")

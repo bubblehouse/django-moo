@@ -2,7 +2,7 @@
 
 # pylint: disable=return-outside-function,undefined-variable,redefined-builtin
 
-from moo.core import context
+from moo.sdk import context
 
 player = context.player
 for dir in context.parser.words[1:]:

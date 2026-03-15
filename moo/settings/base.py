@@ -40,7 +40,7 @@ DEFAULT_PERMISSIONS = (
 )
 
 ALLOWED_MODULES = (
-    "moo.core",
+    "moo.sdk",
     "hashlib",
     "re",
     "datetime",
@@ -48,24 +48,10 @@ ALLOWED_MODULES = (
 )
 
 BLOCKED_IMPORTS = {
-    "moo.core": {
+    "moo.sdk": {
+        # ContextManager is an internal execution primitive — verb code must not
+        # be able to import it and use override_caller() to impersonate other players.
         "ContextManager",
-        "_publish_to_player",
-        # Submodules — prevent reaching Django ORM or internal machinery directly.
-        # Verb code imports exception classes via `from moo.core import NoSuchObjectError`
-        # (which is not blocked); these block access to the submodule objects themselves.
-        "models",
-        "acl",
-        "auth",
-        "object",
-        "verb",
-        "property",
-        "moojson",
-        "tasks",
-        "code",
-        # "exceptions" is intentionally NOT blocked — verb code uses
-        # `from moo.core import exceptions` to raise NoSuchObjectError etc.
-        # The module only contains exception class definitions; no ORM access.
     },
 }
 

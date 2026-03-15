@@ -10,7 +10,7 @@ other objects in the room of the pose action. This provides a two stage mechanis
 overridden to provide special effects.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 if context.parser.words:
     message = " ".join(context.parser.words[1:])

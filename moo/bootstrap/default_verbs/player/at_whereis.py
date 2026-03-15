@@ -15,7 +15,7 @@ contains the objects references that did match.
 The verb runs through the list of object references, and reports the string returned by each player's whereis_location_msg verb.
 """
 
-from moo.core import context, lookup, NoSuchObjectError
+from moo.sdk import context, lookup, NoSuchObjectError
 
 targets = args if args else [context.parser.get_dobj_str()]
 matched = []

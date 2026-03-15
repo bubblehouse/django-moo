@@ -13,7 +13,7 @@ player is able to see in his current location. This includes objects that the pl
 include objects that are contained in other objects.
 """
 
-from moo.core import context, AmbiguousObjectError, NoSuchObjectError
+from moo.sdk import context, AmbiguousObjectError, NoSuchObjectError
 
 name = args[0]
 

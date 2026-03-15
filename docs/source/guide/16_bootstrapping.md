@@ -87,7 +87,8 @@ To create a custom bootstrap dataset:
 ### Example Custom Bootstrap
 
 ```python
-from moo.core import bootstrap, create, lookup, code
+from moo.core import bootstrap, code
+from moo.sdk import create, lookup
 
 repo = bootstrap.initialize_dataset("my_game")
 wizard = lookup("Wizard")
@@ -124,7 +125,7 @@ python manage.py moo_init
 
 # Test bootstrap in Django shell
 python manage.py shell
->>> from moo.core import lookup
+>>> from moo.sdk import lookup
 >>> root = lookup("root")
 >>> root.name
 'Root Class'

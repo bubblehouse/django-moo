@@ -12,7 +12,7 @@ contents list of the player's location. Suitable messages are printed to inform 
 and to tell other people in the room that the object has just been dropped.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 title = this.title()
 if this.location != context.player:

@@ -11,12 +11,12 @@ returned. If more than one object matches, then AmbiguousObjectError is raised. 
 NoSuchObjectError is raised.
 """
 
-from moo.core import exceptions
+from moo.sdk import NoSuchObjectError, AmbiguousObjectError
 
 qs = this.find(args[0])
 if qs.count() == 0:
-    raise exceptions.NoSuchObjectError(args[0])
+    raise NoSuchObjectError(args[0])
 elif qs.count() > 1:
-    raise exceptions.AmbiguousObjectError(args[0], qs)
+    raise AmbiguousObjectError(args[0], qs)
 else:
     return qs.first()

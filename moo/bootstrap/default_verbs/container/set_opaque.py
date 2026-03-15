@@ -6,7 +6,7 @@
 Called by ``@opacity``. It sets the property opaque to be either 0, 1 or 2.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 opaque = args[0]
 

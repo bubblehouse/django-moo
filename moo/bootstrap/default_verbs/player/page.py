@@ -47,7 +47,7 @@ Here, `in`` is used to check if the player``s name occurs in the string we sent 
 does, then we print the player's subjective pronoun, capitalised. If it doesn't, we print the player's name.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 player = context.player
 who = context.parser.get_dobj()

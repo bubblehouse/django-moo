@@ -9,7 +9,7 @@ with `$room` as a parent to create a room. Note that you can only use the `@dig`
 room.
 """
 
-from moo.core import context, create, lookup
+from moo.sdk import context, create, lookup
 
 directions = ["north", "northeast", "east", "southeast", "south", "southwest", "west", "northwest", "up", "down"]
 direction = context.parser.get_dobj_str()

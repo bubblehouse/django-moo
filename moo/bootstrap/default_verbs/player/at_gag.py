@@ -14,7 +14,7 @@ Three verbs are used to maintain and observe the list of objects that are in the
 a player command to add objects to the gag lists.
 """
 
-from moo.core import context, lookup
+from moo.sdk import context, lookup
 
 parser = context.parser
 player = context.player

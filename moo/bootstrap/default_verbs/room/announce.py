@@ -8,7 +8,7 @@ it. This is intended to be the way other verbs pass messages to objects in a roo
 activated, it uses `announce` to inform the other players in the room of what has happened.
 """
 
-from moo.core import context
+from moo.sdk import context
 
 for obj in this.contents.all():
     if obj != context.player:

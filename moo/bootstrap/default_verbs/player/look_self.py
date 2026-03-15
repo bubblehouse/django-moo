@@ -24,7 +24,7 @@ If the player is carrying any objects, a simple list of these is printed.
 """
 
 import datetime
-from moo.core import connected_players
+from moo.sdk import connected_players
 
 passthrough()
 
