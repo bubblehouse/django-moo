@@ -169,12 +169,13 @@ def test_reload_object_reloads_all_verbs(t_init: Object, t_wizard: Object, tmp_p
 
         _write_verb_file(verb_file1, "widget", "verb1", 'print("updated1")')
         _write_verb_file(verb_file2, "widget", "verb2", 'print("updated2")')
-        parse.interpret(ctx, "@reload widget")
+        with pytest.warns(RuntimeWarning) as w:
+            parse.interpret(ctx, "@reload widget")
 
     obj = lookup("widget")
     assert "updated1" in obj.get_verb("verb1").code
     assert "updated2" in obj.get_verb("verb2").code
-    assert any("2 verb(s) on widget" in str(m) for m in printed)
+    assert any("2 verb(s) on widget" in str(warning.message) for warning in w)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -199,11 +200,12 @@ def test_reload_all_reloads_all_verbs(t_init: Object, t_wizard: Object, tmp_path
 
         _write_verb_file(verb_file1, "widgetA", "verbA", 'print("updatedA")')
         _write_verb_file(verb_file2, "widgetB", "verbB", 'print("updatedB")')
-        parse.interpret(ctx, "@reload all")
+        with pytest.warns(RuntimeWarning) as w:
+            parse.interpret(ctx, "@reload all")
 
     assert "updatedA" in lookup("widgetA").get_verb("verbA").code
     assert "updatedB" in lookup("widgetB").get_verb("verbB").code
-    assert any("Reloaded" in str(m) for m in printed)
+    assert any("Reloaded" in str(warning.message) for warning in w)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
