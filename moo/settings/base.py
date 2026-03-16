@@ -52,6 +52,12 @@ BLOCKED_IMPORTS = {
         # ContextManager is an internal execution primitive — verb code must not
         # be able to import it and use override_caller() to impersonate other players.
         "ContextManager",
+        # contextmanager is the contextlib decorator imported at module level in sdk.py.
+        # Verb code has no use for it, and accessing it is unintended.
+        "contextmanager",
+        # log is the module-level logging.Logger in sdk.py. Blocking it prevents
+        # verb code from injecting arbitrary entries into the server log.
+        "log",
     },
 }
 
