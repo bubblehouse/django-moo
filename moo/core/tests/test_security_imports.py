@@ -124,3 +124,42 @@ def test_sdk_module_traversal_to_core_blocked():
         "import moo.sdk\nx = moo.core",
         AttributeError,
     )
+
+
+# ---------------------------------------------------------------------------
+# moo.sdk must not expose non-public framework helpers (pass 15)
+# ---------------------------------------------------------------------------
+
+def test_sdk_contextmanager_function_blocked():
+    """
+
+    `contextmanager` is imported at module level in moo/sdk.py from contextlib.
+    It is not in __all__ and has no verb-code use case.  BLOCKED_IMPORTS for
+    moo.sdk now includes 'contextmanager' to prevent verb code from accessing it
+    via `from moo.sdk import contextmanager` or `import moo.sdk as sdk; sdk.contextmanager`.
+    """
+    raises_in_verb(
+        "from moo.sdk import contextmanager",
+        (ImportError, AttributeError),
+    )
+    raises_in_verb(
+        "import moo.sdk as sdk\nx = sdk.contextmanager",
+        (ImportError, AttributeError),
+    )
+
+
+def test_sdk_log_blocked():
+    """
+
+    `log` is the module-level logging.Logger in moo/sdk.py.  Verb code accessing
+    it could inject arbitrary strings into the server log via log.info()/log.error().
+    BLOCKED_IMPORTS for moo.sdk now includes 'log'.
+    """
+    raises_in_verb(
+        "from moo.sdk import log",
+        (ImportError, AttributeError),
+    )
+    raises_in_verb(
+        "import moo.sdk as sdk\nx = sdk.log",
+        (ImportError, AttributeError),
+    )
