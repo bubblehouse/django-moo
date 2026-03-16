@@ -7,7 +7,7 @@ Public SDK for verb authors. Import game primitives from here:
 
 import logging
 import warnings
-from contextlib import contextmanager
+from contextlib import contextmanager as _contextmanager
 from typing import Union
 
 from .core.code import ContextManager as _ContextManager
@@ -24,7 +24,7 @@ __all__ = [
     "AmbiguousObjectError",
 ]
 
-log = logging.getLogger(__name__)
+_log = logging.getLogger(__name__)
 
 
 def lookup(x: Union[int, str]):
@@ -305,7 +305,7 @@ def invoke(*args, verb=None, callback=None, delay: int = 0, periodic: bool = Fal
         return None
 
 
-@contextmanager
+@_contextmanager
 def set_task_perms(who):
     """
     Set the task permissions to those of `who` for the duration of the with-block.
