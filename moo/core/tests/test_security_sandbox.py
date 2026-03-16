@@ -73,6 +73,26 @@ def test_str_format_blocked_even_via_variable():
     raises_in_verb("fmt = '{0.' + '__class__' + '}'\nprint(fmt.format('hello'))", AttributeError)
 
 
+def test_str_format_class_method_blocked():
+    """
+
+    `str.format(template, arg)` calls format as a class-level unbound method.
+    The previous guard only checked `isinstance(obj, str)`, which returns False
+    when obj is the `str` type itself (a `type`, not a `str` instance).
+
+    str.format("{0.__class__}", some_obj) resolves attribute chains via the
+    C-level format engine without going through our _getattr_ hook, exposing
+    protected attributes as string representations.  The guard now also checks
+    `isinstance(obj, type) and issubclass(obj, str)` to close this path.
+    """
+    raises_in_verb("str.format('{0}', 'hello')", AttributeError)
+
+
+def test_str_format_class_method_blocked_with_dunder():
+    """str.format with a dunder chain in the template must also be blocked."""
+    raises_in_verb("str.format('{0.__class__}', 'hello')", AttributeError)
+
+
 def test_str_normal_methods_still_work():
     """Blocking .format must not affect other string methods."""
     printed = exec_verb("print('hello'.upper())")
