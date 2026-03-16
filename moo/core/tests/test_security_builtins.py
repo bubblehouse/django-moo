@@ -185,3 +185,77 @@ def test_exception_traceback_blocked_by_underscore_guard():
         "try:\n    x = 1/0\nexcept Exception as e:\n    ctx = getattr(e, '__context__')",
         AttributeError,
     )
+
+
+# ---------------------------------------------------------------------------
+# Frame/generator inspection attributes blocked by INSPECT_ATTRIBUTES (pass 15)
+# ---------------------------------------------------------------------------
+
+def test_generator_gi_frame_blocked_via_getattr():
+    """
+
+    CVE-2023-37271 style: RestrictedPython 8.1 blocks `gen.gi_frame` at
+    compile time (AST transform), but `getattr(gen, 'gi_frame')` bypasses
+    the AST check and goes through our runtime safe_getattr.  Since
+    'gi_frame' does not start with '_', the underscore guard alone would not
+    catch it.
+
+    The INSPECT_ATTRIBUTES check in safe_getattr closes this path.  Without
+    it, an attacker can capture gi_frame, walk up f_back twice to the
+    do_eval() frame, access f_builtins.get('__import__') (a dict method call
+    that bypasses _getitem_), and import os for a full sandbox escape.
+    """
+    raises_in_verb(
+        "gen = (x for x in [1])\nf = getattr(gen, 'gi_frame')",
+        AttributeError,
+    )
+
+
+def test_generator_gi_code_blocked_via_getattr():
+    """getattr(gen, 'gi_code') must raise AttributeError (INSPECT_ATTRIBUTES)."""
+    raises_in_verb(
+        "gen = (x for x in [1])\nc = getattr(gen, 'gi_code')",
+        AttributeError,
+    )
+
+
+def test_frame_f_back_blocked_via_getattr():
+    """
+
+    Frame objects' f_back attribute allows walking up the call stack to frames
+    outside the sandbox (e.g. do_eval()), where f_builtins contains the real
+    Python builtins including the unrestricted __import__.  INSPECT_ATTRIBUTES
+    blocks this in safe_getattr even though 'f_back' has no underscore prefix.
+    """
+    raises_in_verb(
+        "gen = (x for x in [1])\nf = getattr(gen, 'gi_frame')\nfb = getattr(f, 'f_back')",
+        AttributeError,
+    )
+
+
+def test_frame_f_globals_blocked_via_getattr():
+    """f_globals exposes the global namespace of a frame; blocked by INSPECT_ATTRIBUTES."""
+    raises_in_verb(
+        "gen = (x for x in [1])\nf = getattr(gen, 'gi_frame')\ng = getattr(f, 'f_globals')",
+        AttributeError,
+    )
+
+
+def test_frame_f_builtins_blocked_via_getattr():
+    """
+
+    f_builtins on the do_eval() frame contains real Python builtins including
+    the unrestricted __import__.  Blocked by INSPECT_ATTRIBUTES in safe_getattr.
+    """
+    raises_in_verb(
+        "gen = (x for x in [1])\nf = getattr(gen, 'gi_frame')\nb = getattr(f, 'f_builtins')",
+        AttributeError,
+    )
+
+
+def test_traceback_tb_frame_blocked_via_getattr():
+    """tb_frame on a traceback object exposes the executing frame; blocked by INSPECT_ATTRIBUTES."""
+    raises_in_verb(
+        "try:\n    1/0\nexcept Exception as e:\n    tb = getattr(e, '__traceback__')",
+        AttributeError,
+    )

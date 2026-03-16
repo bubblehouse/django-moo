@@ -16,6 +16,7 @@ from django.db.models.query import QuerySet
 from RestrictedPython import compile_restricted, compile_restricted_function
 from RestrictedPython.Guards import (guarded_iter_unpack_sequence,
                                      guarded_unpack_sequence, safe_builtins)
+from RestrictedPython.transformer import INSPECT_ATTRIBUTES
 
 # Read-only QuerySet/Manager methods that verb code may legitimately call.
 # Everything else — including all mutation methods, async variants (adelete,
@@ -142,7 +143,11 @@ def get_restricted_environment(name, writer):
     def get_protected_attribute(obj, name, g=getattr):
         if name.startswith("_"):
             raise AttributeError(name)
-        if isinstance(obj, str) and name in ("format", "format_map"):
+        if name in INSPECT_ATTRIBUTES:
+            raise AttributeError(name)
+        if name in ("format", "format_map") and (
+            isinstance(obj, str) or (isinstance(obj, type) and issubclass(obj, str))
+        ):
             raise AttributeError(name)
         if isinstance(obj, (QuerySet, BaseManager)) and name not in _QUERYSET_ALLOWED:
             raise AttributeError(name)
@@ -187,7 +192,11 @@ def get_restricted_environment(name, writer):
     def safe_getattr(obj, name, *args):
         if isinstance(name, str) and name.startswith("_"):
             raise AttributeError(name)
-        if isinstance(obj, str) and name in ("format", "format_map"):
+        if isinstance(name, str) and name in INSPECT_ATTRIBUTES:
+            raise AttributeError(name)
+        if name in ("format", "format_map") and (
+            isinstance(obj, str) or (isinstance(obj, type) and issubclass(obj, str))
+        ):
             raise AttributeError(name)
         if isinstance(obj, (QuerySet, BaseManager)) and name not in _QUERYSET_ALLOWED:
             raise AttributeError(name)
