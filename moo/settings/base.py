@@ -48,17 +48,10 @@ ALLOWED_MODULES = (
 )
 
 BLOCKED_IMPORTS = {
-    "moo.sdk": {
-        # ContextManager is an internal execution primitive — verb code must not
-        # be able to import it and use override_caller() to impersonate other players.
-        "ContextManager",
-        # contextmanager is the contextlib decorator imported at module level in sdk.py.
-        # Verb code has no use for it, and accessing it is unintended.
-        "contextmanager",
-        # log is the module-level logging.Logger in sdk.py. Blocking it prevents
-        # verb code from injecting arbitrary entries into the server log.
-        "log",
-    },
+    # moo.sdk internal names are protected by underscore aliases in sdk.py rather
+    # than explicit blocklist entries: ContextManager → _ContextManager (pass 7),
+    # contextmanager → _contextmanager (pass 15), log → _log (pass 15).
+    # Add entries here if a future sdk.py import cannot be given an underscore alias.
 }
 
 WIZARD_ALLOWED_MODULES = (
