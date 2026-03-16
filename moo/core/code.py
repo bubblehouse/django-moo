@@ -224,6 +224,8 @@ def get_restricted_environment(name, writer):
     def safe_hasattr(obj, name):
         if isinstance(name, str) and name.startswith("_"):
             return False
+        if isinstance(name, str) and name in INSPECT_ATTRIBUTES:
+            return False
         return hasattr(obj, name)
 
     restricted_builtins = dict(safe_builtins)
