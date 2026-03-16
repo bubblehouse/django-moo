@@ -1,3 +1,13 @@
+## [0.80.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.80.1...v0.80.2) (2026-03-16)
+
+### Bug Fixes
+
+* frame access exploit and str.format issue, block modules ([3927933](https://gitlab.com/bubblehouse/django-moo/commit/3927933407c48b8eb60ad18707670d219a94ac58))
+* install django-extensions for debug purposes ([be06b50](https://gitlab.com/bubblehouse/django-moo/commit/be06b50c909c100250beffa0742e68971986f7af))
+* removed need for BLOCKED_IMPORTS ([6412b9f](https://gitlab.com/bubblehouse/django-moo/commit/6412b9f959bc1688e0d1a21a60a123e6ffb2aca8))
+* use tell in reload for status messages ([5ee6a6a](https://gitlab.com/bubblehouse/django-moo/commit/5ee6a6affdd0aa1161b94adfcf6898200946f102))
+* use tell in reload for status messages ([1192c60](https://gitlab.com/bubblehouse/django-moo/commit/1192c604d7cad6985242abf4c74cd3c9fad831e6))
+
 ## [0.80.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.80.0...v0.80.1) (2026-03-15)
 
 ### Bug Fixes

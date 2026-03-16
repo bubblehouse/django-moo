@@ -85,6 +85,7 @@ django==5.0.14
     #   django-celery-results
     #   django-compressor
     #   django-cte
+    #   django-extensions
     #   django-moo
     #   django-storages
     #   django-timezone-field
@@ -98,6 +99,8 @@ django-celery-results==2.6.0
 django-compressor==4.6.0
     # via django-moo
 django-cte==3.0.0
+    # via django-moo
+django-extensions==4.1
     # via django-moo
 django-simplesshkey==2.2.0
     # via django-moo
