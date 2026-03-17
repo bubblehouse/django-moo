@@ -115,6 +115,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django_ace",
+    "django_extensions",
     "simplesshkey",
     "django_celery_beat",
     "moo.core",
