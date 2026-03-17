@@ -288,6 +288,50 @@ except NoSuchObjectError:
 
 Any uncaught exception that is not a `UserError` shows a generic error to regular players and a full traceback to wizards.
 
+## Time-Aware Continuation
+
+Verbs that iterate over many objects must hand off remaining work before the task time limit hits. Use `context.task_time.remaining` to check how much time is left, and `invoke()` to schedule a continuation task.
+
+```python
+TIME_THRESHOLD = 0.5  # hand off when 0.5 s remain
+
+def process_batch(items):
+    count = 0
+    for i, item in enumerate(items):
+        tt = context.task_time
+        if tt and tt.remaining is not None and tt.remaining <= TIME_THRESHOLD:
+            remaining_pks = [x.pk for x in items[i:]]
+            verb = context.parser.verb if context.parser else this.get_verb("myverb")
+            invoke(remaining_pks, verb=verb)
+            context.player.tell(f"  Continuing ({len(remaining_pks)} remaining)...")
+            return True, count
+        context.player.tell(f"  Processing {item}...")
+        item.do_work()
+        count += 1
+    return False, count
+
+# Detect continuation: args[0] is a list of PKs from a prior batch
+if args and isinstance(args[0], list):
+    items = list(MyModel.objects.filter(pk__in=args[0]))
+    continued, count = process_batch(items)
+    if not continued:
+        context.player.tell(f"Done. Processed {count}.")
+else:
+    items = list(MyModel.objects.filter(...))
+    continued, count = process_batch(items)
+    if not continued:
+        context.player.tell(f"Done. Processed {count}.")
+```
+
+Rules:
+- `context.task_time` returns `TaskTime(elapsed, time_limit, remaining)` or `None` (no limit). Always guard: `if tt and tt.remaining is not None`.
+- Pass only `args[0] = list[int]` of remaining PKs to the continuation — no accumulated counts or error strings. Progress messages are delivered in real time via `context.player.tell()` as each item is processed.
+- Use `context.player.tell()` inside the loop, not `print()`. `tell()` writes immediately; `print()` buffers until the verb returns.
+- Materialize querysets to `list()` before the loop so the DB cursor doesn't span the time check.
+- `context.parser` is `None` in continuation mode (the verb was invoked by Celery, not the parser). Fall back to `this.get_verb(name)` for the verb reference.
+- Helper function names must not start with `_` — RestrictedPython blocks underscore-prefixed names.
+- Reference implementation: `moo/bootstrap/default_verbs/programmer/at_reload.py`.
+
 ## Pitfalls
 
 - `get_pobj_string()` / `has_pobj_string()` do not exist. Use `get_pobj_str()` / `has_pobj_str()`.

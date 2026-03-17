@@ -176,6 +176,24 @@ def test_context_manager_task_id():
         assert code.ContextManager.get("task_id") == "task-99"
 
 
+def test_context_manager_task_time_inside_session():
+    caller = _mock()
+    with code.ContextManager(caller, lambda s: None):
+        tt = code.ContextManager.get("task_time")
+        assert tt is not None
+        assert isinstance(tt, code.TaskTime)
+        assert tt.elapsed >= 0
+        # In tests Celery runs in-memory; time_limit may be None
+        if tt.time_limit is not None:
+            assert tt.remaining == tt.time_limit - tt.elapsed
+        else:
+            assert tt.remaining is None
+
+
+def test_context_manager_task_time_outside_session():
+    assert code.ContextManager.get("task_time") is None
+
+
 def test_context_manager_get_unknown_raises():
     caller = _mock()
     with _ctx(caller):

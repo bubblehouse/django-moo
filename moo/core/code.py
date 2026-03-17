@@ -6,7 +6,9 @@ Development support resources for MOO programs
 import contextvars
 import functools
 import logging
+import time
 import warnings
+from collections import namedtuple
 from types import ModuleType
 
 from django.conf import settings
@@ -30,6 +32,8 @@ _QUERYSET_ALLOWED = frozenset({
 })
 
 log = logging.getLogger(__name__)
+
+TaskTime = namedtuple("TaskTime", ["elapsed", "time_limit", "remaining"])
 
 
 def interpret(source, name, *args, runtype="exec", **kwargs):
@@ -262,6 +266,7 @@ _active_player = contextvars.ContextVar("active_player", default=None)
 _active_writer = contextvars.ContextVar("active_writer", default=None)
 _active_parser = contextvars.ContextVar("active_parser", default=None)
 _active_task_id = contextvars.ContextVar("active_task_id", default=None)
+_active_start_time = contextvars.ContextVar("active_start_time", default=None)
 _verb_lookup_cache = contextvars.ContextVar("verb_lookup_cache", default=None)
 _prop_lookup_cache = contextvars.ContextVar("prop_lookup_cache", default=None)
 # A sentinel object (not a mutable default like []) so we can reliably detect whether
@@ -295,6 +300,15 @@ class ContextManager:
             return _active_parser.get()
         if name == "task_id":
             return _active_task_id.get()
+        if name == "task_time":
+            from celery import current_app
+            start = _active_start_time.get()
+            if start is None:
+                return None
+            elapsed = time.monotonic() - start
+            limit = current_app.conf.task_time_limit
+            remaining = (limit - elapsed) if limit is not None else None
+            return TaskTime(elapsed=elapsed, time_limit=limit, remaining=remaining)
         if name == "caller_stack":
             stack = _active_caller_stack.get()
             # Return a copy so callers cannot mutate the live stack.
@@ -355,6 +369,8 @@ class ContextManager:
         self.parser_token = None
         self.task_id = task_id
         self.task_id_token = None
+        self.start_time = time.monotonic()
+        self.start_time_token = None
         # A fresh list per instance so each session has its own isolated stack.
         self.active_caller_stack = []
         self.active_caller_stack_token = None
@@ -376,6 +392,7 @@ class ContextManager:
         self.player_token = _active_player.set(self.player)
         self.writer_token = _active_writer.set(self.writer)
         self.task_id_token = _active_task_id.set(self.task_id)
+        self.start_time_token = _active_start_time.set(self.start_time)
         self.parser_token = _active_parser.set(self.parser)
         # Replacing _UNSET with a real list marks the session as active (is_active() → True)
         # and gives override_caller a mutable list to append to.
@@ -396,6 +413,8 @@ class ContextManager:
             _active_parser.reset(self.parser_token)
         if self.task_id_token:
             _active_task_id.reset(self.task_id_token)
+        if self.start_time_token:
+            _active_start_time.reset(self.start_time_token)
         if self.active_caller_stack_token:
             # reset() restores to whatever the var held before __enter__'s set() call,
             # regardless of how many times override_caller/pop_caller mutated it since.
