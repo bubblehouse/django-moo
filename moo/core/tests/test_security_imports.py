@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=protected-access
 """
-Security tests: import blocking.
+Security tests: import blocking and allowed-module return-value surfaces.
 
 Covers: ContextManager, _publish_to_player, string module,
-moo.core submodules, SDK internal names, module attribute traversal
-(passes 1, 2, 3, 4, 7).
+moo.core submodules, SDK internal names, module attribute traversal,
+django_celery_beat import block, and re/hashlib/datetime/time return objects.
 """
 
-from .utils import raises_in_verb
+from .utils import mock_caller, raises_in_verb
 
 
 # ---------------------------------------------------------------------------
@@ -163,3 +163,139 @@ def test_sdk_log_blocked():
         "import moo.sdk as sdk\nx = sdk.log",
         (ImportError, AttributeError),
     )
+
+
+# ---------------------------------------------------------------------------
+# django_celery_beat not importable even by wizards
+# ---------------------------------------------------------------------------
+
+def test_django_celery_beat_not_importable_by_wizards():
+    """
+
+    django_celery_beat is not in WIZARD_ALLOWED_MODULES or ALLOWED_MODULES.
+    Wizard verb code cannot import django_celery_beat.models directly to
+    construct PeriodicTask instances with arbitrary task names outside the
+    invoke() guard.  The only creation path is invoke(periodic=True/cron=...),
+    which is wizard-gated and always sets task='moo.core.tasks.invoke_verb'.
+    """
+    raises_in_verb(
+        "import django_celery_beat.models",
+        ImportError,
+        caller=mock_caller(is_wizard=True),
+    )
+
+
+def test_django_celery_beat_not_importable_by_non_wizards():
+    """Non-wizards cannot import django_celery_beat either."""
+    raises_in_verb("import django_celery_beat.models", ImportError)
+
+
+# ---------------------------------------------------------------------------
+# re module return objects
+# ---------------------------------------------------------------------------
+
+def test_re_match_object_attributes_are_safe():
+    """
+
+    re.compile(pattern).match(s) returns a Match object.  Its non-underscore
+    attributes (group, string, pos, endpos, lastindex, lastgroup, regs) return
+    strings, integers, or tuples of integers.  No Django model instances or
+    callable chains that could lead to sandbox escape.
+    """
+    from .utils import exec_verb
+    printed = exec_verb(
+        "import re\n"
+        "m = re.match(r'hello', 'hello world')\n"
+        "print(m.group())\n"
+        "print(m.string)\n"
+        "print(m.pos)\n"
+    )
+    assert printed == ["hello", "hello world", 0]
+
+
+def test_re_pattern_object_attributes_are_safe():
+    """re.compile() returns a Pattern whose public attributes are strings/integers."""
+    from .utils import exec_verb
+    printed = exec_verb(
+        "import re\n"
+        "p = re.compile(r'\\d+')\n"
+        "print(p.pattern)\n"
+        "print(p.flags > 0)\n"
+    )
+    assert printed == [r"\d+", True]
+
+
+# ---------------------------------------------------------------------------
+# hashlib module return objects
+# ---------------------------------------------------------------------------
+
+def test_hashlib_hash_object_attributes_are_safe():
+    """
+
+    hashlib.md5(b'data') returns a HASH object.  Its non-underscore attributes
+    (digest_size, block_size, name, hexdigest(), digest()) return integers,
+    strings, or bytes.  No dangerous object references or callable chains.
+    """
+    from .utils import exec_verb
+    printed = exec_verb(
+        "import hashlib\n"
+        "h = hashlib.md5(b'test')\n"
+        "print(isinstance(h.hexdigest(), str))\n"
+        "print(h.digest_size)\n"
+    )
+    assert printed == [True, 16]
+
+
+# ---------------------------------------------------------------------------
+# datetime module return objects
+# ---------------------------------------------------------------------------
+
+def test_datetime_instances_are_safe():
+    """
+
+    datetime.datetime.now() returns a datetime instance.  Methods like
+    replace(), strftime(), and isoformat() return datetime instances or strings.
+    No Django model exposure or callable chains to sandbox internals.
+    """
+    from .utils import exec_verb
+    printed = exec_verb(
+        "import datetime\n"
+        "now = datetime.datetime.now()\n"
+        "print(isinstance(now, datetime.datetime))\n"
+        "s = now.strftime('%Y')\n"
+        "print(isinstance(s, str))\n"
+    )
+    assert printed == [True, True]
+
+
+def test_datetime_timedelta_is_safe():
+    """datetime.timedelta arithmetic returns timedelta instances — safe."""
+    from .utils import exec_verb
+    printed = exec_verb(
+        "import datetime\n"
+        "td = datetime.timedelta(days=1)\n"
+        "print(td.days)\n"
+        "print(td.seconds)\n"
+    )
+    assert printed == [1, 0]
+
+
+# ---------------------------------------------------------------------------
+# time module return objects
+# ---------------------------------------------------------------------------
+
+def test_time_struct_time_is_safe():
+    """
+
+    time.gmtime() returns a struct_time — a named-tuple-like object.
+    Its attributes (tm_year, tm_mon, tm_mday, etc.) are all integers.
+    time.time() returns a float.  No dangerous escalation paths.
+    """
+    from .utils import exec_verb
+    printed = exec_verb(
+        "import time\n"
+        "t = time.gmtime(0)\n"
+        "print(t.tm_year)\n"
+        "print(isinstance(time.time(), float))\n"
+    )
+    assert printed == [1970, True]
