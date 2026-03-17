@@ -62,19 +62,20 @@ All verb code is compiled and executed within RestrictedPython's sandboxed envir
 - Warnings about undefined variables can be ignored for injected variables like `this`, `passthrough`, `_`, `args`, and `kwargs`
 
 **Whitelisted Modules**:
-- `moo.core` - Core game API
+- `moo.sdk` - Public verb API (lookup, create, context, invoke, exceptions, etc.)
 - `hashlib` - Hashing functions
-- `string` - String constants and utilities
+- `re` - Regular expressions
+- `datetime` - Date and time utilities
+- `time` - Time utilities
 
 **Whitelisted Built-ins**:
-- `dir()` - List attributes
+- `dict()` - Create dictionaries
+- `enumerate()` - Enumerate iterables
 - `getattr()` - Get attributes dynamically
 - `hasattr()` - Check if attribute exists
-- `dict()` - Create dictionaries
 - `list()` - Create lists
 - `set()` - Create sets
-- `sorted()` - Sort lists
-- `type()` - Largely used to get access to the DoesNotExist exceptions
+- `sorted()` - Sort iterables
 
 Attempting to import or use other modules will result in a security error.
 
@@ -90,7 +91,7 @@ The `context` object has a variety of attributes that are useful in verbs:
 2. `caller` – the effective user that code is running with (usually the owner of the current executing verb)
 3. `writer` - the Callable that prints text to the client connection
 4. `task_id` - the current Celery task ID, if applicable
-5. `parser` - the Parser object when run from the command-line, otherwise None
+5. `parser` - the Parser object for the current task; inherited by synchronous sub-verb calls. Only `None` when a Celery task re-invokes a verb without an active player command (e.g., scheduled `invoke()` calls)
 
 Also present in the global namespace is `verb_name`, the specific name used when the current verb was invoked.
 
@@ -112,23 +113,62 @@ When a verb is invoked via the command parser, `context.parser` provides these m
 
 | Method | Returns | Notes |
 |--------|---------|-------|
-| `get_dobj()` | Direct object as an **Object** (DB lookup) | Raises `Object.DoesNotExist` if string is not a real object |
+| `get_dobj()` | Direct object as an **Object** (DB lookup) | Raises `NoSuchObjectError` if string is not a real object |
 | `get_dobj_str()` | Direct object as a **raw string** | Safe for plain text arguments (names, messages, etc.) |
 | `has_dobj()` | `True` if dobj resolved to an Object | — |
 | `has_dobj_str()` | `True` if dobj string is present | — |
-| `get_pobj(prep)` | Indirect object as an **Object** for given prep | Raises `Object.DoesNotExist`, `NoSuchPrepositionError` |
+| `get_pobj(prep)` | Indirect object as an **Object** for given prep | Raises `NoSuchObjectError`, `NoSuchPrepositionError` |
 | `get_pobj_str(prep)` | Indirect object as a **raw string** for given prep | Raises `NoSuchPrepositionError` if prep not in command |
 | `has_pobj(prep)` | `True` if iobj resolved to an Object | — |
 | `has_pobj_str(prep)` | `True` if iobj string is present | — |
 
 Use `get_dobj_str()` / `get_pobj_str()` when the argument is plain text (a message, a name to create, etc.). Use `get_dobj()` / `get_pobj()` only when you expect the argument to be a reference to an existing game object.
 
+`NoSuchObjectError` and other exceptions from `moo.core.exceptions` all inherit from `UserError`. Any `UserError` raised inside a verb is automatically caught by the task runner and its message is shown to the player as a bold red line — no extra handling is needed. Letting `get_dobj()` raise `NoSuchObjectError` is the correct pattern when the argument must be a real object; the player will see `"There is no 'X' here."` automatically. Only catch these exceptions when you want to provide a different message or take alternative action.
+
+### Error Handling
+
+All exception classes in `moo.core.exceptions` inherit from `UserError`. Any `UserError` raised inside a verb — whether by the verb itself or by a called function like `get_dobj()` — is automatically caught by the task runner (`moo.core.tasks.parse_command`) and displayed to the player as a bold red message. Verbs do not need to wrap calls in `try/except` just to report errors to the player.
+
+The common player-facing exceptions are all importable from `moo.sdk`:
+
+| Exception | Default message |
+|-----------|----------------|
+| `NoSuchObjectError(name)` | `"There is no '<name>' here."` |
+| `NoSuchVerbError(name)` | `"I don't know how to do that."` |
+| `NoSuchPropertyError(name)` | `"There is no '<name>' property defined."` |
+| `AmbiguousObjectError(name, matches)` | `"When you say '<name>', do you mean …?"` |
+| `UsageError(message)` | The message string |
+
+`UsageError` is the conventional way to signal bad syntax or missing arguments:
+
+```python
+from moo.sdk import UsageError
+
+if not context.parser.has_dobj_str():
+    raise UsageError(f"Usage: {verb_name} <target>")
+```
+
+Only catch a `UserError` subclass when you need a different message or fallback behaviour:
+
+```python
+from moo.sdk import NoSuchObjectError
+
+try:
+    target = context.parser.get_dobj()
+except NoSuchObjectError:
+    print("You'll need to be more specific.")
+    return
+```
+
+Any uncaught exception that is not a `UserError` shows a generic `"An error occurred while executing the command."` to regular players and a full traceback to wizards.
+
 ### Sending Messages to Players
 
 Two mechanisms exist for writing output to a player connection:
 
 - **`obj.tell(msg)`** — Goes through `$player.tell`, which applies gag-list filtering and paranoia tracking before calling `write()`. Use this for normal in-game messages so that player preferences are respected.
-- **`write(obj, msg)`** (imported from `moo.core`) — Only usable by Wizard-owned code. Low-level connection write; bypasses all filtering. Use sparingly, only when filtering must be skipped (e.g., system notifications).
+- **`write(obj, msg)`** (imported from `moo.sdk`) — Only usable by Wizard-owned code. Low-level connection write; bypasses all filtering. Use sparingly, only when filtering must be skipped (e.g., system notifications).
 
 In tests (where `CELERY_BROKER_URL = "memory://"`), both paths ultimately call `write()`, which emits `RuntimeWarning(f"ConnectionError({obj}): {msg}")` instead of sending to a real connection. Wrap test commands that trigger either path with `pytest.warns(RuntimeWarning)`:
 
