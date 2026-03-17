@@ -60,6 +60,15 @@ Verbs also have some attributes of their own:
    :no-index:
 ```
 
+## Error Handling in Verbs
+
+When a verb raises an exception, the task runner (`moo.core.tasks.parse_command`) determines what the player sees:
+
+- **`UserError` and subclasses** — the exception message is displayed to the player as a bold red line. This includes `NoSuchObjectError`, `NoSuchVerbError`, `NoSuchPropertyError`, `UsageError`, `QuotaError`, and others from `moo.core.exceptions`. Verbs should raise these rather than printing error strings manually.
+- **Any other exception** — regular players see `"An error occurred while executing the command."`; wizards see the full traceback.
+
+Because errors propagate automatically, verbs are free to call parser methods like `get_dobj()` without defensive wrapping. If the named object doesn't exist, `NoSuchObjectError` bubbles up and the player sees `"There is no 'X' here."` without any extra code in the verb.
+
 > In addition to an owner and some permission bits, every verb has three 'argument specifiers', one each for the direct object, the preposition, and the indirect object. The direct and indirect specifiers are each drawn from this set: `this`, `any`, or `none`. The preposition specifier is `none`, `any`, or one of the items in this list:
 >
 > * `with/using`

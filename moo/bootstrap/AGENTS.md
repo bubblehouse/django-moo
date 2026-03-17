@@ -122,15 +122,18 @@ Access is limited to (from settings):
 **`ALLOWED_MODULES`**:
 - `moo.sdk` - Public verb API (lookup, create, context, invoke, exceptions, etc.)
 - `hashlib` - Hashing functions
-- `string` - String constants and utilities
+- `re` - Regular expressions
+- `datetime` - Date and time utilities
+- `time` - Time utilities
 
 **`ALLOWED_BUILTINS`**:
-- `dir` - List attributes
+- `dict` - Dictionary creation
+- `enumerate` - Enumerate iterables
 - `getattr` - Get attributes
 - `hasattr` - Check attributes
-- `dict` - Dictionary creation
 - `list` - List creation
 - `set` - Set creation
+- `sorted` - Sort iterables
 
 ### Important Restrictions
 
@@ -194,7 +197,7 @@ if not args and not context.parser.has_dobj_str():  # pylint: disable=undefined-
     print("What do you want to say?")
     return  # pylint: disable=return-outside-function  # type: ignore
 
-if context.parser and context.parser.has_dobj_str():
+if context.parser.has_dobj_str():
     msg = context.parser.get_dobj_str()
 else:
     msg = args[0]  # pylint: disable=undefined-variable  # type: ignore
@@ -248,7 +251,9 @@ Common imports:
 
 ### Parser Method Reference
 
-When a verb is invoked via the command parser, `context.parser` is a `moo.core.parse.Parser` instance. Use these methods to extract arguments:
+`context.parser` is a `moo.core.parse.Parser` instance. It is available in virtually all verbs — including synchronous sub-verb calls, which inherit the parent task's context. The only time it is `None` is when a Celery task re-invokes a verb outside any player command session (e.g., a delayed `invoke()` call). Do **not** use `if context.parser and ...` as a way to detect "called as a method" — check `args`/`kwargs` or branch on `verb_name` instead.
+
+Use these methods to extract arguments:
 
 | Method | Returns | Raises if missing |
 |--------|---------|-------------------|
@@ -374,23 +379,48 @@ if not this.can_caller("write"):
 ```
 
 ### 2. Validate Arguments
+
+Raise `UsageError` for bad input — it is caught by the task runner and shown to the player as a red message:
 ```python
-if not args:
-    return "Usage: verb_name <required_arg>"
+from moo.sdk import UsageError
+
+if not context.parser.has_dobj_str():
+    raise UsageError("Usage: verb_name <required_arg>")
 ```
 
-### 3. Use Descriptive Returns
-- Return `True/False` for success/failure
-- Return strings for player-facing messages
+### 3. Use `UserError` Subclasses for Player-Visible Errors
 
-### 5. Handle Errors Gracefully
+All `UserError` subclasses (`NoSuchObjectError`, `NoSuchVerbError`, `NoSuchPropertyError`, `UsageError`, `QuotaError`, etc.) are automatically caught by the task runner (`moo/core/tasks.py:parse_command`) and their message is displayed to the player as a bold red line. You do not need to wrap parser calls in `try/except` just to display error messages.
+
+Letting `get_dobj()` raise `NoSuchObjectError` is intentional and correct — the player sees "There is no 'X' here." without any extra handling in the verb:
+```python
+key = context.parser.get_pobj("with")   # raises NoSuchObjectError if target doesn't exist
+```
+
+Only catch these exceptions when you need to provide a different message or take alternative action:
 ```python
 try:
-    # Verb code
-except AttributeError:
-    return "Invalid object reference."
+    target = context.parser.get_dobj()
+except NoSuchObjectError:
+    print("You can only do that to a real object.")
+    return
+```
+
+Any other uncaught exception (not a `UserError`) shows a generic `"An error occurred while executing the command."` to regular players and a full traceback to wizards.
+
+### 4. Use Descriptive Returns
+- Return `True/False` for success/failure from helper verbs
+- Use `print()` for player-facing messages in command verbs (not `return "..."`)
+
+### 5. Handle Non-UserError Errors Gracefully
+
+Only catch non-UserError exceptions when they represent truly recoverable conditions:
+```python
+try:
+    result = int(context.parser.get_dobj_str())
 except ValueError:
-    return "Invalid argument value."
+    print("That's not a number.")
+    return
 ```
 
 ### 7. Avoid Long Operations
@@ -443,7 +473,8 @@ obj.add_verb("my_verb", code='return "verb result"')
 - Use `context.player` to identify who initiated a command (the sender/initiator)
 - Use `this` only when the verb genuinely needs the object it was dispatched on (e.g., a room's `accept` or an exit's `go`)
 - Use `lookup()` or properties to find objects
-- Return meaningful error messages to players
+- Let `UserError` subclasses propagate — the task runner will display them to the player automatically
+- Raise `UsageError` for bad input/syntax errors; raise `NoSuchObjectError` / `NoSuchPropertyError` when appropriate rather than printing the message manually
 - Use permission checks (`can_caller()`)
 - Test verbs with multiple argument combinations
 - Document complex verb logic with comments
