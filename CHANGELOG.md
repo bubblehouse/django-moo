@@ -1,3 +1,9 @@
+## [0.81.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.80.4...v0.81.0) (2026-03-17)
+
+### Features
+
+* added context.task_time object to help write verbs that last longer than the timeout ([d1a2d0a](https://gitlab.com/bubblehouse/django-moo/commit/d1a2d0a8a1d2449d0668383a41f0c2fa6b78641d))
+
 ## [0.80.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.80.3...v0.80.4) (2026-03-17)
 
 ### Bug Fixes
