@@ -18,6 +18,7 @@ A read-only object exposing the current execution context. All attributes are re
 | `context.parser` | Parser or None | Parser instance for the current task; inherited by synchronous sub-verb calls. `None` only when a Celery task re-invokes a verb outside any player command (e.g., scheduled `invoke()` calls) |
 | `context.writer` | callable | Low-level write function for the current player's console |
 | `context.task_id` | str | Celery task ID of the current execution |
+| `context.task_time` | TaskTime or None | Timing info for the current task: `elapsed`, `time_limit`, `remaining` (all in seconds). `None` when no time limit is configured (e.g. in tests). |
 | `context.caller_stack` | list | Stack of callers (for nested verb invocations) |
 
 `context.player` is the right variable to use when you need to know who typed the command. `context.caller` reflects the verb's permission context and may differ when `set_task_perms` is used.
@@ -82,6 +83,42 @@ invoke(verb=obj.some_verb, args=(arg1, arg2))
 - Returns a `PeriodicTask` instance for periodic/cron tasks, `None` for one-shots
 
 Use `invoke` when a sub-verb would exceed the 3-second verb time limit, or when you want a delayed or recurring action.
+
+### Time-aware continuation pattern
+
+For verbs that loop over many items, check `context.task_time.remaining` before each iteration and hand off remaining work when time is nearly exhausted:
+
+```python
+TIME_THRESHOLD = 0.5  # seconds
+
+def process_batch(items):
+    count = 0
+    for i, item in enumerate(items):
+        tt = context.task_time
+        if tt and tt.remaining is not None and tt.remaining <= TIME_THRESHOLD:
+            remaining_pks = [x.pk for x in items[i:]]
+            verb = context.parser.verb if context.parser else this.get_verb("myverb")
+            invoke(remaining_pks, verb=verb)
+            context.player.tell(f"  Continuing ({len(remaining_pks)} remaining)...")
+            return True, count
+        context.player.tell(f"  Processing {item}...")
+        item.do_work()
+        count += 1
+    return False, count
+
+# Top of the verb — detect continuation mode
+if args and isinstance(args[0], list):
+    items = list(MyModel.objects.filter(pk__in=args[0]))
+    continued, count = process_batch(items)
+    if not continued:
+        context.player.tell(f"Done. Processed {count}.")
+```
+
+Rules:
+- Pass only `args[0] = list[int]` of remaining PKs — no accumulated counts or errors (those were already told to the player via `tell()` in real time)
+- Helper function names must not start with `_` (RestrictedPython blocks them)
+- `context.parser` is `None` in continuation mode — use `this.get_verb(name)` as fallback
+- Reference implementation: `moo/bootstrap/default_verbs/programmer/at_reload.py`
 
 ## `open_editor(obj, initial_content, callback_verb, *args, content_type="text")`
 
