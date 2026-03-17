@@ -241,6 +241,70 @@ def test_reload_object_permission_denied(t_init: Object, t_wizard: Object, tmp_p
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_reload_all_schedules_continuation_on_low_time(t_init: Object, t_wizard: Object, tmp_path):
+    """@reload all calls invoke() with remaining verb PKs when task_time.remaining hits threshold."""
+    import moo.sdk as sdk
+    from unittest.mock import patch, PropertyMock
+    from moo.core.code import TaskTime
+
+    system = lookup(1)
+    repo = Repository.objects.create(slug="test-repo", prefix="test", url="http://example.com")
+
+    # Create three filesystem verbs across three objects. The default bootstrap also
+    # loads filesystem verbs, so all_pks below will include those too — that's intentional,
+    # since @reload all operates on every filesystem verb in the DB.
+    with code.ContextManager(t_wizard, lambda _: None):
+        for letter in "ABC":
+            create(f"widget{letter}", parents=[system.root_class], location=t_wizard.location)
+            verb_file = tmp_path / f"verb{letter}.py"
+            _write_verb_file(verb_file, f"widget{letter}", f"verb{letter}", f'print("{letter}")')
+            load_verb_source(verb_file, system, repo)
+
+    # Snapshot the full set of filesystem verb PKs now, before the reload. The verb
+    # processes them in this same set, so we can verify the handoff list is exactly
+    # "everything except the one that was processed before time ran out."
+    all_pks = set(
+        Verb.objects.filter(filename__isnull=False, repo__isnull=False)
+        .exclude(filename="")
+        .values_list("pk", flat=True)
+    )
+
+    # Simulate task_time returning different remaining-time values on successive reads.
+    # The verb checks context.task_time before processing each verb in the loop:
+    #   - first check: 0.9s remaining → above TIME_THRESHOLD (0.5s), so process the verb
+    #   - second check: 0.1s remaining → at/below threshold, so hand off the rest
+    task_time_values = iter([
+        TaskTime(elapsed=0.1, time_limit=1.0, remaining=0.9),  # first verb: enough time
+        TaskTime(elapsed=0.9, time_limit=1.0, remaining=0.1),  # second verb: hand off
+    ])
+
+    # patch.object on type(sdk.context) replaces the data descriptor on the _Context class,
+    # so every access to context.task_time inside the verb calls mock_tt() instead.
+    # patch("moo.sdk.invoke") intercepts the continuation call the verb makes; because
+    # verbs re-execute their imports on every call, the patched function is what the verb
+    # binds when it runs `from moo.sdk import invoke`.
+    # pytest.warns captures the RuntimeWarning that context.player.tell() emits in the
+    # test environment (write() can't reach a real connection, so it warns instead).
+    with patch.object(type(sdk.context), "task_time", new_callable=PropertyMock) as mock_tt:
+        mock_tt.side_effect = lambda: next(task_time_values, TaskTime(0.9, 1.0, 0.1))
+        with patch("moo.sdk.invoke") as mock_invoke:
+            with pytest.warns(RuntimeWarning):
+                with code.ContextManager(t_wizard, lambda _: None) as ctx:
+                    parse.interpret(ctx, "@reload all")
+
+    # invoke() should have been called exactly once with the list of un-processed PKs
+    # and the @reload verb object as the keyword argument.
+    assert mock_invoke.call_count == 1
+    invoke_args, invoke_kwargs = mock_invoke.call_args
+    remaining_pks = invoke_args[0]
+    assert isinstance(remaining_pks, list)
+    assert len(remaining_pks) == len(all_pks) - 1  # all but the one verb that completed
+    assert set(remaining_pks).issubset(all_pks)
+    assert "verb" in invoke_kwargs
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_reload_all_permission_denied(t_init: Object, t_wizard: Object):
     """@reload all is denied for a non-wizard player."""
     system = lookup(1)
