@@ -1,3 +1,11 @@
+## [0.80.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.80.2...v0.80.3) (2026-03-17)
+
+### Bug Fixes
+
+* install django-extensions for debug purposes ([e730e9b](https://gitlab.com/bubblehouse/django-moo/commit/e730e9b8c89b0fc2fc26dfa6521adada4c3a854f))
+* install django-extensions for debug purposes ([b7683eb](https://gitlab.com/bubblehouse/django-moo/commit/b7683eb817611983c594584408d68cc2b10490bd))
+* restore RestrictedPythons list of INSPECT_ATTRIBUTES ([b00ca8d](https://gitlab.com/bubblehouse/django-moo/commit/b00ca8d0328cb749cfabaa8c92ef037c3197aa0d))
+
 ## [0.80.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.80.1...v0.80.2) (2026-03-16)
 
 ### Bug Fixes
