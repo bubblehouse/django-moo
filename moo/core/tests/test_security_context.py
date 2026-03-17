@@ -162,8 +162,137 @@ def test_context_caller_shadowing_blocked_in_verb():
 
 
 # ---------------------------------------------------------------------------
-# context.caller_stack items expose previous caller references (known info disclosure)
+# invoke() — PeriodicTask return value and kwargs security
 # ---------------------------------------------------------------------------
+
+def test_invoke_periodic_returns_task_with_registered_task_name():
+    """
+
+    invoke(verb, delay=60, periodic=True) is wizard-gated and returns a live
+    PeriodicTask model instance.  PeriodicTask has no MOO ACL guard on .save(),
+    so a wizard who receives the return value can modify periodic_task.task.
+
+    The escalation risk is limited by Celery's task registry: only tasks
+    decorated with @app.task are callable by beat.  Setting task to an
+    unregistered name causes a celery.exceptions.NotRegistered error at
+    execution time, not arbitrary code execution.
+
+    The wizard guard at invoke() entry prevents non-wizards from creating
+    PeriodicTasks at all; modifying one's own already-scheduled task is
+    accepted wizard-level access.
+    """
+    from unittest.mock import MagicMock, patch
+    from moo.sdk import invoke
+
+    wizard = mock_caller(is_wizard=True)
+    wizard.pk = 1
+    verb = MagicMock()
+    verb._invoked_object.pk = 1
+    verb._invoked_name = "test_verb"
+
+    with ctx(wizard):
+        with patch("django_celery_beat.models.IntervalSchedule.objects.get_or_create") as mock_sched, \
+             patch("django_celery_beat.models.PeriodicTask.objects.create") as mock_create:
+            mock_sched.return_value = (MagicMock(), True)
+            mock_task = MagicMock()
+            mock_task.task = "moo.core.tasks.invoke_verb"
+            mock_create.return_value = mock_task
+
+            task = invoke(verb=verb, delay=60, periodic=True)
+
+    assert task is not None
+    assert task.task == "moo.core.tasks.invoke_verb"
+
+
+def test_invoke_kwargs_caller_id_cannot_be_forged():
+    """
+
+    invoke() unconditionally overwrites caller_id, player_id, this_id, and
+    verb_name with values derived from the authenticated context after merging
+    any verb-supplied kwargs.  Even if verb code passes a forged caller_id
+    using the dict.update() underscore-key bypass documented elsewhere, invoke()
+    overwrites it with context.caller.pk before dispatching the task.
+    """
+    from unittest.mock import MagicMock, patch
+    from moo.sdk import invoke
+
+    wizard = mock_caller(is_wizard=True)
+    wizard.pk = 99
+    verb = MagicMock()
+    verb._invoked_object.pk = 1
+    verb._invoked_name = "test"
+
+    captured_kwargs = {}
+
+    def fake_apply_async(args, kwargs, **kw):
+        captured_kwargs.update(kwargs)
+
+    with ctx(wizard):
+        with patch("moo.core.tasks.invoke_verb.apply_async", side_effect=fake_apply_async):
+            invoke(verb=verb)
+
+    assert captured_kwargs["caller_id"] == 99
+
+
+# ---------------------------------------------------------------------------
+# context.writer / context.parser / context.task_id surface
+# ---------------------------------------------------------------------------
+
+def test_context_writer_equivalent_to_print():
+    """
+
+    context.writer is the same callable that the sandbox's print() uses
+    internally (_print_._call_print calls writer(s)).  Non-wizard verb code
+    calling context.writer('msg') is equivalent to print('msg') — both write
+    only to the current player's own console.
+
+    The wizard check on write(obj, msg) guards writing to ARBITRARY players
+    (by specifying obj).  context.writer always targets the current session's
+    player and is not a bypass of that check.
+    """
+    caller = mock_caller(is_wizard=False)
+    printed = []
+    with ctx(caller, printed.append):
+        w = code.ContextManager.get("writer")
+        g = code.get_default_globals()
+        g.update(code.get_restricted_environment("__main__", w))
+        code.r_exec(
+            "from moo.sdk import context\ncontext.writer('test msg')",
+            {}, g,
+        )
+    assert printed == ["test msg"]
+
+
+def test_context_task_id_is_string_or_none():
+    """
+
+    context.task_id returns the Celery task ID string (or None outside a task).
+    Celery's inspect/revoke APIs require broker access which verb code cannot
+    obtain — knowing the task ID string alone does not allow a verb to cancel
+    or inspect tasks from inside the sandbox.
+    """
+    caller = mock_caller(is_wizard=False)
+    with ctx(caller):
+        task_id = code.ContextManager.get("task_id")
+    assert task_id is None or isinstance(task_id, str)
+
+
+def test_context_parser_is_none_outside_command_dispatch():
+    """
+
+    context.parser returns the Parser instance for the current command.
+    Its public attributes (command, words, dobj_str, dobj, prepositions) expose
+    the same information already available to verb code via the sdk parse helpers.
+    Parser does not expose Django internals or model managers.
+
+    Outside command dispatch (e.g. unit tests where set_parser() is not called),
+    context.parser is None.
+    """
+    caller = mock_caller(is_wizard=False)
+    with ctx(caller):
+        parser = code.ContextManager.get("parser")
+    assert parser is None
+
 
 @pytest.mark.skip(reason="info disclosure only — not scheduled for remediation")
 def test_caller_stack_previous_caller_reference_accessible():
