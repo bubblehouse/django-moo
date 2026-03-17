@@ -1,3 +1,9 @@
+## [0.80.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.80.3...v0.80.4) (2026-03-17)
+
+### Bug Fixes
+
+* possessive noun lookup IndexError in Parser.find_object ([41b32da](https://gitlab.com/bubblehouse/django-moo/commit/41b32dade07448da8c8ce9a2397baf3b7845ffe9))
+
 ## [0.80.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.80.2...v0.80.3) (2026-03-17)
 
 ### Bug Fixes
