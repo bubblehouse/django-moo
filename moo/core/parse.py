@@ -74,7 +74,7 @@ def unquote(s):
 
 class Pattern:
     PREP_SRC = r"(?:\b)(?P<prep>" + "|".join(sum(settings.PREPOSITIONS, [])) + r")(?:\b)"
-    SPEC = r"(?P<spec_str>my|the|a|an|\S+(?:\'s|s\'))"
+    SPEC = r"(?P<spec_str>my|the|a|an|[^\s\"\']\S*(?:\'s|s\'))"
     PHRASE_SRC = r"(?:" + SPEC + r"\s)?(?P<obj_str>.+)"
     PREP = re.compile(PREP_SRC)
     PHRASE = re.compile(PHRASE_SRC)
@@ -265,6 +265,8 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         if isinstance(search, QuerySet):
             if len(search) > 1:
                 raise AmbiguousObjectError(name, search)
+            elif len(search) == 0:
+                raise NoSuchObjectError(person)
             search = search[0]
         if name and search:
             result = search.find(name)
