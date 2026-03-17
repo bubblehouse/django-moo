@@ -360,6 +360,7 @@ class _Context:
     writer = descriptor("writer")  # A callable that will print to the player's console
     parser = descriptor("parser")
     task_id = descriptor("task_id")  # The current task ID
+    task_time = descriptor("task_time")  # TaskTime(elapsed, time_limit, remaining) for the current task
     caller_stack = descriptor("caller_stack")  # A stack of callers, with the current caller at the end
 
 

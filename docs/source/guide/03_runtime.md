@@ -47,6 +47,7 @@ with code.ContextManager(caller, output.append, task_id=task_id) as ctx:
 | `context.parser` | `Parser` | The parsed command. Provides `get_dobj()`, `get_dobj_str()`, `get_pobj_str(prep)`, etc. |
 | `context.caller_stack` | `list` | Stack of caller frames accumulated as verbs invoke sub-verbs. Useful for permission auditing. |
 | `context.task_id` | `str` | The Celery task ID for the current session. |
+| `context.task_time` | `TaskTime` or `None` | Timing info for the current task: `elapsed`, `time_limit`, and `remaining` (all in seconds). `None` when no time limit is configured. Use this to detect when a long-running loop should hand off remaining work via `invoke()`. |
 
 ### Typical Usage in a Verb
 

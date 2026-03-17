@@ -66,6 +66,70 @@ value = kwargs['value'] + 1
 return f"A parrot squawks {value}."
 ```
 
+## Time-Aware Continuation
+
+`invoke()` gives each verb its own 3-second budget, but what if a single verb needs to do work that could take arbitrarily long — like iterating over hundreds of objects? The answer is to check how much time remains and hand the unfinished work off to a fresh task before the budget runs out.
+
+`context.task_time` returns a `TaskTime` namedtuple (or `None` if no time limit is configured):
+
+```python
+from moo.sdk import context
+
+tt = context.task_time
+# tt.elapsed   — seconds since this task started
+# tt.time_limit — the configured hard limit (e.g. 3.0), or None
+# tt.remaining  — seconds left before the task is killed, or None
+```
+
+The canonical pattern is to check `remaining` before each unit of work in a loop. When it drops below a safety threshold, collect whatever is left, schedule it as a new task via `invoke()`, and return:
+
+```python
+from moo.sdk import context, invoke
+
+TIME_THRESHOLD = 0.5  # hand off when 0.5 s remain
+
+def process_batch(items):
+    count = 0
+    for i, item in enumerate(items):
+        tt = context.task_time
+        if tt and tt.remaining is not None and tt.remaining <= TIME_THRESHOLD:
+            remaining = items[i:]
+            reload_verb = context.parser.verb if context.parser else this.get_verb("process")
+            invoke(remaining, verb=reload_verb)
+            context.player.tell(f"  Continuing in a new task ({len(remaining)} item(s) remaining)...")
+            return True, count
+        context.player.tell(f"  Processing {item}...")
+        do_work(item)
+        count += 1
+    return False, count
+```
+
+A few things to note:
+
+- `context.task_time` may return `None` in test environments where no task time limit is configured. Always guard with `if tt and tt.remaining is not None`.
+- Use `context.player.tell()` (not `print()`) for progress messages inside the loop. `tell()` routes through `write()` and is delivered immediately; `print()` buffers until the verb returns.
+- Materialize the queryset to a `list()` before the loop so the DB cursor doesn't stay open across the time check.
+- Get the verb reference for `invoke()` from `context.parser.verb` (no DB hit when called from the parser), falling back to `this.get_verb(name)` in continuation mode where `context.parser` is `None`.
+- Keep the continuation args minimal — just the list of remaining work items. There's no need to pass accumulated counts or error lists since progress messages were already delivered via `tell()`.
+
+When the continuation task fires, add a branch at the top of the verb to detect that it was invoked with pre-computed work rather than through the parser:
+
+```python
+if args and isinstance(args[0], list):
+    # Continuation mode: args[0] is a list of remaining items
+    continued, count = process_batch(list(args[0]))
+    if not continued:
+        context.player.tell(f"Done. Processed {count} item(s).")
+else:
+    # Normal parser path
+    items = list(get_all_items())
+    continued, count = process_batch(items)
+    if not continued:
+        context.player.tell(f"Done. Processed {count} item(s).")
+```
+
+The `@reload` verb in `moo/bootstrap/default_verbs/programmer/at_reload.py` is the reference implementation of this pattern.
+
 ## Returning a Value from a Verb
 
 > The MOO program in a verb is just a sequence of statements. Normally, when the verb is called, those statements are simply executed in order and then the integer 0 is returned as the value of the verb-call expression. Using the `return` statement, one can change this behavior. The `return` statement has one of the following two forms:
@@ -185,13 +249,4 @@ return None
 
 ### 5. Respect the Verb Time Limit
 
-Each verb execution (including synchronous calls to other verbs) should complete in less than 3 seconds, or Celery will terminate the task. If you need complex logic:
-
-```python
-from moo.sdk import context, invoke
-
-player = context.player
-# Invoke async verb operations
-invoke(verb=player.complex_verb, delay=0)
-return "Operation started in background."
-```
+Each verb execution (including synchronous calls to other verbs) should complete in less than 3 seconds, or Celery will terminate the task. For verbs that loop over many items, use the time-aware continuation pattern described in [Time-Aware Continuation](#time-aware-continuation) above.

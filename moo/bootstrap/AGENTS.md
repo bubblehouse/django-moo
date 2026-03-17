@@ -423,15 +423,51 @@ except ValueError:
     return
 ```
 
-### 7. Avoid Long Operations
-If a verb needs to do something time-consuming:
+### 7. Time-Aware Continuation for Long-Running Verbs
+
+Verbs that iterate over many objects must check `context.task_time.remaining` before each item and hand remaining work off via `invoke()` when time is nearly exhausted. The target verb budget is 3 seconds; use a 0.5-second safety threshold.
 
 ```python
 from moo.sdk import context, invoke
 
-invoke("Hello, finally.", verb=context.player.tell, delay=10, periodic=False)
-return "Task started in background."
+TIME_THRESHOLD = 0.5
+
+def process_batch(items):
+    count = 0
+    for i, item in enumerate(items):
+        tt = context.task_time
+        if tt and tt.remaining is not None and tt.remaining <= TIME_THRESHOLD:
+            remaining_pks = [x.pk for x in items[i:]]
+            verb = context.parser.verb if context.parser else this.get_verb("myverb")
+            invoke(remaining_pks, verb=verb)
+            context.player.tell(f"  Continuing in a new task ({len(remaining_pks)} remaining)...")
+            return True, count
+        context.player.tell(f"  Processing {item}...")
+        item.do_work()
+        count += 1
+    return False, count
+
+# Continuation branch: args[0] is a list of PKs from a prior batch
+if args and isinstance(args[0], list):
+    items = list(MyModel.objects.filter(pk__in=args[0]))
+    continued, count = process_batch(items)
+    if not continued:
+        context.player.tell(f"Done. Processed {count} item(s).")
+else:
+    items = list(MyModel.objects.filter(...))
+    continued, count = process_batch(items)
+    if not continued:
+        context.player.tell(f"Done. Processed {count} item(s).")
 ```
+
+Key rules:
+- Use `context.player.tell()` for progress messages inside the loop — it delivers immediately via `write()`. `print()` buffers until the verb returns.
+- Pass only the list of remaining PKs as `args[0]`. No need to carry accumulated counts or error strings — those were already told to the player.
+- Materialize the queryset to `list()` before the loop so the DB cursor doesn't span the time check.
+- `context.parser.verb` gives the Verb object with no DB hit when called from the parser; fall back to `this.get_verb(name)` in continuation mode where `context.parser` is `None`.
+- Nested function names must not start with `_` — RestrictedPython blocks underscore-prefixed names.
+
+The reference implementation is `moo/bootstrap/default_verbs/programmer/at_reload.py`.
 
 ## Modifying Bootstrap Datasets
 
