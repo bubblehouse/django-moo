@@ -14,7 +14,7 @@ import pytest
 from moo.core.models.object import Object
 
 from .. import code
-from .utils import ctx
+from .utils import ctx, mock_caller, raises_in_verb
 
 
 # ---------------------------------------------------------------------------
@@ -729,3 +729,89 @@ def test_original_location_write_blocked(t_init: Object, t_wizard: Object):
         g["room"] = room
         with pytest.raises((AttributeError, TypeError)):
             code.r_exec("obj._original_location = room.pk", {}, g)
+
+
+# ---------------------------------------------------------------------------
+# Repository.save() wizard guard fires regardless of import path
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_repository_save_wizard_guard_fires_via_direct_import(t_init: Object, t_wizard: Object):
+    """
+
+    Repository.save() checks ContextManager.get('caller').is_wizard() directly,
+    not call-site restrictions.  This guard fires whether Repository is accessed
+    via verb.repo or by a wizard importing moo.core.models.verb directly.
+
+    Non-wizard callers must always be rejected.  Wizard callers may save, which
+    is acceptable: WIZARD_ALLOWED_MODULES allows moo.core.models.verb and wizards
+    are system administrators with full system access.
+    """
+    from moo.core.models.verb import Repository
+    from moo.core.exceptions import AccessError
+
+    plain = mock_caller(is_wizard=False)
+
+    with ctx(plain):
+        r = Repository(slug="test-repo-guard", url="https://example.com/repo.git", prefix="verbs/")
+        with pytest.raises(AccessError):
+            r.save()
+
+
+# ---------------------------------------------------------------------------
+# passthrough cannot be used to forge caller context
+# ---------------------------------------------------------------------------
+
+def test_passthrough_has_no_this_parameter():
+    """
+
+    passthrough() is passed to verb code as its second positional argument.
+    Its implementation always uses self._invoked_object (underscore-prefixed,
+    inaccessible to verb code) as the 'this' context for the parent verb call.
+    Verb code can pass extra positional args but cannot supply a forged 'this'
+    context because passthrough() does not accept it as a parameter.
+    """
+    import inspect
+    from moo.core.models.verb import Verb
+
+    v = Verb()
+    sig = inspect.signature(v.passthrough)
+    assert "this" not in sig.parameters
+
+
+def test_passthrough_raises_when_unbound():
+    """
+    passthrough() raises RuntimeError when called on an unbound verb (no
+    _invoked_object/_invoked_name set).  Verb code cannot construct a
+    passthrough callable that would work outside of a legitimate dispatch
+    context established by the Verb.__call__ machinery.
+    """
+    from moo.core.models.verb import Verb
+
+    v = Verb()
+    with pytest.raises(RuntimeError, match="unbound"):
+        v.passthrough()
+
+
+# ---------------------------------------------------------------------------
+# Wizard ORM access via WIZARD_ALLOWED_MODULES
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_wizard_allowed_modules_queryset_mutations_still_blocked(t_init: Object, t_wizard: Object):
+    """
+
+    WIZARD_ALLOWED_MODULES includes moo.core.models, giving wizard verb code
+    access to Object, Verb, Property, User, Player, and other model classes for
+    debugging purposes.  Wizards are system administrators; this is intentional.
+
+    QuerySet mutation methods (update, delete, bulk_create, etc.) remain blocked
+    by the _QUERYSET_ALLOWED guard in code.py regardless of wizard status.
+    Wizards cannot use a direct QuerySet .update() call to bypass model-level
+    permission checks.
+    """
+    raises_in_verb(
+        "from moo.core.models import Object\nObject.objects.filter(pk=1).update(name='hacked')",
+        AttributeError,
+        caller=mock_caller(is_wizard=True),
+    )
