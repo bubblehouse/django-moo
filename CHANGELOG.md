@@ -1,3 +1,11 @@
+## [0.81.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.81.1...v0.81.2) (2026-03-18)
+
+### Bug Fixes
+
+* added DjangoMOO to page title ([bb35496](https://gitlab.com/bubblehouse/django-moo/commit/bb35496f95ecae755a2ee532a1947c8834f4bac5))
+* improve title of editor ([6c02012](https://gitlab.com/bubblehouse/django-moo/commit/6c02012041d48127a7e7cf1b8b6c0aec8672cfa1))
+* lookup() should understand pronouns ([4ed0249](https://gitlab.com/bubblehouse/django-moo/commit/4ed02491f16518a144956d51ee78cc7f0fa0af6d))
+
 ## [0.81.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.81.0...v0.81.1) (2026-03-18)
 
 ### Bug Fixes
