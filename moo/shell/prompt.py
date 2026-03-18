@@ -35,14 +35,16 @@ def _make_key_bindings() -> KeyBindings:
     kb = KeyBindings()
     buffer_is_empty = Condition(lambda: get_app().current_buffer.text == "")
     for char, template in PROMPT_SHORTCUTS.items():
+
         def make_handler(ch, tmpl):
             @kb.add(ch, filter=buffer_is_empty)
             def handler(event):
-                text = tmpl.replace('%', '')
-                pos = tmpl.find('%')
+                text = tmpl.replace("%", "")
+                pos = tmpl.find("%")
                 if pos == -1:
                     pos = len(text)
                 event.app.current_buffer.set_document(Document(text, pos))
+
         make_handler(char, template)
     return kb
 
@@ -109,12 +111,12 @@ class MooPrompt:
         try:
             while not self.is_exiting:
                 message = await self.generate_prompt()
-                prompt_task = asyncio.ensure_future(
-                    prompt_session.prompt_async(message, style=self.style))
+                prompt_task = asyncio.ensure_future(prompt_session.prompt_async(message, style=self.style))
                 editor_task = asyncio.ensure_future(self.editor_queue.get())
                 paginator_task = asyncio.ensure_future(self.paginator_queue.get())
                 done, pending = await asyncio.wait(
-                    [prompt_task, editor_task, paginator_task], return_when=asyncio.FIRST_COMPLETED)
+                    [prompt_task, editor_task, paginator_task], return_when=asyncio.FIRST_COMPLETED
+                )
                 for task in pending:
                     task.cancel()
                     try:
@@ -148,6 +150,7 @@ class MooPrompt:
             ``player_id``, and optional ``args``
         """
         from .editor import run_editor
+
         edited_text = await run_editor(req.get("content", ""), req.get("content_type", "text"), title=req.get("title"))
         if edited_text is not None and req.get("callback_this_id") and req.get("callback_verb_name"):
             caller = await sync_to_async(models.Object.objects.get)(pk=req["caller_id"])
@@ -170,6 +173,7 @@ class MooPrompt:
         :param req: paginator request dict with keys ``content`` and ``content_type``
         """
         from .paginator import run_paginator
+
         await run_paginator(req.get("content", ""), req.get("content_type", "text"))
 
     @sync_to_async

@@ -7,31 +7,55 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0011_alter_object_name_alter_object_unique_name_and_more'),
+        ("core", "0011_alter_object_name_alter_object_unique_name_and_more"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Preposition',
+            name="Preposition",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
             ],
         ),
         migrations.CreateModel(
-            name='ArgumentSpecifier',
+            name="ArgumentSpecifier",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('prepositionSpecifier', models.CharField(blank=True, choices=[('any', 'any'), ('none', 'none')], db_index=True, max_length=255, null=True)),
-                ('objectSpecifier', models.CharField(choices=[('this', 'this'), ('any', 'any'), ('none', 'none')], db_index=True, max_length=255)),
-                ('preposition', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to='core.preposition')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "prepositionSpecifier",
+                    models.CharField(
+                        blank=True, choices=[("any", "any"), ("none", "none")], db_index=True, max_length=255, null=True
+                    ),
+                ),
+                (
+                    "objectSpecifier",
+                    models.CharField(
+                        choices=[("this", "this"), ("any", "any"), ("none", "none")], db_index=True, max_length=255
+                    ),
+                ),
+                (
+                    "preposition",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="+",
+                        to="core.preposition",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='PrepositionName',
+            name="PrepositionName",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=255)),
-                ('preposition', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='names', to='core.preposition')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("name", models.CharField(max_length=255)),
+                (
+                    "preposition",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, related_name="names", to="core.preposition"
+                    ),
+                ),
             ],
         ),
     ]

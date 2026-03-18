@@ -28,6 +28,7 @@ def _get_permission_id(name: str) -> int:
         return pk
     return Permission.objects.get(name=name).id
 
+
 log = logging.getLogger(__name__)
 
 

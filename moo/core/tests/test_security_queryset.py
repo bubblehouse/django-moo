@@ -16,10 +16,10 @@ from moo.core.models.object import Object
 from .. import code
 from .utils import ctx
 
-
 # ---------------------------------------------------------------------------
 # QuerySet.model must not expose raw ORM
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_queryset_model_exposes_orm_via_parents(t_init: Object, t_wizard: Object):
@@ -45,6 +45,7 @@ cls = obj.parents.all().model
 # ---------------------------------------------------------------------------
 # QuerySet mutation methods must be blocked
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_queryset_update_bypasses_verb_save_permission(t_init: Object, t_wizard: Object):
@@ -90,6 +91,7 @@ obj.verbs.all().delete()
 # QuerySet.values() must not bypass the Property.value guard
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_queryset_values_bypasses_property_value_guard(t_init: Object, t_wizard: Object):
     """
@@ -126,6 +128,7 @@ rows = list(obj.properties.all().values('name', 'value'))
 # RelatedManager.create() must respect write permission
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_relatedmanager_create_bypasses_add_verb_permission(t_init: Object, t_wizard: Object):
     """
@@ -150,6 +153,7 @@ obj.verbs.create(code='print("injected")')
 # ---------------------------------------------------------------------------
 # ManyToMany parent manipulation must be blocked
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_m2m_parents_add_blocked(t_init: Object, t_wizard: Object):
@@ -182,6 +186,7 @@ target.parents.add(extra)
 # ---------------------------------------------------------------------------
 # Property.value must enforce read permission in verb code
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_property_value_read_bypasses_permission_via_relatedmanager(t_init: Object, t_wizard: Object):
@@ -232,6 +237,7 @@ def test_property_value_read_allowed_for_owner(t_init: Object, t_wizard: Object)
 # Verb.__call__() must check execute permission
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_verb_direct_call_bypasses_execute_permission(t_init: Object, t_wizard: Object):
     """
@@ -272,7 +278,7 @@ def test_passthrough_still_works_after_execute_check(t_init: Object, t_wizard: O
         parent = create("passthrough_parent")
         parent.add_verb("greet", code='print("hello from parent")')
         child = create("passthrough_child", parents=[parent])
-        child.add_verb("greet", code='passthrough()')
+        child.add_verb("greet", code="passthrough()")
 
     printed = []
     with ctx(t_wizard, printed.append):
@@ -283,6 +289,7 @@ def test_passthrough_still_works_after_execute_check(t_init: Object, t_wizard: O
 # ---------------------------------------------------------------------------
 # ACL rules must not be enumerable without grant permission
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_acl_enumeration_via_relatedmanager(t_init: Object, t_wizard: Object):
@@ -329,6 +336,7 @@ def test_acl_enumeration_allowed_for_wizard(t_init: Object, t_wizard: Object):
 # ---------------------------------------------------------------------------
 # select_related() safety (pass 14)
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_select_related_does_not_expose_new_attack_surface(t_init: Object, t_wizard: Object):

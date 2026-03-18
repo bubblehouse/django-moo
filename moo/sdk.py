@@ -12,15 +12,28 @@ from typing import Union
 
 from .core.code import ContextManager as _ContextManager
 from .core.exceptions import (
-    QuotaError, AmbiguousObjectError, UserError,
-    NoSuchObjectError, NoSuchVerbError, NoSuchPropertyError,
+    QuotaError,
+    AmbiguousObjectError,
+    UserError,
+    NoSuchObjectError,
+    NoSuchVerbError,
+    NoSuchPropertyError,
 )
 
 __all__ = [
-    "lookup", "create", "players", "connected_players",
-    "write", "open_editor", "open_paginator",
-    "invoke", "set_task_perms", "context",
-    "NoSuchObjectError", "NoSuchVerbError", "NoSuchPropertyError",
+    "lookup",
+    "create",
+    "players",
+    "connected_players",
+    "write",
+    "open_editor",
+    "open_paginator",
+    "invoke",
+    "set_task_perms",
+    "context",
+    "NoSuchObjectError",
+    "NoSuchVerbError",
+    "NoSuchPropertyError",
     "AmbiguousObjectError",
 ]
 
@@ -45,9 +58,7 @@ def lookup(x: Union[int, str]):
         if x.startswith("$"):
             system = lookup(1)
             return system.get_property(name=x[1:])
-        qs = Object.objects.filter(
-            Q(name__iexact=x) | Q(aliases__alias__iexact=x)
-        ).distinct()
+        qs = Object.objects.filter(Q(name__iexact=x) | Q(aliases__alias__iexact=x)).distinct()
         if not qs:
             if context.parser:
                 obj = context.parser.get_pronoun_object(x)
@@ -84,11 +95,7 @@ def connected_players(within=None):
 
     # Single query: restrict to player avatars only and eagerly load the
     # origin Object to avoid per-row SELECT on prop.origin access.
-    props = (
-        Property.objects
-        .filter(name="last_connected_time", origin__player__isnull=False)
-        .select_related("origin")
-    )
+    props = Property.objects.filter(name="last_connected_time", origin__player__isnull=False).select_related("origin")
 
     pcache = _ContextManager.get_prop_lookup_cache()
     result = []
@@ -110,6 +117,7 @@ def players():
     :rtype: list[Object]
     """
     from .core.models.auth import Player
+
     return [p.avatar for p in Player.objects.select_related("avatar").filter(avatar__isnull=False)]
 
 
@@ -142,6 +150,7 @@ def create(name, *a, **kw):
     :raises QuotaError: if the caller has a quota and it has been exceeded
     """
     from .core.models.object import Object, Property
+
     _SYSTEM_KEY = "__system_object__"
     cache = _ContextManager.get_perm_cache()
     if cache is not None and _SYSTEM_KEY in cache:
@@ -183,6 +192,7 @@ def write(obj, message):
     :type message: Any
     """
     from moo.core import _publish_to_player
+
     if context.caller and not context.caller.is_wizard():
         raise UserError("Only verbs owned by wizards can write to the console.")
     _publish_to_player(obj, message)
@@ -202,21 +212,25 @@ def open_editor(obj, initial_content: str, callback_verb, *args, content_type: s
     :param content_type: "python", "json", or "text" (default); controls syntax highlighting
     """
     from moo.core import _publish_to_player
+
     if content_type not in ("python", "json", "text"):
         raise UserError(f"content_type must be 'python', 'json', or 'text', not {content_type!r}.")
     if context.caller and not context.caller.is_wizard():
         raise UserError("Only verbs owned by wizards can open the editor.")
-    _publish_to_player(obj, {
-        "event": "editor",
-        "content": initial_content,
-        "content_type": content_type,
-        "title": title,
-        "args": list(args),
-        "callback_this_id": callback_verb._invoked_object.pk,  # pylint: disable=protected-access
-        "callback_verb_name": callback_verb._invoked_name,  # pylint: disable=protected-access
-        "caller_id": context.caller.pk,
-        "player_id": (context.player or context.caller).pk,
-    })
+    _publish_to_player(
+        obj,
+        {
+            "event": "editor",
+            "content": initial_content,
+            "content_type": content_type,
+            "title": title,
+            "args": list(args),
+            "callback_this_id": callback_verb._invoked_object.pk,  # pylint: disable=protected-access
+            "callback_verb_name": callback_verb._invoked_name,  # pylint: disable=protected-access
+            "caller_id": context.caller.pk,
+            "player_id": (context.player or context.caller).pk,
+        },
+    )
 
 
 def open_paginator(obj, content: str, content_type: str = "text"):
@@ -229,15 +243,19 @@ def open_paginator(obj, content: str, content_type: str = "text"):
     :param content_type: "python", "json", or "text" (default); controls syntax highlighting
     """
     from moo.core import _publish_to_player
+
     if content_type not in ("python", "json", "text"):
         raise UserError(f"content_type must be 'python', 'json', or 'text', not {content_type!r}.")
     if context.caller and not context.caller.is_wizard():
         raise UserError("Only verbs owned by wizards can open the paginator.")
-    _publish_to_player(obj, {
-        "event": "paginator",
-        "content": content,
-        "content_type": content_type,
-    })
+    _publish_to_player(
+        obj,
+        {
+            "event": "paginator",
+            "content": content,
+            "content_type": content_type,
+        },
+    )
 
 
 def invoke(*args, verb=None, callback=None, delay: int = 0, periodic: bool = False, cron: str = None, **kwargs):
@@ -261,7 +279,11 @@ def invoke(*args, verb=None, callback=None, delay: int = 0, periodic: bool = Fal
     if (periodic or cron) and context.caller and not context.caller.is_wizard():
         raise UserError("Only verbs owned by wizards can create persistent scheduled tasks.")
     if verb is not None and context.caller:
-        exec_obj = verb._invoked_object if verb._invoked_object is not None else verb.origin  # pylint: disable=protected-access
+        exec_obj = (
+            verb._invoked_object  # pylint: disable=protected-access
+            if verb._invoked_object is not None  # pylint: disable=protected-access
+            else verb.origin
+        )
         exec_obj.can_caller("execute", verb)
 
     from django_celery_beat.models import CrontabSchedule, IntervalSchedule, PeriodicTask

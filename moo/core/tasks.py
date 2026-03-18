@@ -75,7 +75,15 @@ def parse_code(self, caller_id: int, source: str, runtype: str = "exec") -> list
 
 @shared_task(bind=True)
 def invoke_verb(
-    self, *args, caller_id: int = None, player_id: Optional[int] = None, this_id: int = None, verb_name: int = None, callback_this_id: Optional[int] = None, callback_verb_name: Optional[int] = None, **kwargs
+    self,
+    *args,
+    caller_id: int = None,
+    player_id: Optional[int] = None,
+    this_id: int = None,
+    verb_name: int = None,
+    callback_this_id: Optional[int] = None,
+    callback_verb_name: Optional[int] = None,
+    **kwargs,
 ) -> None:
     """
     Asynchronously execute a Verb, optionally returning the result to another Verb.
@@ -96,11 +104,13 @@ def invoke_verb(
         this = Object.objects.get(pk=this_id)
         verb_obj = this.get_verb(verb_name)
         if player:
+
             def _player_writer(msg):
                 try:
                     _publish_to_player(player, msg)
                 except Exception:  # pylint: disable=broad-exception-caught
                     background_log.info(msg)
+
             writer = _player_writer
         else:
             writer = background_log.info

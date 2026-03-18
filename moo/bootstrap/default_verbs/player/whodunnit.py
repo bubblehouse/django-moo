@@ -26,8 +26,8 @@ for frame in callers:
         continue
     if caller in mistrust:
         return dict(
-            this = frame["this"],
-            verb_name = frame["verb_name"],
-            caller = caller,
+            this=frame["this"],
+            verb_name=frame["verb_name"],
+            caller=caller,
         )
 return None

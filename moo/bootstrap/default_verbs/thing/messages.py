@@ -14,21 +14,21 @@ prop_value = this.get_property(prop_name)
 actor = context.player
 subject = args[0] if len(args) > 0 else this.title()
 
-if prop_name == 'take_succeeded_msg':
+if prop_name == "take_succeeded_msg":
     return prop_value.replace("{actor}", "You").replace("{subject}", str(subject))
-elif prop_name == 'otake_failed_msg':
+elif prop_name == "otake_failed_msg":
     return prop_value.replace("{actor}", str(actor)).replace("{subject}", str(subject))
-elif prop_name == 'otake_succeeded_msg':
+elif prop_name == "otake_succeeded_msg":
     return prop_value.replace("{actor}", str(actor)).replace("{subject}", str(subject))
-elif prop_name == 'take_failed_msg':
+elif prop_name == "take_failed_msg":
     return prop_value.replace("{actor}", "You").replace("{subject}", str(subject))
-elif prop_name == 'odrop_succeeded_msg':
+elif prop_name == "odrop_succeeded_msg":
     return prop_value.replace("{actor}", str(actor)).replace("{subject}", str(subject))
-elif prop_name == 'odrop_failed_msg':
+elif prop_name == "odrop_failed_msg":
     return prop_value.replace("{actor}", str(actor)).replace("{subject}", str(subject))
-elif prop_name == 'drop_succeeded_msg':
+elif prop_name == "drop_succeeded_msg":
     return prop_value.replace("{actor}", "You").replace("{subject}", str(subject))
-elif prop_name == 'drop_failed_msg':
+elif prop_name == "drop_failed_msg":
     return prop_value.replace("{actor}", "You").replace("{subject}", str(subject))
 else:
     raise ValueError(f"Unknown property name: {prop_name}")

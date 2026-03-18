@@ -111,6 +111,7 @@ class Verb(models.Model, AccessibleMixin):
         if self.repo is None or self.filename is None:
             raise RuntimeError("Cannot reload a verb without an associated repo and filename.")
         import pathlib
+
         bootstrap.load_verb_source(pathlib.Path(self.filename), lookup(1), self.repo, replace=True)
 
     def is_bound(self):
@@ -173,7 +174,7 @@ class Verb(models.Model, AccessibleMixin):
             this = self.origin
             name = self.name()
         if self.filename is not None:
-            kwargs['filename'] = self.filename
+            kwargs["filename"] = self.filename
         if this is None:
             raise RuntimeError(f"Cannot call {self} without a non-null 'this' context.")
         _system_key = "__system_object__"
@@ -186,7 +187,9 @@ class Verb(models.Model, AccessibleMixin):
                 _cache[_system_key] = system
         active = ContextManager.is_active()
         if active:
-            ContextManager.override_caller(self.owner, this=this, verb_name=name, origin=self.origin, player=ContextManager.get("player"))
+            ContextManager.override_caller(
+                self.owner, this=this, verb_name=name, origin=self.origin, player=ContextManager.get("player")
+            )
         try:
             result = interpret(self.code, name, this, self.passthrough, system, *args, **kwargs)
         finally:
@@ -226,6 +229,7 @@ class Repository(models.Model):
 
     def save(self, *args, **kwargs):
         from ..exceptions import AccessError
+
         caller = ContextManager.get("caller")
         if caller is not None and not caller.is_wizard():
             raise AccessError(caller, "modify", self)
@@ -233,6 +237,7 @@ class Repository(models.Model):
 
     def delete(self, *args, **kwargs):
         from ..exceptions import AccessError
+
         caller = ContextManager.get("caller")
         if caller is not None and not caller.is_wizard():
             raise AccessError(caller, "delete", self)

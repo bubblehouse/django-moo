@@ -92,7 +92,9 @@ async def run_editor(initial_text: str = "", content_type: str = "text", title: 
         height=1,
         style="reverse",
     )
-    layout = Layout(HSplit([Frame(editor, title=title if title is not None else _TITLES.get(content_type, "Editor")), status_bar]))
+    layout = Layout(
+        HSplit([Frame(editor, title=title if title is not None else _TITLES.get(content_type, "Editor")), status_bar])
+    )
     pygments_style = style_from_pygments_cls(get_style_by_name("solarized-dark"))
     app = Application(layout=layout, key_bindings=kb, full_screen=True, style=pygments_style)
 

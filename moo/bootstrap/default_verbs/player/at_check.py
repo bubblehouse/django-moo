@@ -23,7 +23,7 @@ trust = []
 mistrust = []
 linecount = int(args.pop(0))
 for name in args:
-    if name.startswith('!'):
+    if name.startswith("!"):
         mistrust.append(lookup(name[1:]))
     else:
         trust.append(lookup(name))
@@ -32,4 +32,6 @@ for frame in player.responsible[-linecount:]:
     callers, saved_args = frame
     non_wizard = player.whodunnit(callers, trust, mistrust)
     if non_wizard:
-        print(f"{non_wizard['caller']} sent message '{saved_args[0]}' using verb '{non_wizard['verb_name']}' in {non_wizard['this']}")
+        print(
+            f"{non_wizard['caller']} sent message '{saved_args[0]}' using verb '{non_wizard['verb_name']}' in {non_wizard['this']}"
+        )

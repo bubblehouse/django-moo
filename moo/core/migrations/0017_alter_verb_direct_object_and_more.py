@@ -6,22 +6,27 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0016_prepositionspecifier_preposition_specifier_and_more'),
+        ("core", "0016_prepositionspecifier_preposition_specifier_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='verb',
-            name='direct_object',
-            field=models.CharField(choices=[('this', 'this'), ('any', 'any'), ('none', 'none')], db_index=True, default='none', max_length=255),
+            model_name="verb",
+            name="direct_object",
+            field=models.CharField(
+                choices=[("this", "this"), ("any", "any"), ("none", "none")],
+                db_index=True,
+                default="none",
+                max_length=255,
+            ),
         ),
         migrations.RemoveField(
-            model_name='verb',
-            name='indirect_objects',
+            model_name="verb",
+            name="indirect_objects",
         ),
         migrations.AddField(
-            model_name='verb',
-            name='indirect_objects',
-            field=models.ManyToManyField(blank=True, null=True, related_name='+', to='core.prepositionspecifier'),
+            model_name="verb",
+            name="indirect_objects",
+            field=models.ManyToManyField(blank=True, null=True, related_name="+", to="core.prepositionspecifier"),
         ),
     ]

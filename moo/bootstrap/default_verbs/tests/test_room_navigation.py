@@ -5,7 +5,6 @@ from moo.sdk import context, create, lookup
 from moo.core.models import Object
 from .utils import save_quietly, setup_room, setup_root_item
 
-
 # --- look (player command) ---
 
 
@@ -252,7 +251,7 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
             f"ConnectionError(#{t_wizard.pk} (Wizard)): #{t_player.pk} (Player) leaves #{home_location.pk} (The Laboratory).",
             f"ConnectionError(#{t_player.pk} (Player)): [bright_yellow]Another Room[/bright_yellow]",
             f"ConnectionError(#{t_player.pk} (Player)): [deep_sky_blue1]There's not much to see here.[/deep_sky_blue1]",
-            f"ConnectionError(#{t_player.pk} (Player)): You arrive at #{another_room.pk} (Another Room)."
+            f"ConnectionError(#{t_player.pk} (Player)): You arrive at #{another_room.pk} (Another Room).",
         ]
         t_player.refresh_from_db()
         assert t_player.location.name == "Another Room"
@@ -267,7 +266,7 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
             f"ConnectionError(#{t_wizard.pk} (Wizard)): [deep_sky_blue1]There's not much to see here.[/deep_sky_blue1]",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): You see {t_player.name} here.",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): You arrive at #{another_room.pk} (Another Room).",
-            f"ConnectionError(#{t_player.pk} (Player)): #{t_wizard.pk} (Wizard) arrives at #{another_room.pk} (Another Room)."
+            f"ConnectionError(#{t_player.pk} (Player)): #{t_wizard.pk} (Wizard) arrives at #{another_room.pk} (Another Room).",
         ]
         context.caller.refresh_from_db()
         context.player.refresh_from_db()
@@ -275,7 +274,7 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
         assert printed == [
             f'[yellow]Tunnelled an exit south to "{home_location.name}".[/yellow]',
         ]
-        assert t_player.location.get_property('exits')
+        assert t_player.location.get_property("exits")
         printed.clear()
 
     with code.ContextManager(t_player, _writer) as ctx:
@@ -286,7 +285,7 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
             f"ConnectionError(#{t_wizard.pk} (Wizard)): #{t_player.pk} (Player) leaves #{another_room.pk} (Another Room).",
             f"ConnectionError(#{t_player.pk} (Player)): [bright_yellow]The Laboratory[/bright_yellow]",
             f"ConnectionError(#{t_player.pk} (Player)): {lab_desc}",
-            f"ConnectionError(#{t_player.pk} (Player)): You arrive at #{home_location.pk} (The Laboratory)."
+            f"ConnectionError(#{t_player.pk} (Player)): You arrive at #{home_location.pk} (The Laboratory).",
         ]
         t_player.refresh_from_db()
         assert t_player.location.name == home_location.name
@@ -296,7 +295,7 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
         parse.interpret(ctx, "@exits")
         assert printed == [
             "[cyan]Exits defined for this room:[/cyan]",
-            f"- [yellow]north from The Laboratory[/yellow] (Aliases: north) to [green]Another Room[/green] (#{another_room.pk})"
+            f"- [yellow]north from The Laboratory[/yellow] (Aliases: north) to [green]Another Room[/green] (#{another_room.pk})",
         ]
         printed.clear()
 
@@ -304,6 +303,6 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
         parse.interpret(ctx, "@entrances")
         assert printed == [
             "[cyan]Entrances defined for this room:[/cyan]",
-            f"- [yellow]south from Another Room[/yellow] (Aliases: south) to [green]The Laboratory[/green] (#{home_location.pk})"
+            f"- [yellow]south from Another Room[/yellow] (Aliases: south) to [green]The Laboratory[/green] (#{home_location.pk})",
         ]
         printed.clear()

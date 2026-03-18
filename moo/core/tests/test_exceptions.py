@@ -21,10 +21,10 @@ from moo.sdk import create
 from moo.core.models import Object
 from moo.core.tests.utils import add_verb as _add_verb
 
-
 # =============================================================================
 # Section 1 — str() representation (no DB)
 # =============================================================================
+
 
 def test_user_error_str():
     """UserError.__str__ returns the message."""
@@ -87,6 +87,7 @@ def test_no_such_preposition_error_str():
 # Section 2 — Integration: natural triggers through parse.interpret /
 #             tasks.parse_command
 # =============================================================================
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_ambiguous_object_error_raised_by_parser(t_init, t_wizard):
@@ -196,6 +197,7 @@ def test_no_such_preposition_error_caught_by_parse_command(t_init, t_wizard):
 #             AccessError
 # =============================================================================
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_recursive_error_raised_on_containment_loop(t_init, t_wizard):
     """RecursiveError is raised by Object.save() when moving an object would
@@ -253,6 +255,7 @@ def test_access_error_raised_by_is_allowed(t_init, t_wizard):
 #             through parse.interpret / tasks.parse_command
 # =============================================================================
 
+
 def test_no_such_object_error_is_user_error():
     """NoSuchObjectError is a UserError subclass and str() contains the name."""
     err = exceptions.NoSuchObjectError("ghost")
@@ -288,7 +291,7 @@ def test_no_such_object_error_raised_by_get_dobj(t_init, t_wizard):
     _add_verb(
         t_wizard,
         "test-get-dobj",
-        'from moo.sdk import context; context.parser.get_dobj()',
+        "from moo.sdk import context; context.parser.get_dobj()",
         t_wizard,
         direct_object="any",
     )
@@ -304,7 +307,7 @@ def test_no_such_object_error_caught_by_parse_command(t_init, t_wizard):
     _add_verb(
         t_wizard,
         "test-get-dobj",
-        'from moo.sdk import context; context.parser.get_dobj()',
+        "from moo.sdk import context; context.parser.get_dobj()",
         t_wizard,
         direct_object="any",
     )

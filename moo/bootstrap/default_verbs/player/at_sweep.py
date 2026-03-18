@@ -30,6 +30,7 @@ if the player's location was The Venue Hallway.
 If no potential bugs are found, the the message ``Communications are secure.`` is printed, and the player can breathe
 easily (ish).
 """
+
 from moo.sdk import context, NoSuchVerbError
 
 buggable_verbs = ["announce", "announce_all", "announce_all_but", "say", "emote", "huh", "huh2", "whisper"]

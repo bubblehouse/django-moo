@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -87,7 +86,7 @@ PREPOSITIONS = [
     ["behind", "past"],
     ["beside", "by", "near", "next to", "along"],
     ["for", "about"],
-    ['is'],
+    ["is"],
     ["as"],
     ["off", "off of"],
 ]
@@ -133,7 +132,7 @@ MIDDLEWARE = [
 ]
 
 STATICFILES_FINDERS = [
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    "django.contrib.staticfiles.finders.AppDirectoriesFinder",
 ]
 
 ROOT_URLCONF = "moo.urls"

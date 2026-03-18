@@ -27,7 +27,7 @@ def test_drop_from_inventory(t_init: Object, t_wizard: Object):
 
         widget.refresh_from_db()
         assert widget.location == lab
-        assert printed == ['You drop widget.']
+        assert printed == ["You drop widget."]
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)

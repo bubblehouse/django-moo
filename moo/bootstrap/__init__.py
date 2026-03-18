@@ -34,7 +34,9 @@ parser = argparse.ArgumentParser("moo")
 parser.add_argument("subcommand", choices=["verb"])
 parser.add_argument("names", nargs="+")
 parser.add_argument("--on", help="The object to add or modify the verb on", required=True)
-parser.add_argument("--dspec", choices=["this", "any", "none", "either"], default="none", help="The direct object specifier")
+parser.add_argument(
+    "--dspec", choices=["this", "any", "none", "either"], default="none", help="The direct object specifier"
+)
 parser.add_argument("--ispec", metavar="PREP:SPEC", nargs="+", help="Indirect object specifiers", action=ISpecAction)
 
 
@@ -114,6 +116,7 @@ def initialize_dataset(dataset="default"):
 
 def load_verb_source(path, system, repo, replace=False):
     from moo.core.models.object import Object
+
     with open(path, encoding="utf8") as f:
         contents = f.read()
         try:
@@ -173,6 +176,7 @@ def load_verbs(repo, verb_package):
     :type verb_package: str
     """
     from moo.core.models.object import Object
+
     system = Object.objects.get(pk=1)
 
     def _iterate_file_paths(ref):

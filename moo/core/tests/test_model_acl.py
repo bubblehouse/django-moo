@@ -12,10 +12,10 @@ from ..models import Access, Object, Permission, Player
 from ..models.acl import _get_permission_id
 from .utils import ctx as _ctx
 
-
 # ---------------------------------------------------------------------------
 # Permission.__str__
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_permission_str(t_init, t_wizard):
@@ -26,6 +26,7 @@ def test_permission_str(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 # Access.__str__
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_access_str(t_init, t_wizard):
@@ -42,6 +43,7 @@ def test_access_str(t_init, t_wizard):
 # can_caller with no active context is a no-op
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_can_caller_no_caller_is_noop(t_init, t_wizard):
     # Outside any ContextManager there is no caller — should not raise
@@ -52,6 +54,7 @@ def test_can_caller_no_caller_is_noop(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 # allow / deny create Access rows
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_allow_group_creates_access_row(t_init, t_wizard):
@@ -73,6 +76,7 @@ def test_deny_group_creates_access_row(t_init, t_wizard):
 # deny() evicts cached True results
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_deny_evicts_cached_true(t_init, t_wizard):
     player = Object.objects.create(name="player")
@@ -90,6 +94,7 @@ def test_deny_evicts_cached_true(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 # is_allowed — group checks
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_is_allowed_group_everyone(t_init, t_wizard):
@@ -126,6 +131,7 @@ def test_is_allowed_group_wizards(t_init, t_wizard):
 # is_allowed — specific accessor
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_is_allowed_specific_accessor(t_init, t_wizard):
     player = Object.objects.create(name="player")
@@ -140,6 +146,7 @@ def test_is_allowed_specific_accessor(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 # deny beats allow
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_deny_overrides_allow(t_init, t_wizard):
@@ -156,6 +163,7 @@ def test_deny_overrides_allow(t_init, t_wizard):
 # fatal=True raises PermissionError
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_is_allowed_fatal_raises(t_init, t_wizard):
     stranger = Object.objects.create(name="stranger fatal")
@@ -168,6 +176,7 @@ def test_is_allowed_fatal_raises(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 # _get_permission_id caching
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_get_permission_id_returns_pk(t_init, t_wizard):
@@ -254,7 +263,9 @@ def test_cant_create_child_of_an_object_that_isnt_yours(t_init: Object, t_wizard
         child_thing = Object.objects.create(name="child thing", owner=user)
         with pytest.raises(PermissionError) as excinfo:
             child_thing.parents.add(parent_thing)
-        assert str(excinfo.value) == f"#{user.pk} (Player) is not allowed to 'derive' on #{parent_thing.pk} (parent thing)"
+        assert (
+            str(excinfo.value) == f"#{user.pk} (Player) is not allowed to 'derive' on #{parent_thing.pk} (parent thing)"
+        )
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -270,7 +281,10 @@ def test_cant_create_parent_of_an_object_that_isnt_yours(t_init: Object, t_wizar
         parent_thing = Object.objects.create(name="parent thing", owner=user)
         with pytest.raises(PermissionError) as excinfo:
             child_thing.parents.add(parent_thing)
-        assert str(excinfo.value) == f"#{user.pk} (Player) is not allowed to 'transmute' on #{child_thing.pk} (child thing)"
+        assert (
+            str(excinfo.value)
+            == f"#{user.pk} (Player) is not allowed to 'transmute' on #{child_thing.pk} (child thing)"
+        )
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)

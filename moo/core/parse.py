@@ -286,13 +286,20 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         Return the canonical list of objects to search for verbs, in priority order:
         caller, inventory, location, dobj, pobj objects. Last match wins when iterated.
         """
-        return list(filter(None, more_itertools.collapse([
-            self.caller,
-            list(self.caller.contents.prefetch_related('aliases')),
-            self.caller.location,
-            self.dobj,
-            [[x[2] for x in prep] for prep in self.prepositions.values()]
-        ])))
+        return list(
+            filter(
+                None,
+                more_itertools.collapse(
+                    [
+                        self.caller,
+                        list(self.caller.contents.prefetch_related("aliases")),
+                        self.caller.location,
+                        self.dobj,
+                        [[x[2] for x in prep] for prep in self.prepositions.values()],
+                    ]
+                ),
+            )
+        )
 
     def get_verb(self):
         """
@@ -314,7 +321,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
 
         search_order_list = self.get_search_order()
 
-        if getattr(settings, 'MOO_BATCH_VERB_DISPATCH', False):
+        if getattr(settings, "MOO_BATCH_VERB_DISPATCH", False):
             winner_this, winner_verb = self._batch_get_verb(search_order_list)
             if winner_this is not None:
                 self.this = winner_this
@@ -353,7 +360,9 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             Verb.objects.filter(
                 origin_id__in=pk_to_rank,
                 names__name=verb_name,
-            ).values("id", "direct_object").annotate(
+            )
+            .values("id", "direct_object")
+            .annotate(
                 viewing_pk=F("origin_id"),
                 depth=Value(0),
                 pw=Value(0),
@@ -365,7 +374,9 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             Verb.objects.filter(
                 origin__ancestor_descendants__descendant_id__in=pk_to_rank,
                 names__name=verb_name,
-            ).values("id", "direct_object").annotate(
+            )
+            .values("id", "direct_object")
+            .annotate(
                 viewing_pk=F("origin__ancestor_descendants__descendant_id"),
                 depth=F("origin__ancestor_descendants__depth"),
                 pw=F("origin__ancestor_descendants__path_weight"),
@@ -399,16 +410,14 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         rank_viewer_verbs = defaultdict(list)
         for (verb_id, viewing_pk), row in best.items():
             rank = pk_to_rank[viewing_pk]
-            rank_viewer_verbs[(rank, viewing_pk)].append(
-                (row["depth"], -row["pw"], verb_id)
-            )
+            rank_viewer_verbs[(rank, viewing_pk)].append((row["depth"], -row["pw"], verb_id))
         for key in rank_viewer_verbs:
             rank_viewer_verbs[key].sort()
 
         # Iterate in ascending rank order; last passing match wins.
         winner_this = None
         winner_verb = None
-        for (rank, viewing_pk) in sorted(rank_viewer_verbs.keys()):
+        for rank, viewing_pk in sorted(rank_viewer_verbs.keys()):
             viewed_by = pk_to_obj[viewing_pk]
             for _depth, _neg_pw, verb_id in rank_viewer_verbs[(rank, viewing_pk)]:
                 v = verb_map.get(verb_id)
@@ -440,6 +449,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         """
         if lookup and self.dobj_str is not None:
             from moo.core import lookup
+
             return lookup(self.dobj_str)
         if not (self.dobj):
             raise NoSuchObjectError(self.dobj_str)
@@ -458,11 +468,12 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             for item in self.prepositions[prep]:
                 if lookup and item[1] is not None:
                     from moo.core import lookup
+
                     matches.append(lookup(item[1]))
                 elif item[2]:
                     matches.append(item[2])
         if len(matches) > 1:
-            raise AmbiguousObjectError(','.join(preps), matches)
+            raise AmbiguousObjectError(",".join(preps), matches)
         if not (matches):
             prep = list(self.prepositions.keys())[0]
             raise NoSuchObjectError(self.prepositions[prep][0][1])

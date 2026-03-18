@@ -14,6 +14,7 @@ def setup_obj(t_wizard: Object):
 
 # --- title ---
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_title_returns_name(t_init: Object, t_wizard: Object):
@@ -33,6 +34,7 @@ def test_titlec_capitalizes_name(t_init: Object, t_wizard: Object):
 
 
 # --- description / describe / look_self ---
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
@@ -78,6 +80,7 @@ def test_describe_sets_description_property(t_init: Object, t_wizard: Object):
 
 # --- accept ---
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_accept_returns_false(t_init: Object, t_wizard: Object):
@@ -100,6 +103,7 @@ def test_accept_false_blocks_movement(t_init: Object, t_wizard: Object):
 
 
 # --- tell / tell_lines ---
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
@@ -138,6 +142,7 @@ def test_tell_lines_sends_each_string(t_init: Object, t_wizard: Object):
 
 # --- eject ---
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_eject_non_player_moves_to_none(t_init: Object, t_wizard: Object):
@@ -164,6 +169,7 @@ def test_eject_not_contained_prints_error(t_init: Object, t_wizard: Object):
 
 # --- moveto ---
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_moveto_changes_location(t_init: Object, t_wizard: Object):
@@ -189,6 +195,7 @@ def test_moveto_none_clears_location(t_init: Object, t_wizard: Object):
 
 
 # --- match ---
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
@@ -225,6 +232,7 @@ def test_match_raises_ambiguous_on_duplicate_names(t_init: Object, t_wizard: Obj
 
 # --- is_unlocked_for ---
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_is_unlocked_for_no_key(t_init: Object, t_wizard: Object):
@@ -235,6 +243,7 @@ def test_is_unlocked_for_no_key(t_init: Object, t_wizard: Object):
 
 
 # --- set_name ---
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
@@ -249,6 +258,7 @@ def test_set_name_renames_object(t_init: Object, t_wizard: Object):
 
 
 # --- examine ---
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
@@ -275,6 +285,7 @@ def test_examine_shows_description(t_init: Object, t_wizard: Object):
 
 
 # --- recycle ---
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)

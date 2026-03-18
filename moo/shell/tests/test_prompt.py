@@ -11,7 +11,6 @@ from prompt_toolkit.key_binding import KeyBindings
 import moo.shell.prompt as prompt_module
 from moo.shell.prompt import MooPrompt, PROMPT_SHORTCUTS, _make_key_bindings
 
-
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
@@ -33,21 +32,21 @@ def test_shortcut_handler_expands_with_cursor_at_percent():
     event = MagicMock()
     binding.handler(event)
     template = PROMPT_SHORTCUTS['"']
-    expected_text = template.replace('%', '')
-    expected_pos = template.find('%')
+    expected_text = template.replace("%", "")
+    expected_pos = template.find("%")
     event.app.current_buffer.set_document.assert_called_once_with(Document(expected_text, expected_pos))
 
 
 def test_shortcut_handler_cursor_at_end_when_no_percent():
     """Shortcut handler places the cursor at the end of the text when the template contains no %."""
     original = prompt_module.PROMPT_SHORTCUTS.copy()
-    prompt_module.PROMPT_SHORTCUTS = {'!': 'emote'}
+    prompt_module.PROMPT_SHORTCUTS = {"!": "emote"}
     try:
         kb = _make_key_bindings()
-        binding = next(b for b in kb.bindings if b.keys[0] == '!')
+        binding = next(b for b in kb.bindings if b.keys[0] == "!")
         event = MagicMock()
         binding.handler(event)
-        event.app.current_buffer.set_document.assert_called_once_with(Document('emote', 5))
+        event.app.current_buffer.set_document.assert_called_once_with(Document("emote", 5))
     finally:
         prompt_module.PROMPT_SHORTCUTS = original
 
@@ -204,8 +203,10 @@ def _make_handle_command_mocks():
 def test_handle_command_writes_property_on_first_command():
     """handle_command() writes last_connected_time on the first command (last_property_write is None)."""
     prompt, avatar, parse_result = _make_handle_command_mocks()
-    with patch("moo.shell.prompt.tasks.parse_command") as mock_task, \
-         patch("moo.shell.prompt.code.ContextManager") as mock_ctx:
+    with (
+        patch("moo.shell.prompt.tasks.parse_command") as mock_task,
+        patch("moo.shell.prompt.code.ContextManager") as mock_ctx,
+    ):
         mock_task.delay.return_value = parse_result
         mock_ctx.return_value.__enter__ = MagicMock(return_value=None)
         mock_ctx.return_value.__exit__ = MagicMock(return_value=False)
@@ -221,8 +222,10 @@ def test_handle_command_throttles_property_writes():
     """handle_command() skips the property write when fewer than 15 seconds have elapsed."""
     prompt, avatar, parse_result = _make_handle_command_mocks()
     prompt.last_property_write = datetime.now(timezone.utc)
-    with patch("moo.shell.prompt.tasks.parse_command") as mock_task, \
-         patch("moo.shell.prompt.code.ContextManager") as mock_ctx:
+    with (
+        patch("moo.shell.prompt.tasks.parse_command") as mock_task,
+        patch("moo.shell.prompt.code.ContextManager") as mock_ctx,
+    ):
         mock_task.delay.return_value = parse_result
         mock_ctx.return_value.__enter__ = MagicMock(return_value=None)
         mock_ctx.return_value.__exit__ = MagicMock(return_value=False)
@@ -234,8 +237,10 @@ def test_handle_command_writes_after_15_seconds():
     """handle_command() writes last_connected_time again after more than 15 seconds have elapsed."""
     prompt, avatar, parse_result = _make_handle_command_mocks()
     prompt.last_property_write = datetime.now(timezone.utc) - timedelta(seconds=16)
-    with patch("moo.shell.prompt.tasks.parse_command") as mock_task, \
-         patch("moo.shell.prompt.code.ContextManager") as mock_ctx:
+    with (
+        patch("moo.shell.prompt.tasks.parse_command") as mock_task,
+        patch("moo.shell.prompt.code.ContextManager") as mock_ctx,
+    ):
         mock_task.delay.return_value = parse_result
         mock_ctx.return_value.__enter__ = MagicMock(return_value=None)
         mock_ctx.return_value.__exit__ = MagicMock(return_value=False)

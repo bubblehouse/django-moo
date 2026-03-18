@@ -30,6 +30,7 @@ def test_lex_look_at_QUOTED_painting_with_the_glasses():
     lex = parse.Lexer("look at 'painting with the glasses'")
     assert lex.prepositions["at"][0][1] == "painting with the glasses"
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_parse_imperative_command(t_init: Object, t_wizard: Object):
     t_wizard.add_verb("look", code="pass")
@@ -223,8 +224,10 @@ def test_parse_with_complex_name(t_init: Object, t_wizard: Object):
     assert parser.get_dobj_str() == "box containing spaces"
     assert parser.get_dobj() == box
 
+
 def test_expand_wildcard():
     from moo.core import utils
+
     assert utils.expand_wildcard("describe") == ["describe"]
     assert utils.expand_wildcard("desc*ribe") == ["desc", "descr", "descri", "describ", "describe"]
     assert utils.expand_wildcard("l*ook") == ["l", "lo", "loo", "look"]
