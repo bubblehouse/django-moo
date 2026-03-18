@@ -89,4 +89,5 @@ dev-dependencies = [
     "pytest-xdist>=3.8.0,<4",
     "pylint-celery>=0.3",
     "django-celery-results>=2.5.1,<3",
+    "black>=26.3.1",
 ]
