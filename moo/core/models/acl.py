@@ -126,9 +126,9 @@ class Access(models.Model):
         elif self.verb:
             return "".join(
                 [
-                    ["", "@"][self.verb.ability],  # pylint: disable=no-member
+                    ["", "@"][self.verb.is_ability],  # pylint: disable=no-member
                     self.verb.names.all()[:1][0].name,
-                    ["", "()"][self.verb.method],  # pylint: disable=no-member
+                    ["", "()"][self.verb.is_method],  # pylint: disable=no-member
                 ]
             )
         else:
