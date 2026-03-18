@@ -1,3 +1,10 @@
+## [0.81.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.81.0...v0.81.1) (2026-03-18)
+
+### Bug Fixes
+
+* acl __str__ verb refs ([84e7809](https://gitlab.com/bubblehouse/django-moo/commit/84e78090ee4053c4b412e83e5967aca1a97042d1))
+* remove shadowed describe verb ([f5fb74b](https://gitlab.com/bubblehouse/django-moo/commit/f5fb74bd85fbc31e12f95076c6dfde37b82c793d))
+
 ## [0.81.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.80.4...v0.81.0) (2026-03-17)
 
 ### Features
