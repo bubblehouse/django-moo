@@ -14,10 +14,10 @@ from moo.core.models.object import Object
 from .. import code
 from .utils import ctx, mock_caller, raises_in_verb
 
-
 # ---------------------------------------------------------------------------
 # set_task_perms must require wizard (regression guard)
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_set_task_perms_requires_wizard(t_init: Object, t_wizard: Object):
@@ -41,6 +41,7 @@ def test_set_task_perms_requires_wizard(t_init: Object, t_wizard: Object):
 # context.caller_stack must return a copy, not the live list
 # ---------------------------------------------------------------------------
 
+
 def test_caller_stack_returns_copy():
     """
 
@@ -58,6 +59,7 @@ def test_caller_stack_returns_copy():
 # ---------------------------------------------------------------------------
 # invoke() must require wizard for persistent (periodic/cron) tasks
 # ---------------------------------------------------------------------------
+
 
 def test_invoke_periodic_requires_wizard():
     """invoke(..., periodic=True) raises UserError when called by a non-wizard."""
@@ -110,6 +112,7 @@ def test_invoke_oneshot_allowed_for_nonwizard():
 # invoke() must check execute permission on the verb
 # ---------------------------------------------------------------------------
 
+
 def test_invoke_checks_execute_permission():
     """
 
@@ -138,6 +141,7 @@ def test_invoke_checks_execute_permission():
 # context attributes must be read-only (descriptor shadowing guard)
 # ---------------------------------------------------------------------------
 
+
 def test_context_caller_is_read_only_directly():
     """
 
@@ -165,6 +169,7 @@ def test_context_caller_shadowing_blocked_in_verb():
 # invoke() — PeriodicTask return value and kwargs security
 # ---------------------------------------------------------------------------
 
+
 def test_invoke_periodic_returns_task_with_registered_task_name():
     """
 
@@ -191,8 +196,10 @@ def test_invoke_periodic_returns_task_with_registered_task_name():
     verb._invoked_name = "test_verb"
 
     with ctx(wizard):
-        with patch("django_celery_beat.models.IntervalSchedule.objects.get_or_create") as mock_sched, \
-             patch("django_celery_beat.models.PeriodicTask.objects.create") as mock_create:
+        with (
+            patch("django_celery_beat.models.IntervalSchedule.objects.get_or_create") as mock_sched,
+            patch("django_celery_beat.models.PeriodicTask.objects.create") as mock_create,
+        ):
             mock_sched.return_value = (MagicMock(), True)
             mock_task = MagicMock()
             mock_task.task = "moo.core.tasks.invoke_verb"
@@ -238,6 +245,7 @@ def test_invoke_kwargs_caller_id_cannot_be_forged():
 # context.writer / context.parser / context.task_id surface
 # ---------------------------------------------------------------------------
 
+
 def test_context_writer_equivalent_to_print():
     """
 
@@ -258,7 +266,8 @@ def test_context_writer_equivalent_to_print():
         g.update(code.get_restricted_environment("__main__", w))
         code.r_exec(
             "from moo.sdk import context\ncontext.writer('test msg')",
-            {}, g,
+            {},
+            g,
         )
     assert printed == ["test msg"]
 
@@ -319,7 +328,5 @@ def test_caller_stack_previous_caller_reference_accessible():
         assert len(stack) == 1
         frame = stack[0]
         prev = frame.get("previous_caller")
-        assert prev is wizard_caller, (
-            "Known gap: previous_caller is readable from caller_stack copy"
-        )
+        assert prev is wizard_caller, "Known gap: previous_caller is readable from caller_stack copy"
         code.ContextManager.pop_caller()

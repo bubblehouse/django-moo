@@ -16,20 +16,30 @@ from django.db.models.manager import BaseManager
 from django.db.models.query import QuerySet
 
 from RestrictedPython import compile_restricted, compile_restricted_function
-from RestrictedPython.Guards import (guarded_iter_unpack_sequence,
-                                     guarded_unpack_sequence, safe_builtins)
+from RestrictedPython.Guards import guarded_iter_unpack_sequence, guarded_unpack_sequence, safe_builtins
 from RestrictedPython.transformer import INSPECT_ATTRIBUTES
 
 # Read-only QuerySet/Manager methods that verb code may legitimately call.
 # Everything else — including all mutation methods, async variants (adelete,
 # aupdate, acreate, …), and any future Django additions — is blocked by default.
-_QUERYSET_ALLOWED = frozenset({
-    "all", "filter", "exclude",
-    "first", "last", "get",
-    "exists", "count", "contains",
-    "order_by", "distinct", "none",
-    "select_related", "prefetch_related",
-})
+_QUERYSET_ALLOWED = frozenset(
+    {
+        "all",
+        "filter",
+        "exclude",
+        "first",
+        "last",
+        "get",
+        "exists",
+        "count",
+        "contains",
+        "order_by",
+        "distinct",
+        "none",
+        "select_related",
+        "prefetch_related",
+    }
+)
 
 log = logging.getLogger(__name__)
 
@@ -162,8 +172,7 @@ def get_restricted_environment(name, writer):
             result = g(obj, name)
             if isinstance(result, ModuleType):
                 result_name = getattr(result, "__name__", "")
-                if (result_name not in settings.ALLOWED_MODULES
-                        and result_name not in settings.WIZARD_ALLOWED_MODULES):
+                if result_name not in settings.ALLOWED_MODULES and result_name not in settings.WIZARD_ALLOWED_MODULES:
                     raise AttributeError(name)
             return result
         if name == "acl" and isinstance(obj, AccessibleMixin):
@@ -211,8 +220,7 @@ def get_restricted_environment(name, writer):
             result = getattr(obj, name, *args) if args else getattr(obj, name)
             if isinstance(result, ModuleType):
                 result_name = getattr(result, "__name__", "")
-                if (result_name not in settings.ALLOWED_MODULES
-                        and result_name not in settings.WIZARD_ALLOWED_MODULES):
+                if result_name not in settings.ALLOWED_MODULES and result_name not in settings.WIZARD_ALLOWED_MODULES:
                     raise AttributeError(name)
             return result
         if name == "acl" and isinstance(obj, AccessibleMixin):
@@ -255,7 +263,7 @@ def get_restricted_environment(name, writer):
         __name__=name,
         __package__=None,
         __doc__=None,
-        verb_name=name
+        verb_name=name,
     )
 
     return env
@@ -277,6 +285,7 @@ _UNSET = object()
 _active_caller_stack = contextvars.ContextVar("active_caller_stack", default=_UNSET)
 _perm_cache = contextvars.ContextVar("perm_cache", default=None)
 
+
 class ContextManager:
     """
     The ContextManager class is what holds critical per-execution information such as
@@ -288,6 +297,7 @@ class ContextManager:
     contextmanager are supported for unit testing purposes, since eager Celery execution
     means that verb invocations within verbs happen synchronously.
     """
+
     @classmethod
     def get(cls, name):
         if name == "caller":
@@ -302,6 +312,7 @@ class ContextManager:
             return _active_task_id.get()
         if name == "task_time":
             from celery import current_app
+
             start = _active_start_time.get()
             if start is None:
                 return None

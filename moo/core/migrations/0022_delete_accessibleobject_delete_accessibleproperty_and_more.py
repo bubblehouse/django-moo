@@ -6,32 +6,43 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0021_alter_verb_direct_object'),
+        ("core", "0021_alter_verb_direct_object"),
     ]
 
     operations = [
         migrations.DeleteModel(
-            name='AccessibleObject',
+            name="AccessibleObject",
         ),
         migrations.DeleteModel(
-            name='AccessibleProperty',
+            name="AccessibleProperty",
         ),
         migrations.DeleteModel(
-            name='AccessibleVerb',
+            name="AccessibleVerb",
         ),
         migrations.RenameField(
-            model_name='property',
-            old_name='inherited',
-            new_name='inherit_owner',
+            model_name="property",
+            old_name="inherited",
+            new_name="inherit_owner",
         ),
         migrations.AlterField(
-            model_name='prepositionspecifier',
-            name='specifier',
-            field=models.CharField(choices=[('this', 'this'), ('any', 'any'), ('none', 'none'), ('either', 'either')], db_index=True, default='none', max_length=255),
+            model_name="prepositionspecifier",
+            name="specifier",
+            field=models.CharField(
+                choices=[("this", "this"), ("any", "any"), ("none", "none"), ("either", "either")],
+                db_index=True,
+                default="none",
+                max_length=255,
+            ),
         ),
         migrations.AlterField(
-            model_name='verb',
-            name='direct_object',
-            field=models.CharField(choices=[('this', 'this'), ('any', 'any'), ('none', 'none'), ('either', 'either')], db_default='none', db_index=True, default='none', max_length=255),
+            model_name="verb",
+            name="direct_object",
+            field=models.CharField(
+                choices=[("this", "this"), ("any", "any"), ("none", "none"), ("either", "either")],
+                db_default="none",
+                db_index=True,
+                default="none",
+                max_length=255,
+            ),
         ),
     ]

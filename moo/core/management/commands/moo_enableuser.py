@@ -9,21 +9,15 @@ class Command(BaseCommand):
     help = "Attach a Django user to an avatar in the game."
 
     def add_arguments(self, parser):
-        parser.add_argument(
-            "username", type=str, help="Name of the user to enable MOO access for."
-        )
-        parser.add_argument(
-            "avatar", type=str, help="Name of the Avatar to grant to the user."
-        )
+        parser.add_argument("username", type=str, help="Name of the user to enable MOO access for.")
+        parser.add_argument("avatar", type=str, help="Name of the Avatar to grant to the user.")
         parser.add_argument(
             "--wizard",
             action="store_true",
             help="Optionally set the user as a wizard (superuser) inside the game.",
         )
 
-    def handle(
-        self, username, avatar, wizard=False, **kwargs
-    ):  # pylint: disable=arguments-differ
+    def handle(self, username, avatar, wizard=False, **kwargs):  # pylint: disable=arguments-differ
         avatar = Object.objects.get(name=avatar, unique_name=True)
         user = User.objects.get(username=username)
         player = Player.objects.get(avatar=avatar)

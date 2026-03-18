@@ -17,11 +17,7 @@ DATABASES = {
 # All tests that move objects around while having enterfuncs and exitfuncs
 # need to run tasks eagerly to ensure that the enterfuncs and exitfuncs are
 # executed within the same test transaction.
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache"
-    }
-}
+CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
 
 # Disable cross-session attribute cache in tests: the in-process LocMemCache
 # does not reset between test cases, which would poison subsequent tests

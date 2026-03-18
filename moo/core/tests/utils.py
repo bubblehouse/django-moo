@@ -49,6 +49,7 @@ def raises_in_verb(src, exc, caller=None):
 def add_verb(obj, name, code_str, owner, **kwargs):
     """Create a Verb + VerbName directly via ORM, bypassing permission checks."""
     from ..models.verb import Verb, VerbName
+
     v = Verb.objects.create(origin=obj, owner=owner, code=code_str, **kwargs)
     VerbName.objects.create(verb=v, name=name)
     return v

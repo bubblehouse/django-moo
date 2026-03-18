@@ -1,6 +1,6 @@
 #!moo verb @reload --on $programmer --dspec any --ispec on:any
 
-# pylint: disable=return-outside-function,undefined-variable
+# pylint: disable=return-outside-function,undefined-variable,redefined-outer-name
 
 """
 
@@ -26,7 +26,9 @@ def reload_batch(verbs):
             remaining_pks = [v.pk for v in verbs[i:]]
             reload_verb = context.parser.verb if context.parser else this.get_verb("@reload")
             invoke(remaining_pks, verb=reload_verb)
-            context.player.tell(f"  Time limit approaching; continuing in a new task ({len(remaining_pks)} verb(s) remaining)...")
+            context.player.tell(
+                f"  Time limit approaching; continuing in a new task ({len(remaining_pks)} verb(s) remaining)..."
+            )
             return True, count
         context.player.tell(f"  Reloading {verb}...")
         try:
@@ -72,7 +74,9 @@ else:
         if not context.player.is_wizard() and not context.player.owns(target):
             print("Permission denied.")
             return
-        verbs = list(Verb.objects.filter(origin=target, filename__isnull=False, repo__isnull=False).exclude(filename=""))
+        verbs = list(
+            Verb.objects.filter(origin=target, filename__isnull=False, repo__isnull=False).exclude(filename="")
+        )
         continued, count = reload_batch(verbs)
         if not continued:
             context.player.tell(f"Reloaded {count} verb(s) on {target.name}.")

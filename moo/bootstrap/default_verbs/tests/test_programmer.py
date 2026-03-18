@@ -8,7 +8,6 @@ from moo.core.models import Object, Player
 from moo.core.models.verb import Repository, Verb, VerbName
 from moo.bootstrap import load_verb_source
 
-
 # --- @edit / edit_callback ---
 
 
@@ -273,10 +272,12 @@ def test_reload_all_schedules_continuation_on_low_time(t_init: Object, t_wizard:
     # The verb checks context.task_time before processing each verb in the loop:
     #   - first check: 0.9s remaining → above TIME_THRESHOLD (0.5s), so process the verb
     #   - second check: 0.1s remaining → at/below threshold, so hand off the rest
-    task_time_values = iter([
-        TaskTime(elapsed=0.1, time_limit=1.0, remaining=0.9),  # first verb: enough time
-        TaskTime(elapsed=0.9, time_limit=1.0, remaining=0.1),  # second verb: hand off
-    ])
+    task_time_values = iter(
+        [
+            TaskTime(elapsed=0.1, time_limit=1.0, remaining=0.9),  # first verb: enough time
+            TaskTime(elapsed=0.9, time_limit=1.0, remaining=0.1),  # second verb: hand off
+        ]
+    )
 
     # patch.object on type(sdk.context) replaces the data descriptor on the _Context class,
     # so every access to context.task_time inside the verb calls mock_tt() instead.

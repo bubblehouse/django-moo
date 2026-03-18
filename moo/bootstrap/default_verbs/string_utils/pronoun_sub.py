@@ -36,40 +36,40 @@ from moo.sdk import context, NoSuchPropertyError
 
 text = args[0]
 who = args[1] if len(args) > 1 else context.player
-parser = context.parser # may be none
+parser = context.parser  # may be none
 
 substitutions = {
-    's': 'ps',
-    'o': 'po',
-    'p': 'pp',
-    'r': 'pr',
-    'n': 'name',
-    'S': 'psc',
-    'O': 'poc',
-    'P': 'ppc',
-    'R': 'prc',
-    'N': 'name',
+    "s": "ps",
+    "o": "po",
+    "p": "pp",
+    "r": "pr",
+    "n": "name",
+    "S": "psc",
+    "O": "poc",
+    "P": "ppc",
+    "R": "prc",
+    "N": "name",
 }
 
-for match in re.finditer(r'%(\w|%)(\((\w+)\))?', text):
+for match in re.finditer(r"%(\w|%)(\((\w+)\))?", text):
     result = match.group(0)
     vartype = match.group(1)
     arg = match.group(3)
-    if vartype == '%':
-        result = '%'
-    elif vartype.lower() == 't':
+    if vartype == "%":
+        result = "%"
+    elif vartype.lower() == "t":
         if parser and parser.this:
             name = parser.this.title()
             result = name.capitalize() if vartype.isupper() else name
-    elif vartype.lower() == 'd':
+    elif vartype.lower() == "d":
         if parser and parser.has_dobj():
             name = parser.get_dobj().title()
             result = name.capitalize() if vartype.isupper() else name
-    elif vartype.lower() == 'i' and arg:
+    elif vartype.lower() == "i" and arg:
         if parser and parser.has_pobj(arg):
             name = parser.get_pobj(arg).title()
             result = name.capitalize() if vartype.isupper() else name
-    elif vartype.lower() == 'x' and arg:
+    elif vartype.lower() == "x" and arg:
         try:
             value = who.get_property(arg)
             result = value.capitalize() if vartype.isupper() else value
@@ -86,7 +86,7 @@ for match in re.finditer(r'%(\w|%)(\((\w+)\))?', text):
         try:
             result = who.get_property(prop)
         except NoSuchPropertyError:
-            if prop == 'name':
+            if prop == "name":
                 result = who.name
     if not result:
         result = f"%{vartype}"

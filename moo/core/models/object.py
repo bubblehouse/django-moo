@@ -47,6 +47,7 @@ def _make_ancestors_cte(self_pk, name="ancestors"):
     depth=1 is a direct parent. path_weight is the Relationship.weight of the depth-1 link.
     Factored out so rebuild helpers can use it without an Object instance.
     """
+
     def make_cte(cte):
         return (
             Relationship.objects.filter(child_id=self_pk)
@@ -56,8 +57,7 @@ def _make_ancestors_cte(self_pk, name="ancestors"):
                 path_weight=F("weight"),
             )
             .union(
-                cte.join(Relationship, child=cte.col.object_id)
-                .values(
+                cte.join(Relationship, child=cte.col.object_id).values(
                     object_id=F("parent_id"),
                     depth=cte.col.depth + Value(1, output_field=IntegerField()),
                     path_weight=cte.col.path_weight,
@@ -65,6 +65,7 @@ def _make_ancestors_cte(self_pk, name="ancestors"):
                 all=True,
             )
         )
+
     return CTE.recursive(make_cte, name=name)
 
 
@@ -96,12 +97,7 @@ def relationship_changed(sender, instance, action, model, signal, reverse, pk_se
             continue
         # Identify which properties already exist on the child so we don't
         # overwrite their values — only update owner/inherit_owner.
-        existing = {
-            p.name: p
-            for p in Property.objects.filter(
-                origin=child, name__in=[p.name for p in parent_props]
-            )
-        }
+        existing = {p.name: p for p in Property.objects.filter(origin=child, name__in=[p.name for p in parent_props])}
         to_create = []
         to_update = []
         for prop in parent_props:
@@ -112,14 +108,16 @@ def relationship_changed(sender, instance, action, model, signal, reverse, pk_se
                 ep.inherit_owner = prop.inherit_owner
                 to_update.append(ep)
             else:
-                to_create.append(Property(
-                    name=prop.name,
-                    origin=child,
-                    owner=new_owner,
-                    inherit_owner=prop.inherit_owner,
-                    value=prop.value,
-                    type=prop.type,
-                ))
+                to_create.append(
+                    Property(
+                        name=prop.name,
+                        origin=child,
+                        owner=new_owner,
+                        inherit_owner=prop.inherit_owner,
+                        value=prop.value,
+                        type=prop.type,
+                    )
+                )
         if to_create:
             # bulk_create returns objects with PKs populated; apply ACL in one shot.
             created = Property.objects.bulk_create(to_create)
@@ -189,8 +187,8 @@ class Object(models.Model, AccessibleMixin):
     @classmethod
     def from_db(cls, db, field_names, values):
         instance = super().from_db(db, field_names, values)
-        instance._original_owner = values[field_names.index("owner_id")]
-        instance._original_location = values[field_names.index("location_id")]
+        instance._original_owner = values[field_names.index("owner_id")]  # pylint: disable=protected-access
+        instance._original_location = values[field_names.index("location_id")]  # pylint: disable=protected-access
         return instance
 
     def __str__(self):
@@ -224,7 +222,7 @@ class Object(models.Model, AccessibleMixin):
         """
         if self.name.lower() == name.lower():  # pylint: disable=no-member
             return True
-        if 'aliases' in getattr(self, '_prefetched_objects_cache', {}):
+        if "aliases" in getattr(self, "_prefetched_objects_cache", {}):
             return any(a.alias.lower() == name.lower() for a in self.aliases.all())
         return self.aliases.filter(alias__iexact=name).exists()
 
@@ -235,9 +233,11 @@ class Object(models.Model, AccessibleMixin):
         :param name: the name or alias to search for, case-insensitive
         """
         self.can_caller("read", self)
-        return Object.objects.filter(location=self).filter(
-            Q(name__iexact=name) | Q(aliases__alias__iexact=name)
-        ).distinct()
+        return (
+            Object.objects.filter(location=self)
+            .filter(Q(name__iexact=name) | Q(aliases__alias__iexact=name))
+            .distinct()
+        )
 
     def contains(self, obj: "Object") -> bool:
         """
@@ -292,8 +292,7 @@ class Object(models.Model, AccessibleMixin):
                 Object.objects.filter(pk=self_pk)
                 .values(object_id=F("id"), depth=Value(0, output_field=IntegerField()))
                 .union(
-                    cte.join(Relationship, parent=cte.col.object_id)
-                    .values(
+                    cte.join(Relationship, parent=cte.col.object_id).values(
                         object_id=F("child_id"),
                         depth=cte.col.depth + Value(1, output_field=IntegerField()),
                     ),
@@ -323,8 +322,7 @@ class Object(models.Model, AccessibleMixin):
                 Object.objects.filter(pk=self_pk)
                 .values(object_id=F("id"), depth=Value(0, output_field=IntegerField()))
                 .union(
-                    cte.join(Object, location_id=cte.col.object_id)
-                    .values(
+                    cte.join(Object, location_id=cte.col.object_id).values(
                         object_id=F("id"),
                         depth=cte.col.depth + Value(1, output_field=IntegerField()),
                     ),
@@ -415,7 +413,7 @@ class Object(models.Model, AccessibleMixin):
                         for return_first_flag in (True, False):
                             vcache.pop((self.pk, item, recurse_flag, return_first_flag), None)
         # Evict cross-session Redis verb cache entries for this object.
-        if getattr(settings, 'MOO_ATTRIB_CACHE_TTL', 120) > 0:
+        if getattr(settings, "MOO_ATTRIB_CACHE_TTL", 120) > 0:
             for name in names:
                 for item in utils.expand_wildcard(name):
                     for recurse_flag in (True, False):
@@ -535,7 +533,7 @@ class Object(models.Model, AccessibleMixin):
         # Cross-session Redis cache — stores comma-separated verb PKs to avoid the
         # expensive AncestorCache JOIN on repeated lookups across requests.
         # Bypassed when MOO_ATTRIB_CACHE_TTL=0 (e.g. tests).
-        _cache_ttl = getattr(settings, 'MOO_ATTRIB_CACHE_TTL', 120)
+        _cache_ttl = getattr(settings, "MOO_ATTRIB_CACHE_TTL", 120)
         redis_key = None if _cache_ttl == 0 else f"moo:verb:{self.pk}:{name}:{int(recurse)}:{int(return_first)}"
         if redis_key is not None:
             raw = cache.get(redis_key, _CACHE_MISS)
@@ -597,9 +595,7 @@ class Object(models.Model, AccessibleMixin):
         if return_first:
             first = result[0]
             result = [
-                v for v in result
-                if v.ancestor_depth == first.ancestor_depth
-                and v.path_weight == first.path_weight
+                v for v in result if v.ancestor_depth == first.ancestor_depth and v.path_weight == first.path_weight
             ]
         if vcache is not None:
             vcache[cache_key] = result
@@ -639,7 +635,7 @@ class Object(models.Model, AccessibleMixin):
         # Evict the cross-session cache for this object's property.
         # Descendant caches are intentionally not invalidated here — they will
         # expire naturally within MOO_ATTRIB_CACHE_TTL, which is acceptable for gameplay.
-        if getattr(settings, 'MOO_ATTRIB_CACHE_TTL', 120) > 0:
+        if getattr(settings, "MOO_ATTRIB_CACHE_TTL", 120) > 0:
             for recurse_flag in (True, False):
                 cache.delete(f"moo:prop:{self.pk}:{name}:{int(recurse_flag)}")
 
@@ -670,7 +666,7 @@ class Object(models.Model, AccessibleMixin):
         # Bypassed for original=True (returns a Property ORM object, not cacheable).
         # Bypassed when MOO_ATTRIB_CACHE_TTL=0 (e.g. tests, where the in-process cache
         # does not reset between test cases and would poison subsequent tests).
-        _cache_ttl = getattr(settings, 'MOO_ATTRIB_CACHE_TTL', 120)
+        _cache_ttl = getattr(settings, "MOO_ATTRIB_CACHE_TTL", 120)
         cache_key = None if (original or _cache_ttl == 0) else f"moo:prop:{self.pk}:{name}:{int(recurse)}"
         if cache_key is not None:
             raw = cache.get(cache_key, _CACHE_MISS)
@@ -739,6 +735,7 @@ class Object(models.Model, AccessibleMixin):
         :param select_related: iterable of FK paths to JOIN on the result
         """
         import json
+
         self.can_caller("read", self)
         # Self always takes priority
         prop = Property.objects.filter(origin=self, name=name).first()
@@ -760,6 +757,7 @@ class Object(models.Model, AccessibleMixin):
         raw = json.loads(prop.value)
         if not isinstance(raw, list):
             from .. import moojson
+
             return moojson.loads(prop.value)
         ids = [
             int(k[2:])
@@ -916,11 +914,15 @@ class Object(models.Model, AccessibleMixin):
                 perm_cache[wizard_key] = is_wizard
 
         # Build OR conditions for all matching rules
-        query = subject_filter & Q(permission_id__in=perms) & (
-            Q(type="accessor", accessor=self) |
-            Q(type="group", group="everyone") |
-            (Q(type="group", group="owners") if self.owns(subject) else Q()) |
-            (Q(type="group", group="wizards") if is_wizard else Q())
+        query = (
+            subject_filter
+            & Q(permission_id__in=perms)
+            & (
+                Q(type="accessor", accessor=self)
+                | Q(type="group", group="everyone")
+                | (Q(type="group", group="owners") if self.owns(subject) else Q())
+                | (Q(type="group", group="wizards") if is_wizard else Q())
+            )
         )
 
         rules = Access.objects.filter(query).order_by("-rule", "type")
@@ -984,6 +986,7 @@ class AncestorCache(models.Model):
     Replaces recursive CTE usage in hot-path verb and property lookups.
     Maintained by the relationship_changed() signal on parents.add/remove.
     """
+
     class Meta:
         unique_together = [["descendant", "ancestor"]]
         indexes = [
@@ -1006,16 +1009,12 @@ def _collect_descendants_pks(root_pk):
     Relationship queries — no permission checks, safe to call from signal handlers.
     """
     result = set()
-    queue = list(
-        Relationship.objects.filter(parent_id=root_pk).values_list("child_id", flat=True)
-    )
+    queue = list(Relationship.objects.filter(parent_id=root_pk).values_list("child_id", flat=True))
     while queue:
         pk = queue.pop()
         if pk not in result:
             result.add(pk)
-            queue.extend(
-                Relationship.objects.filter(parent_id=pk).values_list("child_id", flat=True)
-            )
+            queue.extend(Relationship.objects.filter(parent_id=pk).values_list("child_id", flat=True))
     return result
 
 
@@ -1039,17 +1038,19 @@ def _rebuild_ancestor_cache_for(obj):
             ancestors_cte,
             select=ancestors_cte.join(Object, id=ancestors_cte.col.object_id)
             .annotate(depth=ancestors_cte.col.depth, path_weight=ancestors_cte.col.path_weight)
-            .order_by("depth", "-path_weight")
+            .order_by("depth", "-path_weight"),
         ).values("id", "depth", "path_weight"):
             if row["id"] not in seen:
                 seen[row["id"]] = row
         for row in seen.values():
-            rows.append(AncestorCache(
-                descendant_id=pk,
-                ancestor_id=row["id"],
-                depth=row["depth"],
-                path_weight=row["path_weight"],
-            ))
+            rows.append(
+                AncestorCache(
+                    descendant_id=pk,
+                    ancestor_id=row["id"],
+                    depth=row["depth"],
+                    path_weight=row["path_weight"],
+                )
+            )
 
     if rows:
         AncestorCache.objects.bulk_create(rows, ignore_conflicts=True)

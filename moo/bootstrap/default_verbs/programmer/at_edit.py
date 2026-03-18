@@ -34,6 +34,7 @@ if verb_name == "@edit":
 elif verb_name == "edit_callback":
     from moo.core.models.verb import Verb
     from moo.core.models.property import Property
+
     content = args[0]
     obj_pk = args[1]
     obj_kind = args[2]

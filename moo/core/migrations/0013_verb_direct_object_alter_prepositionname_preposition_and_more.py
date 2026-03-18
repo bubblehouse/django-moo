@@ -7,34 +7,64 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0012_preposition_argumentspecifier_prepositionname'),
+        ("core", "0012_preposition_argumentspecifier_prepositionname"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='verb',
-            name='direct_object',
-            field=models.CharField(blank=True, choices=[('this', 'this'), ('any', 'any'), ('none', 'none')], db_index=True, max_length=255, null=True),
+            model_name="verb",
+            name="direct_object",
+            field=models.CharField(
+                blank=True,
+                choices=[("this", "this"), ("any", "any"), ("none", "none")],
+                db_index=True,
+                max_length=255,
+                null=True,
+            ),
         ),
         migrations.AlterField(
-            model_name='prepositionname',
-            name='preposition',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='names', to='core.preposition'),
+            model_name="prepositionname",
+            name="preposition",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="names",
+                to="core.preposition",
+            ),
         ),
         migrations.CreateModel(
-            name='PrepositionSpecifier',
+            name="PrepositionSpecifier",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('specifier', models.CharField(choices=[('any', 'any'), ('none', 'none')], db_index=True, max_length=255)),
-                ('preposition', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to='core.preposition')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "specifier",
+                    models.CharField(choices=[("any", "any"), ("none", "none")], db_index=True, max_length=255),
+                ),
+                (
+                    "preposition",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="+",
+                        to="core.preposition",
+                    ),
+                ),
             ],
         ),
         migrations.AddField(
-            model_name='verb',
-            name='indirect_objects',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='+', to='core.prepositionspecifier'),
+            model_name="verb",
+            name="indirect_objects",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="+",
+                to="core.prepositionspecifier",
+            ),
         ),
         migrations.DeleteModel(
-            name='ArgumentSpecifier',
+            name="ArgumentSpecifier",
         ),
     ]

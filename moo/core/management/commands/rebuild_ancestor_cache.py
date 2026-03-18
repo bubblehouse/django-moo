@@ -4,6 +4,7 @@ Management command to rebuild the AncestorCache table from scratch.
 Use this after bulk Relationship changes, data migrations, or to recover from
 a signal failure that left the cache inconsistent.
 """
+
 from django.core.management.base import BaseCommand
 from django_cte import with_cte
 
@@ -34,17 +35,19 @@ class Command(BaseCommand):
                 ancestors_cte,
                 select=ancestors_cte.join(Object, id=ancestors_cte.col.object_id)
                 .annotate(depth=ancestors_cte.col.depth, path_weight=ancestors_cte.col.path_weight)
-                .order_by("depth", "-path_weight")
+                .order_by("depth", "-path_weight"),
             ).values("id", "depth", "path_weight"):
                 if row["id"] not in seen:
                     seen[row["id"]] = row
             for row in seen.values():
-                rows.append(AncestorCache(
-                    descendant_id=pk,
-                    ancestor_id=row["id"],
-                    depth=row["depth"],
-                    path_weight=row["path_weight"],
-                ))
+                rows.append(
+                    AncestorCache(
+                        descendant_id=pk,
+                        ancestor_id=row["id"],
+                        depth=row["depth"],
+                        path_weight=row["path_weight"],
+                    )
+                )
             processed += 1
             if len(rows) >= 500:
                 AncestorCache.objects.bulk_create(rows, ignore_conflicts=True)
@@ -55,7 +58,5 @@ class Command(BaseCommand):
 
         total = AncestorCache.objects.count()
         self.stdout.write(
-            self.style.SUCCESS(
-                f"Done. Processed {processed} objects, created {total} AncestorCache rows."
-            )
+            self.style.SUCCESS(f"Done. Processed {processed} objects, created {total} AncestorCache rows.")
         )

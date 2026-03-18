@@ -17,6 +17,7 @@ User = get_user_model()
 # Player creation
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_player_creation_with_user_and_avatar(t_init, t_wizard):
     with _ctx(t_wizard):
@@ -42,6 +43,7 @@ def test_player_creation_without_user(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 # Object.is_player() / is_wizard()
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_object_is_player_true(t_init, t_wizard):
@@ -77,6 +79,7 @@ def test_object_is_wizard_false(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 # Object.is_connected() is always True
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_is_connected_always_true(t_init, t_wizard):

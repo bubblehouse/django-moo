@@ -35,6 +35,7 @@ class ObjectAdmin(admin.ModelAdmin):
     ]
     raw_id_fields = ("owner", "location")
 
+
 @admin.register(object.Relationship)
 class RelationshipAdmin(admin.ModelAdmin):
     list_display = ("child", "parent", "weight")

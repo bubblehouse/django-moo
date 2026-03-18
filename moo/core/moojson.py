@@ -52,7 +52,6 @@ def dumps(obj):
         elif isinstance(o, Property):
             return {"p#%d" % o.pk: o.name}
         else:
-            raise TypeError(
-                "Unserializable object {} of type {}".format(obj, type(obj))
-            )
+            raise TypeError("Unserializable object {} of type {}".format(obj, type(obj)))
+
     return json.dumps(obj, default=from_entity)
