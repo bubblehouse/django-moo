@@ -148,7 +148,7 @@ class MooPrompt:
             ``player_id``, and optional ``args``
         """
         from .editor import run_editor
-        edited_text = await run_editor(req.get("content", ""), req.get("content_type", "text"))
+        edited_text = await run_editor(req.get("content", ""), req.get("content_type", "text"), title=req.get("title"))
         if edited_text is not None and req.get("callback_this_id") and req.get("callback_verb_name"):
             caller = await sync_to_async(models.Object.objects.get)(pk=req["caller_id"])
             if not await sync_to_async(caller.is_wizard)():

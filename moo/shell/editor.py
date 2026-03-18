@@ -27,13 +27,14 @@ _TITLES = {
 }
 
 
-async def run_editor(initial_text: str = "", content_type: str = "text") -> str | None:
+async def run_editor(initial_text: str = "", content_type: str = "text", title: str | None = None) -> str | None:
     """
     Display a full-screen text editor over the SSH terminal and return the final
     text, or None if the user cancels.
 
     :param initial_text: initial buffer contents
     :param content_type: "python", "json", or "text" — controls syntax highlighting
+    :param title: optional frame title; defaults to a content_type label
     """
     lexer = None
     if content_type in _LEXERS:
@@ -91,7 +92,7 @@ async def run_editor(initial_text: str = "", content_type: str = "text") -> str 
         height=1,
         style="reverse",
     )
-    layout = Layout(HSplit([Frame(editor, title=_TITLES.get(content_type, "Editor")), status_bar]))
+    layout = Layout(HSplit([Frame(editor, title=title if title is not None else _TITLES.get(content_type, "Editor")), status_bar]))
     pygments_style = style_from_pygments_cls(get_style_by_name("solarized-dark"))
     app = Application(layout=layout, key_bindings=kb, full_screen=True, style=pygments_style)
 
