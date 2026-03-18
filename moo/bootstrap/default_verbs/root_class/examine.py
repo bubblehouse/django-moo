@@ -19,6 +19,7 @@ they are readable.
 """
 
 from moo.sdk import context
+
 obj = context.parser.get_dobj()
 
 print(f"{obj.name} (#{obj.id} ) is owned by {obj.owner.name} (#{obj.owner.id}).")
@@ -48,11 +49,11 @@ if contents:
         print(f"  {item.name} (#{item.id})")
 
 # display verbs if there are any and they are readable
-verbs = list(obj.verbs.prefetch_related('names').all())
+verbs = list(obj.verbs.prefetch_related("names").all())
 if verbs:
     print("Verbs:")
     for verb in verbs:
-        if context.player.is_allowed('read', verb):
+        if context.player.is_allowed("read", verb):
             print(f"  {verb.name()}")
         else:
             print(f"  {verb.name()} (unreadable)")

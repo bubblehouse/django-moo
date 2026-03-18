@@ -9,10 +9,10 @@ dict.update known gap (passes 3, 4, 5).
 
 from .utils import exec_verb, raises_in_verb
 
-
 # ---------------------------------------------------------------------------
 # _write_.__setitem__ must block underscore keys
 # ---------------------------------------------------------------------------
+
 
 def test_write_setitem_underscore_key_blocked():
     """
@@ -27,6 +27,7 @@ def test_write_setitem_underscore_key_blocked():
 # ---------------------------------------------------------------------------
 # _getitem_ must block underscore keys (read side)
 # ---------------------------------------------------------------------------
+
 
 def test_getitem_underscore_key_blocked():
     """
@@ -47,6 +48,7 @@ def test_getitem_normal_keys_still_work():
 # ---------------------------------------------------------------------------
 # str.format() / str.format_map() must not be accessible
 # ---------------------------------------------------------------------------
+
 
 def test_str_format_dunder_blocked():
     """
@@ -114,6 +116,7 @@ def test_str_replace_still_works():
 # ---------------------------------------------------------------------------
 # Known gap: dict.update() + dict.get() bypass _write_/__getitem__ guards
 # ---------------------------------------------------------------------------
+
 
 def test_dict_update_bypasses_write_guard():
     """

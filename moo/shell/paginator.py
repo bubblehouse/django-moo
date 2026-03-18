@@ -19,17 +19,14 @@ _LEXERS = {
     "json": ("pygments.lexers", "JsonLexer"),
 }
 
-_DISABLED_HANDLERS = frozenset(
-    ("_print_filename", "_examine", "_next_file", "_previous_file", "_remove_source")
-)
+_DISABLED_HANDLERS = frozenset(("_print_filename", "_examine", "_next_file", "_previous_file", "_remove_source"))
 
 _python_version = sys.version_info
 _ptk_version = prompt_toolkit.__version__
 _pypager_version = pypager.__version__
 
 HELP = (
-    HTML(
-        """
+    HTML("""
             <title>SUMMARY OF COMMANDS</title>
 
  <keys> h  H             </keys> Display this help.
@@ -84,8 +81,7 @@ HELP = (
   - Python version:         <version>%s.%s.%s</version>
   - prompt_toolkit version: <version>%s</version>
 
-"""
-    )
+""")
     % (
         _pypager_version,
         _python_version[0],
@@ -112,13 +108,16 @@ async def run_paginator(content: str = "", content_type: str = "text") -> None:
         source = StringSource(content)
 
     import pypager.pager as _pypager_pager
+
     _pypager_pager.HELP = HELP
 
     session = get_app_session()
     pager = Pager(input=session.input, output=session.output)
 
     kb = pager.application.key_bindings
-    kb._bindings[:] = [b for b in kb._bindings if b.handler.__name__ not in _DISABLED_HANDLERS]  # pylint: disable=protected-access
+    kb._bindings[:] = [  # pylint: disable=protected-access
+        b for b in kb._bindings if b.handler.__name__ not in _DISABLED_HANDLERS  # pylint: disable=protected-access
+    ]
     kb._clear_cache()  # pylint: disable=protected-access
 
     pager.add_source(source)

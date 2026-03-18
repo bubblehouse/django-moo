@@ -7,7 +7,6 @@ from moo.sdk import context, create, lookup
 from moo.core.models import Object, Player
 from .utils import save_quietly, setup_room, setup_root_item
 
-
 # --- look_self ---
 
 

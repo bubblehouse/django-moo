@@ -20,9 +20,7 @@ def populate_ancestor_cache(apps, schema_editor):
     # Load all relationships into memory for efficient traversal.
     parent_map = {}  # child_pk -> [(parent_pk, weight)]
     for rel in Relationship.objects.values("child_id", "parent_id", "weight"):
-        parent_map.setdefault(rel["child_id"], []).append(
-            (rel["parent_id"], rel["weight"])
-        )
+        parent_map.setdefault(rel["child_id"], []).append((rel["parent_id"], rel["weight"]))
 
     rows = []
     for obj_pk in all_obj_pks:
@@ -41,12 +39,14 @@ def populate_ancestor_cache(apps, schema_editor):
                         queue.append((gp_pk, depth + 1, path_weight))
 
         for ancestor_pk, (depth, path_weight) in seen.items():
-            rows.append(AncestorCache(
-                descendant_id=obj_pk,
-                ancestor_id=ancestor_pk,
-                depth=depth,
-                path_weight=path_weight,
-            ))
+            rows.append(
+                AncestorCache(
+                    descendant_id=obj_pk,
+                    ancestor_id=ancestor_pk,
+                    depth=depth,
+                    path_weight=path_weight,
+                )
+            )
 
         if len(rows) >= 500:
             AncestorCache.objects.bulk_create(rows, ignore_conflicts=True)

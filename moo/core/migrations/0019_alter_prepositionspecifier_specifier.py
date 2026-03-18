@@ -6,13 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0018_alter_verb_indirect_objects'),
+        ("core", "0018_alter_verb_indirect_objects"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='prepositionspecifier',
-            name='specifier',
-            field=models.CharField(choices=[('this', 'this'), ('any', 'any'), ('none', 'none')], db_index=True, default='none', max_length=255),
+            model_name="prepositionspecifier",
+            name="specifier",
+            field=models.CharField(
+                choices=[("this", "this"), ("any", "any"), ("none", "none")],
+                db_index=True,
+                default="none",
+                max_length=255,
+            ),
         ),
     ]

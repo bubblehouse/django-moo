@@ -24,10 +24,10 @@ from moo.core.models.object import Object
 from .. import code
 from .utils import ctx as _ctx, make_restricted_globals as _make_globals, mock_caller as _mock
 
-
 # ---------------------------------------------------------------------------
 # Original tests (kept unchanged)
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_eval_simple_command(t_init: Object, t_wizard: Object):
@@ -73,6 +73,7 @@ def test_printing_imported_caller(t_init: Object, t_wizard: Object):
         code.r_exec(src, {}, globals)
         assert printed == [t_wizard]
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_caller_stack(t_init: Object, t_wizard: Object):
     printed = []
@@ -95,39 +96,54 @@ def test_caller_stack(t_init: Object, t_wizard: Object):
         # update the owner afterward. Permissions (allow "everyone" "execute") are set
         # automatically by apply_default_permissions during Verb.save() on creation.
 
-        v1 = player.add_verb("test-caller-chain-1", code="""
+        v1 = player.add_verb(
+            "test-caller-chain-1",
+            code="""
 from moo.sdk import context
 this.invoke_verb("test-caller-chain-2")
-""")
+""",
+        )
         v1.owner = t_wizard
         v1.save()
 
-        v2 = player.add_verb("test-caller-chain-2", code="""
+        v2 = player.add_verb(
+            "test-caller-chain-2",
+            code="""
 from moo.sdk import context
 this.invoke_verb("test-caller-chain-3")
-""")
+""",
+        )
         v2.owner = player
         v2.save()
 
-        v3 = player.add_verb("test-caller-chain-3", code="""
+        v3 = player.add_verb(
+            "test-caller-chain-3",
+            code="""
 from moo.sdk import context
 this.invoke_verb("test-caller-chain-4")
-""")
+""",
+        )
         v3.owner = p3
         v3.save()
 
-        v4 = player.add_verb("test-caller-chain-4", code="""
+        v4 = player.add_verb(
+            "test-caller-chain-4",
+            code="""
 from moo.sdk import context
 this.invoke_verb("test-caller-chain-5")
-""")
+""",
+        )
         v4.owner = p4
         v4.save()
 
-        v5 = player.add_verb("test-caller-chain-5", code="""
+        v5 = player.add_verb(
+            "test-caller-chain-5",
+            code="""
 from moo.sdk import context
 for frame in context.caller_stack:
     print(frame)
-""")
+""",
+        )
         v5.owner = p5
         v5.save()
 
@@ -139,11 +155,46 @@ for frame in context.caller_stack:
 
         # The 5 frames were captured in order by verb 5
         assert printed == [
-            dict(caller=t_wizard, origin=player, player=t_wizard, previous_caller=t_wizard, this=player, verb_name="test-caller-chain-1"),
-            dict(caller=player, origin=player, player=t_wizard, previous_caller=t_wizard, this=player, verb_name="test-caller-chain-2"),
-            dict(caller=p3, origin=player, player=t_wizard, previous_caller=player, this=player, verb_name="test-caller-chain-3"),
-            dict(caller=p4, origin=player, player=t_wizard, previous_caller=p3, this=player, verb_name="test-caller-chain-4"),
-            dict(caller=p5, origin=player, player=t_wizard, previous_caller=p4, this=player, verb_name="test-caller-chain-5"),
+            dict(
+                caller=t_wizard,
+                origin=player,
+                player=t_wizard,
+                previous_caller=t_wizard,
+                this=player,
+                verb_name="test-caller-chain-1",
+            ),
+            dict(
+                caller=player,
+                origin=player,
+                player=t_wizard,
+                previous_caller=t_wizard,
+                this=player,
+                verb_name="test-caller-chain-2",
+            ),
+            dict(
+                caller=p3,
+                origin=player,
+                player=t_wizard,
+                previous_caller=player,
+                this=player,
+                verb_name="test-caller-chain-3",
+            ),
+            dict(
+                caller=p4,
+                origin=player,
+                player=t_wizard,
+                previous_caller=p3,
+                this=player,
+                verb_name="test-caller-chain-4",
+            ),
+            dict(
+                caller=p5,
+                origin=player,
+                player=t_wizard,
+                previous_caller=p4,
+                this=player,
+                verb_name="test-caller-chain-5",
+            ),
         ]
 
 
@@ -151,10 +202,13 @@ for frame in context.caller_stack:
 # 1. ContextManager – lifecycle and get()
 # ---------------------------------------------------------------------------
 
+
 def test_context_manager_defaults():
     caller = _mock()
+
     def writer(s):
         pass
+
     with _ctx(caller, writer):
         assert code.ContextManager.get("caller") is caller
         assert code.ContextManager.get("player") is caller  # defaults to caller
@@ -242,6 +296,7 @@ def test_context_manager_caller_stack_outside_session():
 # 2. ContextManager – caller stack
 # ---------------------------------------------------------------------------
 
+
 def test_context_manager_override_and_pop_caller():
     original = _mock()
     new_caller = _mock()
@@ -292,6 +347,7 @@ def test_context_manager_override_caller_stack_contents():
 # 3. ContextManager – per-session caches
 # ---------------------------------------------------------------------------
 
+
 def test_context_manager_caches_are_dicts_inside_session():
     caller = _mock()
     with _ctx(caller):
@@ -320,6 +376,7 @@ def test_context_manager_caches_isolated_between_sessions():
 # 4. get_default_globals() / get_restricted_environment()
 # ---------------------------------------------------------------------------
 
+
 def test_get_default_globals():
     g = code.get_default_globals()
     assert set(g.keys()) == {"__name__", "__package__", "__doc__"}
@@ -331,11 +388,22 @@ def test_get_default_globals():
 def test_get_restricted_environment_exact_keys():
     env = code.get_restricted_environment("test_verb", lambda s: None)
     expected = {
-        "_apply_", "_print_", "_print", "_write_",
-        "_getattr_", "_getitem_", "_getiter_", "_inplacevar_",
-        "_unpack_sequence_", "_iter_unpack_sequence_",
-        "__import__", "__builtins__",
-        "__name__", "__package__", "__doc__", "verb_name",
+        "_apply_",
+        "_print_",
+        "_print",
+        "_write_",
+        "_getattr_",
+        "_getitem_",
+        "_getiter_",
+        "_inplacevar_",
+        "_unpack_sequence_",
+        "_iter_unpack_sequence_",
+        "__import__",
+        "__builtins__",
+        "__name__",
+        "__package__",
+        "__doc__",
+        "verb_name",
     }
     assert set(env.keys()) == expected
     assert env["__name__"] == "test_verb"
@@ -430,6 +498,7 @@ def test_getiter():
 # 5. compile_verb_code() and LRU cache
 # ---------------------------------------------------------------------------
 
+
 def test_compile_verb_code_returns_object():
     result = code.compile_verb_code("pass", "<test-compile>")
     assert hasattr(result, "code")
@@ -451,6 +520,7 @@ def test_compile_verb_code_different_args():
 # 6. do_eval() – string path (compile_restricted)
 # ---------------------------------------------------------------------------
 
+
 def test_do_eval_string_expression():
     g = code.get_default_globals()
     g.update(code.get_restricted_environment("__main__", lambda s: None))
@@ -468,6 +538,7 @@ def test_do_eval_string_exec():
 # ---------------------------------------------------------------------------
 # 7. r_exec() / r_eval()
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_r_exec_executes_code(t_init: Object, t_wizard: Object):
@@ -498,11 +569,13 @@ def test_r_exec_print_calls_writer(t_init: Object, t_wizard: Object):
 # 8. Restricted import security
 # ---------------------------------------------------------------------------
 
+
 def test_restricted_import_allowed_module():
     # 're' is in ALLOWED_MODULES — any caller may import it.
     with _ctx(_mock(is_wizard=False)):
         env = code.get_restricted_environment("test", lambda s: None)
         import re as re_module
+
         result = env["__import__"]("re", {}, {}, [], 0)
         assert result is re_module
 

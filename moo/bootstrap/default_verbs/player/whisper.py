@@ -10,6 +10,6 @@ surrounding it to indicate that is it a whisper.
 from moo.sdk import context
 
 source = context.player.title()
-target = context.parser.get_pobj('to')
+target = context.parser.get_pobj("to")
 message = context.parser.get_dobj_str()
 target.tell(f"{source} whispers to you: {message}")

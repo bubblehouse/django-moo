@@ -2,6 +2,7 @@
 """
 AsyncSSH server components.
 """
+
 import asyncio
 import json
 import logging
@@ -9,10 +10,8 @@ import os
 
 import asyncssh
 from asgiref.sync import sync_to_async
-from django.contrib.auth.models import \
-    User  # pylint: disable=imported-auth-user
-from prompt_toolkit.contrib.ssh import (PromptToolkitSSHServer,
-                                        PromptToolkitSSHSession)
+from django.contrib.auth.models import User  # pylint: disable=imported-auth-user
+from prompt_toolkit.contrib.ssh import PromptToolkitSSHServer, PromptToolkitSSHSession
 from simplesshkey.models import UserKey
 
 from .prompt import embed
@@ -38,7 +37,9 @@ async def server(port=8022):
     """
     await asyncio.sleep(1)
     await asyncssh.create_server(
-        lambda: SSHServer(interact), "", port,
+        lambda: SSHServer(interact),
+        "",
+        port,
         server_host_keys=["/etc/ssh/ssh_host_ecdsa_key"],
         kex_algs=[
             "mlkem768x25519-sha256",

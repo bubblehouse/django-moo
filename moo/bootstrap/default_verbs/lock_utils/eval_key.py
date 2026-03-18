@@ -38,6 +38,7 @@ from moo.sdk import lookup
 
 key, who = args
 
+
 def eval_key_expression(expr, candidate):
     if isinstance(expr, int):
         subject = lookup(expr)
@@ -59,5 +60,6 @@ def eval_key_expression(expr, candidate):
             obj = lookup(expr[1])
             return eval_key_expression(obj.key, candidate)
     return False
+
 
 return eval_key_expression(key, who)

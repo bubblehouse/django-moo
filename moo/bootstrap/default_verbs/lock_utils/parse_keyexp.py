@@ -44,6 +44,7 @@ keyexp = args[0]
 # keyexp = "!#56"
 # result = ["!", 56]
 
+
 def parse_expression(expr):
     expr = expr.strip("() ").strip()
     if "&&" in expr:
@@ -67,5 +68,6 @@ def parse_expression(expr):
         return ["?", int(obj_num[1:])]  # Assuming format is ?#num
     else:
         raise ValueError("Invalid key expression format: %s" % expr)
+
 
 return parse_expression(keyexp)

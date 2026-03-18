@@ -29,7 +29,4 @@ This complex set of conditions shows how an arbitrary set of criteria can be app
 """
 
 what = args[0]
-return this.is_unlocked_for(what) and (
-       this.free_entry or
-       what.owner == this.owner or
-       what in this.residents)
+return this.is_unlocked_for(what) and (this.free_entry or what.owner == this.owner or what in this.residents)

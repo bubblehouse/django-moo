@@ -66,7 +66,7 @@ for item in this.contents.all():
 
 ctype = this.content_list_type
 if ctype == 3:
-    to_be = ('is', 'are')[int(len(players) > 1)]
+    to_be = ("is", "are")[int(len(players) > 1)]
     if items:
         if len(items) == 1:
             print(f"You see {items[0]} here.")

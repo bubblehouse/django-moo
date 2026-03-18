@@ -21,16 +21,17 @@ from opentelemetry.instrumentation.redis import RedisInstrumentor
 from . import celeryconfig
 from .core import moojson
 
-WORKER_READINESS_FILE = Path('/tmp/worker-readiness')
-WORKER_LIVENESS_FILE = Path('/tmp/worker-liveness')
-BEAT_READINESS_FILE = Path('/tmp/beat-readiness')
-BEAT_LIVENESS_FILE = Path('/tmp/beat-liveness.pid')
+WORKER_READINESS_FILE = Path("/tmp/worker-readiness")
+WORKER_LIVENESS_FILE = Path("/tmp/worker-liveness")
+BEAT_READINESS_FILE = Path("/tmp/beat-readiness")
+BEAT_LIVENESS_FILE = Path("/tmp/beat-liveness.pid")
 
 app = Celery("moo")
 app.config_from_object("moo.celeryconfig")
 app.autodiscover_tasks()
 
 register("moojson", moojson.dumps, moojson.loads, content_type="application/x-moojson", content_encoding="utf-8")
+
 
 @worker_process_init.connect(weak=False)
 def init_celery_tracing(*args, **kwargs):
@@ -41,27 +42,32 @@ def init_celery_tracing(*args, **kwargs):
     Psycopg2Instrumentor().instrument()
     RedisInstrumentor().instrument()
 
+
 @setup_logging.connect
 def configure_celery_logging(**kwargs):
     from logging.config import dictConfig
 
     dictConfig(celeryconfig.logging)
 
+
 @beat_init.connect
 def beat_ready(**kwargs):
     BEAT_READINESS_FILE.touch()
+
 
 @worker_ready.connect
 def worker_ready(**kwargs):
     WORKER_READINESS_FILE.touch()
 
+
 @worker_shutdown.connect
 def worker_shutdown(**kwargs):
     WORKER_READINESS_FILE.unlink(missing_ok=True)
 
+
 @app.steps["worker"].add
 class LivenessProbe(bootsteps.StartStopStep):
-    requires = {'celery.worker.components:Timer'}
+    requires = {"celery.worker.components:Timer"}
 
     def __init__(self, parent, **kwargs):
         super().__init__(parent, **kwargs)
@@ -70,7 +76,10 @@ class LivenessProbe(bootsteps.StartStopStep):
 
     def start(self, parent):
         self.tref = parent.timer.call_repeatedly(
-            1.0, self.update_heartbeat_file, (parent,), priority=10,
+            1.0,
+            self.update_heartbeat_file,
+            (parent,),
+            priority=10,
         )
 
     def stop(self, parent):
