@@ -49,6 +49,10 @@ def lookup(x: Union[int, str]):
             Q(name__iexact=x) | Q(aliases__alias__iexact=x)
         ).distinct()
         if not qs:
+            if context.parser:
+                obj = context.parser.get_pronoun_object(x)
+                if obj:
+                    return obj
             raise NoSuchObjectError(x)
         return qs[0]
     else:
