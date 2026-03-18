@@ -1,3 +1,9 @@
+## [0.81.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.81.2...v0.81.3) (2026-03-18)
+
+### Bug Fixes
+
+* add black to dependencies and update agent docs ([a32d643](https://gitlab.com/bubblehouse/django-moo/commit/a32d643e82ef296eb049acc8c787b07f77eb67c3))
+
 ## [0.81.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.81.1...v0.81.2) (2026-03-18)
 
 ### Bug Fixes
