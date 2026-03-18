@@ -16,10 +16,10 @@ import pytest
 from .. import code
 from .utils import ctx, exec_verb, mock_caller, raises_in_verb
 
-
 # ---------------------------------------------------------------------------
 # __metaclass__ must not expose type
 # ---------------------------------------------------------------------------
+
 
 def test_metaclass_not_in_globals():
     """__metaclass__ was a Python 2 artifact; it must not appear in the sandbox globals."""
@@ -35,6 +35,7 @@ def test_metaclass_not_in_globals():
 # dir() must not be available
 # ---------------------------------------------------------------------------
 
+
 def test_dir_builtin_removed():
     """dir() is not in ALLOWED_BUILTINS and must raise NameError in verb code."""
     raises_in_verb("dir()", NameError)
@@ -43,6 +44,7 @@ def test_dir_builtin_removed():
 # ---------------------------------------------------------------------------
 # getattr() / hasattr() must not allow underscore names
 # ---------------------------------------------------------------------------
+
 
 def test_getattr_underscore_blocked():
     """getattr(obj, '__class__') must raise AttributeError, not return the class."""
@@ -71,6 +73,7 @@ def test_hasattr_normal_names_still_work():
 # Dunder attribute syntax must remain blocked (regression guard)
 # ---------------------------------------------------------------------------
 
+
 def test_dunder_syntax_blocked():
     """
 
@@ -84,6 +87,7 @@ def test_dunder_syntax_blocked():
 # ---------------------------------------------------------------------------
 # setattr() / delattr() builtins must not bypass _write_ guards (pass 14)
 # ---------------------------------------------------------------------------
+
 
 def test_setattr_builtin_blocks_write_to_objects():
     """
@@ -144,6 +148,7 @@ def test_delattr_builtin_blocks_delete_on_objects():
 # callable() / isinstance() — pass 14
 # ---------------------------------------------------------------------------
 
+
 def test_callable_builtin_accessible_but_harmless():
     """
 
@@ -172,6 +177,7 @@ def test_isinstance_accessible_but_cannot_probe_dunder_classes():
 # Exception dunder attributes blocked by underscore guard (pass 14)
 # ---------------------------------------------------------------------------
 
+
 def test_exception_traceback_blocked_by_underscore_guard():
     """
 
@@ -192,6 +198,7 @@ def test_exception_traceback_blocked_by_underscore_guard():
 # ---------------------------------------------------------------------------
 # Frame/generator inspection attributes blocked by INSPECT_ATTRIBUTES (pass 15)
 # ---------------------------------------------------------------------------
+
 
 def test_generator_gi_frame_blocked_via_getattr():
     """
@@ -267,6 +274,7 @@ def test_traceback_tb_frame_blocked_via_getattr():
 # safe_hasattr must also check INSPECT_ATTRIBUTES
 # ---------------------------------------------------------------------------
 
+
 def test_safe_hasattr_does_not_leak_gi_frame():
     """
 
@@ -325,6 +333,7 @@ def test_safe_hasattr_still_works_for_normal_attrs():
 # AttributeError.obj in Python 3.12+
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="AttributeError.obj added in Python 3.12")
 def test_attribute_error_obj_returns_object_verb_already_had():
     """
@@ -367,7 +376,7 @@ def test_attribute_error_obj_is_none_for_guard_raised_errors():
         "try:\n"
         "    getattr('hello', '__class__')\n"
         "except AttributeError as e:\n"
-        "    print(e.obj is None)\n"
+        "    print(e.obj is None)\n"  # pylint: disable=implicit-str-concat
     )
     assert printed == [True]
 
@@ -375,6 +384,7 @@ def test_attribute_error_obj_is_none_for_guard_raised_errors():
 # ---------------------------------------------------------------------------
 # sorted / enumerate / list / set return values
 # ---------------------------------------------------------------------------
+
 
 def test_sorted_returns_plain_list():
     """sorted() returns a plain list — no new attack surface over list literals."""
@@ -392,7 +402,7 @@ def test_enumerate_iteration_safe():
         "pairs = []\n"
         "for i, v in enumerate(['a', 'b']):\n"
         "    pairs.append((i, v))\n"
-        "print(pairs)\n"
+        "print(pairs)\n"  # pylint: disable=implicit-str-concat
     )
     assert printed == [[(0, "a"), (1, "b")]]
 
@@ -414,6 +424,6 @@ def test_set_operations_safe():
     printed = exec_verb(
         "s = set([1, 2, 3])\n"
         "s.add(4)\n"
-        "print(sorted(list(s)))\n"
+        "print(sorted(list(s)))\n"  # pylint: disable=implicit-str-concat
     )
     assert printed == [[1, 2, 3, 4]]

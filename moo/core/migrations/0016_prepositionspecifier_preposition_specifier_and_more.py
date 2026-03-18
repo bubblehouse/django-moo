@@ -6,19 +6,27 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0015_remove_verb_ability_remove_verb_method'),
+        ("core", "0015_remove_verb_ability_remove_verb_method"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='prepositionspecifier',
-            name='preposition_specifier',
-            field=models.CharField(choices=[('any', 'any'), ('none', 'none')], db_index=True, default='none', max_length=255),
+            model_name="prepositionspecifier",
+            name="preposition_specifier",
+            field=models.CharField(
+                choices=[("any", "any"), ("none", "none")], db_index=True, default="none", max_length=255
+            ),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='prepositionspecifier',
-            name='specifier',
-            field=models.CharField(blank=True, choices=[('this', 'this'), ('any', 'any'), ('none', 'none')], db_index=True, max_length=255, null=True),
+            model_name="prepositionspecifier",
+            name="specifier",
+            field=models.CharField(
+                blank=True,
+                choices=[("this", "this"), ("any", "any"), ("none", "none")],
+                db_index=True,
+                max_length=255,
+                null=True,
+            ),
         ),
     ]

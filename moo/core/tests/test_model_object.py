@@ -13,10 +13,10 @@ from .. import code, create, exceptions, lookup
 from ..models import Alias, AncestorCache, Object, Player, Property, Verb
 from .utils import ctx as _ctx
 
-
 # ---------------------------------------------------------------------------
 # Basic Object attributes
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_object_str(t_init, t_wizard):
@@ -35,6 +35,7 @@ def test_object_kind(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 # Player / wizard status
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_object_is_player_false(t_init, t_wizard):
@@ -78,6 +79,7 @@ def test_object_is_connected(t_init, t_wizard):
 # Naming and aliases
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_object_is_named_by_name(t_init, t_wizard):
     with _ctx(t_wizard):
@@ -99,6 +101,7 @@ def test_object_is_named_by_alias(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 # find / contains
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_object_find_by_name(t_init, t_wizard):
@@ -137,6 +140,7 @@ def test_object_contains(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 # Ancestry / is_a
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_object_is_a_direct_parent(t_init, t_wizard):
@@ -207,6 +211,7 @@ def test_object_get_descendents(t_init, t_wizard):
 # Contents
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_object_get_contents(t_init, t_wizard):
     with _ctx(t_wizard):
@@ -237,6 +242,7 @@ def test_object_get_contents_nested(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 # Verbs
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_object_add_verb_and_has_verb(t_init, t_wizard):
@@ -302,6 +308,7 @@ def test_object_add_verb_replace(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 # Properties
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_object_set_property(t_init, t_wizard):
@@ -403,6 +410,7 @@ def test_object_has_property_no_recurse(t_init, t_wizard):
 # delete
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_object_delete_basic(t_init, t_wizard):
     with _ctx(t_wizard):
@@ -428,6 +436,7 @@ def test_object_delete_invokes_recycle_verb(t_init, t_wizard):
 # save — recursion check
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_object_save_recursion_raises(t_init, t_wizard):
     with _ctx(t_wizard):
@@ -445,6 +454,7 @@ def test_object_save_recursion_raises(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 # __getattr__
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_object_getattr_verb(t_init, t_wizard):
@@ -478,6 +488,7 @@ def test_object_getattr_missing_raises(t_init, t_wizard):
 # owns
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_object_owns(t_init, t_wizard):
     with _ctx(t_wizard):
@@ -491,6 +502,7 @@ def test_object_owns(t_init, t_wizard):
 # Relationship weight
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_relationship_weight_auto_assigned(t_init, t_wizard):
     with _ctx(t_wizard):
@@ -502,9 +514,8 @@ def test_relationship_weight_auto_assigned(t_init, t_wizard):
         child.parents.add(p2)
         child.parents.add(p3)
     from ..models.object import Relationship
-    weights = list(
-        Relationship.objects.filter(child=child).order_by("weight").values_list("weight", flat=True)
-    )
+
+    weights = list(Relationship.objects.filter(child=child).order_by("weight").values_list("weight", flat=True))
     assert weights == sorted(weights)
     assert len(set(weights)) == len(weights)
 
@@ -512,6 +523,7 @@ def test_relationship_weight_auto_assigned(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 # Alias permission check
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_alias_requires_write_permission(t_init, t_wizard):
@@ -526,6 +538,7 @@ def test_alias_requires_write_permission(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 # AncestorCache maintenance
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_ancestor_cache_rebuilt_on_parents_add(t_init, t_wizard):

@@ -5,7 +5,6 @@ from moo.sdk import lookup
 from moo.core.models import Object
 from .utils import save_quietly, setup_room
 
-
 # --- say ---
 
 

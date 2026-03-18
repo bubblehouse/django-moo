@@ -16,10 +16,10 @@ from moo.core.models.object import Object
 from .. import code
 from .utils import ctx, mock_caller, raises_in_verb
 
-
 # ---------------------------------------------------------------------------
 # Verb.save() must require write permission
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_verb_save_requires_write_permission(t_init, t_wizard):
@@ -68,6 +68,7 @@ def test_verb_save_allowed_for_owner(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 # Verb.delete() must require write permission
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_verb_delete_requires_write_permission(t_init: Object, t_wizard: Object):
@@ -119,6 +120,7 @@ def test_verb_delete_allowed_for_owner(t_init: Object, t_wizard: Object):
 # Property.save() must require write permission
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_property_save_requires_write_permission(t_init, t_wizard):
     """
@@ -149,6 +151,7 @@ def test_property_save_requires_write_permission(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 # Property.delete() must require write permission
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_property_delete_requires_write_permission(t_init: Object, t_wizard: Object):
@@ -198,6 +201,7 @@ def test_property_delete_allowed_for_owner(t_init: Object, t_wizard: Object):
 # Object.delete() must require write permission
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_object_delete_requires_write_permission(t_init, t_wizard):
     """
@@ -226,6 +230,7 @@ def test_object_delete_requires_write_permission(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 # VerbName.save() / VerbName.delete() must require write permission
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_verbname_save_requires_write_permission(t_init: Object, t_wizard: Object):
@@ -290,6 +295,7 @@ def test_verbname_delete_requires_write_permission(t_init: Object, t_wizard: Obj
 # Alias.delete() must require write permission
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_alias_delete_requires_write_permission(t_init: Object, t_wizard: Object):
     """
@@ -323,6 +329,7 @@ def test_alias_delete_requires_write_permission(t_init: Object, t_wizard: Object
 # Verb.reload() must require write permission
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_verb_reload_requires_write_permission(t_init: Object, t_wizard: Object):
     """
@@ -353,6 +360,7 @@ def test_verb_reload_requires_write_permission(t_init: Object, t_wizard: Object)
 # ---------------------------------------------------------------------------
 # Verb._invoked_object / _invoked_name must be inaccessible from sandbox
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def testinvoked_object_write_blocked(t_init: Object, t_wizard: Object):
@@ -442,6 +450,7 @@ def testinvoked_object_read_blocked(t_init: Object, t_wizard: Object):
 # Access.save() / Access.delete() must require grant permission
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_access_save_requires_grant(t_init: Object, t_wizard: Object):
     """
@@ -530,6 +539,7 @@ def test_access_delete_requires_grant(t_init: Object, t_wizard: Object):
 # set_protected_attribute must enforce write ACL, not just underscore blocking
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_set_protected_attribute_shadows_moo_property_without_acl(t_init: Object, t_wizard: Object):
     """
@@ -601,6 +611,7 @@ def test_set_protected_attribute_on_system_object_requires_write(t_init: Object,
 # Repository.save() must require wizard
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_repository_save_requires_wizard(t_init: Object, t_wizard: Object):
     """
@@ -635,6 +646,7 @@ def test_repository_save_requires_wizard(t_init: Object, t_wizard: Object):
 # ---------------------------------------------------------------------------
 # _original_owner / _original_location tracking fields must be inaccessible
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_original_owner_write_blocked(t_init: Object, t_wizard: Object):
@@ -735,6 +747,7 @@ def test_original_location_write_blocked(t_init: Object, t_wizard: Object):
 # Repository.save() wizard guard fires regardless of import path
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_repository_save_wizard_guard_fires_via_direct_import(t_init: Object, t_wizard: Object):
     """
@@ -761,6 +774,7 @@ def test_repository_save_wizard_guard_fires_via_direct_import(t_init: Object, t_
 # ---------------------------------------------------------------------------
 # passthrough cannot be used to forge caller context
 # ---------------------------------------------------------------------------
+
 
 def test_passthrough_has_no_this_parameter():
     """
@@ -796,6 +810,7 @@ def test_passthrough_raises_when_unbound():
 # ---------------------------------------------------------------------------
 # Wizard ORM access via WIZARD_ALLOWED_MODULES
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_wizard_allowed_modules_queryset_mutations_still_blocked(t_init: Object, t_wizard: Object):

@@ -9,10 +9,10 @@ from .. import create
 from ..models import Access, Object
 from .utils import ctx as _ctx
 
-
 # ---------------------------------------------------------------------------
 # Property.__str__ and .kind
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_property_str(t_init, t_wizard):
@@ -38,6 +38,7 @@ def test_property_kind(t_init, t_wizard):
 # save() applies default permissions
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_property_save_applies_default_permissions(t_init, t_wizard):
     with _ctx(t_wizard):
@@ -50,6 +51,7 @@ def test_property_save_applies_default_permissions(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 # inherit_owner propagation
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_property_inherit_owner_propagates(t_init, t_wizard):
@@ -93,6 +95,7 @@ def test_property_inherit_owner_only_on_change(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 # Value roundtrip via moojson
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_property_value_roundtrip_string(t_init, t_wizard):

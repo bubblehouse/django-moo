@@ -6,32 +6,32 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0025_ancestor_cache'),
+        ("core", "0025_ancestor_cache"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='task',
-            name='origin',
+            model_name="task",
+            name="origin",
         ),
         migrations.RemoveField(
-            model_name='task',
-            name='user',
+            model_name="task",
+            name="user",
         ),
         migrations.RemoveIndex(
-            model_name='relationship',
-            name='relationship_child_parent_weight_idx',
+            model_name="relationship",
+            name="relationship_child_parent_weight_idx",
         ),
         migrations.RemoveIndex(
-            model_name='verbname',
-            name='verbname_name_verb_idx',
+            model_name="verbname",
+            name="verbname_name_verb_idx",
         ),
         migrations.AlterField(
-            model_name='ancestorcache',
-            name='id',
-            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
+            model_name="ancestorcache",
+            name="id",
+            field=models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID"),
         ),
         migrations.DeleteModel(
-            name='Task',
+            name="Task",
         ),
     ]

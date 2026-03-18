@@ -7,7 +7,6 @@ from moo.sdk import create, lookup, open_paginator
 from moo.core.exceptions import UserError
 from moo.core.models import Object
 
-
 # ---------------------------------------------------------------------------
 # Helper verb bodies
 # ---------------------------------------------------------------------------

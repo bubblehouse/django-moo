@@ -19,6 +19,7 @@ log = logging.getLogger(__name__)
 @pytest.fixture(autouse=True, scope="session")
 def configure_celery_for_tests():
     from moo.celery import app
+
     app.conf.update(
         broker_url="memory://",
         task_always_eager=True,

@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0017_alter_verb_direct_object_and_more'),
+        ("core", "0017_alter_verb_direct_object_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='verb',
-            name='indirect_objects',
-            field=models.ManyToManyField(blank=True, related_name='+', to='core.prepositionspecifier'),
+            model_name="verb",
+            name="indirect_objects",
+            field=models.ManyToManyField(blank=True, related_name="+", to="core.prepositionspecifier"),
         ),
     ]

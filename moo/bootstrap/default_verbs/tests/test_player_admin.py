@@ -6,7 +6,6 @@ from moo.core.models import Object
 from moo.core.models.verb import Verb, VerbName
 from .utils import save_quietly
 
-
 # --- whodunnit ---
 
 
@@ -78,9 +77,9 @@ def test_eject_victim_from_container(t_init: Object, t_wizard: Object):
         save_quietly(player_npc)
         for name, code_str in [
             ("victim_ejection_msg", 'return "You have been ejected!"'),
-            ("ejection_msg",        'return "You ejected them."'),
-            ("oejection_msg",       'return "They were ejected."'),
-            ("eject",               'victim = args[0]; victim.location = this.location; victim.save()'),
+            ("ejection_msg", 'return "You ejected them."'),
+            ("oejection_msg", 'return "They were ejected."'),
+            ("eject", "victim = args[0]; victim.location = this.location; victim.save()"),
         ]:
             v = Verb.objects.create(origin=container, owner=t_wizard, code=code_str)
             VerbName.objects.create(verb=v, name=name)
@@ -195,8 +194,8 @@ def test_check_tracks_multiple_senders(t_init: Object, t_wizard: Object):
 
     for sender, msg in [
         (player_npc, "msg from player"),
-        (alice,      "msg from alice"),
-        (bob,        "msg from bob"),
+        (alice, "msg from alice"),
+        (bob, "msg from bob"),
     ]:
         with code.ContextManager(sender, lambda _: None):
             with pytest.warns(RuntimeWarning):

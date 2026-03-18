@@ -111,7 +111,6 @@ with code.ContextManager(wizard, log.info):
     letters = create("Generic Letter", parents=[notes], location=None)
     sys.set_property("letter", letters)
 
-
     lock_utils = create("Lock Utilities", location=None)
     sys.set_property("lock_utils", lock_utils)
 
@@ -120,9 +119,7 @@ with code.ContextManager(wizard, log.info):
 
     gender_utils = create("Gender Utilities", location=None)
     sys.set_property("gender_utils", gender_utils)
-    gender_utils.set_property("pronouns", [
-        "ps", "po", "pp", "pr", "pq", "psc", "poc", "ppc", "prc", "pqc"
-    ])
+    gender_utils.set_property("pronouns", ["ps", "po", "pp", "pr", "pq", "psc", "poc", "ppc", "prc", "pqc"])
     gender_utils.set_property("genders", ["neuter", "male", "female", "plural"])
     gender_utils.set_property("ps", ["it", "he", "she", "they"])
     gender_utils.set_property("po", ["it", "him", "her", "them"])

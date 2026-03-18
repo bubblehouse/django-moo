@@ -7,13 +7,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0013_verb_direct_object_alter_prepositionname_preposition_and_more'),
+        ("core", "0013_verb_direct_object_alter_prepositionname_preposition_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='prepositionname',
-            name='preposition',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='names', to='core.preposition'),
+            model_name="prepositionname",
+            name="preposition",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, related_name="names", to="core.preposition"
+            ),
         ),
     ]

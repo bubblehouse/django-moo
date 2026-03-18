@@ -115,8 +115,10 @@ class NoSuchPrepositionError(UserError):
     Raised by the parser when the programmer attempts to retreive the object
     for a preposition that was not used in the sentence.
     """
+
     def __init__(self, prep):
         UserError.__init__(self, "I don't understand you.", prep)
+
 
 class NoSuchObjectError(UserError):
     """
@@ -124,22 +126,30 @@ class NoSuchObjectError(UserError):
     there. If the verb is written correctly, means the user tried to manipulate
     a non-existant object (a typo, or other misteak).
     """
+
     def __init__(self, name):
         UserError.__init__(self, "There is no '" + str(name) + "' here.")
+
 
 class NoSuchVerbError(UserError):
     """
     Raised by the parser when it cannot find a verb for a sentence.
     """
+
     def __init__(self, name):
         UserError.__init__(self, "I don't know how to do that.", name)
+
 
 class NoSuchPropertyError(UserError):
     """
     Raised by the system when it cannot find a needed property.
     """
+
     def __init__(self, name, origin=None):
-        UserError.__init__(self, "There is no '" + str(name) + "' property defined" + ['.', ' on %s.' % origin][bool(origin)])
+        UserError.__init__(
+            self, "There is no '" + str(name) + "' property defined" + [".", " on %s." % origin][bool(origin)]
+        )
+
 
 class ExecutionError(UserError):
     """

@@ -14,10 +14,10 @@ from .. import code, create
 from ..models import Object, Repository, Verb, VerbName
 from .utils import ctx as _ctx
 
-
 # ---------------------------------------------------------------------------
 # Verb.__str__ and .kind
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_verb_str(t_init, t_wizard):
@@ -43,6 +43,7 @@ def test_verb_kind(t_init, t_wizard):
 # Verb.name()
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_verb_name_untitled(t_init, t_wizard):
     with _ctx(t_wizard):
@@ -64,9 +65,11 @@ def test_verb_name_returns_first(t_init, t_wizard):
 # Verb.save() applies default permissions
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_verb_save_applies_default_permissions(t_init, t_wizard):
     from ..models import Access
+
     with _ctx(t_wizard):
         obj = create("perm obj")
         obj.add_verb("permverb", code="pass")
@@ -77,6 +80,7 @@ def test_verb_save_applies_default_permissions(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 # Verb.is_bound()
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_verb_is_bound_false(t_init, t_wizard):
@@ -102,6 +106,7 @@ def test_verb_is_bound_true(t_init, t_wizard):
 # Verb.__call__
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_verb_call_executes_code(t_init, t_wizard):
     with _ctx(t_wizard):
@@ -123,6 +128,7 @@ def test_verb_call_this_isinvoked_object(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 # Verb.passthrough
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_verb_passthrough_calls_parent(t_init, t_wizard):
@@ -157,6 +163,7 @@ def test_verb_passthrough_unbound_raises(t_init, t_wizard):
 # VerbName uniqueness
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_verbname_uniqueness_constraint(t_init, t_wizard):
     with _ctx(t_wizard):
@@ -170,6 +177,7 @@ def test_verbname_uniqueness_constraint(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 # Repository
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_repository_fields_stored(t_init, t_wizard):
@@ -188,6 +196,7 @@ def test_repository_fields_stored(t_init, t_wizard):
 # Verb override in subclass
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_override_verb_in_subclass(t_init, t_wizard):
     with code.ContextManager(t_wizard, lambda m: None):
@@ -204,6 +213,7 @@ def test_override_verb_in_subclass(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 # write() emits RuntimeWarning on memory broker
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_write_to_caller(t_init, t_wizard):

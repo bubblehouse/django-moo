@@ -42,10 +42,10 @@ print(f"  Owner: {obj.owner}")
 print(f"  Location: {obj.location}")
 print(f"  Parents: {', '.join(str(p) for p in obj.parents.all())}")
 print("  Verbs:")
-for verb in obj.verbs.prefetch_related('names').select_related('owner').all():
+for verb in obj.verbs.prefetch_related("names").select_related("owner").all():
     if player.is_allowed("execute", verb):
         print(f"    {', '.join(sorted(vn.name for vn in verb.names.all()))}")
 print("  Properties:")
-for prop in obj.properties.select_related('owner').all():
+for prop in obj.properties.select_related("owner").all():
     if player.is_allowed("read", prop):
         print(f"    {prop.name}: {prop.value}")

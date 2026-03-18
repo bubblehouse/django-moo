@@ -14,5 +14,5 @@ else:
     obj = parser.get_dobj(lookup=True)
 
 for prop in obj.properties.all():
-    if prop.name.endswith('_msg'):
+    if prop.name.endswith("_msg"):
         print(f"{prop.name}: {prop.value}")

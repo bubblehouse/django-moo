@@ -10,10 +10,10 @@ django_celery_beat import block, and re/hashlib/datetime/time return objects.
 
 from .utils import mock_caller, raises_in_verb
 
-
 # ---------------------------------------------------------------------------
 # ContextManager must not be importable via moo.sdk
 # ---------------------------------------------------------------------------
+
 
 def test_context_manager_not_importable():
     """
@@ -27,6 +27,7 @@ def test_context_manager_not_importable():
 # ---------------------------------------------------------------------------
 # _publish_to_player must not be importable via moo.sdk
 # ---------------------------------------------------------------------------
+
 
 def test_publish_to_player_not_importable():
     """
@@ -42,6 +43,7 @@ def test_publish_to_player_not_importable():
 # string module must not be importable
 # ---------------------------------------------------------------------------
 
+
 def test_string_module_not_importable():
     """
 
@@ -55,6 +57,7 @@ def test_string_module_not_importable():
 # ---------------------------------------------------------------------------
 # moo.sdk must not expose internal framework names
 # ---------------------------------------------------------------------------
+
 
 def test_models_not_in_sdk():
     """
@@ -98,6 +101,7 @@ def test_code_not_in_sdk():
 # moo.sdk module attribute access must not expose blocked names (pass 7)
 # ---------------------------------------------------------------------------
 
+
 def test_sdk_contextmanager_blocked_via_module_attribute():
     """
 
@@ -129,6 +133,7 @@ def test_sdk_module_traversal_to_core_blocked():
 # ---------------------------------------------------------------------------
 # moo.sdk must not expose non-public framework helpers (pass 15)
 # ---------------------------------------------------------------------------
+
 
 def test_sdk_contextmanager_function_blocked():
     """
@@ -169,6 +174,7 @@ def test_sdk_log_blocked():
 # django_celery_beat not importable even by wizards
 # ---------------------------------------------------------------------------
 
+
 def test_django_celery_beat_not_importable_by_wizards():
     """
 
@@ -194,6 +200,7 @@ def test_django_celery_beat_not_importable_by_non_wizards():
 # re module return objects
 # ---------------------------------------------------------------------------
 
+
 def test_re_match_object_attributes_are_safe():
     """
 
@@ -203,6 +210,7 @@ def test_re_match_object_attributes_are_safe():
     callable chains that could lead to sandbox escape.
     """
     from .utils import exec_verb
+
     printed = exec_verb(
         "import re\n"
         "m = re.match(r'hello', 'hello world')\n"
@@ -216,11 +224,12 @@ def test_re_match_object_attributes_are_safe():
 def test_re_pattern_object_attributes_are_safe():
     """re.compile() returns a Pattern whose public attributes are strings/integers."""
     from .utils import exec_verb
+
     printed = exec_verb(
         "import re\n"
         "p = re.compile(r'\\d+')\n"
         "print(p.pattern)\n"
-        "print(p.flags > 0)\n"
+        "print(p.flags > 0)\n"  # pylint: disable=implicit-str-concat
     )
     assert printed == [r"\d+", True]
 
@@ -228,6 +237,7 @@ def test_re_pattern_object_attributes_are_safe():
 # ---------------------------------------------------------------------------
 # hashlib module return objects
 # ---------------------------------------------------------------------------
+
 
 def test_hashlib_hash_object_attributes_are_safe():
     """
@@ -237,6 +247,7 @@ def test_hashlib_hash_object_attributes_are_safe():
     strings, or bytes.  No dangerous object references or callable chains.
     """
     from .utils import exec_verb
+
     printed = exec_verb(
         "import hashlib\n"
         "h = hashlib.md5(b'test')\n"
@@ -250,6 +261,7 @@ def test_hashlib_hash_object_attributes_are_safe():
 # datetime module return objects
 # ---------------------------------------------------------------------------
 
+
 def test_datetime_instances_are_safe():
     """
 
@@ -258,6 +270,7 @@ def test_datetime_instances_are_safe():
     No Django model exposure or callable chains to sandbox internals.
     """
     from .utils import exec_verb
+
     printed = exec_verb(
         "import datetime\n"
         "now = datetime.datetime.now()\n"
@@ -271,11 +284,12 @@ def test_datetime_instances_are_safe():
 def test_datetime_timedelta_is_safe():
     """datetime.timedelta arithmetic returns timedelta instances — safe."""
     from .utils import exec_verb
+
     printed = exec_verb(
         "import datetime\n"
         "td = datetime.timedelta(days=1)\n"
         "print(td.days)\n"
-        "print(td.seconds)\n"
+        "print(td.seconds)\n"  # pylint: disable=implicit-str-concat
     )
     assert printed == [1, 0]
 
@@ -283,6 +297,7 @@ def test_datetime_timedelta_is_safe():
 # ---------------------------------------------------------------------------
 # time module return objects
 # ---------------------------------------------------------------------------
+
 
 def test_time_struct_time_is_safe():
     """
@@ -292,10 +307,11 @@ def test_time_struct_time_is_safe():
     time.time() returns a float.  No dangerous escalation paths.
     """
     from .utils import exec_verb
+
     printed = exec_verb(
         "import time\n"
         "t = time.gmtime(0)\n"
         "print(t.tm_year)\n"
-        "print(isinstance(time.time(), float))\n"
+        "print(isinstance(time.time(), float))\n"  # pylint: disable=implicit-str-concat
     )
     assert printed == [1970, True]
