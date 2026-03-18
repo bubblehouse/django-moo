@@ -401,6 +401,19 @@ def test_match_exit_case_insensitive(t_init: Object, t_wizard: Object):
     assert exit_obj is not None
 
 
+# --- describe ---
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_describe_sets_description_on_room(t_init: Object, t_wizard: Object):
+    """room.describe() stores the given string as the room's description property."""
+    with code.ContextManager(t_wizard, lambda msg: None):
+        room = setup_room(t_wizard)
+        room.describe("A dank pit of sadness and mediocrity.")
+        assert room.get_property("description") == "A dank pit of sadness and mediocrity."
+
+
 # --- match_object ---
 
 
