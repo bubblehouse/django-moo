@@ -188,7 +188,7 @@ def write(obj, message):
     _publish_to_player(obj, message)
 
 
-def open_editor(obj, initial_content: str, callback_verb, *args, content_type: str = "text"):
+def open_editor(obj, initial_content: str, callback_verb, *args, content_type: str = "text", title: str | None = None):
     """
     Request the connected SSH client to open a full-screen text editor.
     When the user saves, the edited text is passed to callback_verb as args[0],
@@ -210,6 +210,7 @@ def open_editor(obj, initial_content: str, callback_verb, *args, content_type: s
         "event": "editor",
         "content": initial_content,
         "content_type": content_type,
+        "title": title,
         "args": list(args),
         "callback_this_id": callback_verb._invoked_object.pk,  # pylint: disable=protected-access
         "callback_verb_name": callback_verb._invoked_name,  # pylint: disable=protected-access

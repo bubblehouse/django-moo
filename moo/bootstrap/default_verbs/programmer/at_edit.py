@@ -30,7 +30,7 @@ if verb_name == "@edit":
         print(f"{attribute} is not a verb or property on {target}")
         return
     callback = this.get_verb("edit_callback")
-    open_editor(context.player, content, callback, obj.pk, obj.kind, content_type=content_type)
+    open_editor(context.player, content, callback, obj.pk, obj.kind, content_type=content_type, title=str(obj))
 elif verb_name == "edit_callback":
     from moo.core.models.verb import Verb
     from moo.core.models.property import Property

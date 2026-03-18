@@ -14,7 +14,7 @@ if verb_name == "@edit":
         return
     content = this.get_property("text")
     callback = this.get_verb("edit_callback")
-    open_editor(context.player, content, callback, content_type="text")
+    open_editor(context.player, content, callback, content_type="text", title=str(this))
 elif verb_name == "edit_callback":
     content = args[0]
     this.set_property("text", content)
