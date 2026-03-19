@@ -1,6 +1,6 @@
 # Audit History
 
-Sixteen passes, 50 holes sealed, 630 tests (3 skipped). This file is the canonical in-repo record. The project memory file (`~/.claude/projects/-Users-philchristensen-Workspace-bubblehouse-django-moo/memory/project_security_audit.md`) mirrors this content — keep both in sync after each pass.
+Seventeen passes, 50 holes sealed, 644 tests (3 skipped). This file is the canonical in-repo record. The project memory file (`~/.claude/projects/-Users-philchristensen-Workspace-bubblehouse-django-moo/memory/project_security_audit.md`) mirrors this content — keep both in sync after each pass.
 
 ---
 
@@ -107,6 +107,30 @@ No new holes. Systematic investigation confirmed: `setattr`/`delattr` builtins a
 50. **`safe_hasattr` now checks `INSPECT_ATTRIBUTES`** — `hasattr(gen, 'gi_frame')` returned `True` even though `getattr` was blocked; boolean leak confirmed the frame attribute was accessible for reconnaissance.
 
 Confirmed safe across 24 tests: PeriodicTask task registry gating; `django_celery_beat` not importable; wizard ORM read-only access accepted; `passthrough` cannot forge `this`; `invoke()` kwargs security fields overwritten from authenticated context; `AttributeError.obj` discloses nothing new; `re`/`hashlib`/`datetime`/`time` return types are safe; `sorted`/`enumerate`/`list`/`set` are safe; `context.writer` targets only the current player; `context.task_id` is a string; `context.parser` exposes only command-parsing info.
+
+## Pass 17 — 0 holes + 14 confirmed-safe tests (new module addition)
+
+**Date:** 2026-03-19
+**Focus:** `random` module addition to `ALLOWED_MODULES`
+
+No holes found. The `random` module was systematically evaluated across all attack categories before being added to `ALLOWED_MODULES`.
+
+**Attack surface analysis:**
+- **Dunder/MRO access** — Module, class, and instance dunder attributes blocked by existing underscore guard. Tested `__package__`, `__bases__`, `__class__` via `getattr()`.
+- **Frame/inspection** — Random objects are not generators/coroutines; no `gi_frame`, `cr_frame`, or `f_back` attributes exist. `INSPECT_ATTRIBUTES` guard provides defense-in-depth.
+- **Format string** — Random objects don't have `.format()` or `.format_map()` methods. Only strings trigger the format guard (pass 5/15).
+- **Module traversal** — No submodules exposed. All exports are classes (`Random`, `SystemRandom`), functions (`randint`, `choice`), or numeric constants (`BPF`, `TWOPI`). `ModuleType` guard (pass 7) would block any future submodule additions.
+- **ORM/Manager access** — Return types are `float`, `int`, `tuple`. No `QuerySet`, `Manager`, or model instances. `getstate()` returns a plain tuple `(VERSION, tuple_of_ints, None)`.
+- **State manipulation** — `seed()` and `setstate()` manipulate module-level RNG state, but Celery execution model isolates each verb invocation in a task. State changes only affect the current task execution; no cross-task or persistent pollution possible.
+
+**Tests added:** 14 new tests in `moo/core/tests/test_security_random.py` covering basic functionality, dunder blocks, frame checks, getstate safety, format method absence, module attributes, SystemRandom, state isolation, constants, and integration with existing guards.
+
+**Changes:** Added `"random"` to `ALLOWED_MODULES` in `moo/settings/base.py:47`.
+
+**Lessons learned:**
+- RestrictedPython blocks dunder syntax (`obj.__class__`) at compile time, so security tests must use `getattr(obj, '__attr__')` instead or face `TypeError: exec() arg 1 must be a string, bytes or code object`.
+- `dir()` and `type()` were removed from `ALLOWED_BUILTINS` in pass 1, so tests cannot enumerate attributes or inspect types directly. Use architectural spot-checks instead (e.g., `isinstance(x, int)`, `callable(f)`).
+- Module addition audits benefit from the six-category checklist (dunder/MRO, frame/inspection, format string, module traversal, ORM/Manager, state manipulation) to ensure comprehensive coverage.
 
 ---
 
