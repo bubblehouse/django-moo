@@ -14,6 +14,8 @@ import time
 
 Available restricted imports: `moo.sdk`, `re`, `datetime`, `time`, `hashlib`
 
+**`random` is NOT available.** Use `int(time.time()) % len(list)` for pseudo-random selection (see "Random Outcome" pattern below).
+
 ## Output
 
 ```python

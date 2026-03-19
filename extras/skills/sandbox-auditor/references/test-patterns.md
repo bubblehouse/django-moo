@@ -198,9 +198,66 @@ def test_something_allowed_for_wizard():
     assert printed == [...]
 ```
 
+## RestrictedPython Limitations in Tests
+
+**RestrictedPython blocks certain syntax at compile time**, before our runtime guards see it. When writing security tests, be aware of these restrictions:
+
+### Dunder Attribute Syntax
+
+**Problem:** `obj.__class__` is rejected at compile time by RestrictedPython's AST transformer:
+```python
+# This raises TypeError: exec() arg 1 must be a string, bytes or code object
+raises_in_verb("x = obj.__class__", AttributeError)  # WRONG
+```
+
+**Solution:** Use `getattr()` to access dunder attributes, which is checked at runtime:
+```python
+# This correctly tests the runtime guard
+raises_in_verb("x = getattr(obj, '__class__')", AttributeError)  # CORRECT
+```
+
+### Underscore-Prefixed Attributes
+
+Similar issue with any `_`-prefixed attribute:
+```python
+raises_in_verb("x = getattr(obj, '_private')", AttributeError)  # Use this
+# NOT: raises_in_verb("x = obj._private", AttributeError)
+```
+
+### Removed Builtins
+
+`dir()` and `type()` were removed from `ALLOWED_BUILTINS` in pass 1:
+```python
+# These raise NameError, not what we're testing
+# raises_in_verb("for attr in dir(obj): ...", NameError)  # WRONG
+# raises_in_verb("t = type(obj).__name__", NameError)    # WRONG
+```
+
+**Solutions for tests that need to inspect objects:**
+- Use `isinstance(obj, SomeType)` instead of `type(obj)`
+- Use `callable(obj)` to check if something is callable
+- Spot-check known attributes with `hasattr(obj, 'attr_name')`
+- Check return types with `isinstance(result, (int, float, str))`
+
+### Example: Module Addition Tests (Pass 17)
+
+When auditing a new module like `random`, tests check return types without `type()` or `dir()`:
+
+```python
+# Instead of: assert type(val).__name__ == 'float'
+assert isinstance(val, float)  # CORRECT
+
+# Instead of: for attr in dir(random.Random): ...
+# Spot-check known attributes:
+assert callable(random.Random.random)
+assert callable(random.Random.seed)
+assert isinstance(random.Random.VERSION, int)
+```
+
 ## Important Notes
 
 - Tests that only manipulate Python objects with no DB access do **not** need `@pytest.mark.django_db`. This is the common case for builtins, format string, and import tests.
 - `mock_caller()` is sufficient for non-DB tests. For DB tests, use `t_wizard` from the fixture.
 - For inline verb code that imports from `moo.sdk` and calls `lookup()`/`create()`, the `@pytest.mark.django_db` marker is required.
 - After sealing a hole, always add both the blocked test and a "still works" regression to confirm the fix does not break legitimate usage.
+- **When tests fail with `TypeError: exec() arg 1 must be a string, bytes or code object`**, it means RestrictedPython rejected the syntax at compile time. Use `getattr()` instead of dot notation for underscore-prefixed names.

@@ -37,12 +37,15 @@ Produce a design document before writing any commands:
 Before issuing build commands, confirm:
 
 - `@edit` supports verb/property creation syntax (`@edit verb <name> on "<obj>"`) — requires updated `at_edit.py`
+- After any DB reset (fresh `moo_init`), run `@reload @edit on $programmer` to ensure the current `at_edit.py` source is loaded into the database
 - `@test-<name>` verb will be placed on `$programmer` so any programmer can run it
 - Parent class names are finalized and won't conflict with existing objects
 
 ## Phase 4: Build Sequence
 
 Issue commands in this order. See `references/moo-commands.md` for exact syntax.
+
+**Disambiguation**: When creating multiple objects with the same name (e.g., 4 bar stools), capture each object's `#N` ID from `@create` output. Use `#N` (unquoted) instead of the name string for all subsequent `@describe`, `@edit`, and `@move` commands on those objects. Referencing by name when duplicates exist raises `AmbiguousObjectError`.
 
 1. Create parent classes (`@create "Generic X" from "$thing"` or `"$player"` for NPCs)
 2. Add verbs to parent classes (`@edit verb <name> on "Generic X"`)
@@ -55,7 +58,7 @@ Issue commands in this order. See `references/moo-commands.md` for exact syntax.
 9. `@describe` each object
 10. `@move` objects to their rooms
 11. Set instance-specific properties (`@edit property <name> on "<obj>" with <value>`)
-12. Create NPC instances, `@move` to rooms, `@gender`, set `lines` property
+12. Create NPC instances, `@move` to rooms, set `lines` property (skip `@gender` — it only works on the caller, not a target object)
 13. `@lock` any exits that need conditions
 14. Write the `@test-<name>` verb (Phase 5)
 
