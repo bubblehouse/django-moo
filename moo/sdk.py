@@ -355,6 +355,79 @@ def set_task_perms(who):
         _ContextManager.pop_caller()
 
 
+def moo_eval(code_string: str):
+    """
+    Evaluate arbitrary Python code in the RestrictedPython sandbox.
+
+    The code runs with the same environment as verb code, with standard
+    verb variables (this, _, context) automatically available.
+
+    :param code_string: Python code to evaluate
+    :return: The result of the evaluation
+    """
+    from moo.core.code import get_default_globals, get_restricted_environment
+    from RestrictedPython import compile_restricted
+    import warnings
+    import ast
+
+    # Build the execution environment
+    globals_dict = get_default_globals()
+    globals_dict.update(get_restricted_environment("@eval", context.writer))
+
+    # Add standard verb variables to locals
+    locals_dict = {
+        "this": context.player,
+        "passthrough": lambda: None,
+        "_": lookup(1),
+    }
+
+    # Try to evaluate as an expression first (for REPL-like behavior)
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=SyntaxWarning)
+            compiled = compile_restricted(code_string, "<@eval>", "eval")
+        return eval(compiled, globals_dict, locals_dict)  # pylint: disable=eval-used
+    except SyntaxError:
+        # If it's not a valid expression, compile as statements
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=SyntaxWarning)
+            compiled = compile_restricted(code_string, "<@eval>", "exec")
+
+        # Parse the code to check if the last statement is an expression
+        try:
+            tree = ast.parse(code_string, mode="exec")
+            if tree.body and isinstance(tree.body[-1], ast.Expr):
+                # Last statement is an expression - evaluate it and return
+                # Execute all but the last statement
+                if len(tree.body) > 1:
+                    code_without_last = compile(ast.Module(body=tree.body[:-1], type_ignores=[]), "<@eval>", "exec")
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("ignore", category=SyntaxWarning)
+                        exec_compiled = compile_restricted(
+                            (
+                                ast.unparse(tree.body[:-1][0])
+                                if len(tree.body) == 2
+                                else "\n".join(ast.unparse(stmt) for stmt in tree.body[:-1])
+                            ),
+                            "<@eval>",
+                            "exec",
+                        )
+                    exec(exec_compiled, globals_dict, locals_dict)  # pylint: disable=exec-used
+
+                # Now evaluate and return the last expression
+                last_expr_code = ast.unparse(tree.body[-1].value)
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", category=SyntaxWarning)
+                    expr_compiled = compile_restricted(last_expr_code, "<@eval>", "eval")
+                return eval(expr_compiled, globals_dict, locals_dict)  # pylint: disable=eval-used
+        except:
+            pass  # Fall back to just executing
+
+        # Execute the code (no return value)
+        exec(compiled, globals_dict, locals_dict)  # pylint: disable=exec-used
+        return None
+
+
 class _Context:
     """
     This wrapper class makes it easy to use a number of contextvars.

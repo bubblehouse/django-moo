@@ -59,11 +59,9 @@ if verb_name == "@edit":
             content_type = "json"
         except NoSuchPropertyError:
             if use_editor:
-                # Create blank property first so the editor has a real obj.pk
-                target.set_property(attribute, "")
-                obj = target.get_property(attribute, recurse=False, original=True)
-                content = ""
-                content_type = "json"
+                # When explicitly requesting a property without "with", require it to exist
+                print(f"{attribute} is not a property on {target}")
+                return
             else:
                 # Create new property when using "with"
                 is_new = True
@@ -76,11 +74,9 @@ if verb_name == "@edit":
             content_type = "python"
         except NoSuchVerbError:
             if use_editor:
-                # Create blank verb first so the editor has a real obj.pk
-                target.add_verb(attribute, code="")
-                obj = target.get_verb(attribute, recurse=False)
-                content = ""
-                content_type = "python"
+                # When explicitly requesting a verb without "with", require it to exist
+                print(f"{attribute} is not a verb on {target}")
+                return
             else:
                 # Create new verb when using "with"
                 is_new = True

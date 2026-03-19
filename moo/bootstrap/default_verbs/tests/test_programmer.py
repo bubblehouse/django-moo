@@ -478,3 +478,109 @@ def test_reload_all_permission_denied(t_init: Object, t_wizard: Object):
     with code.ContextManager(non_wiz, printed.append) as ctx:
         parse.interpret(ctx, "@reload all")
     assert any("Permission denied" in str(m) for m in printed)
+
+
+# --- @eval ---
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_eval_verb_exists(t_init: Object, t_wizard: Object):
+    """@eval verb exists on $programmer."""
+    system = lookup(1)
+    programmer = system.get_property("programmer")
+    # This should not raise NoSuchVerbError
+    eval_verb = programmer.get_verb("@eval")
+    assert eval_verb is not None
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_eval_simple_expression(t_init: Object, t_wizard: Object):
+    """@eval evaluates simple expressions and prints the result."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, '@eval "1 + 1"')
+    assert any("2" in str(m) for m in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_eval_with_import(t_init: Object, t_wizard: Object):
+    """@eval can import from allowed modules."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, '@eval "from moo.sdk import lookup; lookup(1)"')
+    # Should print the system object repr
+    assert any("Object" in str(m) or "#1" in str(m) for m in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_eval_has_context_access(t_init: Object, t_wizard: Object):
+    """@eval has access to context variables."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, '@eval "from moo.sdk import context; context.player.name"')
+    assert any("Wizard" in str(m) for m in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_eval_syntax_error(t_init: Object, t_wizard: Object):
+    """@eval handles syntax errors gracefully."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, '@eval "1 +"')
+    assert any("SyntaxError" in str(m) or "Error" in str(m) for m in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_eval_runtime_error(t_init: Object, t_wizard: Object):
+    """@eval handles runtime errors gracefully."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, '@eval "1 / 0"')
+    assert any("ZeroDivisionError" in str(m) or "Error" in str(m) for m in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_eval_multiline_with_semicolons(t_init: Object, t_wizard: Object):
+    """@eval can handle multiple statements with semicolons."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, '@eval "x = 5; y = 3; x + y"')
+    assert any("8" in str(m) for m in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_eval_with_print(t_init: Object, t_wizard: Object):
+    """@eval code can use print() which goes to the player."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, "@eval \"print('hello world')\"")
+    assert any("hello world" in str(m) for m in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_eval_respects_sandbox(t_init: Object, t_wizard: Object):
+    """@eval respects sandbox restrictions (no os module)."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, '@eval "import os"')
+    assert any("ImportError" in str(m) or "Error" in str(m) for m in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_eval_returns_none_no_output(t_init: Object, t_wizard: Object):
+    """@eval does not print None results."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, '@eval "None"')
+    # Should not print "None" - only non-None results are printed
+    assert not any(str(m).strip() == "None" for m in printed)
