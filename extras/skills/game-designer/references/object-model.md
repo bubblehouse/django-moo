@@ -38,10 +38,11 @@ NPCs use `$player` as parent to get the full messaging infrastructure (tell, ann
 
 @create "Moe" from "Generic Tavern NPC"
 @move "Moe" to "Moe's Tavern"
-@gender "Moe" as male
 @describe "Moe" as "A surly bartender."
 @edit property lines on "Moe" with ["Yeah?", "What'll it be?", "We're closing.", "Get out."]
 ```
+
+**Note on gender**: `@gender` only sets the caller's own pronouns — it cannot be used to set an NPC's gender. To set NPC gender, set the `gender` property directly and the individual pronoun properties (`her`, `him`, `his`, etc.) on the NPC object. Skip gender setup entirely if the NPCs don't need pronoun-aware messages.
 
 ## Exits
 
@@ -91,6 +92,24 @@ glass = create("a pint", parents=[beer_glass_class], location=context.player)
 - Room instances: Proper names (e.g., `"Moe's Tavern"`, `"The Back Room"`)
 - NPC instances: Character names (e.g., `"Moe"`, `"Barney"`)
 - Object instances: `"a <thing>"` or `"the <thing>"` (e.g., `"the jukebox"`, `"a dartboard"`)
+
+## Disambiguation with `#N` References
+
+When multiple objects share the same name (e.g., 4 "bar stool" instances), any command that references them by name will fail with `AmbiguousObjectError`. Use the `#N` object ID instead:
+
+```
+# Fails if multiple "bar stool" objects exist:
+@describe "bar stool" as "..."
+
+# Works every time:
+@describe #34 as "Wobbly bar stool with cracked vinyl."
+@edit verb sit on #34 with "print('You sit.')"
+@move #34 to "The Bar"
+```
+
+The `#N` number comes from `@create` output: `Created #34 (bar stool)`. In build scripts, capture it with `re.search(r'(#\d+)', output)`.
+
+`#N` refs are never quoted in MOO commands. Named string refs are always quoted.
 
 ## Checking Object State
 
