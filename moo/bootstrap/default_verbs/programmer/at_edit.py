@@ -41,6 +41,9 @@ if verb_name == "@edit":
     new_content = None
     if not use_editor:
         new_content = context.parser.get_pobj_str("with")
+        # Allow \n in the with-content to represent real newlines, enabling
+        # multi-line verb code without the full-screen editor
+        new_content = new_content.replace("\\n", "\n")
 
     # Find the object to edit
     obj = None
@@ -56,11 +59,15 @@ if verb_name == "@edit":
             content_type = "json"
         except NoSuchPropertyError:
             if use_editor:
-                print(f"{attribute} is not a property on {target}")
-                return
-            # Create new property when using "with"
-            is_new = True
-            content_type = "json"
+                # Create blank property first so the editor has a real obj.pk
+                target.set_property(attribute, "")
+                obj = target.get_property(attribute, recurse=False, original=True)
+                content = ""
+                content_type = "json"
+            else:
+                # Create new property when using "with"
+                is_new = True
+                content_type = "json"
     elif edit_type == "verb":
         # Explicitly editing a verb
         try:
@@ -69,11 +76,15 @@ if verb_name == "@edit":
             content_type = "python"
         except NoSuchVerbError:
             if use_editor:
-                print(f"{attribute} is not a verb on {target}")
-                return
-            # Create new verb when using "with"
-            is_new = True
-            content_type = "python"
+                # Create blank verb first so the editor has a real obj.pk
+                target.add_verb(attribute, code="")
+                obj = target.get_verb(attribute, recurse=False)
+                content = ""
+                content_type = "python"
+            else:
+                # Create new verb when using "with"
+                is_new = True
+                content_type = "python"
     else:
         # Auto-detect: try verb first, then property
         try:
