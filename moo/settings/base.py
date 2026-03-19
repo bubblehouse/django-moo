@@ -44,6 +44,7 @@ ALLOWED_MODULES = (
     "re",
     "datetime",
     "time",
+    "random",
 )
 
 BLOCKED_IMPORTS = {
