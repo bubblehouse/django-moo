@@ -1,36 +1,140 @@
-#!moo verb @edit edit_callback --on $programmer --dspec any --ispec on:any
+#!moo verb @edit edit_callback --on $programmer --dspec any --ispec on:any --ispec with:any
 
 # pylint: disable=return-outside-function,undefined-variable
 
 """
 Modify a verb or property in a full-screen editor.
+
+Syntax:
+    @edit <name> on <object> [with <content>]
+    @edit verb <name> on <object> [with <content>]
+    @edit property <name> on <object> [with <content>]
+
 The verb or property to edit is determined by the dobj of the command, and the
-object to edit is determined by the pobj of the command.
+object to edit is determined by the pobj of the "on" preposition.
+
+If "with" is specified, the content is set directly without opening the editor.
+Otherwise, the editor is opened.
+
+Use "verb" or "property" prefix to disambiguate when an object has both.
 """
 
-from moo.sdk import context, open_editor, NoSuchVerbError, NoSuchPropertyError
+from moo.sdk import context, open_editor, NoSuchVerbError, NoSuchPropertyError, moojson
 
 if verb_name == "@edit":
-    attribute = context.parser.get_dobj_str()
+    dobj_str = context.parser.get_dobj_str()
     target = context.parser.get_pobj("on", lookup=True)
+
+    # Parse the dobj to determine type (verb/property) and attribute name
+    edit_type = None  # None = auto-detect, "verb" or "property" for explicit
+    attribute = dobj_str
+
+    if dobj_str.startswith("verb "):
+        edit_type = "verb"
+        attribute = dobj_str[5:]  # Remove "verb " prefix
+    elif dobj_str.startswith("property "):
+        edit_type = "property"
+        attribute = dobj_str[9:]  # Remove "property " prefix
+
+    # Check if "with" preposition was provided
+    use_editor = not context.parser.has_pobj_str("with")
+    new_content = None
+    if not use_editor:
+        new_content = context.parser.get_pobj_str("with")
+
+    # Find the object to edit
     obj = None
-    try:
-        obj = target.get_verb(attribute, recurse=False)
-        content = obj.code
-        content_type = "python"
-    except NoSuchVerbError:
-        pass
-    try:
-        obj = target.get_property(attribute, recurse=False, original=True)
-        content = obj.value
-        content_type = "json"
-    except NoSuchPropertyError:
-        pass
-    if not obj:
-        print(f"{attribute} is not a verb or property on {target}")
-        return
-    callback = this.get_verb("edit_callback")
-    open_editor(context.player, content, callback, obj.pk, obj.kind, content_type=content_type, title=str(obj))
+    content = None
+    content_type = None
+    is_new = False
+
+    if edit_type == "property":
+        # Explicitly editing a property
+        try:
+            obj = target.get_property(attribute, recurse=False, original=True)
+            content = obj.value
+            content_type = "json"
+        except NoSuchPropertyError:
+            if use_editor:
+                print(f"{attribute} is not a property on {target}")
+                return
+            # Create new property when using "with"
+            is_new = True
+            content_type = "json"
+    elif edit_type == "verb":
+        # Explicitly editing a verb
+        try:
+            obj = target.get_verb(attribute, recurse=False)
+            content = obj.code
+            content_type = "python"
+        except NoSuchVerbError:
+            if use_editor:
+                print(f"{attribute} is not a verb on {target}")
+                return
+            # Create new verb when using "with"
+            is_new = True
+            content_type = "python"
+    else:
+        # Auto-detect: try verb first, then property
+        try:
+            obj = target.get_verb(attribute, recurse=False)
+            content = obj.code
+            content_type = "python"
+        except NoSuchVerbError:
+            pass
+        if not obj:
+            try:
+                obj = target.get_property(attribute, recurse=False, original=True)
+                content = obj.value
+                content_type = "json"
+            except NoSuchPropertyError:
+                pass
+        if not obj:
+            if use_editor:
+                print(f"{attribute} is not a verb or property on {target}")
+                return
+            # When using "with" without explicit type, cannot determine whether to create verb or property
+            print(f"{attribute} is not a verb or property on {target}. Use 'verb' or 'property' prefix to create new.")
+            return
+
+    # Either open editor or directly set content
+    if use_editor:
+        callback = this.get_verb("edit_callback")
+        open_editor(context.player, content, callback, obj.pk, obj.kind, content_type=content_type, title=str(obj))
+    else:
+        # Directly set the content (same behavior as edit_callback)
+        if content_type == "python":
+            # Verb: create or update with Python code
+            if is_new:
+                target.add_verb(attribute, code=new_content)
+                print(f"Created verb {attribute} on {target}")
+            else:
+                obj.code = new_content
+                obj.save()
+                print(f"Set verb {attribute} on {target}")
+        else:
+            # Property: set raw JSON value (like editor does with obj.value = content)
+            # The parser strips quotes, so 'with "Duff"' gives us 'Duff'
+            # We need to encode it as JSON for storage
+            try:
+                # Try to parse as JSON - if it works, it's already valid JSON
+                moojson.loads(new_content)
+                json_value = new_content
+            except (ValueError, TypeError):
+                # Not valid JSON, treat as a string and encode it
+                json_value = moojson.dumps(new_content)
+
+            if is_new:
+                # Create property with empty value, then fetch and update
+                target.set_property(attribute, "")
+                obj = target.get_property(attribute, recurse=False, original=True)
+            # Update the raw value (either new or existing)
+            obj.value = json_value
+            obj.save()
+            if is_new:
+                print(f"Created property {attribute} on {target}")
+            else:
+                print(f"Set property {attribute} on {target}")
 elif verb_name == "edit_callback":
     from moo.core.models.verb import Verb
     from moo.core.models.property import Property
