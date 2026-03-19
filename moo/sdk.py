@@ -31,11 +31,15 @@ __all__ = [
     "invoke",
     "set_task_perms",
     "context",
+    "moojson",
     "NoSuchObjectError",
     "NoSuchVerbError",
     "NoSuchPropertyError",
     "AmbiguousObjectError",
 ]
+
+# Re-export moojson for verb use
+from .core import moojson
 
 _log = logging.getLogger(__name__)
 
@@ -86,7 +90,6 @@ def connected_players(within=None):
     """
     from datetime import datetime, timedelta, timezone
     from .core.models.property import Property
-    from .core import moojson
 
     if within is None:
         within = timedelta(minutes=5)
