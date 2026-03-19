@@ -38,6 +38,29 @@ Although there hasn't been a need yet, you could also target arbitrary objects b
 
 Indirect object specifiers can seem like they are optional, but they help the parser distinguish between different prepositions and ensure the correct parsing of commands.
 
+### Parser Behavior and Quoted Arguments
+
+The parser automatically scans for prepositions (from `settings.PREPOSITIONS`: `in`, `on`, `with`, `at`, `from`, `to`, `under`, `behind`, `through`, etc.) and splits commands at these boundaries. This means:
+
+**If your verb needs arguments containing preposition keywords, you MUST use quoted strings:**
+```python
+# WRONG - parser splits at "from"
+@eval from moo.sdk import lookup
+
+# CORRECT - quotes protect the argument
+@eval "from moo.sdk import lookup"
+```
+
+**Why this matters:**
+- `@eval from moo.sdk import lookup` → Parser treats "from" as a preposition, creates pobj instead of dobj
+- `@eval "from moo.sdk import lookup"` → Parser treats the whole thing as a single dobj string
+- With `--dspec any`, the verb won't match without a dobj, so unquoted prepositions cause lookup failures
+
+**Parser methods handle quoted strings correctly:**
+- `parser.words` — tokenized list with quotes removed: `['@eval', 'from moo.sdk import lookup']`
+- `parser.get_dobj_str()` — returns the dobj with quotes removed: `'from moo.sdk import lookup'`
+- `parser.command` — raw command string: `'@eval "from moo.sdk import lookup"'`
+
 Examples:
 ```python
 #!moo verb accept --on $room
@@ -75,11 +98,18 @@ Include this pylint comment at the top of every verb file:
 
 ### Sandbox Restrictions
 
-Allowed imports: `moo.sdk`, `hashlib`, `re`, `datetime`, `time`
+Allowed imports: `moo.sdk`, `hashlib`, `re`, `datetime`, `time`, `random`
 
 Allowed builtins: `dict`, `enumerate`, `getattr`, `hasattr`, `list`, `set`, `sorted`
 
 Verbs cannot: import arbitrary modules, access the filesystem, open network connections, use `__import__`, `exec`, or `eval`.
+
+**RestrictedPython Naming Restrictions:**
+- Cannot use `eval` as a function name (it's blocked as the built-in)
+- Cannot access dunder attributes: `obj.__class__`, `obj.__name__`, etc.
+- `type()` builtin is not available
+- Cannot use underscore-prefixed helper function names
+- For error handling, use `str(exception)` instead of `exception.__class__.__name__`
 
 ## Output to Players
 
@@ -153,6 +183,40 @@ room.announce_all_but(obj, msg)          # all occupants except obj
    ```
 
 4. Sub-verbs that need the same properties (e.g., source/dest) should accept them as `args[0]`/`args[1]` with a `NoSuchPropertyError` fallback for standalone calls.
+
+## SDK Functions for Privileged Operations
+
+When a verb needs to access restricted functionality (compilation, wizard-only modules, etc.), create a function in `moo/sdk.py` rather than trying to import from `moo.core.*` in verb code.
+
+**Pattern for SDK functions:**
+```python
+# In moo/sdk.py
+def privileged_operation(args):
+    """Does something that requires restricted access."""
+    from moo.core import restricted_module  # Import at function level
+
+    # Privilege checks if needed
+    if context.caller and not context.caller.is_wizard():
+        raise UserError("Only wizards can...")
+
+    # Do the privileged operation
+    return restricted_module.do_thing(args)
+
+# In verb file
+from moo.sdk import privileged_operation
+result = privileged_operation(data)
+```
+
+**Examples in the codebase:**
+- `write(obj, msg)` — bypasses filtering, requires wizard permissions
+- `open_editor(obj, ...)` — publishes editor events, requires wizard permissions
+- `moo_eval(code)` — compiles and executes code in RestrictedPython sandbox
+
+**Why this pattern:**
+- SDK functions can import from `moo.core.*` modules
+- Verbs can only import from `moo.sdk` and a few allowed modules
+- Centralizes privilege checks and error handling
+- Follows the same pattern as `write()`, `open_editor()`, `open_paginator()`
 
 ## Imports Reference
 
@@ -263,6 +327,45 @@ else:
 
 Key points: `args[0]` for the first method argument. `NoSuchPropertyError` import for optional property check. Pre-fetch contents once per room.
 
+### @eval.py — REPL-like evaluation with quoted arguments
+
+```python
+#!moo verb @eval --on $programmer --dspec any
+
+# pylint: disable=return-outside-function,undefined-variable
+
+"""
+Evaluate arbitrary Python code in the RestrictedPython sandbox.
+
+Usage:
+    @eval "<python-code>"
+
+The code must be enclosed in quotes to avoid parser interference.
+"""
+
+from moo.sdk import moo_eval, context
+
+# Get the dobj string (which should be the quoted code)
+code_to_eval = context.parser.get_dobj_str()
+
+# Execute the code with error handling
+try:
+    result = moo_eval(code_to_eval)
+    # Print the result (REPL-like behavior)
+    if result is not None:
+        print(repr(result))
+except Exception as e:
+    # Just stringify - will include exception type automatically
+    print(f"Error: {e}")
+```
+
+Key points:
+- `--dspec any` required so verb matches when dobj present
+- Quotes required to protect code from parser's preposition scanning
+- Error handling catches all exceptions (can't use `e.__class__.__name__` in RestrictedPython)
+- `moo_eval()` is an SDK function that handles compilation and execution
+- Only prints non-None results (REPL-like behavior)
+
 ## Error Handling
 
 `UserError` and all its subclasses (`NoSuchObjectError`, `NoSuchVerbError`, `NoSuchPropertyError`, `UsageError`, `QuotaError`, etc.) are automatically caught by the task runner and displayed to the player as a bold red message. Verbs do not need to catch these to report errors — raising them is the correct and idiomatic pattern.
@@ -339,6 +442,11 @@ Rules:
 - `obj.parents` is a ManyRelatedManager. Always call `.all()` to iterate.
 - `has_property(x)` + `get_property(x)` is 2 queries. Use `try: get_property() except NoSuchPropertyError`.
 - Verbs on `$player` with `--dspec any`: when dobj and caller both inherit the verb, the dobj wins — `this` = dobj, `context.player` = caller.
+- **Parser preposition scanning:** Words like `from`, `to`, `with`, `in`, `on` are automatically treated as prepositions. Use quoted strings when these keywords appear in arguments: `@eval "from moo.sdk import lookup"` not `@eval from moo.sdk import lookup`.
+- **`--dspec any` is required for verbs that need a dobj:** Without it, the verb won't match commands with direct objects. The verb will never be invoked if a dobj is typed.
+- **`eval` is a reserved name:** Can't name SDK functions or variables `eval` — RestrictedPython blocks it. Use alternatives like `moo_eval`.
+- **Can't import from `moo.core.*` in verb code:** These modules aren't in `ALLOWED_MODULES`. Create SDK functions in `moo/sdk.py` for privileged operations instead.
+- **Exception handling limitations:** Can't use `e.__class__.__name__` or `type(e)` in verb error handlers. Use `str(e)` or just stringify: `print(f"Error: {e}")`.
 
 ## Further Reference
 
