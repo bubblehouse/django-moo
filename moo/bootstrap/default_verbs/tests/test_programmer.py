@@ -81,6 +81,167 @@ def test_edit_callback_updates_property_value(t_init: Object, t_wizard: Object):
     assert prop.value == "updated"
 
 
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_edit_verb_prefix_explicitly_edits_verb(t_init: Object, t_wizard: Object):
+    """@edit verb <name> on <obj> opens editor for the verb even if property exists."""
+    system = lookup(1)
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        obj = create("widget", parents=[system.root_class], location=t_wizard.location)
+        v = Verb.objects.create(origin=obj, owner=t_wizard, code='print("verb")')
+        VerbName.objects.create(verb=v, name="name")
+        obj.set_property("name", "property")
+        with pytest.warns(RuntimeWarning):
+            parse.interpret(ctx, "@edit verb name on widget")
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_edit_property_prefix_explicitly_edits_property(t_init: Object, t_wizard: Object):
+    """@edit property <name> on <obj> opens editor for the property even if verb exists."""
+    system = lookup(1)
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        obj = create("widget", parents=[system.root_class], location=t_wizard.location)
+        v = Verb.objects.create(origin=obj, owner=t_wizard, code='print("verb")')
+        VerbName.objects.create(verb=v, name="name")
+        obj.set_property("name", "property")
+        with pytest.warns(RuntimeWarning):
+            parse.interpret(ctx, "@edit property name on widget")
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_edit_with_sets_existing_verb_directly(t_init: Object, t_wizard: Object):
+    """@edit <verb> on <obj> with <content> updates verb without opening editor."""
+    system = lookup(1)
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        obj = create("widget", parents=[system.root_class], location=t_wizard.location)
+        v = Verb.objects.create(origin=obj, owner=t_wizard, code='print("original")')
+        VerbName.objects.create(verb=v, name="myverb")
+        parse.interpret(ctx, '@edit myverb on widget with print("updated")')
+    v.refresh_from_db()
+    assert "updated" in v.code
+    assert any("Set verb myverb" in str(m) and "widget" in str(m) for m in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_edit_with_sets_existing_property_directly(t_init: Object, t_wizard: Object):
+    """@edit <prop> on <obj> with <content> updates property without opening editor."""
+    system = lookup(1)
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        obj = create("widget", parents=[system.root_class], location=t_wizard.location)
+        obj.set_property("myprop", "original")
+        # User types: with "updated" → parser gives: updated → we JSON-encode to: "updated"
+        parse.interpret(ctx, '@edit myprop on widget with "updated"')
+    prop = obj.get_property("myprop", recurse=False, original=True)
+    assert prop.value == '"updated"'
+    assert any("Set property myprop" in str(m) and "widget" in str(m) for m in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_edit_verb_with_creates_new_verb(t_init: Object, t_wizard: Object):
+    """@edit verb <name> on <obj> with <content> creates new verb."""
+    system = lookup(1)
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        obj = create("widget", parents=[system.root_class], location=t_wizard.location)
+        parse.interpret(ctx, '@edit verb newverb on widget with print("new")')
+    obj.refresh_from_db()
+    assert obj.has_verb("newverb")
+    v = obj.get_verb("newverb")
+    assert "new" in v.code
+    assert any("Created verb newverb" in str(m) and "widget" in str(m) for m in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_edit_property_with_creates_new_property(t_init: Object, t_wizard: Object):
+    """@edit property <name> on <obj> with <content> creates new property."""
+    system = lookup(1)
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        obj = create("widget", parents=[system.root_class], location=t_wizard.location)
+        # User types: with "newvalue" → parser gives: newvalue → we JSON-encode to: "newvalue"
+        parse.interpret(ctx, '@edit property newprop on widget with "newvalue"')
+    obj.refresh_from_db()
+    assert obj.has_property("newprop")
+    prop = obj.get_property("newprop", recurse=False, original=True)
+    assert prop.value == '"newvalue"'
+    assert any("Created property newprop" in str(m) and "widget" in str(m) for m in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_edit_with_nonexistent_requires_type_prefix(t_init: Object, t_wizard: Object):
+    """@edit <nonexistent> on <obj> with <content> prints error requiring type prefix."""
+    system = lookup(1)
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        create("widget", parents=[system.root_class], location=t_wizard.location)
+        parse.interpret(ctx, "@edit bogus on widget with content")
+    assert any("bogus" in str(m) and "prefix" in str(m).lower() for m in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_edit_verb_nonexistent_without_with_prints_error(t_init: Object, t_wizard: Object):
+    """@edit verb <nonexistent> on <obj> (without 'with') prints error for missing verb."""
+    system = lookup(1)
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        create("widget", parents=[system.root_class], location=t_wizard.location)
+        parse.interpret(ctx, "@edit verb bogus on widget")
+    assert any("bogus" in str(m) and "not a verb" in str(m) for m in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_edit_property_nonexistent_without_with_prints_error(t_init: Object, t_wizard: Object):
+    """@edit property <nonexistent> on <obj> (without 'with') prints error for missing property."""
+    system = lookup(1)
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        create("widget", parents=[system.root_class], location=t_wizard.location)
+        parse.interpret(ctx, "@edit property bogus on widget")
+    assert any("bogus" in str(m) and "not a property" in str(m) for m in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_edit_property_with_json_array(t_init: Object, t_wizard: Object):
+    """@edit property with JSON array stores it correctly."""
+    system = lookup(1)
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        obj = create("widget", parents=[system.root_class], location=t_wizard.location)
+        # User types array literal → parser gives us the string → we store as-is
+        parse.interpret(ctx, '@edit property lines on widget with ["Yeah?", "What\'ll it be?"]')
+    obj.refresh_from_db()
+    prop = obj.get_property("lines", recurse=False, original=True)
+    assert prop.value == '["Yeah?", "What\'ll it be?"]'
+    assert any("Created property lines" in str(m) for m in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_edit_property_with_json_boolean(t_init: Object, t_wizard: Object):
+    """@edit property with JSON boolean stores it correctly."""
+    system = lookup(1)
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        obj = create("widget", parents=[system.root_class], location=t_wizard.location)
+        # User types: with true → parser gives: true → we store as-is (valid JSON)
+        parse.interpret(ctx, "@edit property full on widget with true")
+    obj.refresh_from_db()
+    prop = obj.get_property("full", recurse=False, original=True)
+    assert prop.value == "true"
+    assert any("Created property full" in str(m) for m in printed)
+
+
 def _write_verb_file(path: pathlib.Path, on: str, verb_name: str, body: str) -> pathlib.Path:
     """Write a minimal verb source file to *path* and return it."""
     path.write_text(f"#!moo verb {verb_name} --on {on}\n{body}\n", encoding="utf8")

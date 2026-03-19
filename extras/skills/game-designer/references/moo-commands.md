@@ -97,8 +97,6 @@ Example:
 ```
 Opens the verb editor for a named verb on an object, creating it if it doesn't exist. The `with` form sets code inline without opening the editor — useful for one-liners.
 
-**Requires updated `at_edit.py`** that supports the `verb`/`property` prefix for creation.
-
 Examples:
 ```
 @edit verb drink on "Generic Beer Glass"
