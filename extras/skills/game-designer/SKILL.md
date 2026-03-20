@@ -100,7 +100,7 @@ After generating the YAML file:
 4. **Wait for explicit approval** before proceeding to Phase 4
 5. **Allow edits**: User can manually edit the YAML if needed
 
-This review step prevents committing to a 15-20 minute build process without user validation of the content.
+This review step prevents committing to a multi-minute build process without user validation of the content.
 
 **Do not proceed to Phase 4 until the user approves the YAML file.**
 
@@ -128,7 +128,7 @@ python extras/skills/game-designer/tools/build_from_yaml.py \
 5. **Phase 4: Verbs**: Attaches verbs to objects/NPCs using resolved references
 6. **Phase 5: Test verb**: Generates test code, places on `$programmer`, runs verification
 
-**Build time**: ~15-20 minutes for typical environments (5 rooms, 30+ objects)
+**Build time**: ~3-4 minutes for typical environments (5 rooms, 30+ objects). The build script uses automation mode (PREFIX/SUFFIX delimiters + QUIET mode) automatically — each command takes ~1.1s instead of the old ~7.5s.
 
 **What you'll see:**
 - Progress messages for each phase (stderr)
@@ -182,9 +182,9 @@ Based on validated builds:
 
 ### Performance
 
-- YAML-based builds are ~13% more efficient than manual scripting
+- Each command takes ~1.1s (0.1s execution + 1s settle delay) vs the old ~7.5s
+- Typical 5-room environment: ~3-4 minutes (down from 15-20 minutes)
 - Uses clean `@alias` commands instead of verbose `@eval` calls
-- Typical 5-room environment: 1,200 output lines, ~15-20 minutes
 - Hash mode adds minimal overhead (suffix generation is fast)
 
 ### Troubleshooting
@@ -192,7 +192,9 @@ Based on validated builds:
 - **"No such object" errors**: Check room names match exactly (case-sensitive)
 - **Ambiguous object errors**: Use `room` context in verb definitions
 - **Test verb failures**: Verify hash is included in object names when hash mode enabled
-- **SSH disconnects**: MooSSH handles reconnection, but very long builds may timeout
+- **SSH disconnects**: If a build crashes, ask the user to restart docker compose, then re-run the build script
+
+**Note**: Never attempt to restart the server or run `docker compose` commands. Server management is the user's responsibility.
 
 ## Available Build Commands
 
@@ -272,7 +274,7 @@ python extras/skills/game-designer/tools/build_from_yaml.py \
 python extras/skills/game-designer/tools/build_from_yaml.py \
   extras/skills/game-designer/environments/moes-tavern.yaml
 
-# Output: ~1,200 lines over ~15-20 minutes
+# Output: ~1,200 lines over ~3-4 minutes
 # Result: Test verb test-moes-tavern-abc123 passes all checks
 
 # Phase 6: Verify in-game

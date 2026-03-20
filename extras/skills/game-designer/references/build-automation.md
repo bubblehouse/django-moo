@@ -20,10 +20,11 @@ The game-designer skill uses a YAML-driven architecture that separates content (
    - Handles object ID tracking and verification
 
 3. **moo_ssh.py**: SSH automation library
-   - Connects via pexpect to MOO SSH server
-   - Handles async output capture with active PTY polling
-   - Strips ANSI escape sequences
-   - Provides `run()` for single commands
+   - Connects via pexpect to MOO SSH server with `TERM=moo-automation` (disables CPR)
+   - Uses PREFIX/SUFFIX delimiters for fast output detection (~0.1s per command)
+   - Quiet mode (`QUIET enable`) disables Rich ANSI color codes for clean output
+   - Strips ANSI escape sequences from captured output
+   - Provides `run()`, `enable_delimiters()`, `enable_automation_mode()`
 
 **Key benefits:**
 - **Repeatable builds**: YAML defines exact environment
@@ -108,7 +109,7 @@ The script automatically:
 5. Generates test verb
 6. Runs test verb
 
-Build time: ~15-20 minutes for typical environments (5 rooms, 30+ objects)
+Build time: ~3-4 minutes for typical environments (5 rooms, 30+ objects)
 
 ## YAML Schema Reference
 
@@ -230,7 +231,7 @@ The YAML-driven build system has been validated against the original monolithic 
 | Build Status | ✅ Success | ✅ Success | Equivalent |
 | Output Lines | 1,191 | 1,355 | 13% reduction |
 | Alias Commands | 48 (`@alias`) | 132 (`@eval`) | 64% reduction |
-| Build Time | ~15-20 min | ~15-20 min | Equivalent |
+| Build Time | ~3-4 min | ~15-20 min | 4-5x faster |
 | Rooms Created | 5 | 5 | ✅ |
 | Objects Created | 23 | 23 | ✅ |
 | NPCs Created | 3 | 3 | ✅ |
@@ -241,7 +242,7 @@ The YAML-driven build system has been validated against the original monolithic 
 - YAML approach produces equivalent results with cleaner output
 - Using `@alias` verb reduces alias commands by 64%
 - Overall output reduction of 13% improves readability
-- Build time unchanged (SSH/network latency dominates)
+- Automation mode (delimiters + quiet) reduces build time from ~15-20 min to ~3-4 min
 - Hash mode works correctly for repeated builds
 
 ### Efficiency Improvements
@@ -415,27 +416,24 @@ def main():
 
 ### Output Capture
 
-The MOO uses Celery tasks to process commands asynchronously. Responses arrive over multiple seconds. Use active PTY polling instead of passive `expect()`:
+The MOO uses Celery tasks to process commands asynchronously. `moo_ssh.py` supports two output capture modes:
+
+**Delimiter mode** (default when `enable_automation_mode()` is called): The server emits a PREFIX marker before command output and a SUFFIX marker after. The client polls for the suffix marker and returns as soon as it's seen — typically within 100ms of the Celery task completing. A 1-second settle delay is then applied before the next command.
+
+**Timeout fallback** (used for PREFIX/SUFFIX setup commands themselves): Polls the PTY buffer over ~7.5s. Used automatically when delimiters aren't yet configured.
 
 ```python
-def run(self, command):
-    self.child.sendline(command)
+# Delimiter mode — fast
+with MooSSH() as moo:
+    moo.enable_automation_mode()
+    output = moo.run("look")  # returns in ~1.1s
 
-    # Poll PTY buffer over 7.5s total
-    accumulated = []
-    for i in range(4):
-        time.sleep(1.5 if i < 3 else 3.0)  # Longer final wait
-        try:
-            chunk = self.child.read_nonblocking(size=8192, timeout=0)
-            if chunk:
-                accumulated.append(chunk)
-        except (pexpect.TIMEOUT, pexpect.EOF):
-            pass
-
-    return strip_ansi("".join(accumulated))
+# Timeout fallback (still works, just slow)
+with MooSSH() as moo:
+    output = moo.run("look")  # returns in ~7.5s
 ```
 
-`expect(pexpect.TIMEOUT, timeout=N)` waits exactly N seconds (wall time), not "until output arrives". This caused the original bug where `obj_id()` returned the wrong IDs.
+`expect(pexpect.TIMEOUT, timeout=N)` waits exactly N seconds (wall time), not "until output arrives". The delimiter approach avoids this entirely.
 
 ## Build Script Best Practices
 
@@ -450,16 +448,14 @@ def run(self, command):
 
 ## Timing Considerations
 
-With ~7.5s per command and 150+ commands, a full build takes 15-20 minutes. This is acceptable for:
-- Initial environment creation
-- Regression testing after MOO code changes
-- Documentation/demonstration purposes
+With automation mode enabled (the default), each command takes ~1.1s (0.1s execution + 1s settle delay). A 150-command build takes ~3-4 minutes.
+
+Without automation mode (e.g., when connecting manually), each command takes ~7.5s due to CPR timeout delays — that's 15-20 minutes for the same build.
 
 For faster iteration during development:
 - Test individual commands interactively first
 - Use smaller test builds (1-2 rooms)
 - Create parent classes once, reuse across builds
-- Consider DB snapshots for complex environments
 
 ## SSH Connection Details
 
@@ -469,11 +465,21 @@ MooSSH(
     port=8022,
     user="phil",
     password="qw12er34",
-    timeout=6  # Must exceed CPR timeout (~2-3s)
+    timeout=6  # Applies to delimiter wait loop; setup commands use timeout-based fallback
 )
 ```
 
-The MOO shell uses prompt_toolkit which sends CPR (cursor position request) on every render. Terminal doesn't respond, so prompt_toolkit waits ~2-3s before timing out. All command timeouts must exceed this delay.
+`MooSSH` connects with `TERM=moo-automation`, which the server detects to disable CPR (Cursor Position Request). CPR previously caused ~2-3s timeout delays per command. With CPR disabled and delimiters active, commands complete as soon as output is received.
+
+Call `enable_automation_mode()` once after connecting to enable all optimizations:
+
+```python
+with MooSSH() as moo:
+    moo.enable_automation_mode()  # enables delimiters + quiet mode
+    moo.run("look")               # ~1.1s instead of ~7.5s
+```
+
+`build_from_yaml.py` calls `enable_automation_mode()` automatically.
 
 ## Limitations
 
@@ -524,17 +530,17 @@ The environment itself works perfectly - this only affects automated verificatio
 - **Debugging**: SSH in, use `@show "object"` to list verbs
 
 **Issue: Build seems stuck**
-- **Cause**: Waiting for async Celery task to complete
-- **Solution**: Be patient - commands take ~6-7 seconds each
-- **Expected**: 1,200 lines = ~8,400 seconds = 15-20 minutes
+- **Cause**: A command is waiting for its delimiter or timeout
+- **Solution**: Each command takes ~1.1s in automation mode; 150 commands = ~3 minutes
+- **If truly stuck**: The delimiter loop has a 6s timeout before giving up — check for SSH errors in output
 
 ### Build Performance Tips
 
-1. **Run dry-run first**: Catches YAML errors before time-consuming build
+1. **Run dry-run first**: Catches YAML errors before committing to a build
 2. **Use hash mode for testing**: Allows repeated builds without cleanup
-3. **Build during off-hours**: Less network/server contention
-4. **Monitor stderr**: Progress messages show which phase is running
-5. **Don't run multiple builds**: Wizard moves between rooms, causes conflicts
+3. **Monitor stderr**: Progress messages show which phase is running
+4. **Don't run multiple builds**: Wizard moves between rooms, causes conflicts
+5. **Automation mode is automatic**: `build_from_yaml.py` calls `enable_automation_mode()` — no manual setup needed
 
 ## Recommended Improvements
 
