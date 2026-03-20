@@ -504,7 +504,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             if return_list:
                 return matches
             else:
-                raise matches[0]
+                return matches[0]
         elif not (matches):
             raise NoSuchObjectError(self.prepositions[prep][0][1])
         return self.prepositions[prep][0][1]
