@@ -222,3 +222,53 @@ def test_show_object_details(t_init: Object, t_wizard: Object, setup_item):
     assert any("Owner:" in line for line in printed)
     assert any("Location:" in line for line in printed)
     assert any("Verbs:" in line for line in printed)
+
+
+# --- @alias ---
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_alias_by_name(t_init: Object, t_wizard: Object, setup_item):
+    """@alias <object> as <alias> adds an alias to an object by name."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        widget = setup_item(t_wizard.location, "widget")
+        parse.interpret(ctx, '@alias widget as "gadget"')
+        widget.refresh_from_db()
+
+    # Verify alias was added
+    assert widget.aliases.filter(alias="gadget").exists()
+    assert any("Added alias" in line for line in printed)
+    assert any("gadget" in line for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_alias_by_object_id(t_init: Object, t_wizard: Object, setup_item):
+    """@alias #N as <alias> adds an alias to an object by ID."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        widget = setup_item(t_wizard.location, "widget")
+        parse.interpret(ctx, f'@alias #{widget.id} as "thing"')
+        widget.refresh_from_db()
+
+    # Verify alias was added
+    assert widget.aliases.filter(alias="thing").exists()
+    assert any("Added alias" in line for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_alias_multiple_aliases(t_init: Object, t_wizard: Object, setup_item):
+    """Multiple @alias commands add multiple aliases to the same object."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        widget = setup_item(t_wizard.location, "pool table")
+        parse.interpret(ctx, '@alias "pool table" as "table"')
+        parse.interpret(ctx, '@alias "pool table" as "pool"')
+        widget.refresh_from_db()
+
+    # Verify both aliases were added
+    assert widget.aliases.filter(alias="table").exists()
+    assert widget.aliases.filter(alias="pool").exists()
