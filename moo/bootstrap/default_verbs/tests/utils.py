@@ -27,6 +27,6 @@ def setup_room(t_wizard: Object, name: str = "Test Room", description: str = "A 
 
 
 def setup_root_item(location: Object, name: str = "red ball") -> Object:
-    """Create a plain root_class child object in the given location."""
+    """Create a plain root_class child object in the given location, marked obvious."""
     system = lookup(1)
-    return create(name, parents=[system.root_class], location=location)
+    return create(name, parents=[system.root_class], location=location, obvious=True)
