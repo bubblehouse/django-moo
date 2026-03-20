@@ -198,6 +198,34 @@ class Verb(models.Model, AccessibleMixin):
         return result
 
 
+def set_indirect_objects(verb, ispec):
+    """
+    Replace the indirect_objects M2M set on `verb` from an ispec dict.
+
+    Called from `@edit` after updating verb code/dspec. Runs natively outside
+    the RestrictedPython sandbox so that M2M write operations are not exposed.
+
+    :param verb: the Verb instance to update
+    :param ispec: dict of {prep_or_specifier: specifier} as produced by parse_shebang,
+                  or None/empty to clear all indirect objects
+    """
+    verb.indirect_objects.clear()
+    if not ispec:
+        return
+    for prep, specifier in ispec.items():
+        if prep in ("any", "none"):
+            p = None
+            prep_specifier = prep
+        else:
+            pn = PrepositionName.objects.get(name=prep)
+            p = pn.preposition
+            prep_specifier = "none"
+        ps, _ = PrepositionSpecifier.objects.update_or_create(
+            preposition=p, preposition_specifier=prep_specifier, specifier=specifier
+        )
+        verb.indirect_objects.add(ps)
+
+
 class VerbName(models.Model):
     verb = models.ForeignKey(Verb, related_name="names", on_delete=models.CASCADE)
     name = models.CharField(max_length=255, db_index=True)
