@@ -1,3 +1,18 @@
+## [0.82.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.81.3...v0.82.0) (2026-03-20)
+
+### Features
+
+* added [@alias](https://gitlab.com/alias) function for all players ([9359109](https://gitlab.com/bubblehouse/django-moo/commit/9359109abfc6271fb174c84864d6fd6322bb53f8))
+* added [@eval](https://gitlab.com/eval) verb for $programmers ([11d8776](https://gitlab.com/bubblehouse/django-moo/commit/11d8776fd50d8bc1afb6545c25f938ec6ecf4b6f))
+* added `random` to sandbox imports ([d2512ad](https://gitlab.com/bubblehouse/django-moo/commit/d2512ad02b5a8112121a72ae30558fd9f8208be0))
+* added more invocation styles for [@edit](https://gitlab.com/edit) ([41af63e](https://gitlab.com/bubblehouse/django-moo/commit/41af63e94c712acf89178d67d23696b40ed6cdf4))
+* added PREFIX/SUFFIX/QUIET verbs to manage client connection features ([c27300f](https://gitlab.com/bubblehouse/django-moo/commit/c27300fe6d84224f410f53e7a0dd7520287aa001))
+* let specifying verbs and props at the CLI with [@edit](https://gitlab.com/edit) ([bc84963](https://gitlab.com/bubblehouse/django-moo/commit/bc849635546a6beeec4c4e1b949c996426e25209))
+
+### Bug Fixes
+
+* support creating object in the void ([b61b81f](https://gitlab.com/bubblehouse/django-moo/commit/b61b81fb91e0f063c0f9074537310c2c1ba19794))
+
 ## [0.81.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.81.2...v0.81.3) (2026-03-18)
 
 ### Bug Fixes
