@@ -538,6 +538,37 @@ except Exception as e:
     return f"Error: {str(e)}"
 ```
 
+## Connection Control Verbs and Session Settings
+
+Three verbs on `$player` allow automation clients to control how command output is delivered. They are implemented in `default_verbs/player/` and use the `set_session_setting` / `get_session_setting` SDK functions.
+
+| Verb | Usage | Effect |
+|------|-------|--------|
+| `PREFIX <marker>` | `PREFIX >>START<<` | Emits `<marker>` before each command's output |
+| `SUFFIX <marker>` | `SUFFIX >>END<<` | Emits `<marker>` after each command's output |
+| `QUIET enable\|disable` | `QUIET enable` | Suppresses ANSI color codes; simplifies prompt to `$ ` |
+
+### How Session Settings Work
+
+Session settings are stored in a per-user dict (`_session_settings`) in the SSH server process. Because verbs run in a separate Celery worker process, **you cannot write to `_session_settings` directly from a verb**. Instead, use the SDK functions:
+
+```python
+from moo.sdk import set_session_setting, get_session_setting
+
+set_session_setting('output_prefix', '>>START<<')  # publishes a Kombu message
+prefix = get_session_setting('output_prefix')       # reads from the SSH server's registry
+```
+
+`set_session_setting` publishes a `{"event": "session_setting", ...}` message to the player's Kombu queue. The SSH server's `process_messages()` loop picks it up and updates its own in-process registry. This is the same cross-process bridge used by `open_editor` and `open_paginator`.
+
+**Key names**: `output_prefix`, `output_suffix`, `quiet_mode` (bool).
+
+All settings are session-scoped — they are cleared automatically when the player disconnects.
+
+### QUIET mode and prepositions
+
+`QUIET` uses `enable` / `disable` rather than `on` / `off` because `on` and `off` are MOO prepositions. If you add similar toggle verbs, use words that are not in `settings.PREPOSITIONS`.
+
 ## Additional Resources
 
 - See `default_verbs/` for example verbs in this repository
