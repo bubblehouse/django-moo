@@ -369,7 +369,6 @@ def moo_eval(code_string: str):
     """
     from moo.core.code import get_default_globals, get_restricted_environment
     from RestrictedPython import compile_restricted
-    import warnings
     import ast
 
     # Build the execution environment
@@ -402,7 +401,6 @@ def moo_eval(code_string: str):
                 # Last statement is an expression - evaluate it and return
                 # Execute all but the last statement
                 if len(tree.body) > 1:
-                    code_without_last = compile(ast.Module(body=tree.body[:-1], type_ignores=[]), "<@eval>", "exec")
                     with warnings.catch_warnings():
                         warnings.simplefilter("ignore", category=SyntaxWarning)
                         exec_compiled = compile_restricted(
@@ -422,7 +420,7 @@ def moo_eval(code_string: str):
                     warnings.simplefilter("ignore", category=SyntaxWarning)
                     expr_compiled = compile_restricted(last_expr_code, "<@eval>", "eval")
                 return eval(expr_compiled, globals_dict, locals_dict)  # pylint: disable=eval-used
-        except:
+        except Exception:  # pylint: disable=broad-except
             pass  # Fall back to just executing
 
         # Execute the code (no return value)
@@ -494,7 +492,7 @@ def get_session_setting(key, default=None):
     if user_pk is None:
         return default
 
-    settings = prompt_module._session_settings.get(user_pk, {})
+    settings = prompt_module._session_settings.get(user_pk, {})  # pylint: disable=protected-access
     return settings.get(key, default)
 
 
