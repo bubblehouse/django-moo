@@ -49,6 +49,29 @@ else:
     context.player.location.announce_all_but(context.player, f"{context.player.name} sits down.")
 ```
 
+## One-Shot Event (banana peel, trap, explosive)
+
+Fires once with full effect; subsequent triggers get an "already happened" message. Resets after one day so the event can fire again.
+
+```python
+from moo.sdk import context, NoSuchPropertyError
+import datetime
+
+try:
+    last_fired = this.get_property("last_fired")
+    elapsed = datetime.datetime.now() - datetime.datetime.fromisoformat(last_fired)
+    cooled_down = elapsed.total_seconds() > 86400
+except NoSuchPropertyError:
+    cooled_down = True
+
+if not cooled_down:
+    print("Nothing more happens. The moment has passed.")
+else:
+    this.set_property("last_fired", datetime.datetime.now().isoformat())
+    print("It happens. Dramatically.")
+    context.player.location.announce_all_but(context.player, f"{context.player.name} triggers it.")
+```
+
 ## Consume Item (drink, eat)
 
 ```python
