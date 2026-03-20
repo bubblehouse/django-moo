@@ -275,6 +275,7 @@ _active_writer = contextvars.ContextVar("active_writer", default=None)
 _active_parser = contextvars.ContextVar("active_parser", default=None)
 _active_task_id = contextvars.ContextVar("active_task_id", default=None)
 _active_start_time = contextvars.ContextVar("active_start_time", default=None)
+_active_connection = contextvars.ContextVar("active_connection", default=None)
 _verb_lookup_cache = contextvars.ContextVar("verb_lookup_cache", default=None)
 _prop_lookup_cache = contextvars.ContextVar("prop_lookup_cache", default=None)
 # A sentinel object (not a mutable default like []) so we can reliably detect whether
@@ -310,6 +311,8 @@ class ContextManager:
             return _active_parser.get()
         if name == "task_id":
             return _active_task_id.get()
+        if name == "connection":
+            return _active_connection.get()
         if name == "task_time":
             from celery import current_app
 
@@ -369,7 +372,7 @@ class ContextManager:
         _active_caller_stack.set(caller_stack)
         _active_caller.set(frame["previous_caller"])
 
-    def __init__(self, caller, writer, task_id=None, player=None):
+    def __init__(self, caller, writer, task_id=None, player=None, connection=None):
         self.caller = caller
         self.caller_token = None
         self.player = player if player is not None else self.caller
@@ -380,6 +383,8 @@ class ContextManager:
         self.parser_token = None
         self.task_id = task_id
         self.task_id_token = None
+        self.connection = connection
+        self.connection_token = None
         self.start_time = time.monotonic()
         self.start_time_token = None
         # A fresh list per instance so each session has its own isolated stack.
@@ -403,6 +408,7 @@ class ContextManager:
         self.player_token = _active_player.set(self.player)
         self.writer_token = _active_writer.set(self.writer)
         self.task_id_token = _active_task_id.set(self.task_id)
+        self.connection_token = _active_connection.set(self.connection)
         self.start_time_token = _active_start_time.set(self.start_time)
         self.parser_token = _active_parser.set(self.parser)
         # Replacing _UNSET with a real list marks the session as active (is_active() → True)
@@ -424,6 +430,8 @@ class ContextManager:
             _active_parser.reset(self.parser_token)
         if self.task_id_token:
             _active_task_id.reset(self.task_id_token)
+        if self.connection_token:
+            _active_connection.reset(self.connection_token)
         if self.start_time_token:
             _active_start_time.reset(self.start_time_token)
         if self.active_caller_stack_token:

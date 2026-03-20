@@ -19,6 +19,27 @@ from .prompt import embed
 log = logging.getLogger(__name__)
 
 
+class MooPromptToolkitSSHSession(PromptToolkitSSHSession):
+    """
+    Custom SSH session that disables CPR for automation clients.
+
+    Checks the terminal type - if it contains 'moo-automation', disables
+    CPR to avoid timeout delays during machine-driven command sequences.
+    """
+
+    def session_started(self) -> None:
+        """Check terminal type and adjust CPR setting before starting interaction."""
+        import sys
+
+        if self._chan:
+            term = self._chan.get_terminal_type()
+            print(f"[MOO-DEBUG] Terminal type: {term!r}, enable_cpr={self.enable_cpr}", file=sys.stderr, flush=True)
+            if term and "moo-automation" in term.lower():
+                print(f"[MOO-DEBUG] Disabling CPR for automation", file=sys.stderr, flush=True)
+                self.enable_cpr = False
+        super().session_started()
+
+
 async def interact(ssh_session: PromptToolkitSSHSession) -> None:
     """
     Initial entry point for SSH sessions.
@@ -110,6 +131,6 @@ class SSHServer(PromptToolkitSSHServer):
         """
         Setup a session and associate the Django User object.
         """
-        session = PromptToolkitSSHSession(self.interact, enable_cpr=self.enable_cpr)
+        session = MooPromptToolkitSSHSession(self.interact, enable_cpr=self.enable_cpr)
         session.user = self.user
         return session
