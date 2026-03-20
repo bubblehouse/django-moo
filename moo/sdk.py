@@ -149,6 +149,8 @@ def create(name, *a, **kw):
     :type location: Object
     :param parents: a list of parents for the Object
     :type parents: list[Object]
+    :param obvious: whether the object appears in room contents listings (default False)
+    :type obvious: bool
     :return: the new object
     :rtype: Object
     :raises PermissionError: if the caller is not allowed to `derive` from the parent

@@ -61,7 +61,7 @@ for item in this.contents.all():
         continue
     if item.is_player():
         players.append(item.title())
-    else:
+    elif item.obvious:
         items.append(item.title())
 
 ctype = this.content_list_type
