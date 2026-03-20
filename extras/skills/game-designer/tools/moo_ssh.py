@@ -20,6 +20,7 @@ Requirements:
 """
 
 import argparse
+import hashlib
 import re
 import sys
 import time
@@ -81,11 +82,13 @@ class MooSSH:
 
     def connect(self):
         """Open SSH connection and wait for the MOO session to stabilize."""
+        # Set TERM=moo-automation to signal server to disable CPR (cursor position requests)
+        # This eliminates ~2-3s timeout delays on each command
         ssh_cmd = (
-            "ssh -tt "
+            "/bin/sh -c 'TERM=moo-automation ssh -tt "
             "-o StrictHostKeyChecking=no "
             "-o UserKnownHostsFile=/dev/null "
-            f"-p {self.port} {self.user}@{self.host}"
+            f"-p {self.port} {self.user}@{self.host}'"
         )
         self._log(f"[moo_ssh] Connecting to {self.user}@{self.host}:{self.port}...")
         self.child = pexpect.spawn(ssh_cmd, timeout=CONNECT_TIMEOUT, encoding="utf-8")
@@ -100,12 +103,51 @@ class MooSSH:
         self._log("[moo_ssh] Connected.")
         return self
 
+    def enable_delimiters(self):
+        """
+        Enable PREFIX/SUFFIX markers for machine-parseable output.
+
+        Generates unique session-specific markers and configures the MOO
+        session to emit them around command output. This allows the client
+        to detect when output is complete without relying on timeouts.
+
+        Call this once after connect() to optimize parsing speed.
+        """
+        # Generate unique markers for this session
+        session_id = hashlib.sha256(str(time.time()).encode()).hexdigest()[:8]
+        self.prefix_marker = f">>MOO-START-{session_id}<<"
+        self.suffix_marker = f">>MOO-END-{session_id}<<"
+
+        # Configure MOO session (using standard timeout parsing for these setup commands)
+        self._log(f"[moo_ssh] Enabling delimiters: {self.prefix_marker} / {self.suffix_marker}")
+        self.run(f"PREFIX {self.prefix_marker}")
+        self.run(f"SUFFIX {self.suffix_marker}")
+
+        # Flush any stale output — the SUFFIX echo contains the suffix marker string,
+        # which would cause the next run() call to exit immediately on stale data.
+        self.child.expect(pexpect.TIMEOUT, timeout=1)
+        self._log("[moo_ssh] Delimiters enabled")
+
+    def enable_automation_mode(self):
+        """
+        Enable all automation optimizations in one call.
+
+        Sets up PREFIX/SUFFIX delimiters for fast output detection, and
+        enables quiet mode to suppress ANSI color codes so captured output
+        is plain text without needing post-processing.
+
+        Call this once after connect() before issuing build commands.
+        """
+        self.enable_delimiters()
+        self.run("QUIET enable")
+
     def run(self, command):
         """
         Send a single MOO command and return stripped output.
 
-        Accumulates output over multiple short waits to capture async responses
-        that may arrive over several seconds (due to CPR timeout, Celery tasks, etc).
+        If delimiters are enabled (via enable_delimiters()), polls for the
+        suffix marker and returns output between prefix and suffix. Otherwise,
+        falls back to timeout-based polling to capture async responses.
         """
         command = command.strip()
         if not command or command.startswith("#"):
@@ -113,33 +155,82 @@ class MooSSH:
 
         self.child.sendline(command)
 
-        # Actively read from PTY over multiple intervals to capture async responses
-        # The MOO uses Celery tasks that write output asynchronously to the PTY
-        accumulated = []
-        for i in range(4):
-            time.sleep(1.5 if i < 3 else 3.0)  # Longer final wait for late responses
-            try:
-                # Read whatever is available right now (non-blocking with timeout=0)
-                chunk = self.child.read_nonblocking(size=8192, timeout=0)
-                if chunk:
-                    accumulated.append(chunk)
-            except (pexpect.TIMEOUT, pexpect.EOF):
-                pass
+        # If delimiters are enabled, wait for suffix marker
+        if hasattr(self, "suffix_marker") and self.suffix_marker:
+            accumulated = []
+            deadline = time.time() + self.timeout
 
-        raw = "".join(accumulated)
-        output = strip_ansi(raw).strip()
-        lines = [l for l in output.splitlines() if l.strip()]
+            while time.time() < deadline:
+                try:
+                    chunk = self.child.read_nonblocking(size=8192, timeout=0.1)
+                    if chunk:
+                        accumulated.append(chunk)
+                        # Check if we've received the suffix
+                        full_output = "".join(accumulated)
+                        if self.suffix_marker in full_output:
+                            break
+                except (pexpect.TIMEOUT, pexpect.EOF):
+                    time.sleep(0.1)
 
-        # The first non-empty line is usually the echoed command — drop it
-        if lines and command[:20] in lines[0]:
-            lines = lines[1:]
+            raw = "".join(accumulated)
+            output = self._extract_delimited_output(raw)
+            time.sleep(1)
+        else:
+            # Fallback: timeout-based polling (original behavior)
+            accumulated = []
+            for i in range(4):
+                time.sleep(1.5 if i < 3 else 3.0)  # Longer final wait for late responses
+                try:
+                    # Read whatever is available right now (non-blocking with timeout=0)
+                    chunk = self.child.read_nonblocking(size=8192, timeout=0)
+                    if chunk:
+                        accumulated.append(chunk)
+                except (pexpect.TIMEOUT, pexpect.EOF):
+                    pass
 
-        output = "\n".join(lines).strip()
+            raw = "".join(accumulated)
+            output = strip_ansi(raw).strip()
+            lines = [l for l in output.splitlines() if l.strip()]
+
+            # The first non-empty line is usually the echoed command — drop it
+            if lines and command[:20] in lines[0]:
+                lines = lines[1:]
+
+            output = "\n".join(lines).strip()
+
         self._log(f"  > {command[:120]}")
         if output:
             indented = output[:300].replace("\n", "\n    ")
             self._log(f"    {indented}")
         return output
+
+    def _extract_delimited_output(self, raw):
+        """Extract output between PREFIX and SUFFIX markers."""
+        stripped = strip_ansi(raw)
+
+        # Find the markers
+        start_idx = stripped.find(self.prefix_marker)
+        end_idx = stripped.find(self.suffix_marker)
+
+        if start_idx == -1 or end_idx == -1:
+            # Markers not found, fall back to returning everything stripped
+            self._log("[moo_ssh] WARNING: Delimiters not found in output")
+            return stripped.strip()
+
+        # Extract content between markers
+        content = stripped[start_idx + len(self.prefix_marker) : end_idx]
+
+        # Clean up: remove echoed command if present
+        lines = [l for l in content.splitlines() if l.strip()]
+        # First line might be the echoed command
+        if lines:
+            # Check if first line looks like a command echo
+            first = lines[0].strip()
+            # Remove if it matches the start of recent commands or looks like echo
+            if any(first.startswith(cmd) for cmd in ["PREFIX", "SUFFIX", "QUIET", "look", "@", "help"]):
+                lines = lines[1:]
+
+        return "\n".join(lines).strip()
 
     def edit_verb(self, verb_name, obj_name, code, clear_existing=False):
         """
