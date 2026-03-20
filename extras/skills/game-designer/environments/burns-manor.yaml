@@ -12,10 +12,11 @@ rooms:
   - name: Grand Foyer
     description: >
       The entrance hall of Burns Manor stretches upward three stories, bathed in the cold glow of
-      a crystal chandelier the size of a small automobile. Two suits of Gothic armor flank the grand
-      staircase, their visors perpetually downcast. A Persian rug — rumored to have belonged to a
+      a crystal chandelier the size of a small automobile. Two suits of Gothic armor flank the
+      entrance, their visors perpetually downcast. A Persian rug — rumored to have belonged to a
       Persian king — muffles your footsteps. An oil portrait of Mr. Burns dominates the north wall,
-      his expression suggesting he is watching you specifically.
+      his expression suggesting he is watching you specifically. Beside the entrance, a brass
+      doorbell is mounted on a polished plate. A small card reads "Ring for Smithers."
     exits:
       - direction: west
         to: The Drawing Room
@@ -29,10 +30,10 @@ rooms:
   - name: The Drawing Room
     description: >
       A formal Victorian sitting room of staggering opulence. A chaise longue upholstered in
-      Napoleonic-era silk occupies the center. Above the marble fireplace hangs a Fabege egg
-      collection in a climate-controlled case. A grandfather clock of uncertain age ticks at
-      precisely the wrong interval, as if time itself is intimidated by the owner. The air smells
-      faintly of old money and coal smoke.
+      Napoleonic-era silk occupies the center. Above the marble fireplace, a Faberge egg gleams
+      from its velvet stand — jeweled, Romanov-era, and unmistakably not yours. A grandfather
+      clock of uncertain age ticks at precisely the wrong interval, as if time itself is
+      intimidated by the owner. The air smells faintly of old money and coal smoke.
     exits:
       - direction: east
         to: Grand Foyer
@@ -46,9 +47,9 @@ rooms:
       hand. Display cases mounted at eye level contain the more exceptional specimens: a $60,000
       Chateau Margaux, a bottle of pre-Prohibition Madeira, several vintages that predate most
       nations. Three taxidermied heads are mounted on the far wall — a Dodo, a Saber-toothed Tiger,
-      and what the placard confirms is a Tyrannosaurus Rex. In the corner, a skeleton in tattered
-      clothing sits against the wall, still clutching a glass. A small card reads: "Trespasser.
-      The Bordeaux was wasted on him."
+      and a Tyrannosaurus Rex whose placard reads "Acquired 1886. Do not ask." In the corner, a
+      skeleton in tattered clothing sits against the wall, still clutching a glass. A small card
+      reads: "Trespasser. The Bordeaux was wasted on him."
     exits:
       - direction: up
         to: The Drawing Room
@@ -110,12 +111,14 @@ objects:
         fund Springfield's school district for a year. Mr. Burns reportedly had it installed to
         "remind guests of their smallness."
       aliases: [chandelier, lights]
+      obvious: true
 
     - name: suit of armor
       description: >
         Full Gothic plate armor, polished to a mirror finish. A small placard reads "15th century,
         Milanese. Do not touch. The last person who touched it is no longer with us."
       aliases: [armor, armour, knight]
+      obvious: true
       quantity: 2
 
     - name: oil portrait of Burns
@@ -125,12 +128,14 @@ objects:
         just off-canvas with barely concealed contempt. A small brass plate at the bottom reads:
         "Charles Montgomery Burns, 1886 — ?"
       aliases: [portrait, oil portrait]
+      obvious: true
 
     - name: brass doorbell
       description: >
         An ornate brass doorbell mounted beside the entrance. A small card reads "Ring for
         Smithers." Below that, in smaller text: "Do not ring for Burns."
       aliases: [doorbell, bell]
+      obvious: true
 
     - name: Persian rug
       description: >
@@ -144,6 +149,7 @@ objects:
         A silk-upholstered chaise longue in imperial gold, reportedly seized from a Napoleonic
         field marshal's personal quarters. It is extraordinarily comfortable, which feels wrong.
       aliases: [chaise, lounge, couch, sofa]
+      obvious: true
 
     - name: grandfather clock
       description: >
@@ -151,6 +157,7 @@ objects:
         shows a time that does not match any timezone. The face is painted with allegorical scenes
         of industry crushing labor.
       aliases: [clock, grandfather clock]
+      obvious: true
 
     - name: marble fireplace
       description: >
@@ -158,6 +165,7 @@ objects:
         keeps the mansion at 58 degrees to "build character." The mantle holds a row of
         commemorative plates from historical moments Burns personally witnessed.
       aliases: [fireplace, fire, hearth, mantle]
+      obvious: true
 
     - name: iron poker
       description: >
@@ -170,6 +178,7 @@ objects:
         A jeweled egg by Carl Faberge, displayed in a temperature-controlled case. A card notes
         it was "gifted" by the Romanovs in 1912. The quotation marks are handwritten.
       aliases: [egg, faberge egg, faberge, jeweled egg]
+      obvious: true
 
   The Wine Cellar:
     - name: wine rack
@@ -178,6 +187,7 @@ objects:
         Victorian hand. The oldest vintage visible is 1843. Several bottles are marked with
         small skulls, meaning unclear.
       aliases: [rack, bottles, wine bottles]
+      obvious: true
 
     - name: taxidermied dodo
       description: >
@@ -185,18 +195,29 @@ objects:
         "Raphus cucullatus — extinct since 1681. Personal collection, CMB." The glass eyes
         retain an air of mild surprise.
       aliases: [dodo, bird, extinct bird]
+      obvious: true
 
     - name: taxidermied saber-toothed tiger
       description: >
         A full-mount Smilodon, fangs polished to a gleam. The placard notes acquisition in
         "the early years." The pose suggests it was mid-leap when acquired.
       aliases: [saber tooth, sabertooth, tiger, smilodon]
+      obvious: true
+
+    - name: taxidermied T-Rex
+      description: >
+        A full Tyrannosaurus Rex skull mounted on the far wall, jaws open wide enough to swallow
+        a Buick. A brass placard reads: "Tyrannosaurus rex — Cretaceous, approx. 66 million years
+        old. Acquired 1886. Do not ask. — CMB." The teeth have been individually polished.
+      aliases: [t-rex, rex, dinosaur, tyrannosaurus, skull, t rex]
+      obvious: true
 
     - name: trespasser skeleton
       description: >
         A skeleton in tattered clothing, seated against the wall with a wine glass still in hand.
         A small card reads: "Trespasser — 1987. The Bordeaux was wasted on him. — CMB"
       aliases: [skeleton, bones, trespasser]
+      obvious: true
 
   Mr. Burns' Study:
     - name: mahogany desk
@@ -205,18 +226,21 @@ objects:
         Its surface is bare except for a single red button, a brass intercom, and a stack of
         manila dossiers. Each dossier is labeled with an employee name.
       aliases: [desk]
+      obvious: true
 
     - name: leather chair
       description: >
         Mr. Burns' throne — a high-backed leather chair that swivels to face the desk or the
         window with equal menace. Sitting in it makes you feel briefly omnipotent.
       aliases: [chair, throne]
+      obvious: true
 
     - name: hounds button
       description: >
         A large red button mounted on a polished brass base, sitting on the corner of the desk.
         A small engraved label reads: "THE HOUNDS." The button shows signs of frequent use.
       aliases: [button, red button, release button]
+      obvious: true
 
     - name: dossier pile
       description: >
@@ -230,12 +254,14 @@ objects:
         A vintage intercom system, heavy brass with a single large button labeled "SMITHERS."
         There is no other button.
       aliases: [intercom]
+      obvious: true
 
     - name: poker portrait
       description: >
         A large oil painting rendered in the style of Coolidge's "Dogs Playing Poker," except all
         the dogs have been replaced with Mr. Burns at various ages. He is winning in every panel.
       aliases: [dog portrait, poker painting, coolidge portrait]
+      obvious: true
 
   The Surveillance Room:
     - name: bank of monitors
@@ -244,6 +270,7 @@ objects:
         footage from a hidden camera somewhere in Springfield. Several are labeled with tape:
         "742 Evergreen," "Kwik-E-Mart," "Plant Floor 3," "Quimby's Bedroom (CONFIDENTIAL)."
       aliases: [monitors, screens, televisions, tvs, monitor, screen]
+      obvious: true
 
     - name: control console
       description: >
@@ -251,6 +278,7 @@ objects:
         with either cryptic labels or no labels at all. Several switches are taped down with
         warnings reading "DO NOT TOGGLE — Springfield's water supply."
       aliases: [console, controls, control panel, panel]
+      obvious: true
 
     - name: filing cabinet
       description: >
@@ -258,6 +286,7 @@ objects:
         for 742 Evergreen Terrace is considerably thicker than the others and has a sticky note
         reading "Ongoing."
       aliases: [cabinet, file cabinet]
+      obvious: true
 
     - name: bowl of fruit
       description: >
@@ -272,18 +301,21 @@ objects:
         Stewart Gardner Museum since March 18, 1990. A small card beneath it reads "Private
         Collection — not for loan, not for return." The painting is in immaculate condition.
       aliases: [vermeer, concert, masterwork]
+      obvious: true
 
     - name: velvet rope
       description: >
         A red velvet rope on brass stanchions, separating the viewer from the Vermeer. A sign
         on the rope reads "Do Not Cross." A second sign reads "This Means You, Specifically."
       aliases: [rope, stanchion]
+      obvious: true
 
     - name: bust of Napoleon
       description: >
         A marble bust of Napoleon Bonaparte, approximately life-sized. He appears to be looking
         slightly upward, possibly to compensate. A small plaque reads "A personal hero — CMB."
       aliases: [napoleon, bust, marble bust]
+      obvious: true
 
     - name: gallery camera
       description: >
@@ -305,6 +337,7 @@ objects:
         The cacophony is extraordinary. Several monkeys pause to regard you with what may be
         professional jealousy.
       aliases: [typewriters, typewriter, monkeys, monkey]
+      obvious: true
 
     - name: manuscript pile
       description: >
@@ -312,6 +345,7 @@ objects:
         scholarly output of the monkey experiment. Spot-checking reveals mostly capital A's, one
         complete limerick of uncertain appropriateness, and a troublingly coherent legal brief.
       aliases: [manuscripts, manuscript, papers, paper, stack]
+      obvious: true
 
     - name: banana peel
       description: >
@@ -519,6 +553,28 @@ verbs:
       line = random.choice(lines)
       print(f'Smithers straightens his lapels and says, "{line}"')
       context.player.location.announce_all_but(context.player, f'Smithers addresses {context.player.name} with clipped efficiency.')
+
+  - verb: slip
+    object: banana peel
+    room: The Monkey Chamber
+    code: |
+      #!moo verb slip --on "banana peel" --dspec this
+      from moo.sdk import context, NoSuchPropertyError
+      import datetime
+      try:
+          last_slipped = this.get_property("last_slipped")
+          elapsed = datetime.datetime.now() - datetime.datetime.fromisoformat(last_slipped)
+          cooled_down = elapsed.total_seconds() > 86400
+      except NoSuchPropertyError:
+          cooled_down = True
+      if not cooled_down:
+          print("The banana peel has already done its damage. It lies there, spent.")
+      else:
+          this.set_property("last_slipped", datetime.datetime.now().isoformat())
+          print("You slip on the banana peel. Time slows. You execute an involuntary pirouette.")
+          print("You land hard. A thousand monkeys pause their typing to watch.")
+          print("Several appear to be taking notes.")
+          context.player.location.announce_all_but(context.player, f"{context.player.name} slips on the banana peel and goes down hard. The monkeys are riveted.")
 
   - verb: use
     object: brass intercom
