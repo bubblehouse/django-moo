@@ -1,4 +1,4 @@
-#!moo verb @create make --on $player --dspec any --ispec from:any
+#!moo verb @create make --on $player --dspec any --ispec from:any --ispec in:any
 
 # pylint: disable=return-outside-function,undefined-variable
 
@@ -7,9 +7,12 @@ Create an instance of an object or class. It parses the arguments to extract the
 parent object we wish to create an instance of, along with the name we wish to give to the created object. The
 `create()`` primitive is called, with the derived parent added afterwards. The resulting object is moved to the player``s
 inventory, using the `move()` primitive.
+
+Special syntax: @create "name" from "parent" in the void
+  Creates object with location = None (not in player's inventory or any room)
 """
 
-from moo.sdk import context, create, lookup
+from moo.sdk import context, create, lookup, NoSuchObjectError
 
 if not (context.parser.has_dobj_str()):
     print("[yellow]What do you want to create?[/yellow]")
@@ -24,4 +27,19 @@ if context.parser.has_pobj_str("from"):
     new_obj.add_parent(parent)
     print("[yellow]Transmuted %s to %s[/yellow]" % (new_obj, parent))
 
-new_obj.moveto(context.player)
+# Handle location: check for "void" (parser strips "the" article)
+if context.parser.has_pobj_str("in"):
+    location_str = context.parser.get_pobj_str("in").lower()
+    if location_str == "void":
+        # Keep location = None (object exists in the void)
+        print("[yellow]%s exists in the void[/yellow]" % new_obj)
+    else:
+        # Normal case: look up location object
+        try:
+            location = context.parser.get_pobj("in", lookup=True)
+            new_obj.moveto(location)
+        except NoSuchObjectError:
+            print("[bold red]There is no '%s' here.[/bold red]" % location_str)
+            new_obj.moveto(context.player)
+else:
+    new_obj.moveto(context.player)
