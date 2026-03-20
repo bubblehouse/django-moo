@@ -511,7 +511,7 @@ def main():
 
     try:
         with MooSSH(host=args.host, port=args.port) as moo:
-            moo.run("look")
+            moo.enable_automation_mode()
 
             print("\n--- Reloading verbs ---", file=sys.stderr)
             moo.run("@reload @edit on $programmer")
