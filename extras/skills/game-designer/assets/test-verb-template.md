@@ -7,6 +7,21 @@ Place this verb on `$programmer` so any programmer can run it:
 
 Then paste the code below, replacing all `# TODO` placeholders.
 
+## Important Limitations
+
+**Very Long Code Warning**: When test verbs exceed ~100 lines, creating them via `@edit verb ... with "..."` can fail with compilation errors in RestrictedPython's execution context. The verb gets stored correctly but fails to run.
+
+**Workarounds**:
+1. **Simplify the test**: Use a dictionary-based approach instead of nested functions and reduce formatting:
+   ```python
+   results = {"passed": 0, "failed": 0}
+   # ... inline pass/fail logic without helper functions ...
+   ```
+2. **Use the interactive editor**: Run `@edit verb test-<name> on "$programmer"` without `with`, then paste the full code in the editor
+3. **Create via multiple @eval chunks**: Break the verb into smaller sections and concatenate
+
+**Invocation**: Test verbs are in-world verbs, not administrative commands. Run them **without** the `@` prefix: `test-moes-tavern`, not `@test-moes-tavern`.
+
 ---
 
 ## Full Template
@@ -132,6 +147,69 @@ except NoSuchObjectError as e:
 
 print(f"[bold]{passed}/{passed+failed} checks passed.[/bold]")
 ```
+
+---
+
+## Simplified Template (No Nested Functions)
+
+Use this version if the standard template causes compilation errors:
+
+```python
+from moo.sdk import lookup, NoSuchObjectError, NoSuchVerbError
+
+results = {"passed": 0, "failed": 0}
+
+print("[bold]--- Room checks ---[/bold]")
+
+# TODO: Check each room
+try:
+    main_room = lookup("TODO: Main Room Name")
+    results["passed"] += 1
+    print(f"[green]PASS[/green] Main Room exists")
+except NoSuchObjectError as e:
+    main_room = None
+    results["failed"] += 1
+    print(f"[red]FAIL[/red] Main Room exists: {e}")
+
+# ... repeat for all rooms ...
+
+print("[bold]--- Object checks ---[/bold]")
+
+# TODO: Check objects in each room
+if main_room:
+    names = [o.name for o in main_room.contents.all()]
+    target = "TODO: object name"
+    if any(target.lower() in n.lower() for n in names):
+        results["passed"] += 1
+        print(f"[green]PASS[/green] Main Room: {target}")
+    else:
+        results["failed"] += 1
+        print(f"[red]FAIL[/red] Main Room: {target} (not in {names})")
+
+# ... repeat for all objects ...
+
+print("[bold]--- Verb checks ---[/bold]")
+
+# TODO: Check verbs on objects
+try:
+    obj = lookup("TODO: object name")
+    obj.get_verb("TODO: verb name")
+    results["passed"] += 1
+    print(f"[green]PASS[/green] object: verb")
+except NoSuchObjectError as e:
+    results["failed"] += 1
+    print(f"[red]FAIL[/red] object: verb (object not found: {e})")
+except NoSuchVerbError:
+    results["failed"] += 1
+    print(f"[red]FAIL[/red] object: verb (verb not found)")
+
+# ... repeat for all verb checks ...
+
+total = results["passed"] + results["failed"]
+print(f"[bold]{results['passed']}/{total} checks passed.[/bold]")
+```
+
+This version uses a dictionary for counters instead of nested functions with `global`, which avoids RestrictedPython's limitations with nested function scopes.
 
 ---
 

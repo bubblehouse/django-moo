@@ -9,12 +9,11 @@ All verbs run inside the RestrictedPython sandbox.
 ```python
 from moo.sdk import context, create, lookup, invoke
 from moo.sdk import NoSuchObjectError, NoSuchVerbError, NoSuchPropertyError
+import random
 import time
 ```
 
-Available restricted imports: `moo.sdk`, `re`, `datetime`, `time`, `hashlib`
-
-**`random` is NOT available.** Use `int(time.time()) % len(list)` for pseudo-random selection (see "Random Outcome" pattern below).
+Available restricted imports: `moo.sdk`, `re`, `datetime`, `time`, `hashlib`, `random`
 
 ## Output
 
@@ -82,11 +81,10 @@ context.player.location.announce_all_but(context.player, f"{context.player.name}
 
 ```python
 from moo.sdk import context
-import time
+import random
 
 lines = this.get_property("lines")
-idx = int(time.time()) % len(lines)
-msg = lines[idx]
+msg = random.choice(lines)
 print(f'{this.name} says, "{msg}"')
 context.player.location.announce_all_but(context.player, f'{this.name} says, "{msg}"')
 ```
@@ -97,11 +95,10 @@ The `lines` property is a list of strings set via `@edit property lines on "NPC"
 
 ```python
 from moo.sdk import context
-import time
+import random
 
 outcomes = this.get_property("outcomes")
-idx = int(time.time()) % len(outcomes)
-result = outcomes[idx]
+result = random.choice(outcomes)
 print(f"You throw. {result}")
 context.player.location.announce_all_but(context.player, f"{context.player.name} throws a dart. {result}")
 ```
@@ -110,11 +107,10 @@ context.player.location.announce_all_but(context.player, f"{context.player.name}
 
 ```python
 from moo.sdk import context
-import time
+import random
 
 names = this.get_property("names")
-idx = int(time.time()) % len(names)
-name = names[idx]
+name = random.choice(names)
 print(f"You dial the number. Moe picks up.")
 print(f'"Hey Moe, is {name} there?"')
 print(f'Moe\'s voice: "Uh... {name}? Hey, is there a {name} in here?"')

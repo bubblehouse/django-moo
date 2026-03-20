@@ -31,8 +31,11 @@ Example:
 ### `@create`
 ```
 @create "<name>" from "<parent>"
+@create "<name>" from "<parent>" in the void
 ```
-Creates a new object instance with the given parent. Places it in your inventory.
+Creates a new object instance with the given parent. By default places it in your inventory.
+
+Use `in the void` to create an object with `location=None` (exists but isn't in any room). Useful for avoiding race conditions with `enterfunc` and for staging objects before placement.
 
 Examples:
 ```
@@ -40,7 +43,10 @@ Examples:
 @create "Generic Beer Glass" from "$thing"
 @create "Moe" from "Generic Tavern NPC"
 @create "a pint of Duff" from "Generic Beer Glass"
+@create "Moe's Tavern - Main Bar" from "$room" in the void
 ```
+
+**Parser Ambiguity Issue**: When creating the 3rd+ object with the same name, the parser raises `AmbiguousObjectError` because it tries to resolve the name string *before* running the verb. Use `@eval` with SDK `create()` to bypass parser resolution (see Advanced Techniques below).
 
 ### `@describe`
 ```
@@ -86,6 +92,24 @@ Example (sets caller's gender):
 ```
 @gender as male
 ```
+
+### `@alias`
+```
+@alias "<object>" as "<alias>"
+@alias #N as "<alias>"
+```
+Adds an alias to an object. Supports both object names and `#N` ID references with global lookup (can reference objects anywhere in the database).
+
+Use `#N` (unquoted) when multiple objects share the same name to avoid `AmbiguousObjectError`. Permissions are enforced by the object model — you can only add aliases to objects you own or have appropriate permissions for.
+
+Examples:
+```
+@alias "pool table" as "table"
+@alias #34 as "stool"
+@alias "jukebox" as "juke"
+```
+
+Multiple aliases can be added to the same object by running the command multiple times.
 
 ### `@lock`
 ```
@@ -159,11 +183,72 @@ Lists all verbs and properties defined directly on an object.
 ```
 Lists all `_msg` properties (take/drop/look messages) on an object and its parents.
 
-### `@test-<name>`
+### `@eval`
 ```
-@test-<name>
+@eval "<python-code>"
+```
+Evaluates Python code directly using the RestrictedPython sandbox. Has access to `context`, `this`, and can import from `moo.sdk`. Useful for operations that don't have dedicated commands.
+
+Examples:
+```
+@eval "print(context.player.location)"
+@eval "from moo.sdk import lookup; obj = lookup('Moe'); print(obj.name)"
+```
+
+### Test Verbs
+```
+test-<name>
 ```
 Runs the environment verification verb. Must be placed on `$programmer`.
+
+**Note**: Test verbs on `$programmer` are in-world verbs, not administrative commands. Invoke them **without** the `@` prefix. The `@` prefix is only for administrative/world-building commands like `@create`, `@edit`, `@describe`.
+
+## Advanced Techniques
+
+### Creating Objects with @eval (Bypassing Parser Ambiguity)
+
+When creating 3+ objects with the same name, `@create` fails with `AmbiguousObjectError` because the parser resolves names *before* the verb runs. Use `@eval` with the SDK `create()` function instead:
+
+```
+@eval "from moo.sdk import create, lookup; obj = create(\"bar stool\", parents=[lookup(\"$thing\")], location=None); print(f\"Created {obj}\"); obj"
+```
+
+This bypasses parser name resolution and always succeeds. The `location=None` parameter avoids race conditions with `enterfunc`. Capture the returned `#N` object ID from the output (e.g., `Created #45 (bar stool)`).
+
+### Moving Objects from the Void
+
+Objects created with `location=None` exist in the void and won't appear in any room. Move them using `moveto()`:
+
+```
+@eval "from moo.sdk import lookup; lookup(45).moveto(lookup(\"Moe's Tavern - Main Bar\"))"
+```
+
+The `@move` command won't work on objects in the void because it tries to look them up via `context.parser`, which only searches the local area.
+
+### Adding Aliases
+
+Use the `@alias` command (see Object Commands section above):
+
+```
+@alias #45 as "stool"
+@alias "pool table" as "table"
+```
+
+For programmatic access in build scripts, you can also use `@eval`:
+
+```
+@eval "from moo.sdk import lookup; lookup(45).add_alias('stool')"
+```
+
+### Setting Player Location Directly
+
+When creating rooms in the void, you can't navigate to them with normal movement commands. Use `@eval` to set your location:
+
+```
+@eval "from moo.sdk import lookup, context; context.player.location = lookup(\"Moe's Tavern - Main Bar\"); context.player.save()"
+```
+
+Must call `.save()` after setting `.location` because it's a Django model field.
 
 ## Navigation Tip
 
