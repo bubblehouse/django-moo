@@ -36,8 +36,10 @@ PROMPT_SHORTCUTS = {
 }
 
 
-def _make_key_bindings() -> KeyBindings:
+def _make_key_bindings(automation: bool = False) -> KeyBindings:
     kb = KeyBindings()
+    if automation:
+        return kb
     buffer_is_empty = Condition(lambda: get_app().current_buffer.text == "")
     for char, template in PROMPT_SHORTCUTS.items():
 
@@ -56,6 +58,7 @@ def _make_key_bindings() -> KeyBindings:
 
 async def embed(
     user: models.User,
+    automation: bool = False,
 ) -> None:
     """
     Start the interactive MOO shell for the given user.
@@ -64,8 +67,9 @@ async def embed(
     coroutines concurrently until either exits.
 
     :param user: the authenticated Django user whose avatar will be the active player
+    :param automation: if True, disables interactive shortcuts (e.g. ``"`` → say)
     """
-    repl = MooPrompt(user)
+    repl = MooPrompt(user, automation=automation)
     await asyncio.wait([asyncio.ensure_future(f()) for f in (repl.process_commands, repl.process_messages)])
 
 
@@ -92,13 +96,15 @@ class MooPrompt:
         }
     )
 
-    def __init__(self, user, *a, **kw):
+    def __init__(self, user, automation: bool = False, *a, **kw):
         """
         Initialize the prompt session for the given Django user.
 
         :param user: the authenticated Django user whose avatar will be the active player
+        :param automation: if True, disables interactive shortcuts
         """
         self.user = user
+        self.automation = automation
         self.is_exiting = False
         self.editor_queue = asyncio.Queue()
         self.paginator_queue = asyncio.Queue()
@@ -118,7 +124,7 @@ class MooPrompt:
         paginator request. Whichever arrives first is handled; the others are
         cancelled. Exits cleanly on EOF or KeyboardInterrupt.
         """
-        prompt_session = PromptSession(key_bindings=_make_key_bindings())
+        prompt_session = PromptSession(key_bindings=_make_key_bindings(self.automation))
         try:
             while not self.is_exiting:
                 message = await self.generate_prompt()
