@@ -75,6 +75,8 @@ class MooSSH:
         self.timeout = timeout
         self.verbose = verbose
         self.child = None
+        self.prefix_marker = None
+        self.suffix_marker = None
 
     def _log(self, msg):
         if self.verbose:

@@ -27,6 +27,8 @@ class MooPromptToolkitSSHSession(PromptToolkitSSHSession):
     CPR to avoid timeout delays during machine-driven command sequences.
     """
 
+    user = None  # set by MooSSHServer.session_requested() before the session starts
+
     def session_started(self) -> None:
         """Check terminal type and adjust CPR setting before starting interaction."""
         import sys
@@ -35,7 +37,7 @@ class MooPromptToolkitSSHSession(PromptToolkitSSHSession):
             term = self._chan.get_terminal_type()
             print(f"[MOO-DEBUG] Terminal type: {term!r}, enable_cpr={self.enable_cpr}", file=sys.stderr, flush=True)
             if term and "moo-automation" in term.lower():
-                print(f"[MOO-DEBUG] Disabling CPR for automation", file=sys.stderr, flush=True)
+                print("[MOO-DEBUG] Disabling CPR for automation", file=sys.stderr, flush=True)
                 self.enable_cpr = False
         super().session_started()
 
