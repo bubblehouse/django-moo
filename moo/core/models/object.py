@@ -133,7 +133,7 @@ class Object(models.Model, AccessibleMixin):
     #: If True, this object is the only object with this name
     unique_name = models.BooleanField(default=False, db_index=True)
     #: This object should be obvious among a group. The meaning of this value is database-dependent.
-    obvious = models.BooleanField(default=True)
+    obvious = models.BooleanField(default=False)
     #: The owner of this object. Changes require `entrust` permission.
     owner = models.ForeignKey("self", related_name="+", blank=True, null=True, on_delete=models.SET_NULL)
     parents = models.ManyToManyField(
