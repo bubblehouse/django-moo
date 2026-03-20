@@ -104,22 +104,36 @@ class MooSSH:
         """
         Send a single MOO command and return stripped output.
 
-        Flushes any stale buffered output before sending so that
-        self.child.before contains only this command's response.
+        Accumulates output over multiple short waits to capture async responses
+        that may arrive over several seconds (due to CPR timeout, Celery tasks, etc).
         """
         command = command.strip()
         if not command or command.startswith("#"):
             return ""
-        # Flush stale output left over from the previous command
-        self.child.expect(pexpect.TIMEOUT, timeout=FLUSH_TIMEOUT)
+
         self.child.sendline(command)
-        self.child.expect(pexpect.TIMEOUT, timeout=self.timeout)
-        raw = self.child.before or ""
+
+        # Actively read from PTY over multiple intervals to capture async responses
+        # The MOO uses Celery tasks that write output asynchronously to the PTY
+        accumulated = []
+        for i in range(4):
+            time.sleep(1.5 if i < 3 else 3.0)  # Longer final wait for late responses
+            try:
+                # Read whatever is available right now (non-blocking with timeout=0)
+                chunk = self.child.read_nonblocking(size=8192, timeout=0)
+                if chunk:
+                    accumulated.append(chunk)
+            except (pexpect.TIMEOUT, pexpect.EOF):
+                pass
+
+        raw = "".join(accumulated)
         output = strip_ansi(raw).strip()
         lines = [l for l in output.splitlines() if l.strip()]
+
         # The first non-empty line is usually the echoed command — drop it
         if lines and command[:20] in lines[0]:
             lines = lines[1:]
+
         output = "\n".join(lines).strip()
         self._log(f"  > {command[:120]}")
         if output:

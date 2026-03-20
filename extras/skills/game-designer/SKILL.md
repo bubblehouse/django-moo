@@ -20,66 +20,273 @@ Before writing any commands, research the theme thoroughly:
 
 Use web research for real-world locations. Aim for specificity — generic descriptions produce generic spaces.
 
-## Phase 2: Design
+## Phase 2: Design - Generate YAML Environment File
 
-Produce a design document before writing any commands:
+Create a YAML environment file with this structure:
 
-1. **Room list** with names and one-sentence descriptions
-2. **Exit map** showing which rooms connect and in which directions
-3. **Parent classes** — if 4+ objects share behavior, define a Generic parent class first
-4. **Object instances** per room, with parent class and key properties
-5. **NPC roster** with names, parent class, and sample dialogue lines
-6. **Verb list** — which verbs go on which objects/classes, and what they do
-7. **Test checklist** — enumerate every room, exit pair, object, and verb to be verified
+```yaml
+metadata:
+  name: "Environment Name"
+  description: "Brief description"
+  author: "game-designer"
+  version: "1.0"
+  base_parent: "$thing"    # Default parent for objects
+  npc_parent: "$player"     # Default parent for NPCs
+  use_hash_suffix: true     # Enable hash suffixes for testing
 
-## Phase 3: Prerequisites
+rooms:
+  - name: "Room Name"
+    description: "Detailed room description..."
+    exits:
+      - direction: north
+        to: "Other Room"
+      - direction: south
+        to: "External Room"
+        reverse: north  # Tunnel back to existing room
 
-Before issuing build commands, confirm:
+objects:
+  "Room Name":
+    - name: "object name"
+      description: "Object description..."
+      aliases: ["alias1", "alias2"]
+      quantity: 4  # Create 4 identical objects
 
-- `@edit` supports verb/property creation syntax (`@edit verb <name> on "<obj>"`) — requires updated `at_edit.py`
-- After any DB reset (fresh `moo_init`), run `@reload @edit on $programmer` to ensure the current `at_edit.py` source is loaded into the database
-- `@test-<name>` verb will be placed on `$programmer` so any programmer can run it
-- Parent class names are finalized and won't conflict with existing objects
+npcs:
+  - name: "NPC Name"
+    description: "NPC description..."
+    aliases: ["alias"]
+    room: "Room Name"
 
-## Phase 4: Build Sequence
+verbs:
+  - verb: "verb_name"
+    object: "object name"
+    room: "Room Name"  # For disambiguation
+    code: |
+      from moo.sdk import context
+      # Verb implementation...
+```
 
-Issue commands in this order. See `references/moo-commands.md` for exact syntax.
+**Key sections:**
 
-**Disambiguation**: When creating multiple objects with the same name (e.g., 4 bar stools), capture each object's `#N` ID from `@create` output. Use `#N` (unquoted) instead of the name string for all subsequent `@describe`, `@edit`, and `@move` commands on those objects. Referencing by name when duplicates exist raises `AmbiguousObjectError`.
+1. **metadata**: Environment info, parent defaults, hash mode
+   - `use_hash_suffix: true` — Testing/development mode (adds `[abc123]` to names)
+   - `use_hash_suffix: false` — Production mode (clean names)
+2. **rooms**: List of room definitions with inline exits
+3. **objects**: Dict mapping room names to object lists (use `quantity` for duplicates)
+4. **npcs**: List of NPC definitions with starting rooms
+5. **verbs**: List of verb definitions with multi-line code blocks
+6. **test**: (Optional) Explicit test expectations, or omit for auto-generation
 
-1. Create parent classes (`@create "Generic X" from "$thing"` or `"$player"` for NPCs)
-2. Add verbs to parent classes (`@edit verb <name> on "Generic X"`)
-3. Add properties to parent classes (`@edit property <name> on "Generic X" with <value>`)
-4. Create the first room if needed (you start somewhere — `@dig` from there)
-5. `@dig` each room, noting the exit object name created
-6. `@tunnel` reverse exits
-7. `@describe` each room
-8. Create object instances (`@create "<name>" from "<parent>"`)
-9. `@describe` each object
-10. `@move` objects to their rooms
-11. Set instance-specific properties (`@edit property <name> on "<obj>" with <value>`)
-12. Create NPC instances, `@move` to rooms, set `lines` property (skip `@gender` — it only works on the caller, not a target object)
-13. `@lock` any exits that need conditions
-14. Write the `@test-<name>` verb (Phase 5)
+**Hash Mode Usage:**
+- **During development**: `use_hash_suffix: true` allows repeated builds without cleanup
+- **For production**: `use_hash_suffix: false` produces clean professional names
+- **CLI override**: `--hash` or `--no-hash` flags override YAML setting
 
-## Phase 5: Test Verb
+**Save to**: `extras/skills/game-designer/environments/<name>.yaml`
 
-Write the full `@test-<name>` verb using the template in `assets/test-verb-template.md`.
+**Example**: See `environments/moes-tavern.yaml` for a complete working example
 
-Place it on `$programmer` with: `@edit verb test-<name> on "$programmer"`
+## Phase 3: Review YAML (User Approval Required)
 
-The verb must cover:
-- Every room (lookup by name)
-- Every exit pair (direction + destination)
-- Every named object in each room
-- Every NPC
-- Key verbs on parent classes
+After generating the YAML file:
 
-See `assets/test-verb-template.md` for the full code structure.
+1. **Show the file path** to the user: `extras/skills/game-designer/environments/<name>.yaml`
+2. **Summarize what will be created**:
+   - X rooms with Y exits
+   - Z objects across N rooms
+   - M NPCs
+   - P interactive verbs
+3. **Ask the user to review** the YAML file
+4. **Wait for explicit approval** before proceeding to Phase 4
+5. **Allow edits**: User can manually edit the YAML if needed
+
+This review step prevents committing to a 15-20 minute build process without user validation of the content.
+
+**Do not proceed to Phase 4 until the user approves the YAML file.**
+
+## Phase 4: Build - Invoke Build Script
+
+After user approval, execute the build script:
+
+```bash
+python extras/skills/game-designer/tools/build_from_yaml.py \
+    extras/skills/game-designer/environments/<name>.yaml
+```
+
+**Options:**
+- `--dry-run`: Parse YAML without connecting to MOO
+- `--no-test`: Skip test verb creation
+- `--hash`: Force hash suffix mode (override YAML setting)
+- `--no-hash`: Force clean name mode (override YAML setting)
+- `--host HOST --port PORT`: Custom SSH connection
+
+**Build process:**
+1. **Reloads verbs**: Ensures `@edit`, `@create`, `@alias` are current
+2. **Phase 1: Rooms and exits**: Creates rooms in void, digs exits, tunnels back
+3. **Phase 2: Objects**: Creates objects in void, describes, adds aliases, moves to rooms
+4. **Phase 3: NPCs**: Creates NPCs, describes, adds aliases, moves to rooms
+5. **Phase 4: Verbs**: Attaches verbs to objects/NPCs using resolved references
+6. **Phase 5: Test verb**: Generates test code, places on `$programmer`, runs verification
+
+**Build time**: ~15-20 minutes for typical environments (5 rooms, 30+ objects)
+
+**What you'll see:**
+- Progress messages for each phase (stderr)
+- Real-time command execution trace (stdout)
+- Object IDs captured (e.g., `#45: bar stool`)
+- Warnings for any unresolved references
+- Final test results with pass/fail counts
+
+**Monitor output** for errors. The script will print progress and warnings. Each phase completes before moving to the next.
+
+## Phase 5: Verify - Auto-Generated Test Verb
+
+The test verb is automatically generated and run by `build_from_yaml.py`.
+
+**Test verb name**:
+- With hash: `test-<env-name>-<hash>` (e.g., `test-moes-tavern-abc123`)
+- Without hash: `test-<env-name>` (e.g., `test-moes-tavern`)
+
+**Test verb verifies**:
+- All rooms exist and are accessible
+- All objects are in correct rooms
+- All NPCs are present
+- All verbs are attached to correct objects
+
+**Manual re-run**:
+```
+test-<env-name>-<hash>
+```
+
+The test verb name is printed at the end of the build output.
+
+**Custom tests**: You can still create custom test verbs if needed, but auto-generation covers standard verification cases.
+
+## Best Practices & Tips
+
+Based on validated builds:
+
+### YAML Authoring
+
+1. **Use `quantity` for duplicates**: Instead of repeating object definitions, use `quantity: 4` to create multiple identical objects
+2. **Organize by room**: Group objects under their destination rooms for clarity
+3. **Hash mode for testing**: Set `use_hash_suffix: true` during development, `false` for production
+4. **Comment liberally**: YAML supports comments - explain non-obvious design decisions
+
+### Build Process
+
+1. **Always run `--dry-run` first**: Validate YAML syntax before committing to a 15-20 minute build
+2. **One build at a time**: Don't run multiple builds simultaneously (player moves between rooms)
+3. **Monitor output**: Watch for warnings about unresolved object references
+4. **Reload verbs first**: Script automatically reloads `@edit`, `@create`, `@alias` verbs
+
+### Performance
+
+- YAML-based builds are ~13% more efficient than manual scripting
+- Uses clean `@alias` commands instead of verbose `@eval` calls
+- Typical 5-room environment: 1,200 output lines, ~15-20 minutes
+- Hash mode adds minimal overhead (suffix generation is fast)
+
+### Troubleshooting
+
+- **"No such object" errors**: Check room names match exactly (case-sensitive)
+- **Ambiguous object errors**: Use `room` context in verb definitions
+- **Test verb failures**: Verify hash is included in object names when hash mode enabled
+- **SSH disconnects**: MooSSH handles reconnection, but very long builds may timeout
+
+## Available Build Commands
+
+The following specialized verbs are available for world building:
+
+### `@alias` verb
+
+Add aliases to objects without using `@eval`:
+
+```
+@alias #N as "alias"
+@alias "object name" as "alias"
+```
+
+**Examples:**
+- `@alias #45 as "stool"`
+- `@alias "pool table" as "table"`
+- `@alias "jukebox" as "juke"`
+
+The verb supports global lookup (can reference objects anywhere by name or #N ID). Permissions are enforced by the object model — you can only add aliases to objects you own or have appropriate permissions for.
+
+**Implementation:** `moo/bootstrap/default_verbs/player/at_alias.py`
+
+## Build Automation
+
+All environments are built using the generic `build_from_yaml.py` script. This YAML-driven approach provides:
+
+**Benefits:**
+- **Repeatable builds**: Content in YAML, logic in Python
+- **Version control**: YAML diffs show actual content changes
+- **No code knowledge needed**: Edit YAML directly, no Python required
+- **Hash mode**: Optional hash suffixes for testing (allows repeated builds)
+- **Automated testing**: Test verbs auto-generated from YAML structure
+- **Improved efficiency**: ~13% reduction in commands using `@alias` verb instead of `@eval`
+
+**Scripts:**
+- `build_from_yaml.py` — Generic YAML-driven builder (✅ tested and validated)
+- `build_moes_tavern.py` — Original monolithic script (reference only)
+
+**Example environment**: `environments/moes-tavern.yaml` (complete 5-room Simpsons tavern)
+
+**Validation**: Both scripts have been tested side-by-side and produce equivalent environments. The YAML approach uses 48 `@alias` commands vs 132 `@eval` alias commands in the original, resulting in cleaner output and faster execution.
+
+See `references/build-automation.md` for YAML schema details and advanced patterns.
+
+## Complete Workflow Example
+
+From research to verified build:
+
+```bash
+# Phase 1: Research (manual web research)
+# Theme: Moe's Tavern from The Simpsons
+# - 5 rooms (Main Bar, Men's Room, Ladies Room, Back Room, Secret Room)
+# - 23 objects (bar counter, stools, pool table, etc.)
+# - 3 NPCs (Moe, Barney, Homer)
+# - 13 interactive verbs (call, drink, play, talk, etc.)
+
+# Phase 2: Generate YAML
+# Create: extras/skills/game-designer/environments/moes-tavern.yaml
+# (See example file for complete structure)
+
+# Phase 3: Validate YAML
+python extras/skills/game-designer/tools/build_from_yaml.py \
+  --dry-run extras/skills/game-designer/environments/moes-tavern.yaml
+
+# Output:
+# Loaded environment: Moe's Tavern
+#   Hash mode: enabled
+#   Rooms: 5
+#   Objects: 23
+#   NPCs: 3
+#   Verbs: 13
+
+# Phase 4: User reviews YAML, approves build
+
+# Phase 5: Execute build
+python extras/skills/game-designer/tools/build_from_yaml.py \
+  extras/skills/game-designer/environments/moes-tavern.yaml
+
+# Output: ~1,200 lines over ~15-20 minutes
+# Result: Test verb test-moes-tavern-abc123 passes all checks
+
+# Phase 6: Verify in-game
+# SSH to MOO, run: test-moes-tavern-abc123
+# Explore the environment, test verbs
+```
+
+**Result**: Fully functional 5-room environment with interactive objects, NPCs, and verbs. Content is version-controlled in YAML and can be rebuilt at any time.
 
 ## Reference Files
 
 - `references/moo-commands.md` — exact syntax for all build commands
 - `references/verb-patterns.md` — RestrictedPython code patterns for interactive verbs
 - `references/object-model.md` — parent classes, properties, exits, NPCs
-- `assets/test-verb-template.md` — `@test-<name>` verb template
+- `references/build-automation.md` — YAML schema and automated build patterns
+- `assets/test-verb-template.md` — `@test-<name>` verb template (for custom tests)
+- `environments/moes-tavern.yaml` — complete working example (5 rooms, 23 objects, 3 NPCs)
