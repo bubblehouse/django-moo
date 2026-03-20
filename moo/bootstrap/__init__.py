@@ -114,6 +114,28 @@ def initialize_dataset(dataset="default"):
     return repo
 
 
+def parse_shebang(content):
+    """
+    Parse the ``#!moo verb`` shebang from verb source code.
+
+    :param content: the full verb source code string
+    :returns: ``(names, dspec, ispec)`` tuple if a valid shebang is present, else ``None``
+    """
+    try:
+        first_line, _ = content.split("\n", maxsplit=1)
+    except ValueError:
+        return None
+    if not first_line.startswith("#!moo verb"):
+        return None
+    shebang = first_line[6:]  # strip "#!moo "
+    try:
+        args = parser.parse_args(shlex.split(shebang))
+    except SystemExit:
+        return None
+    ispec = args.ispec if hasattr(args, "ispec") else None
+    return args.names, args.dspec, ispec
+
+
 def load_verb_source(path, system, repo, replace=False):
     from moo.core.models.object import Object
 

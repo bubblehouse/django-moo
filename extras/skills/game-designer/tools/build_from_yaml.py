@@ -40,15 +40,16 @@ def obj_id(output):
     return m.group(1) if m else None
 
 
-def create(moo, name, parent="$thing"):
+def create(moo, name, parent="$thing", obvious=False):
     """Create an object via @eval and return its #N reference."""
     # Use @eval with create() SDK function to avoid parser ambiguity when duplicates exist
     # Set location=None to avoid enterfunc race condition
     escaped_name = name.replace('"', '\\"')
     escaped_parent = parent.replace('"', '\\"')
+    obvious_str = "True" if obvious else "False"
     output = moo.run(
         f'@eval "from moo.sdk import create, lookup; '
-        f'obj = create(\\"{escaped_name}\\", parents=[lookup(\\"{escaped_parent}\\")], location=None); '
+        f'obj = create(\\"{escaped_name}\\", parents=[lookup(\\"{escaped_parent}\\")], location=None, obvious={obvious_str}); '
         f'print(f\\"Created {{obj}}\\"); obj"'
     )
     ref = obj_id(output)
@@ -138,9 +139,24 @@ def add_hash_suffix(name, run_hash, use_hash):
 # -----------------------------------------------------------------------------
 
 
+def teleport_to(moo, room_name):
+    """Teleport the player to a room by name using @eval."""
+    escaped = room_name.replace('"', '\\"')
+    moo.run(
+        f'@eval "from moo.sdk import lookup, context; '
+        f'context.player.location = lookup(\\"{escaped}\\"); '
+        f'context.player.save()"'
+    )
+
+
 def build_rooms(moo, env, run_hash, use_hash):
     """
     Create all rooms and exits.
+
+    Phase 1: Create every room in the void (no navigation required).
+    Phase 2: Teleport to each room, describe it, and tunnel all exits.
+             All rooms already exist by this point, so @tunnel works for
+             every exit regardless of direction or graph depth.
 
     Returns: room_map dict {original_name: hash_suffixed_name}
     """
@@ -150,77 +166,33 @@ def build_rooms(moo, env, run_hash, use_hash):
     if not rooms:
         return room_map
 
-    # Create first room in void
-    first_room = rooms[0]
-    room_name = add_hash_suffix(first_room["name"], run_hash, use_hash)
-    room_map[first_room["name"]] = room_name
+    # Phase 1: Create all rooms in the void
+    print("  Creating rooms:", file=sys.stderr)
+    for room_def in rooms:
+        room_name = add_hash_suffix(room_def["name"], run_hash, use_hash)
+        room_map[room_def["name"]] = room_name
+        escaped = room_name.replace('"', '\\"')
+        moo.run(f'@create "{escaped}" from "$room" in the void')
+        print(f"    {room_name}", file=sys.stderr)
 
-    escaped_room_name = room_name.replace('"', '\\"')
-    moo.run(f'@create "{escaped_room_name}" from "$room" in the void')
-    moo.run(
-        f'@eval "from moo.sdk import lookup, context; '
-        f'context.player.location = lookup(\\"{escaped_room_name}\\"); '
-        f'context.player.save()"'
-    )
-    moo.run(f'@describe here as "{first_room["description"].replace(chr(34), chr(92)+chr(34))}"')
+    # Phase 2: Teleport to each room, describe it, wire exits
+    print("  Describing rooms and wiring exits:", file=sys.stderr)
+    for room_def in rooms:
+        room_name = room_map[room_def["name"]]
+        teleport_to(moo, room_name)
 
-    print(f"  Created: {room_name}", file=sys.stderr)
+        escaped_desc = room_def["description"].replace('"', '\\"')
+        moo.run(f'@describe here as "{escaped_desc}"')
 
-    # Process exits for first room
-    if "exits" in first_room:
-        for exit_def in first_room["exits"]:
+        for exit_def in room_def.get("exits", []):
             direction = exit_def["direction"]
             to_room = exit_def["to"]
-
-            # Check if this is a reverse exit (to external room)
-            if "reverse" in exit_def:
-                # Room already exists, just tunnel back
-                moo.run(f'@tunnel {direction} to "{to_room}"')
-                print(f"  Tunneled: {direction} -> {to_room}", file=sys.stderr)
-            else:
-                # Create new room with @dig
-                to_room_hash = add_hash_suffix(to_room, run_hash, use_hash)
-                room_map[to_room] = to_room_hash
-
-                # Find the room definition
-                to_room_def = None
-                for r in rooms[1:]:
-                    if r["name"] == to_room:
-                        to_room_def = r
-                        break
-
-                if to_room_def:
-                    escaped_to = to_room_hash.replace('"', '\\"')
-                    moo.run(f'@dig {direction} to "{escaped_to}"')
-                    print(f"  Dug: {direction} -> {to_room_hash}", file=sys.stderr)
-
-                    # Navigate to new room and describe it
-                    moo.run(direction)
-                    escaped_desc = to_room_def["description"].replace('"', '\\"')
-                    moo.run(f'@describe here as "{escaped_desc}"')
-
-                    # Process exits from this room recursively
-                    if "exits" in to_room_def:
-                        for sub_exit in to_room_def["exits"]:
-                            sub_direction = sub_exit["direction"]
-                            sub_to = sub_exit["to"]
-
-                            if "reverse" in sub_exit or sub_to in room_map:
-                                # Tunnel back to existing room
-                                existing_name = room_map.get(sub_to, sub_to)
-                                escaped_existing = existing_name.replace('"', '\\"')
-                                moo.run(f'@tunnel {sub_direction} to "{escaped_existing}"')
-                                print(f"  Tunneled: {sub_direction} -> {existing_name}", file=sys.stderr)
-
-                    # Navigate back
-                    # Find reverse direction
-                    reverse_dir = None
-                    for back_exit in to_room_def.get("exits", []):
-                        if back_exit["to"] == first_room["name"]:
-                            reverse_dir = back_exit["direction"]
-                            break
-                    if reverse_dir:
-                        moo.run(reverse_dir)
+            # Use hash name if this room is in our map, otherwise use as-is
+            # (allows exits to pre-existing rooms outside this environment)
+            to_room_hash = room_map.get(to_room, to_room)
+            escaped_to = to_room_hash.replace('"', '\\"')
+            moo.run(f'@tunnel {direction} to "{escaped_to}"')
+            print(f"    {room_name} -{direction}-> {to_room_hash}", file=sys.stderr)
 
     return room_map
 
@@ -247,11 +219,12 @@ def build_objects(moo, env, run_hash, use_hash, room_map):
             aliases = obj_spec.get("aliases", [])
             quantity = obj_spec.get("quantity", 1)
             obj_parent = obj_spec.get("parent", parent)
+            obj_obvious = obj_spec.get("obvious", False)
 
             # Create object(s)
             for i in range(quantity):
                 hash_name = add_hash_suffix(name, run_hash, use_hash)
-                ref = create(moo, hash_name, obj_parent)
+                ref = create(moo, hash_name, obj_parent, obvious=obj_obvious)
 
                 if not ref:
                     continue

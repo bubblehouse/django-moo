@@ -49,6 +49,7 @@ objects:
     - name: "object name"
       description: "Object description..."
       aliases: ["alias1", "alias2"]
+      obvious: true  # Appears in room listing when players look (default: false)
       quantity: 4  # Create 4 identical objects
 
 npcs:
@@ -65,6 +66,15 @@ verbs:
       from moo.sdk import context
       # Verb implementation...
 ```
+
+When creating descriptions, review the `references/room-description-principles.md` reference for guidelines on effective writing. Key principle: room descriptions should be atmospheric, not inventories. The `obvious` object listing handles enumeration — descriptions handle character and orientation.
+
+**For each object, decide: `obvious: true` or `obvious: false`?**
+
+- `obvious: true` — the object appears in the room listing when players `look`. Use for dominant furniture, interactive focal points, major props, anything a person would immediately notice walking in.
+- `obvious: false` (default) — hidden from the listing, discovered by examining other objects or through narrative hints. Use for small details, easter eggs, items found by searching.
+
+Objects marked `obvious: true` should be mentioned in the room description. Non-obvious objects don't need to be — though a description can hint at them as flavor or reward for curiosity.
 
 **Key sections:**
 
@@ -106,7 +116,7 @@ This review step prevents committing to a multi-minute build process without use
 
 ## Phase 4: Build - Invoke Build Script
 
-After user approval, execute the build script:
+After user approval, execute the build script **in the background** — builds take 3-4 minutes and must not block the conversation:
 
 ```bash
 python extras/skills/game-designer/tools/build_from_yaml.py \
@@ -170,8 +180,10 @@ Based on validated builds:
 
 1. **Use `quantity` for duplicates**: Instead of repeating object definitions, use `quantity: 4` to create multiple identical objects
 2. **Organize by room**: Group objects under their destination rooms for clarity
-3. **Hash mode for testing**: Set `use_hash_suffix: true` during development, `false` for production
-4. **Comment liberally**: YAML supports comments - explain non-obvious design decisions
+3. **Mark obvious objects explicitly**: Every object that should appear in the room listing needs `obvious: true` — the default is `false`. Think: what would someone notice immediately walking in?
+4. **Write descriptions for atmosphere, not inventory**: `obvious` objects appear in the room listing automatically. Room descriptions should orient and evoke, not enumerate. A description that reads like a bullet list means too many objects are being named.
+5. **Hash mode for testing**: Set `use_hash_suffix: true` during development, `false` for production
+6. **Comment liberally**: YAML supports comments - explain non-obvious design decisions
 
 ### Build Process
 
@@ -289,6 +301,7 @@ python extras/skills/game-designer/tools/build_from_yaml.py \
 - `references/moo-commands.md` — exact syntax for all build commands
 - `references/verb-patterns.md` — RestrictedPython code patterns for interactive verbs
 - `references/object-model.md` — parent classes, properties, exits, NPCs
+- `references/room-description-principles.md` — guidelines for writing effective room descriptions
 - `references/build-automation.md` — YAML schema and automated build patterns
 - `assets/test-verb-template.md` — `@test-<name>` verb template (for custom tests)
 - `environments/moes-tavern.yaml` — complete working example (5 rooms, 23 objects, 3 NPCs)

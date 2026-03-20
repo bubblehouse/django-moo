@@ -61,6 +61,7 @@ objects:
     - name: "bar stool"
       description: "Wobbly bar stool..."
       aliases: ["stool"]
+      obvious: true   # Appears in room listing when players look
       quantity: 4  # Create 4 identical stools
 
 npcs:
@@ -158,6 +159,7 @@ objects:
       description: "Object description..."
       aliases: ["alias1", "alias2"]
       parent: "$thing"      # Optional, uses metadata.base_parent if omitted
+      obvious: true         # Optional, makes object appear in room listing (default: false)
       quantity: 4           # Optional, creates N identical objects
 
     - name: "another object"
@@ -166,8 +168,14 @@ objects:
 
 **Key Features:**
 - Organized by room for clarity
+- `obvious: true` makes an object appear in the room contents listing when players `look`
 - `quantity` field creates multiple identical objects
 - Aliases added using `@alias` verb
+
+**`obvious` guidelines:**
+- Mark obvious the things a player would immediately notice: dominant furniture, interactive focal points, major props
+- Leave non-obvious: small details, discoverable easter eggs, functional items that players find by examining other objects
+- See `references/room-description-principles.md` for the full Chekhov's Gun / `obvious` relationship
 
 ### npcs Section
 
