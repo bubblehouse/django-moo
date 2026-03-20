@@ -32,6 +32,8 @@ __all__ = [
     "set_task_perms",
     "context",
     "moojson",
+    "get_session_setting",
+    "set_session_setting",
     "NoSuchObjectError",
     "NoSuchVerbError",
     "NoSuchPropertyError",
@@ -468,3 +470,52 @@ class _Context:
 
 
 context = _Context()
+
+
+# Session settings for PREFIX/SUFFIX/QUIET commands
+def get_session_setting(key, default=None):
+    """
+    Get a session-specific output setting for the current player.
+
+    Session settings are stored per-user and cleared on disconnect.
+    Used by PREFIX, SUFFIX, and QUIET commands for machine-readable output.
+
+    :param key: setting name ('output_prefix', 'output_suffix', 'quiet_mode', 'color_system')
+    :param default: value to return if setting is not found
+    :return: setting value or default
+    """
+    from .shell import prompt as prompt_module
+
+    player = context.player
+    if not player:
+        return default
+
+    user_pk = player.owner.pk if player.owner else None
+    if user_pk is None:
+        return default
+
+    settings = prompt_module._session_settings.get(user_pk, {})
+    return settings.get(key, default)
+
+
+def set_session_setting(key, value):
+    """
+    Set a session-specific output setting for the current player.
+
+    Session settings are stored per-user and cleared on disconnect.
+    Used by PREFIX, SUFFIX, and QUIET commands for machine-readable output.
+
+    Publishes a ``session_setting`` event to the player's Kombu message queue,
+    which the SSH server's ``process_messages()`` loop picks up and applies to
+    its own in-process registry. This bridges the Celery worker / SSH server
+    process boundary.
+
+    :param key: setting name ('output_prefix', 'output_suffix', 'quiet_mode', 'color_system')
+    :param value: setting value
+    """
+    from moo.core import _publish_to_player
+
+    player = context.player
+    if not player:
+        return
+    _publish_to_player(player, {"event": "session_setting", "key": key, "value": value})

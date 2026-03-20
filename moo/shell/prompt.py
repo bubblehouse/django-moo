@@ -25,6 +25,11 @@ from ..core import code, models, moojson, tasks
 
 log = logging.getLogger(__name__)
 
+# Session-specific output settings registry
+# Keyed by user_pk, stores {output_prefix, output_suffix, quiet_mode, color_system}
+# Settings are cleared when user disconnects
+_session_settings = {}
+
 PROMPT_SHORTCUTS = {
     '"': 'say "%"',
     "'": "say '%'",
@@ -99,6 +104,12 @@ class MooPrompt:
         self.paginator_queue = asyncio.Queue()
         self.last_property_write: datetime | None = None
 
+        # Connection-level output configuration (session-only, not persisted)
+        self.output_prefix = None  # Set by PREFIX verb
+        self.output_suffix = None  # Set by SUFFIX verb
+        self.quiet_mode = False  # Set by QUIET verb
+        self.color_system = "truecolor"  # Default: full color support
+
     async def process_commands(self):
         """
         Read and dispatch user input in a loop.
@@ -136,6 +147,12 @@ class MooPrompt:
                     await self.handle_command(line)
         except:  # pylint: disable=bare-except
             log.exception("Error in command processing")
+        finally:
+            # Clean up session settings on disconnect
+            user_pk = self.user.pk
+            if user_pk in _session_settings:
+                del _session_settings[user_pk]
+                log.debug(f"Cleared session settings for user {user_pk}")
         log.debug("REPL is exiting, stopping main thread...")
 
     async def run_editor_session(self, req: dict):
@@ -181,9 +198,15 @@ class MooPrompt:
         """
         Build the prompt_toolkit message tuple for the current location.
 
+        In quiet mode, returns a minimal prompt so automation clients get
+        clean output without location noise.
+
         :returns: list of ``(style_class, text)`` pairs showing the avatar's name
             and current location, e.g. ``Wizard@The Void:$ ``
         """
+        settings = _session_settings.get(self.user.pk, {})
+        if settings.get("quiet_mode", False):
+            return [("", "$ ")]
         caller = self.user.player.avatar
         caller.refresh_from_db()
         return [
@@ -203,6 +226,8 @@ class MooPrompt:
         to avoid excessive property writes. Any exception from the Celery task is
         caught and rendered as a red traceback in the terminal.
 
+        Emits PREFIX and SUFFIX markers if set by the user for machine-readable output.
+
         :param line: raw input string typed by the user
         """
         caller = self.user.player.avatar
@@ -212,15 +237,27 @@ class MooPrompt:
                 caller.set_property("last_connected_time", now)
             self.last_property_write = now
         log.info(f"{caller}: {line}")
+
+        # Get session settings for this user
+        user_pk = self.user.pk
+        settings = _session_settings.get(user_pk, {})
+        output_prefix = settings.get("output_prefix")
+        output_suffix = settings.get("output_suffix")
+
         ct = tasks.parse_command.delay(caller.pk, line)
         try:
             output = ct.get()
+            if output_prefix:
+                self.writer(output_prefix)
             for item in output:
                 self.writer(item)
         except:  # pylint: disable=bare-except
             import traceback
 
             self.writer(f"[bold red]{traceback.format_exc()}[/bold red]")
+        finally:
+            if output_suffix:
+                self.writer(output_suffix)
 
     def writer(self, s, is_error=False):
         """
@@ -229,10 +266,15 @@ class MooPrompt:
         Captures Rich's ANSI output and passes it through print_formatted_text
         so it prints above the active input prompt without clobbering it.
 
+        In quiet mode, colors are disabled at the Rich level so no ANSI escape
+        sequences are emitted — automation clients receive clean plain text.
+
         :param s: Rich markup string to render
         :param is_error: reserved for future use; currently unused
         """
-        console = Console(color_system="truecolor")
+        settings = _session_settings.get(self.user.pk, {})
+        color_system = None if settings.get("quiet_mode", False) else "truecolor"
+        console = Console(color_system=color_system)
         with console.capture() as capture:
             console.print(s)
         content = capture.get()
@@ -258,18 +300,27 @@ class MooPrompt:
                     try:
                         msg = sb.get_nowait()
                     except sb.Empty:
-                        await asyncio.sleep(1)
+                        msg = None
+                    finally:
+                        sb.close()
+
+                    if msg is None:
+                        await asyncio.sleep(0.05)
                         continue
-                    if msg:
-                        content = moojson.loads(msg.body)
-                        message = content["message"]
-                        if isinstance(message, dict) and message.get("event") == "editor":
-                            await self.editor_queue.put(message)
-                        elif isinstance(message, dict) and message.get("event") == "paginator":
-                            await self.paginator_queue.put(message)
-                        else:
-                            await run_in_terminal(lambda: self.writer(message))
-                    sb.close()
+
+                    content = moojson.loads(msg.body)
+                    message = content["message"]
+                    if isinstance(message, dict) and message.get("event") == "editor":
+                        await self.editor_queue.put(message)
+                    elif isinstance(message, dict) and message.get("event") == "paginator":
+                        await self.paginator_queue.put(message)
+                    elif isinstance(message, dict) and message.get("event") == "session_setting":
+                        user_pk = self.user.pk
+                        if user_pk not in _session_settings:
+                            _session_settings[user_pk] = {}
+                        _session_settings[user_pk][message["key"]] = message["value"]
+                    else:
+                        await run_in_terminal(lambda: self.writer(message))
         except:  # pylint: disable=bare-except
             log.exception("Stopping message processing")
         log.debug("REPL is exiting, stopping messages thread...")
