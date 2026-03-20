@@ -148,6 +148,11 @@ obj.is_player()
 obj.is_wizard()
 obj.is_connected()
 
+# Aliases
+obj.add_alias(alias)                     # add an alias (handles duplicates)
+obj.aliases.all()                        # QuerySet of ObjectAlias instances
+obj.aliases.filter(alias="name").exists() # check if alias exists
+
 # Verb dispatch
 obj.invoke_verb(name, *args)
 obj.has_verb(name)
@@ -366,6 +371,54 @@ Key points:
 - `moo_eval()` is an SDK function that handles compilation and execution
 - Only prints non-None results (REPL-like behavior)
 
+### @alias.py — global lookup with preposition
+
+```python
+#!moo verb @alias add --on $player --dspec any --ispec as:any
+
+# pylint: disable=return-outside-function,undefined-variable
+
+"""
+Add an alias to an object.
+
+Usage:
+    @alias <object> as "<alias>"
+    @alias #N as "alias"
+
+The object can be specified by name (quoted if it contains spaces) or by
+object ID (#N). Multiple aliases can be added to the same object by running
+the command multiple times.
+
+Examples:
+    @alias "pool table" as "table"
+    @alias #45 as "stool"
+    @alias jukebox as "juke"
+
+Permissions are enforced by the object model - you can only add aliases to
+objects you own or have appropriate permissions for.
+"""
+
+from moo.sdk import context
+
+# Get the target object (supports both names and #N IDs)
+obj = context.parser.get_dobj(lookup=True)
+
+# Get the alias string
+alias = context.parser.get_pobj_str("as")
+
+# Add the alias - permissions are checked by the object model
+obj.add_alias(alias)
+
+print(f"[yellow]Added alias '{alias}' to {obj}[/yellow]")
+```
+
+Key points:
+- `get_dobj(lookup=True)` performs global lookup (not just local area)
+- Supports both object names and `#N` object ID references
+- `get_pobj_str("as")` extracts the string after the preposition
+- Delegates permission checks to the object model (`add_alias()` method)
+- Simple, focused verb that does one thing well
+
 ## Error Handling
 
 `UserError` and all its subclasses (`NoSuchObjectError`, `NoSuchVerbError`, `NoSuchPropertyError`, `UsageError`, `QuotaError`, etc.) are automatically caught by the task runner and displayed to the player as a bold red message. Verbs do not need to catch these to report errors — raising them is the correct and idiomatic pattern.
@@ -440,10 +493,12 @@ Rules:
 - `get_pobj_string()` / `has_pobj_string()` do not exist. Use `get_pobj_str()` / `has_pobj_str()`.
 - `if player != this:` breaks on any verb with a dspec. `this` is the last matched object in dispatch order, not the caller. Use `context.player` for the initiator.
 - `obj.parents` is a ManyRelatedManager. Always call `.all()` to iterate.
+- `obj.aliases` is a RelatedManager. Check with `obj.aliases.filter(alias="name").exists()`, not `"name" in obj.aliases`.
 - `has_property(x)` + `get_property(x)` is 2 queries. Use `try: get_property() except NoSuchPropertyError`.
 - Verbs on `$player` with `--dspec any`: when dobj and caller both inherit the verb, the dobj wins — `this` = dobj, `context.player` = caller.
 - **Parser preposition scanning:** Words like `from`, `to`, `with`, `in`, `on` are automatically treated as prepositions. Use quoted strings when these keywords appear in arguments: `@eval "from moo.sdk import lookup"` not `@eval from moo.sdk import lookup`.
 - **`--dspec any` is required for verbs that need a dobj:** Without it, the verb won't match commands with direct objects. The verb will never be invoked if a dobj is typed.
+- **`get_dobj()` vs `get_dobj(lookup=True)`:** By default, `get_dobj()` only searches the player's inventory and current room. Use `lookup=True` for global lookups (e.g., `@alias #45 as "thing"` needs global lookup to work with object IDs).
 - **`eval` is a reserved name:** Can't name SDK functions or variables `eval` — RestrictedPython blocks it. Use alternatives like `moo_eval`.
 - **Can't import from `moo.core.*` in verb code:** These modules aren't in `ALLOWED_MODULES`. Create SDK functions in `moo/sdk.py` for privileged operations instead.
 - **Exception handling limitations:** Can't use `e.__class__.__name__` or `type(e)` in verb error handlers. Use `str(e)` or just stringify: `print(f"Error: {e}")`.

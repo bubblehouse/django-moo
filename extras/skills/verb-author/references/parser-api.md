@@ -10,11 +10,16 @@ To distinguish "was this verb triggered directly by a player command vs. called 
 
 | Method | Returns | Raises | Use when |
 |--------|---------|--------|----------|
-| `get_dobj()` | Object | `NoSuchObjectError` | You expect the dobj to be an existing game object |
-| `get_dobj(lookup=True)` | Object | `NoSuchObjectError` | Same, but also resolves by name/alias globally |
+| `get_dobj()` | Object | `NoSuchObjectError` | You expect the dobj to be an existing game object (local area only) |
+| `get_dobj(lookup=True)` | Object | `NoSuchObjectError` | Same, but resolves globally by name/alias/ID anywhere in the database |
 | `get_dobj_str()` | str | `NoSuchObjectError` if missing | You want the raw string (a message, a name to create, etc.) |
 | `has_dobj()` | bool | — | Check if dobj resolved to an Object |
 | `has_dobj_str()` | bool | — | Check if any dobj string was typed |
+
+**Local vs Global Lookup:**
+- Without `lookup=True`: searches only the player's inventory and current room
+- With `lookup=True`: searches the entire database by name, alias, or `#N` object ID reference
+- Use global lookup for admin commands that need to reference objects anywhere (e.g., `@alias #45 as "thing"`)
 
 ## Indirect Object Methods
 
