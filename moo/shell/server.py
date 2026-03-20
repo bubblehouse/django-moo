@@ -33,12 +33,14 @@ class MooPromptToolkitSSHSession(PromptToolkitSSHSession):
         """Check terminal type and adjust CPR setting before starting interaction."""
         import sys
 
+        self.is_automation = False
         if self._chan:
             term = self._chan.get_terminal_type()
             print(f"[MOO-DEBUG] Terminal type: {term!r}, enable_cpr={self.enable_cpr}", file=sys.stderr, flush=True)
             if term and "moo-automation" in term.lower():
                 print("[MOO-DEBUG] Disabling CPR for automation", file=sys.stderr, flush=True)
                 self.enable_cpr = False
+                self.is_automation = True
         super().session_started()
 
 
@@ -48,7 +50,8 @@ async def interact(ssh_session: PromptToolkitSSHSession) -> None:
 
     :param ssh_session: the session being started
     """
-    await embed(ssh_session.user)
+    automation = getattr(ssh_session, "is_automation", False)
+    await embed(ssh_session.user, automation=automation)
     log.info(f"{ssh_session.user} disconnected.")
 
 
