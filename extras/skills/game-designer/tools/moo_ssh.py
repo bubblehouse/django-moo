@@ -317,10 +317,10 @@ class MooSSH:
         return results
 
     def disconnect(self):
-        """Send QUIT and close the SSH session."""
+        """Send @quit and close the SSH session."""
         if self.child and self.child.isalive():
             try:
-                self.child.sendline("QUIT")
+                self.child.sendline("@quit")
                 self.child.expect([pexpect.EOF, pexpect.TIMEOUT], timeout=5)
             except (pexpect.ExceptionPexpect, OSError):
                 # Ignore errors during disconnect cleanup

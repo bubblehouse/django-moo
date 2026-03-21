@@ -17,6 +17,8 @@ import sys
 import time
 from pathlib import Path
 
+import pexpect
+
 sys.path.insert(0, str(Path(__file__).parent))
 from moo_ssh import MooSSH  # pylint: disable=wrong-import-position
 
@@ -116,6 +118,26 @@ def test_very_long_verb(moo, ref):
         print("  FAIL or no confirmation in output (possible timeout)")
 
 
+def test_quit_disconnects():
+    """Verify that @quit causes a clean EOF (not a 5 s TIMEOUT)."""
+    print("\n=== Test: @quit disconnects ===")
+    moo = MooSSH(timeout=10)
+    moo.connect()
+    moo.enable_automation_mode()
+
+    t0 = time.time()
+    moo.child.sendline("@quit")
+    result = moo.child.expect([pexpect.EOF, pexpect.TIMEOUT], timeout=5)
+    elapsed = time.time() - t0
+
+    if moo.child.isalive():
+        moo.child.close()
+    moo.child = None
+
+    assert result == 0, f"Expected EOF but got TIMEOUT after {elapsed:.2f}s — @quit did not disconnect"
+    print(f"  PASS: clean EOF in {elapsed:.2f}s")
+
+
 def main():
     print("[test_ssh_bugs] Connecting...")
     with MooSSH(timeout=15) as moo:
@@ -140,6 +162,8 @@ def main():
             if r:
                 out = moo.run(f"@recycle {r}")
                 print(f"  recycled {r}: {out!r}")
+
+    test_quit_disconnects()
 
     print("\n[test_ssh_bugs] Done.")
 
