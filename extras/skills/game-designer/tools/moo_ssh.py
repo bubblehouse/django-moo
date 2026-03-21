@@ -176,7 +176,7 @@ class MooSSH:
 
             raw = "".join(accumulated)
             output = self._extract_delimited_output(raw)
-            time.sleep(1)
+            time.sleep(0.1)
         else:
             # Fallback: timeout-based polling (original behavior)
             accumulated = []

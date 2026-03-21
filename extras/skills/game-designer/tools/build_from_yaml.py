@@ -6,6 +6,7 @@ Builds themed multi-room environments from YAML environment definitions.
 
 Usage:
     python build_from_yaml.py environments/moes-tavern.yaml
+    python build_from_yaml.py environments/planet-express/
     python build_from_yaml.py --dry-run environments/moes-tavern.yaml
     python build_from_yaml.py --no-test environments/moes-tavern.yaml
     python build_from_yaml.py --hash environments/moes-tavern.yaml
@@ -28,6 +29,30 @@ import yaml
 # Add parent directory to path for moo_ssh import
 sys.path.insert(0, str(Path(__file__).parent))
 from moo_ssh import MooSSH  # pylint: disable=wrong-import-position
+
+# Placeholder used in YAML names and verb code to mark where the hash suffix goes.
+# With hash enabled:  "Room Name __hash_suffix__"  →  "Room Name [abc123]"
+# With hash disabled: "Room Name __hash_suffix__"  →  "Room Name"
+HASH_PLACEHOLDER = "__hash_suffix__"
+
+# -----------------------------------------------------------------------------
+# Hash Helper Functions
+# -----------------------------------------------------------------------------
+
+
+def apply_hash(text, run_hash, use_hash):
+    """Replace __hash_suffix__ placeholder in text with the hash suffix or empty string."""
+    if use_hash and run_hash:
+        return text.replace(HASH_PLACEHOLDER, f"[{run_hash}]")
+    else:
+        # Remove the placeholder and any immediately preceding space
+        return text.replace(f" {HASH_PLACEHOLDER}", "").replace(HASH_PLACEHOLDER, "")
+
+
+def strip_hash_placeholder(text):
+    """Remove the hash placeholder entirely, for use as an internal dictionary key."""
+    return text.replace(f" {HASH_PLACEHOLDER}", "").replace(HASH_PLACEHOLDER, "")
+
 
 # -----------------------------------------------------------------------------
 # Helper Functions (reused from build_moes_tavern.py)
@@ -105,9 +130,27 @@ def set_verb(moo, verb_name, obj_ref, code):
 
 
 def load_environment(yaml_path):
-    """Load and validate YAML environment file."""
-    with open(yaml_path, encoding="utf-8") as f:
-        env = yaml.safe_load(f)
+    """Load and validate YAML environment file or directory.
+
+    If yaml_path is a directory, loads all *.yaml files from it and merges
+    them into a single environment dict. Each file should contain one or more
+    top-level sections (metadata, rooms, objects, npcs, verbs, test).
+    """
+    path = Path(yaml_path)
+
+    if path.is_dir():
+        env = {}
+        section_files = sorted(path.glob("*.yaml"))
+        if not section_files:
+            raise ValueError(f"No .yaml files found in directory: {path}")
+        for section_file in section_files:
+            with open(section_file, encoding="utf-8") as f:
+                data = yaml.safe_load(f)
+            if data:
+                env.update(data)
+    else:
+        with open(path, encoding="utf-8") as f:
+            env = yaml.safe_load(f)
 
     # Validate required sections
     required = ["metadata", "rooms"]
@@ -126,13 +169,6 @@ def load_environment(yaml_path):
 def generate_hash():
     """Generate unique 6-character hash for this build."""
     return hashlib.sha256(str(time.time()).encode()).hexdigest()[:6]
-
-
-def add_hash_suffix(name, run_hash, use_hash):
-    """Add hash suffix to object/room name if use_hash is True."""
-    if use_hash and run_hash:
-        return f"{name} [{run_hash}]"
-    return name
 
 
 # -----------------------------------------------------------------------------
@@ -159,7 +195,12 @@ def build_rooms(moo, env, run_hash, use_hash):
              All rooms already exist by this point, so @tunnel works for
              every exit regardless of direction or graph depth.
 
-    Returns: room_map dict {original_name: hash_suffixed_name}
+    room_map is keyed by the clean room name (placeholder stripped) and
+    maps to the fully resolved name (with hash applied). Internal YAML
+    references (exit to:, npc room:, object section keys) use clean names
+    and look up via room_map.
+
+    Returns: room_map dict {clean_name: resolved_name}
     """
     rooms = env["rooms"]
     room_map = {}
@@ -170,8 +211,9 @@ def build_rooms(moo, env, run_hash, use_hash):
     # Phase 1: Create all rooms in the void
     print("  Creating rooms:", file=sys.stderr)
     for room_def in rooms:
-        room_name = add_hash_suffix(room_def["name"], run_hash, use_hash)
-        room_map[room_def["name"]] = room_name
+        clean_name = strip_hash_placeholder(room_def["name"])
+        room_name = apply_hash(room_def["name"], run_hash, use_hash)
+        room_map[clean_name] = room_name
         escaped = room_name.replace('"', '\\"')
         moo.run(f'@create "{escaped}" from "$room" in the void')
         print(f"    {room_name}", file=sys.stderr)
@@ -179,21 +221,27 @@ def build_rooms(moo, env, run_hash, use_hash):
     # Phase 2: Teleport to each room, describe it, wire exits
     print("  Describing rooms and wiring exits:", file=sys.stderr)
     for room_def in rooms:
-        room_name = room_map[room_def["name"]]
+        clean_name = strip_hash_placeholder(room_def["name"])
+        room_name = room_map[clean_name]
         teleport_to(moo, room_name)
 
         escaped_desc = room_def["description"].replace("\\", "\\\\").replace("\n", "\\n").replace('"', '\\"')
         moo.run(f'@describe here as "{escaped_desc}"')
 
+        # In hash mode, alias the clean name so lookup("Room Name") works without the hash
+        if use_hash and run_hash:
+            escaped_clean = clean_name.replace('"', '\\"')
+            moo.run(f'@alias here as "{escaped_clean}"')
+
         for exit_def in room_def.get("exits", []):
             direction = exit_def["direction"]
             to_room = exit_def["to"]
-            # Use hash name if this room is in our map, otherwise use as-is
-            # (allows exits to pre-existing rooms outside this environment)
-            to_room_hash = room_map.get(to_room, to_room)
-            escaped_to = to_room_hash.replace('"', '\\"')
+            # to_room is a clean name (no placeholder); look up resolved name.
+            # Falls back to the raw value for exits to rooms outside this environment.
+            to_room_resolved = room_map.get(to_room, to_room)
+            escaped_to = to_room_resolved.replace('"', '\\"')
             moo.run(f'@tunnel {direction} to "{escaped_to}"')
-            print(f"    {room_name} -{direction}-> {to_room_hash}", file=sys.stderr)
+            print(f"    {room_name} -{direction}-> {to_room_resolved}", file=sys.stderr)
 
     return room_map
 
@@ -202,13 +250,18 @@ def build_objects(moo, env, run_hash, use_hash, room_map):
     """
     Create all objects in all rooms.
 
-    Returns: obj_refs dict mapping (room, name) -> #N reference
+    obj_refs is keyed by (clean_room_name, clean_obj_name) where both names
+    have the hash placeholder stripped. Verb object: and room: fields use
+    clean names and look up via this dict.
+
+    Returns: obj_refs dict mapping (clean_room, clean_name) -> #N reference
     """
     obj_refs = {}
     objects = env.get("objects", {})
     parent = env["metadata"].get("base_parent", "$thing")
 
     for room_name, objs in objects.items():
+        # room_name from YAML is a clean name (no placeholder)
         room_hash_name = room_map.get(room_name, room_name)
         refs_to_move = []
 
@@ -216,6 +269,7 @@ def build_objects(moo, env, run_hash, use_hash, room_map):
 
         for obj_spec in objs:
             name = obj_spec["name"]
+            clean_name = strip_hash_placeholder(name)
             desc = obj_spec.get("description", "")
             aliases = obj_spec.get("aliases", [])
             quantity = obj_spec.get("quantity", 1)
@@ -224,7 +278,7 @@ def build_objects(moo, env, run_hash, use_hash, room_map):
 
             # Create object(s)
             for i in range(quantity):
-                hash_name = add_hash_suffix(name, run_hash, use_hash)
+                hash_name = apply_hash(name, run_hash, use_hash)
                 ref = create(moo, hash_name, obj_parent, obvious=obj_obvious)
 
                 if not ref:
@@ -234,16 +288,17 @@ def build_objects(moo, env, run_hash, use_hash, room_map):
                 if i == 0 and desc:
                     describe(moo, ref, desc)
 
-                # Add aliases
-                if aliases:
-                    add_aliases(moo, ref, aliases)
+                # In hash mode, prepend the clean name as an alias
+                all_aliases = ([clean_name] + list(aliases)) if (use_hash and run_hash) else list(aliases)
+                if all_aliases:
+                    add_aliases(moo, ref, all_aliases)
 
                 refs_to_move.append(ref)
 
-                # Store ref for verb attachment (use first instance)
+                # Store ref for verb attachment (use first instance, keyed by clean name)
                 if i == 0:
-                    obj_refs[(room_name, name)] = ref
-                    print(f"    {ref}: {name}", file=sys.stderr)
+                    obj_refs[(room_name, clean_name)] = ref
+                    print(f"    {ref}: {hash_name}", file=sys.stderr)
 
         # Move all objects to room
         for ref in refs_to_move:
@@ -253,7 +308,10 @@ def build_objects(moo, env, run_hash, use_hash, room_map):
 
 
 def build_npcs(moo, env, run_hash, use_hash, room_map):
-    """Create all NPCs and move to rooms."""
+    """Create all NPCs and move to rooms.
+
+    npc_refs is keyed by clean NPC name (placeholder stripped).
+    """
     npcs = env.get("npcs", [])
     parent = env["metadata"].get("npc_parent", "$player")
     npc_refs = {}
@@ -265,7 +323,8 @@ def build_npcs(moo, env, run_hash, use_hash, room_map):
 
     for npc_spec in npcs:
         name = npc_spec["name"]
-        hash_name = add_hash_suffix(name, run_hash, use_hash)
+        clean_name = strip_hash_placeholder(name)
+        hash_name = apply_hash(name, run_hash, use_hash)
         desc = npc_spec.get("description", "")
         aliases = npc_spec.get("aliases", [])
         room = npc_spec.get("room")
@@ -277,20 +336,28 @@ def build_npcs(moo, env, run_hash, use_hash, room_map):
 
         if desc:
             describe(moo, ref, desc)
-        if aliases:
-            add_aliases(moo, ref, aliases)
+        # In hash mode, prepend the clean name as an alias
+        all_aliases = ([clean_name] + list(aliases)) if (use_hash and run_hash) else list(aliases)
+        if all_aliases:
+            add_aliases(moo, ref, all_aliases)
         if room:
+            # room is a clean name (no placeholder)
             room_hash_name = room_map.get(room, room)
             move_to_room(moo, ref, room_hash_name)
 
-        npc_refs[name] = ref
-        print(f"    {ref}: {name}", file=sys.stderr)
+        npc_refs[clean_name] = ref
+        print(f"    {ref}: {hash_name}", file=sys.stderr)
 
     return npc_refs
 
 
 def build_verbs(moo, env, run_hash, use_hash, obj_refs, npc_refs, room_map):
-    """Attach verbs to objects/NPCs."""
+    """Attach verbs to objects/NPCs.
+
+    verb object: fields may contain __hash_suffix__ (used for test verb lookup);
+    the placeholder is stripped when looking up in obj_refs/npc_refs.
+    Verb code has __hash_suffix__ replaced before being sent to the MOO.
+    """
     verbs = env.get("verbs", [])
 
     if not verbs:
@@ -301,30 +368,31 @@ def build_verbs(moo, env, run_hash, use_hash, obj_refs, npc_refs, room_map):
     for verb_spec in verbs:
         verb_name = verb_spec["verb"]
         obj_name = verb_spec["object"]
+        obj_name_key = strip_hash_placeholder(obj_name)
         room_name = verb_spec.get("room")
-        code = verb_spec["code"]
+        code = apply_hash(verb_spec["code"], run_hash, use_hash)
 
         # Resolve object reference
         obj_ref = None
 
         if room_name:
-            # Use room context for disambiguation
-            obj_ref = obj_refs.get((room_name, obj_name))
+            # Use room context for disambiguation (room_name is a clean name)
+            obj_ref = obj_refs.get((room_name, obj_name_key))
             if not obj_ref:
                 # Try NPCs
-                obj_ref = npc_refs.get(obj_name)
+                obj_ref = npc_refs.get(obj_name_key)
         else:
             # Search all rooms for object
             for (_, n), ref in obj_refs.items():
-                if n == obj_name:
+                if n == obj_name_key:
                     obj_ref = ref
                     break
             if not obj_ref:
-                obj_ref = npc_refs.get(obj_name)
+                obj_ref = npc_refs.get(obj_name_key)
 
-        # Also check if it's a room name
-        if not obj_ref and obj_name in room_map:
-            obj_ref = f'"{room_map[obj_name]}"'
+        # Also check if it's a room name (obj_name_key is a clean name)
+        if not obj_ref and obj_name_key in room_map:
+            obj_ref = f'"{room_map[obj_name_key]}"'
 
         if not obj_ref:
             print(f"    WARNING: Could not resolve object '{obj_name}' for verb '{verb_name}'", file=sys.stderr)
@@ -363,24 +431,26 @@ def generate_test_verb(env, run_hash, use_hash, room_map):
         "rooms = {}",
     ]
 
-    # Room checks
+    # Room checks — room names from YAML may contain __hash_suffix__
     for room_name in rooms:
-        hash_name = add_hash_suffix(room_name, run_hash, use_hash)
+        hash_name = apply_hash(room_name, run_hash, use_hash)
         escaped_hash_name = hash_name.replace('"', '\\"')
+        display_name = strip_hash_placeholder(room_name)
         code_parts.append("try:")
-        code_parts.append(f'    rooms["{room_name}"] = lookup("{escaped_hash_name}")')
+        code_parts.append(f'    rooms["{display_name}"] = lookup("{escaped_hash_name}")')
         code_parts.append("    passed += 1")
-        code_parts.append(f'    print(f"[green]PASS[/green] {room_name}")')
+        code_parts.append(f'    print(f"[green]PASS[/green] {display_name}")')
         code_parts.append("except NoSuchObjectError as e:")
-        code_parts.append(f'    rooms["{room_name}"] = None')
+        code_parts.append(f'    rooms["{display_name}"] = None')
         code_parts.append("    failed += 1")
-        code_parts.append(f'    print(f"[red]FAIL[/red] {room_name}: {{e}}")')
+        code_parts.append(f'    print(f"[red]FAIL[/red] {display_name}: {{e}}")')
         code_parts.append("")
 
     # Object checks
     if objects:
         code_parts.append('print("[bold]--- Objects ---[/bold]")')
         for room_name, obj_list in objects.items():
+            # room_name here is a clean key
             code_parts.append(f'if rooms.get("{room_name}"):')
             code_parts.append(f'    names = [o.name for o in rooms["{room_name}"].contents.all()]')
             for obj_name in obj_list:
@@ -392,39 +462,41 @@ def generate_test_verb(env, run_hash, use_hash, room_map):
                 code_parts.append(f'        print(f"[red]FAIL[/red] {room_name}: {obj_name} (not in {{names}})")')
             code_parts.append("")
 
-    # NPC checks
+    # NPC checks — NPC names from YAML may contain __hash_suffix__
     if npcs:
         code_parts.append('print("[bold]--- NPCs ---[/bold]")')
         for npc_name in npcs:
-            hash_name = add_hash_suffix(npc_name, run_hash, use_hash)
+            hash_name = apply_hash(npc_name, run_hash, use_hash)
             escaped_hash_name = hash_name.replace('"', '\\"')
+            display_name = strip_hash_placeholder(npc_name)
             code_parts.append("try:")
             code_parts.append(f'    lookup("{escaped_hash_name}")')
             code_parts.append("    passed += 1")
-            code_parts.append(f'    print(f"[green]PASS[/green] {npc_name}")')
+            code_parts.append(f'    print(f"[green]PASS[/green] {display_name}")')
             code_parts.append("except NoSuchObjectError as e:")
             code_parts.append("    failed += 1")
-            code_parts.append(f'    print(f"[red]FAIL[/red] {npc_name}: {{e}}")')
+            code_parts.append(f'    print(f"[red]FAIL[/red] {display_name}: {{e}}")')
         code_parts.append("")
 
-    # Verb checks
+    # Verb checks — verb object: fields may contain __hash_suffix__
     if verbs:
         code_parts.append('print("[bold]--- Verbs ---[/bold]")')
         for verb_spec in verbs:
-            obj_name = add_hash_suffix(verb_spec["object"], run_hash, use_hash)
+            obj_name = apply_hash(verb_spec["object"], run_hash, use_hash)
             escaped_obj_name = obj_name.replace('"', '\\"')
             verb_name = verb_spec["verb"]
+            display_name = strip_hash_placeholder(verb_spec["object"])
             code_parts.append("try:")
             code_parts.append(f'    obj = lookup("{escaped_obj_name}")')
             code_parts.append(f'    obj.get_verb("{verb_name}")')
             code_parts.append("    passed += 1")
-            code_parts.append(f'    print(f"[green]PASS[/green] {obj_name}: {verb_name}")')
+            code_parts.append(f'    print(f"[green]PASS[/green] {display_name}: {verb_name}")')
             code_parts.append("except NoSuchObjectError as e:")
             code_parts.append("    failed += 1")
-            code_parts.append(f'    print(f"[red]FAIL[/red] {obj_name}: {verb_name} (object not found: {{e}})")')
+            code_parts.append(f'    print(f"[red]FAIL[/red] {display_name}: {verb_name} (object not found: {{e}})")')
             code_parts.append("except NoSuchVerbError:")
             code_parts.append("    failed += 1")
-            code_parts.append(f'    print(f"[red]FAIL[/red] {obj_name}: {verb_name} (verb not found)")')
+            code_parts.append(f'    print(f"[red]FAIL[/red] {display_name}: {verb_name} (verb not found)")')
         code_parts.append("")
 
     code_parts.extend(
@@ -444,7 +516,7 @@ def generate_test_verb(env, run_hash, use_hash, room_map):
 
 def main():
     parser = argparse.ArgumentParser(description="Build MOO environment from YAML")
-    parser.add_argument("yaml_file", help="Path to YAML environment file")
+    parser.add_argument("yaml_file", help="Path to YAML environment file or directory")
     parser.add_argument("--dry-run", action="store_true", help="Parse YAML but don't connect to MOO")
     parser.add_argument("--no-test", action="store_true", help="Skip creating and running test verb")
     parser.add_argument("--hash", action="store_true", help="Force hash suffix mode (override YAML setting)")
