@@ -25,6 +25,7 @@ The game-designer skill uses a YAML-driven architecture that separates content (
    - Quiet mode (`QUIET enable`) disables Rich ANSI color codes for clean output
    - Strips ANSI escape sequences from captured output
    - Provides `run()`, `enable_delimiters()`, `enable_automation_mode()`
+   - `disconnect()` sends `@quit` (not `QUIT`) to trigger a clean server-side disconnect
 
 **Key benefits:**
 - **Repeatable builds**: YAML defines exact environment
@@ -566,6 +567,10 @@ with MooSSH() as moo:
 **Issue: SSH disconnects during build**
 - **Cause**: Network timeout or MOO server restart
 - **Solution**: Run `docker compose restart webapp celery` to restore the server, then re-run the build script
+
+**Issue: `disconnect()` hangs for ~5 seconds at end of build**
+- **Cause**: `QUIT` (without `@`) is the legacy verb and only prints "please use @quit" — it does not actually close the connection, so pexpect times out waiting for EOF.
+- **Solution**: `MooSSH.disconnect()` now sends `@quit`. If you see 5-second hangs on an older server, ensure the `@quit` verb is loaded on `$player` (run `@reload @quit on $player` after a DB reset).
 
 **Issue: Objects not appearing in rooms**
 - **Cause**: `moveto()` failed or room name mismatch
