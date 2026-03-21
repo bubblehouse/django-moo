@@ -34,7 +34,9 @@ Although there hasn't been a need yet, you could also target arbitrary objects b
 - `none` - (uncommon) dobj must not be provided, useful when a verb supports a preposition (e.g., `crawl --ispec under:any`), but not a direct object (e.g., `crawl` to crawl without a target)
 - `either` — dobj is optional
 
-**`--ispec PREP:SPEC`** — indirect object specifiers (repeatable). PREP is a preposition from `settings.PREPOSITIONS` (e.g., `in`, `on`, `with`, `at`, `from`, `to`). SPEC is `any`, `this`, or `none`.
+**`--ispec PREP:SPEC`** — indirect object specifiers (repeatable). PREP is a preposition from `settings.PREPOSITIONS` (e.g., `in`, `on`, `with`, `at`, `from`, `to`). Use the **canonical** (first) form from each synonym group — see [parser-api.md](references/parser-api.md) for the full synonym table. SPEC is `any`, `this`, or `none`.
+
+Prepositions within a synonym group are interchangeable: a verb defined with `--ispec with:any` will also match commands typed with `using`. Always use the canonical form in `--ispec` and in parser method calls; the parser normalises all synonyms to it automatically.
 
 Indirect object specifiers can seem like they are optional, but they help the parser distinguish between different prepositions and ensure the correct parsing of commands.
 
