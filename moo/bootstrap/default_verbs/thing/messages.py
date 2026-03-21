@@ -3,32 +3,20 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-These verbs return a pronoun substituted version of the corresponding properties stored on the thing object. They are
-used by `$thing.take` and `$thing.drop`.
+These verbs return a pronoun-substituted version of the corresponding message property stored on the
+thing object. They are used by `$thing.take` and `$thing.drop`.
+
+Property format codes:
+    %N  — actor name (capitalized), resolved from context.player
+    %t  — object name, pre-substituted from this.title() before pronoun_sub runs
+    %T  — object name (capitalized), same
 """
 
-from moo.sdk import context
+prop_value = this.get_property(verb_name)
 
-prop_name = verb_name
-prop_value = this.get_property(prop_name)
-actor = context.player
-subject = args[0] if len(args) > 0 else this.title()
+# Pre-substitute %t/%T with this.title() directly so the object name is always correct
+# regardless of what parser.this points to at the call site.
+title = this.title()
+prop_value = prop_value.replace("%T", title.capitalize()).replace("%t", title)
 
-if prop_name == "take_succeeded_msg":
-    return prop_value.replace("{actor}", "You").replace("{subject}", str(subject))
-elif prop_name == "otake_failed_msg":
-    return prop_value.replace("{actor}", str(actor)).replace("{subject}", str(subject))
-elif prop_name == "otake_succeeded_msg":
-    return prop_value.replace("{actor}", str(actor)).replace("{subject}", str(subject))
-elif prop_name == "take_failed_msg":
-    return prop_value.replace("{actor}", "You").replace("{subject}", str(subject))
-elif prop_name == "odrop_succeeded_msg":
-    return prop_value.replace("{actor}", str(actor)).replace("{subject}", str(subject))
-elif prop_name == "odrop_failed_msg":
-    return prop_value.replace("{actor}", str(actor)).replace("{subject}", str(subject))
-elif prop_name == "drop_succeeded_msg":
-    return prop_value.replace("{actor}", "You").replace("{subject}", str(subject))
-elif prop_name == "drop_failed_msg":
-    return prop_value.replace("{actor}", "You").replace("{subject}", str(subject))
-else:
-    raise ValueError(f"Unknown property name: {prop_name}")
+return _.string_utils.pronoun_sub(prop_value)
