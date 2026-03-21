@@ -113,12 +113,13 @@ if verb_name == "@edit":
         if content_type == "python":
             # Parse shebang metadata if present (sets direct_object/indirect_objects)
             import moo.bootstrap
+
             shebang_result = moo.bootstrap.parse_shebang(new_content)
             dspec = "none"
             ispec = None
             shebang_names = None
             if shebang_result:
-                shebang_names, dspec, ispec = shebang_result
+                shebang_names, _, dspec, ispec = shebang_result
 
             # Verb: create or update with Python code
             if is_new:
@@ -127,6 +128,7 @@ if verb_name == "@edit":
                 print(f"Created verb {attribute} on {target}")
             else:
                 from moo.core.models.verb import set_indirect_objects
+
                 obj.code = new_content
                 obj.direct_object = dspec
                 set_indirect_objects(obj, ispec)
@@ -167,9 +169,10 @@ elif verb_name == "edit_callback":
         obj.code = content
         # Parse shebang metadata if present
         import moo.bootstrap
+
         shebang_result = moo.bootstrap.parse_shebang(content)
         if shebang_result:
-            _, dspec, ispec = shebang_result
+            _, _, dspec, ispec = shebang_result
             obj.direct_object = dspec
             obj.indirect_objects.clear()
             if ispec:
