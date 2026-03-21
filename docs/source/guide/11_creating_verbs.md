@@ -31,13 +31,16 @@ The full syntax is:
 - `verb_name`: The name(s) of the verb (space-separated for aliases like `#!moo verb put give`)
 - `--on`: Object to attach the verb to. Supports the special `$property_name` syntax to refer to properties on the system object
 - `--dspec`: Direct object specifier (defaults to `none`)
-  - `this`: Requires a direct object from the player
-  - `any`: Optional direct object
+  - `this`: The verb only matches if the direct object resolves to the object the verb is defined on
+  - `any`: A direct object must be present (but can be any string)
   - `none`: No direct object allowed
-  - `either`: Can work with or without a direct object
+  - `either`: Direct object is optional — the verb matches with or without one
+  - omitted: Same as `none`; the verb will never match commands that include a direct object
 - `--ispec`: Indirect object specifiers using prepositions
-  - Format: `PREP:SPEC` where PREP is from the configured prepositions (e.g., `on`, `in`, `with`)
+  - Format: `PREP:SPEC` where PREP is a preposition (e.g., `on`, `in`, `with`) and SPEC is `this`, `any`, or `none`
   - Example: `--ispec on:this in:this` allows "put X on Y" and "put X in Y"
+  - Use `none` for a preposition that must not take an object (e.g. `crawl --dspec none --ispec under:any` matches "crawl under desk" without requiring a direct object)
+  - Combine `--dspec either` with `--ispec` to accept both `verb object` and `verb prep object` in one verb — `this` is set correctly in both cases without branching in your code
 
 **Examples**:
 
@@ -50,7 +53,39 @@ The full syntax is:
 
 #!moo verb put give --on $thing --dspec this --ispec on:this --ispec in:this
 # A verb with aliases, requiring direct and indirect objects
+
+#!moo verb look inspect --on $room --dspec either --ispec at:any
+# Matches "look", "look at painting", and "look painting" equally
+
+#!moo verb sit --on $furniture --dspec either --ispec on:this
+# Matches both "sit" and "sit on bench"
 ```
+
+**Common preposition choices by interaction type:**
+
+| Interaction | Recommended `--ispec` | Example command |
+|-------------|----------------------|-----------------|
+| Talking to someone | `to:any` | `talk to barkeep` |
+| Sitting / lying down | `on:this` | `sit on couch` |
+| Putting items inside | `in:any` or `into:any` | `put bottle into bag` |
+| Taking / drinking from | `from:this` | `drink from tap` |
+| Examining via | `through:any` | `look through scope` |
+| Attacking / aiming | `at:this` | `punch at dummy` |
+
+### Quoted Arguments
+
+The parser scans every command for preposition words before splitting it into parts. Words like `from`, `to`, `with`, `in`, `on`, `at`, and `into` are always treated as prepositions, even when they appear inside what you intended to be a plain argument.
+
+**If your verb's argument contains one of these words, the player must quote it:**
+
+```
+@eval from moo.sdk import lookup       ← WRONG: "from" is parsed as a preposition
+@eval "from moo.sdk import lookup"     ← CORRECT: quotes protect the whole string
+```
+
+Without quotes, the parser treats "from" as a preposition boundary, breaks the command there, and your verb may not match at all (especially with `--dspec any`).
+
+This applies to any word in `settings.PREPOSITIONS`. When writing verbs that accept free-form text (code snippets, descriptions, messages with common words), document in the verb's help text that arguments containing preposition words need to be quoted.
 
 ### RestrictedPython Execution
 
@@ -101,7 +136,7 @@ Also present in the global namespace is `verb_name`, the specific name used when
 Since verb code is run in a function context, we always get a set of arguments that are available in verb code:
 
 1. `this` - the Object where the current verb was found, often a child of the origin object
-2. `passthrough()` - a function that calls the current function on the parent object, somewhat similar to super()
+2. `passthrough()` - a function that calls the current verb on the parent object, similar to `super()`. If your verb uses `args` or `kwargs`, pass them along: `passthrough(*args, **kwargs)`
 3. `_` - a reference to the #1 or "system" object
 4. `args` - function arguments when run as a method, or an empty list
 5. `kwargs` - function arguments when run as a method, or an empty dict
@@ -166,10 +201,29 @@ Any uncaught exception that is not a `UserError` shows a generic `"An error occu
 
 ### Sending Messages to Players
 
-Two mechanisms exist for writing output to a player connection:
+Three mechanisms exist for writing output from a verb:
 
-- **`obj.tell(msg)`** — Goes through `$player.tell`, which applies gag-list filtering and paranoia tracking before calling `write()`. Use this for normal in-game messages so that player preferences are respected.
-- **`write(obj, msg)`** (imported from `moo.sdk`) — Only usable by Wizard-owned code. Low-level connection write; bypasses all filtering. Use sparingly, only when filtering must be skipped (e.g., system notifications).
+| Method | Who sees it | Notes |
+|--------|-------------|-------|
+| `print(msg)` | The player who ran the command, only | Buffered until the verb finishes; the simplest way to give feedback |
+| `obj.tell(msg)` | Any player object | Goes through `$player.tell`, respecting gag lists and paranoia settings |
+| `write(obj, msg)` | Any player object | Low-level, bypasses all filtering; wizard-owned verbs only |
+
+`print()` is what most command verbs use for confirmation messages and output. It writes directly to the initiating player's console with no filtering.
+
+**`return "some string"` does not display anything to the player.** It returns the value to whatever code called the verb (useful for helper verbs), but it is invisible when the verb is invoked as a player command. Use `print()` for player-visible output, with a bare `return` to exit early:
+
+```python
+if not context.parser.has_dobj_str():
+    print(f"Usage: {verb_name} <target>")
+    return                                 # exit cleanly; no output from return itself
+
+print("Done.")
+```
+
+`obj.tell(msg)` goes through `$player.tell`, which applies gag-list filtering and paranoia tracking before writing. Use it to send messages to players other than the initiator, or when you want player preferences respected.
+
+`write(obj, msg)` (imported from `moo.sdk`) is only callable from wizard-owned verbs. It is a low-level connection write that bypasses all filtering. Use it sparingly, only when filtering must be skipped (e.g., system notifications).
 
 In tests (where `CELERY_BROKER_URL = "memory://"`), both paths ultimately call `write()`, which emits `RuntimeWarning(f"ConnectionError({obj}): {msg}")` instead of sending to a real connection. Wrap test commands that trigger either path with `pytest.warns(RuntimeWarning)`:
 
@@ -191,7 +245,7 @@ The Django ORM brings in a few changes to how we access properties. We could pot
      print("No description.")
 ```
 
-This doesn't honor inheritance, so you'll probably prefer to use `Object.get_property()`:
+This doesn't honor inheritance, so you'll probably prefer to use `Object.get_property()`, which walks the inheritance chain:
 
 ```python
  description = context.player.location.get_property('description')
@@ -208,6 +262,22 @@ But similarly, you should probably just use:
 
 ```python
 context.player.location.set_property("description", "A dark room.")
+```
+
+**Checking whether a property exists:** calling `has_property(name)` followed by `get_property(name)` makes two database queries for the same data. When you only need the value and want to handle the missing case, `try/except` is more efficient:
+
+```python
+from moo.sdk import NoSuchPropertyError
+
+# Preferred — one query
+try:
+    description = obj.get_property("description")
+except NoSuchPropertyError:
+    description = "You see nothing special."
+
+# Avoid — two queries for the same data
+if obj.has_property("description"):
+    description = obj.get_property("description")
 ```
 
 So far these examples haven't required any calls to `obj.save()`; this is only required for changes to the intrinsic object properties like `name`, `unique_name`, `obvious`, and `owner`.
