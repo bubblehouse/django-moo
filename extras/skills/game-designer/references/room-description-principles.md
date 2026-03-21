@@ -67,6 +67,47 @@ The second version names only the `obvious` objects, uses them to establish char
 
 ---
 
+---
+
+## Paragraph Breaks
+
+Long single-block descriptions are hard to read. Break them into short paragraphs by topic using `\n\n` (a blank line between paragraphs). The build script converts YAML block scalars to escaped `\n\n` before sending to the server, and `at_describe.py` stores and renders them correctly.
+
+**In YAML**, write paragraphs naturally in a block scalar — the build script handles escaping:
+
+```yaml
+rooms:
+  - name: "The Library"
+    description: |
+      Floor-to-ceiling bookshelves line every wall, their upper reaches lost in shadow.
+      The smell of old paper and wood polish is almost physical.
+
+      A reading table dominates the center of the room, its leather surface worn smooth
+      by decades of use. An oil lamp sits at one end, still faintly warm.
+
+      A brass plaque above the door reads: "Knowledge is the only lamp that never dims."
+```
+
+**How to break by topic:**
+- Paragraph 1 — overall atmosphere, first impression (what the room feels like)
+- Paragraph 2 — the dominant object or focal point (the thing your eye goes to)
+- Paragraph 3 — secondary details, exits, or interactive elements worth noting
+
+Three paragraphs is usually enough. Two is fine. One long paragraph is almost always wrong.
+
+**Object descriptions** follow the same rule. Anything longer than two sentences should be split:
+
+```yaml
+- name: "grandfather clock __hash_suffix__"
+  description: |
+    A mahogany grandfather clock stands nearly eight feet tall, its pendulum
+    swinging with metronomic patience.
+
+    The face is hand-painted with the phases of the moon. The time reads 11:57.
+```
+
+**Signs and notes** should also use paragraph breaks when the text warrants it. The `text` property of a `$note` supports `\n\n` the same way descriptions do.
+
 ### Source
 
 Toronto Film School — "Chekhov's Gun: Definition, Examples, and Tips"
