@@ -4,7 +4,8 @@
 
 | Class | Use for | Gets you |
 |---|---|---|
-| `$thing` | Inert objects, furniture, containers | take/drop verbs, description |
+| `$thing` | Portable objects (items, tools, props) | take/drop verbs, description |
+| `$furniture` | Fixed objects players can sit on (chairs, couches, benches, boulders, crates) | immovable (take fails), `sit`/`stand` verbs, customizable `*_msg` properties |
 | `$note` | Readable documents, menus, tabs, letters | read/edit/burn verbs |
 | `$player` | NPCs with dialogue | tell/announce infrastructure, full player API |
 | `$room` | Rooms (created by `@dig`, not `@create`) | contents, exits, announce |
@@ -146,7 +147,64 @@ Objects descended from `$thing` inherit these `_msg` properties (set via `@edit 
 
 - `take_succeeded_msg` — shown to player on successful take
 - `otake_succeeded_msg` — shown to room on successful take
+- `take_failed_msg` — shown to player when take fails
+- `otake_failed_msg` — shown to room when take fails
 - `drop_succeeded_msg` — shown to player on successful drop
 - `odrop_succeeded_msg` — shown to room on successful drop
+- `drop_failed_msg` — shown to player when drop fails
+- `odrop_failed_msg` — shown to room when drop fails
 
-Override per-instance to customize pickup/drop text flavor.
+All values use `pronoun_sub` format codes: `%N` = actor name, `%t` = object name. Override per-instance to customize flavor.
+
+## `$furniture` Message Properties
+
+`$furniture` inherits all `$thing` `_msg` properties plus:
+
+- `sit_succeeded_msg` — shown to player when they sit (default: `"You sit on %t."`)
+- `osit_succeeded_msg` — shown to room when player sits (default: `"%N sits on %t."`)
+- `sit_failed_msg` — shown to player if they try to sit when already sitting on this piece (default: `"You are already sitting on %t."`)
+- `stand_succeeded_msg` — shown to player when they stand up (default: `"You stand up from %t."`)
+- `ostand_succeeded_msg` — shown to room when player stands (default: `"%N stands up from %t."`)
+- `stand_failed_msg` — shown to player if `stand <furniture>` doesn't match what they're sitting on (default: `"You aren't sitting on %t."`)
+
+### Making Unusual Furniture Feel Right
+
+Any object that shouldn't be moved and can plausibly be sat on is a candidate for `$furniture`. Flavor text can signal how comfortable (or not) it is:
+
+```
+# A hard bench
+@edit property sit_succeeded_msg on "wooden bench" with "You sit on the wooden bench. It's not exactly comfortable."
+@edit property osit_succeeded_msg on "wooden bench" with "%N settles onto the wooden bench with a wince."
+
+# A boulder outside
+@edit property sit_succeeded_msg on "mossy boulder" with "You perch on the boulder. Cold stone, but it'll do."
+@edit property take_failed_msg on "mossy boulder" with "The boulder isn't going anywhere."
+
+# A luxurious chair
+@edit property sit_succeeded_msg on "velvet armchair" with "You sink into the velvet armchair. Heavenly."
+@edit property stand_succeeded_msg on "velvet armchair" with "You reluctantly stand up from the velvet armchair."
+```
+
+The `take_failed_msg` property is particularly useful for explaining *why* something can't be moved — whether it's bolted down, too heavy, or simply absurd to pick up.
+
+## Immovable but Not Sittable
+
+If an object should be fixed in place but doesn't make sense to sit on (a statue, a machine, a tree), use `$thing` as the parent and override its `moveto` verb to return `False`:
+
+```
+@create "stone statue" from "$thing"
+@edit verb moveto on "stone statue"
+```
+
+Verb body:
+```python
+return False
+```
+
+Then set a descriptive `take_failed_msg`:
+
+```
+@edit property take_failed_msg on "stone statue" with "The statue is far too heavy to move."
+```
+
+This blocks `take`, `give`, and any other movement without adding `sit`/`stand` verbs.
