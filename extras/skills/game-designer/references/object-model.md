@@ -5,8 +5,9 @@
 | Class | Use for | Gets you |
 |---|---|---|
 | `$thing` | Portable objects (items, tools, props) | take/drop verbs, description |
+| `$container` | Openable/closable containers (chests, cabinets, boxes, bags) | `open`/`close`/`put`/`take` verbs, `open` state, optional key lock; child of `$thing` so it's portable by default |
 | `$furniture` | Fixed objects players can sit on (chairs, couches, benches, boulders, crates) | immovable (take fails), `sit`/`stand` verbs, customizable `*_msg` properties |
-| `$note` | Readable documents, menus, tabs, letters | read/edit/burn verbs |
+| `$note` | Anything with readable text: signs, menus, letters, plaques, books, bulletin boards | `read`/`edit`/`erase` verbs, optional read-lock; portable by default (add `moveto` returning `False` to fix in place) |
 | `$player` | NPCs with dialogue | tell/announce infrastructure, full player API |
 | `$room` | Rooms (created by `@dig`, not `@create`) | contents, exits, announce |
 | `$exit` | Exits (created by `@dig`/`@tunnel`) | go verb, dest property |
@@ -202,6 +203,114 @@ Any object that shouldn't be moved and can plausibly be sat on is a candidate fo
 ```
 
 The `take_failed_msg` property is particularly useful for explaining *why* something can't be moved — whether it's bolted down, too heavy, or simply absurd to pick up.
+
+## `$container` — Openable Containers
+
+`$container` is a child of `$thing`. Use it for any object that holds other objects and can be opened and closed: treasure chests, cabinets, safes, drawers, toolboxes, backpacks.
+
+**Built-in verbs:**
+- `open <container>` — sets state to open
+- `close <container>` — sets state to closed
+- `put <obj> in <container>` / `insert <obj> in <container>` — places an item inside (only when open)
+- `get <obj> from <container>` / `take <obj> from <container>` — retrieves an item (only when open)
+- `@lock_for_open <container> with <key>` — requires the key to open
+
+**Key properties:**
+- `open` (bool, default `false`) — current open/closed state
+- `open_key` (null or key expression) — if set, container requires the matching key to open
+- `opaque` (bool, default `false`) — if `true`, contents are hidden when container is closed
+
+**YAML example (portable container):**
+
+```yaml
+- name: "leather satchel __hash_suffix__"
+  parent: "$container"
+  description: "A worn leather satchel with a brass clasp."
+  aliases: ["satchel", "bag"]
+  obvious: true
+```
+
+**Fixed containers** (cabinets, built-in drawers, a heavy safe) should use `$container` as the parent and add a `moveto` verb that returns `False` — same pattern as `$thing`-based immovable objects, but you keep all the open/close/put/take behavior:
+
+```yaml
+- name: "oak cabinet __hash_suffix__"
+  parent: "$container"
+  description: "A tall oak cabinet with iron hinges."
+  aliases: ["cabinet"]
+  obvious: true
+
+verbs:
+  - verb: "moveto"
+    object: "oak cabinet __hash_suffix__"
+    room: "Study"
+    code: |
+      #!moo verb moveto --on "oak cabinet __hash_suffix__"
+      return False
+```
+
+Set a descriptive `take_failed_msg` so the player knows why they can't move it:
+
+```
+@edit property take_failed_msg on "oak cabinet" with "The cabinet is built into the wall."
+```
+
+**Do not use `$furniture` for containers.** `$furniture` adds `sit`/`stand` verbs and doesn't give you `open`/`close`. A chest or cabinet should always be `$container`, even if it's also immovable.
+
+## `$note` — Readable Text Objects
+
+Use `$note` for anything with readable text content: signs, menus, letters, plaques, books, newspapers, bulletin boards, wanted posters. The player types `read <object>` to see the text.
+
+**Built-in verbs:**
+- `read <note>` (also `r <note>`) — prints the `text` property to the player
+- `edit <note>` — opens the in-game text editor to change the text
+- `erase <note>` — clears the text
+- `@lock_for_read <note> with <key>` — restricts reading to players holding the key
+
+**Key properties:**
+- `text` (string) — the content shown when the player reads it. Set via `@edit property text on "sign" with "..."` or via `@edit` to use the interactive editor.
+- `read_key` (null or key expression) — if set, reading requires the matching key
+
+**Signs and fixed notices** are the most common use case. They are portable by default (child of `$thing`), so add a `moveto` verb returning `False` to fix them in place:
+
+```yaml
+- name: "welcome sign __hash_suffix__"
+  parent: "$note"
+  description: "A wooden sign hangs by the entrance."
+  aliases: ["sign", "wooden sign", "notice"]
+  obvious: true
+
+verbs:
+  - verb: "moveto"
+    object: "welcome sign __hash_suffix__"
+    room: "Entrance"
+    code: |
+      #!moo verb moveto --on "welcome sign __hash_suffix__"
+      return False
+```
+
+Set the text content with `@edit property`:
+
+```
+@edit property text on "welcome sign" with "Welcome to Springfield. Population: Dwindling."
+```
+
+**Room descriptions with signs:** The room description should only say the sign is there. Let the player choose to read it. Do not embed the sign text in the room description unless it is essential to understanding the room.
+
+```
+# WRONG — room description contains the sign text
+The entrance features a sign that reads: "No shirt, no shoes, no service."
+
+# CORRECT — room description acknowledges the sign; player reads it themselves
+A hand-lettered sign hangs beside the entrance.
+```
+
+**Aliases matter for signs.** If the room has multiple readable objects, give each specific aliases so `read sign` always resolves unambiguously:
+
+```yaml
+aliases: ["sign", "wooden sign", "notice"]   # entrance welcome sign
+aliases: ["menu", "chalkboard menu", "board"] # bar menu
+aliases: ["letter", "envelope", "note"]       # letter on desk
+```
 
 ## Immovable but Not Sittable
 

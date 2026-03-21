@@ -251,7 +251,26 @@ test-<env-name>-<hash>
 3. **`__hash_suffix__` placement**: Add to all `name:` fields that get created in MOO, and to all `lookup()` calls and shebang `--on` arguments in verb code. Leave internal references (exits, room refs, section keys) clean.
 4. **Mark obvious objects explicitly**: Every object that should appear in the room listing needs `obvious: true`. Think: what would someone notice immediately walking in?
 5. **Write descriptions for atmosphere, not inventory**: `obvious` objects appear in the room listing automatically. Room descriptions should orient and evoke, not enumerate.
-6. **Comment liberally**: YAML supports comments — explain non-obvious design decisions.
+6. **Break descriptions into paragraphs**: Use `\n\n` (blank line in YAML block scalars) to split descriptions by topic. One paragraph per idea — overall atmosphere, focal object, secondary details. A single long block of text is hard to read. This applies to room descriptions, object descriptions, and `$note` text equally.
+7. **Comment liberally**: YAML supports comments — explain non-obvious design decisions.
+
+### Choosing a Parent Class
+
+- `$thing` — portable props with no special behavior (decorative items, tools, sealed objects)
+- `$container` — anything that opens, closes, and holds objects (chests, cabinets, safes, bags). Add a `moveto` verb returning `False` to keep it fixed in place — you keep all the open/close behavior
+- `$furniture` — anything players sit on (chairs, benches, couches). Immovable by default. Do not use for containers
+- `$note` — anything with readable text (signs, menus, letters, plaques, books, bulletin boards). Add a `moveto` verb returning `False` for fixed signs
+- `$player` — NPCs with dialogue
+
+When in doubt between `$thing` and `$container`: if a player might ever want to put something inside it or take something out, use `$container`. When in doubt between `$thing` and `$note`: if there's text a player would want to read, use `$note`.
+
+### Signs and Room Descriptions
+
+When a room has a sign, plaque, menu, or other readable object, put its text in the `$note`'s `text` property — not in the room description. The room description should only say the sign is there. Players read it themselves.
+
+The exception is when the text is essential to understanding the space (a single carved word, a room name, a critical warning) — in that case it can appear in the description. When uncertain, default to `$note`.
+
+Give every `$note` object specific aliases so `read sign` is never ambiguous. Include the generic type word (`sign`, `menu`, `letter`) and at least one more specific alias (`chalkboard`, `notice`, `plaque`).
 
 ### Verb Design
 
@@ -272,6 +291,8 @@ test-<env-name>-<hash>
 ### Multiline Descriptions
 
 YAML block scalars (`|` or `>`) work correctly. The `describe()` function escapes `\n` as `\\n` before sending via SSH, and `at_describe.py` unescapes when storing. Write descriptions as block scalars freely.
+
+Use blank lines between paragraphs to create `\n\n` breaks in the stored text. Split by topic — one idea per paragraph. A single wall of text is hard to read in-game. Aim for 2–3 short paragraphs for room descriptions; 1–2 for object descriptions. The same applies to `$note` text properties.
 
 ### RestrictedPython Gotchas in Verb Code
 
