@@ -167,6 +167,22 @@ All values use `pronoun_sub` format codes: `%N` = actor name, `%t` = object name
 - `ostand_succeeded_msg` — shown to room when player stands (default: `"%N stands up from %t."`)
 - `stand_failed_msg` — shown to player if `stand <furniture>` doesn't match what they're sitting on (default: `"You aren't sitting on %t."`)
 
+### `$furniture` and Build-Time Placement
+
+`$furniture` has a `moveto` verb that returns `False` — this is what makes players unable to pick it up. **This same verb also blocks `moveto()` calls from admin build code.** If the build script uses `lookup(N).moveto(lookup("Room"))`, `$furniture` objects will silently remain in the void.
+
+The fix is to use direct Django model assignment, which bypasses the verb system:
+
+```python
+# WRONG — $furniture's moveto verb returns False, object stays in void
+@eval "from moo.sdk import lookup; lookup(45).moveto(lookup(\"The Bar\"))"
+
+# CORRECT — direct field assignment bypasses all verbs
+@eval "from moo.sdk import lookup; obj = lookup(45); room = lookup(\"The Bar\"); obj.location = room; obj.save()"
+```
+
+`build_from_yaml.py` uses the correct approach for all object placement.
+
 ### Making Unusual Furniture Feel Right
 
 Any object that shouldn't be moved and can plausibly be sat on is a candidate for `$furniture`. Flavor text can signal how comfortable (or not) it is:
