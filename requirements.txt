@@ -252,6 +252,8 @@ platformdirs==4.9.4
     #   pylint-gitlab
 pluggy==1.6.0
     # via pytest
+polib==1.2.0
+    # via sphinx-lint
 prompt-toolkit==3.0.52
     # via
     #   click-repl
@@ -329,6 +331,8 @@ redis==6.4.0
     #   django-moo
     #   kombu
     #   python-redis-cache
+regex==2026.2.28
+    # via sphinx-lint
 requests==2.32.5
     # via
     #   opentelemetry-exporter-otlp-proto-http
@@ -354,6 +358,7 @@ sphinx==7.4.7
     #   sphinx-rtd-theme
     #   sphinxcontrib-jquery
 sphinx-autodoc-typehints==2.3.0
+sphinx-lint==1.0.2
 sphinx-rtd-theme==2.0.0
 sphinxcontrib-applehelp==2.0.0
     # via sphinx

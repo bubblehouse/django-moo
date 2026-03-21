@@ -1,3 +1,9 @@
+## [0.85.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.85.0...v0.85.1) (2026-03-21)
+
+### Bug Fixes
+
+* interchangeable prepositions are now working ([f35697c](https://gitlab.com/bubblehouse/django-moo/commit/f35697c82815bb2be65080365658115af306ae8d))
+
 ## [0.85.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.84.0...v0.85.0) (2026-03-21)
 
 ### Features
