@@ -88,6 +88,32 @@ One of the most common tasks of the Parser is to find an object in the context o
   2. ...but the string is "me", return the player.
   3. ...but the string is a number starting with '#', return that Object by ID
 
+### Preposition Synonym Groups
+
+Prepositions are defined in `settings.PREPOSITIONS` as a list of synonym groups. Words within a group are interchangeable — the parser normalises them all to the first word in the group when it stores the parsed result. This means players can type `take sword using tongs` or `take sword with tongs` and both reach the same verb with the same preposition key.
+
+| Canonical | Synonyms |
+|-----------|----------|
+| `with` | `using` |
+| `at` | `to` |
+| `in front of` | |
+| `in` | `inside`, `into`, `within` |
+| `on top of` | `on`, `onto`, `upon`, `above` |
+| `out of` | `from inside`, `from` |
+| `over` | |
+| `through` | |
+| `under` | `underneath`, `beneath`, `below` |
+| `around` | `round` |
+| `between` | `among` |
+| `behind` | `past` |
+| `beside` | `by`, `near`, `next to`, `along` |
+| `for` | `about` |
+| `is` | |
+| `as` | |
+| `off` | `off of` |
+
+Verb authors should use the canonical (first) form in `--ispec` shebang options and in parser API calls such as `get_pobj_str("with")`. Any synonym also works transparently if passed directly to these methods.
+
 ### Finding a Verb
 
 Once all the objects are defined, the caller's context is searched for the verb in the following order:

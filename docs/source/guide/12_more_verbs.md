@@ -63,7 +63,7 @@ if context.parser is not None:
     invoke(verb=context.parser.verb, callback=say, delay=30, value=0)
     return
 value = kwargs['value'] + 1
-return f"A parrot squawks {value}."
+return f"A parrot squawks {value}."  # return value passed to the 'say' callback
 ```
 
 ## Time-Aware Continuation
@@ -132,49 +132,57 @@ The `@reload` verb in `moo/bootstrap/default_verbs/programmer/at_reload.py` is t
 
 ## Returning a Value from a Verb
 
-> The MOO program in a verb is just a sequence of statements. Normally, when the verb is called, those statements are simply executed in order and then the integer 0 is returned as the value of the verb-call expression. Using the `return` statement, one can change this behavior. The `return` statement has one of the following two forms:
->
-> `return`
->
-> or
->
-> `return _expression_`
->
-> When it is executed, execution of the current verb is terminated immediately after evaluating the given expression, if any. The verb-call expression that started the execution of this verb then returns either the value of expression or the integer 0, if no expression was provided.
+> The MOO program in a verb is just a sequence of statements. Normally, when the verb is called, those statements are simply executed in order and then the integer 0 is returned as the value of the verb-call expression. Using the `return` statement, one can change this behavior.
 
-This works basically the same in DjangoMOO verb code because all verbs are compiled with RestrictedPython's `compile_restricted_function` feature. The game engine automatically wraps your verb code with a function that provides these parameters:
+`return` can be used from anywhere in verb code, not just at the end of a function — this is one of the advantages of how RestrictedPython compiles verbs.
 
-- `this`: The object where the current verb was found, often a child of the origin object
-- `passthrough`: A function that calls the current verb on the parent object, somewhat similar to `super()`
-- `_`: A reference to the #1 or "system" object
-- `args`: Function arguments when run as a method, or an empty list
-- `kwargs`: Keyword arguments when run as a method, or an empty dict
+**Important:** `return "some string"` does **not** display anything to a player when the verb is invoked as a command. The return value goes back to whatever called the verb, which is discarded for top-level player commands. To display output, use `print()`. Use a bare `return` to exit early:
 
-One key difference in this approach is that `return` can be used from anywhere in the verb code, not just at the end of functions:
+```python
+# CORRECT: print the message, then return
+if not args:
+    print(f"Usage: {verb_name} <object_name>")
+    return
+
+# WRONG: the player sees nothing
+if not args:
+    return "Usage: check_object <object_name>"
+```
+
+Returning a value is useful when a verb is designed to be called by other verbs (as a helper method), not by players directly. For example, `$thing.take_succeeded_msg()` returns a formatted string that `take.py` then passes to `print()`.
 
 ```python
 #!moo verb check_object --on $room
 
-from moo.sdk import context
+from moo.sdk import context, NoSuchPropertyError
 
-# Early return for empty arguments
+# Early exit for missing arguments
 if not args:
-    return "Syntax: check_object <object_name>"
+    print(f"Usage: {verb_name} <object_name>")
+    return
 
 # Find the object
 obj_name = args[0]
 found_objs = this.contents.filter(name=obj_name)
 
 if not found_objs.exists():
-    return f"I don't see '{obj_name}' here."
+    print(f"I don't see '{obj_name}' here.")
+    return
 
 # Check permissions
 obj = found_objs.first()
 if not obj.can_caller("read"):
-    return "You don't have permission to examine that."
+    print("You don't have permission to examine that.")
+    return
 
-# Return success information
-return f"Object: {obj.name}\nDescription: {obj.get_property('description')}"
+# Display result
+try:
+    desc = obj.get_property("description")
+except NoSuchPropertyError:
+    desc = "(no description)"
+
+print(f"Object: {obj.name}")
+print(f"Description: {desc}")
 ```
 
 ## Handling Verb Errors
@@ -204,6 +212,70 @@ time raising any of them from verb code will rollback the transaction as if the 
    :no-index:
 ```
 
+## Additional SDK Functions
+
+Beyond `lookup()`, `create()`, `write()`, and `invoke()`, `moo.sdk` provides several more functions for wizard-owned verbs.
+
+### `open_editor(obj, initial_content, callback_verb, *args, content_type="text")`
+
+Opens a full-screen text editor in the player's SSH terminal. When the player saves and closes the editor, `callback_verb` is called with the saved text as its first argument, followed by any additional `*args`.
+
+```python
+from moo.sdk import context, open_editor
+
+# Open the editor pre-filled with existing text; call obj.save_verb when done
+open_editor(context.player, existing_text, obj.save_verb, content_type="python")
+```
+
+`content_type` controls syntax highlighting: `"text"` (default), `"python"`, or `"json"`.
+
+### `open_paginator(obj, content, content_type="text")`
+
+Opens a full-screen read-only paginator for long text (help pages, listings, etc.).
+
+```python
+from moo.sdk import context, open_paginator
+
+open_paginator(context.player, long_help_text, content_type="text")
+```
+
+### `players()`
+
+Returns all player avatar Objects (connected or not).
+
+```python
+from moo.sdk import players
+
+for p in players():
+    print(p.title())
+```
+
+### `connected_players(within=None)`
+
+Returns player Objects that have been active within the given time window (default: 5 minutes).
+
+```python
+from moo.sdk import connected_players
+from datetime import timedelta
+
+active = connected_players(within=timedelta(minutes=10))
+print(f"{len(active)} player(s) online.")
+```
+
+### `set_task_perms(who)`
+
+Context manager. Temporarily runs the enclosed code with the permissions of `who`. Useful when a wizard-owned verb needs to perform an action as a different user or as the system object.
+
+```python
+from moo.sdk import set_task_perms, lookup
+
+system = lookup(1)
+with set_task_perms(system):
+    obj.set_property("owner", system)  # runs as if owned by the system object
+```
+
+All four functions above are only callable from wizard-owned verbs.
+
 ## Best Practices for Verb Development
 
 ### 1. Always Check Permissions First
@@ -212,14 +284,25 @@ time raising any of them from verb code will rollback the transaction as if the 
 from moo.sdk import context
 
 if not this.can_caller("write"):
-    return "Permission denied."
+    print("Permission denied.")
+    return
 ```
 
 ### 2. Validate Arguments Early
 
 ```python
+from moo.sdk import UsageError
+
 if len(args) < 2:
-    return "Usage: verb_name <arg1> <arg2>"
+    raise UsageError(f"Usage: {verb_name} <arg1> <arg2>")
+```
+
+Or with `print()` if you prefer a softer exit:
+
+```python
+if len(args) < 2:
+    print(f"Usage: {verb_name} <arg1> <arg2>")
+    return
 ```
 
 ### 3. Use the MOO Context
@@ -233,20 +316,39 @@ from moo.sdk import context
 # context.parser contains parsed command info
 ```
 
-### 4. Return Meaningful Messages
+### 4. Use `print()` for Player-Visible Output
+
+`return "message"` does not show anything to the player in a command verb. Use `print()` for feedback:
 
 ```python
-# GOOD: Descriptive error messages
+# CORRECT: player sees this
 if not obj:
-    return "That object doesn't exist."
+    print("That object doesn't exist.")
+    return
 
-# GOOD: Confirm success
+print("Object created successfully.")
+
+# WRONG: return value is silently discarded
 return "Object created successfully."
-
-# AVOID: Silent failures
-return None
 ```
 
-### 5. Respect the Verb Time Limit
+`return` a value only when you are writing a helper verb designed to be called by other verb code, not by players directly.
+
+### 5. Avoid Subscript Augmented Assignment
+
+RestrictedPython silently fails to compile verbs that use `+=` on a dictionary subscript. The failure produces a `TypeError: exec() arg 1 must be a string, bytes or code object` at runtime, not a clear syntax error.
+
+```python
+# BLOCKED — causes a silent compilation failure
+results["passed"] += 1
+
+# CORRECT — use a plain variable instead
+passed += 1
+failed += 1
+```
+
+If a verb inexplicably does nothing or crashes with a `TypeError` about `exec()`, check for this pattern.
+
+### 6. Respect the Verb Time Limit
 
 Each verb execution (including synchronous calls to other verbs) should complete in less than 3 seconds, or Celery will terminate the task. For verbs that loop over many items, use the time-aware continuation pattern described in [Time-Aware Continuation](#time-aware-continuation) above.
