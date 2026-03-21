@@ -1,3 +1,19 @@
+## [0.83.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.82.0...v0.83.0) (2026-03-21)
+
+### Features
+
+* added boot_player() and implemented true [@quit](https://gitlab.com/quit) verb ([66b0eb7](https://gitlab.com/bubblehouse/django-moo/commit/66b0eb7607875f443eb4ef3015929671fbb964c4))
+* support `obvious` on objects ([7fcc694](https://gitlab.com/bubblehouse/django-moo/commit/7fcc6945d1a3969d2ce0d51b3080af42bffbcf2e))
+
+### Bug Fixes
+
+* correct escaping in at_describe ([67f20bf](https://gitlab.com/bubblehouse/django-moo/commit/67f20bfaf22ff3799d2a80bf0b814a5c8bab185f))
+* further ssh improvements ([854edf9](https://gitlab.com/bubblehouse/django-moo/commit/854edf96d1efeb8ad74ae860e01a444e5ffc2f30))
+* improve verb write handling ([5233cec](https://gitlab.com/bubblehouse/django-moo/commit/5233cec2aa23886dd1c83b8d7b5ae3b8f2eeaa7c))
+* linting errors ([0305f75](https://gitlab.com/bubblehouse/django-moo/commit/0305f759dba5cbc945dd5b98d66482d6ab5dfda1))
+* typo, should be return, not raise ([189cb11](https://gitlab.com/bubblehouse/django-moo/commit/189cb11dd4b71bd29f104a70b143b9b12f9130e5))
+* unquote needs to be more intelligent ([9ff07ed](https://gitlab.com/bubblehouse/django-moo/commit/9ff07edc249961221db4a4221202b1eae50e8fb9))
+
 ## [0.82.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.81.3...v0.82.0) (2026-03-20)
 
 ### Features
