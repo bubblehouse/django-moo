@@ -76,10 +76,10 @@ ALLOWED_BUILTINS = (
 PREPOSITIONS = [
     ["with", "using"],
     ["at", "to"],
-    ["in front of"],
+    ["before", "in front of"],
     ["in", "inside", "into", "within"],
-    ["on top of", "on", "onto", "upon", "above"],
-    ["out of", "from inside", "from"],
+    ["on", "onto", "upon", "above", "on top of"],
+    ["from", "out of", "from inside"],
     ["over"],
     ["through"],
     ["under", "underneath", "beneath", "below"],

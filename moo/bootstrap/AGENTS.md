@@ -44,7 +44,8 @@ All verb files must start with a "shebang" line that defines metadata:
   - `none`: Will not match if a direct object is specified
   - `either`: Used for optional direct objects
 - `--ispec`: Indirect object specifiers using prepositions
-  - Format: `PREP:SPEC` where SPEC is `this`, `any`, or `none` and PREP is an item from `settings.PREPOSITIONS`
+  - Format: `PREP:SPEC` where SPEC is `this`, `any`, or `none` and PREP is a preposition from `settings.PREPOSITIONS`
+  - Prepositions are grouped into synonym sets; words within a group are interchangeable (e.g., `with`/`using`, `at`/`to`, `in`/`inside`/`into`). Use the **canonical** (first) form from each group in `--ispec` lines and in parser method calls — the parser normalises all synonyms automatically.
 
 ### Verb Dispatch and `this`
 

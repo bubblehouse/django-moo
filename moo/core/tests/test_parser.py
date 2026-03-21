@@ -244,6 +244,41 @@ def test_parse_with_complex_name(t_init: Object, t_wizard: Object):
     assert parser.get_dobj() == box
 
 
+def test_lex_synonym_preposition_normalized():
+    # "using" is a synonym for "with"; the Lexer should store it under the canonical key "with"
+    lex = parse.Lexer("take hammer using tongs")
+    assert "with" in lex.prepositions
+    assert "using" not in lex.prepositions
+    assert lex.prepositions["with"][0][1] == "tongs"
+
+
+def test_lex_canonical_preposition_unchanged():
+    # "with" is already canonical; it should still be stored as "with"
+    lex = parse.Lexer("take hammer with tongs")
+    assert "with" in lex.prepositions
+    assert lex.prepositions["with"][0][1] == "tongs"
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_parse_synonym_get_pobj_str(t_init: object, t_wizard: object):
+    # typed "using" (synonym); canonical lookup "with" should succeed
+    lex = parse.Lexer("take hammer using tongs")
+    parser = parse.Parser(lex, t_wizard)
+    assert parser.get_pobj_str("with") == "tongs"
+    # also works when calling with the synonym itself
+    assert parser.get_pobj_str("using") == "tongs"
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_parse_synonym_has_pobj_str(t_init: object, t_wizard: object):
+    lex = parse.Lexer("take hammer using tongs")
+    parser = parse.Parser(lex, t_wizard)
+    assert parser.has_pobj_str("with")
+    assert parser.has_pobj_str("using")
+    # non-synonym should still be False
+    assert not parser.has_pobj_str("at")
+
+
 def test_expand_wildcard():
     from moo.core import utils
 
