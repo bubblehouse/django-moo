@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import asyncio
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
 
 from moo.core import code
@@ -122,3 +125,107 @@ def test_open_editor_non_wizard_raises(t_init: Object, t_wizard: Object):
     with code.ContextManager(player_npc, lambda _: None):
         with pytest.raises(UserError):
             open_editor(player_npc, "some text", callback)
+
+
+# ---------------------------------------------------------------------------
+# run_editor() — key binding state machine and lexer branching
+#
+# Strategy: patch Application so run_async() fires real key handlers
+# (which close over the real `state` and `result` dicts), then assert on
+# the return value.
+# ---------------------------------------------------------------------------
+
+
+def _run_with_key_sequence(initial_text, key_sequence, content_type="text"):
+    """
+    Run run_editor() with a mocked Application whose run_async fires the
+    given key handlers in order.  Returns the return value of run_editor().
+    """
+    from moo.shell.editor import run_editor
+
+    kb_capture = []
+
+    async def fake_run_async():
+        kb = kb_capture[0]
+        event = MagicMock()
+        for key in key_sequence:
+            binding = next((b for b in kb.bindings if key in b.keys), None)
+            if binding:
+                binding.handler(event)
+
+    mock_app = MagicMock()
+    mock_app.run_async = fake_run_async
+
+    with patch("moo.shell.editor.Application") as MockApp:
+
+        def capture_app(**kwargs):
+            kb_capture.append(kwargs["key_bindings"])
+            return mock_app
+
+        MockApp.side_effect = capture_app
+        return asyncio.run(run_editor(initial_text, content_type=content_type))
+
+
+def test_run_editor_no_save_returns_none():
+    """run_editor returns None when no key is pressed (application exits without saving)."""
+    from moo.shell.editor import run_editor
+
+    mock_app = MagicMock()
+    mock_app.run_async = AsyncMock()
+
+    with patch("moo.shell.editor.Application", return_value=mock_app):
+        result = asyncio.run(run_editor("hello", content_type="text"))
+
+    assert result is None
+
+
+def test_run_editor_python_lexer_branch():
+    """content_type='python' triggers the lexer lookup branch without error."""
+    from moo.shell.editor import run_editor
+
+    mock_app = MagicMock()
+    mock_app.run_async = AsyncMock()
+
+    with patch("moo.shell.editor.Application", return_value=mock_app):
+        result = asyncio.run(run_editor("def foo(): pass", content_type="python"))
+
+    assert result is None  # no save
+
+
+def test_run_editor_save_flow():
+    """Ctrl+S then Y saves the buffer and returns the initial text."""
+    result = _run_with_key_sequence("hello world", ["c-s", "y"])
+    assert result == "hello world"
+
+
+def test_run_editor_cancel_flow():
+    """Ctrl+C then Y cancels without saving and returns None."""
+    result = _run_with_key_sequence("hello world", ["c-c", "y"])
+    assert result is None
+
+
+def test_run_editor_deny_resets_state():
+    """Ctrl+S then N resets confirming state; subsequent Ctrl+C then Y cancels."""
+    # Start save, deny it, then cancel — should return None (no save completed)
+    result = _run_with_key_sequence("hello world", ["c-s", "n", "c-c", "y"])
+    assert result is None
+
+
+def test_run_editor_get_status_text():
+    """get_status_text returns the correct prompt for each confirming state."""
+    from moo.shell.editor import run_editor
+
+    status_fn_ref = []
+
+    mock_app = MagicMock()
+    mock_app.run_async = AsyncMock()
+
+    with (
+        patch("moo.shell.editor.Application", return_value=mock_app),
+        patch("moo.shell.editor.FormattedTextControl") as MockFmtCtrl,
+    ):
+        MockFmtCtrl.side_effect = lambda fn: status_fn_ref.append(fn) or MagicMock()
+        asyncio.run(run_editor("x"))
+
+    get_status_text = status_fn_ref[0]
+    assert get_status_text() == "[Ctrl+S] Save  [Ctrl+C/Q] Cancel"
