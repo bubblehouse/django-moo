@@ -105,7 +105,7 @@ def test_invoke_oneshot_allowed_for_nonwizard():
 
     with ctx(non_wizard):
         with patch("moo.core.tasks.invoke_verb.apply_async"):
-            invoke(verb=verb)
+            invoke(verb=verb)  # must not raise
 
 
 # ---------------------------------------------------------------------------
