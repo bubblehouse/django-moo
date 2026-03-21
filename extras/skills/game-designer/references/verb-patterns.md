@@ -33,7 +33,28 @@ context.player.location.announce_all("A thing happens.")
 
 Never use `return "message"` — returned values are not displayed. Use `print()` for player-visible output and bare `return` for early exit.
 
-## State Toggle (sit/stand, open/close, lock/unlock)
+## Sittable Objects — Use `$furniture`
+
+For any object a player can sit on (chair, bench, couch, crate, boulder), use `$furniture` as the parent instead of `$thing`. It provides `sit`/`stand` verbs automatically, tracks seated state on the player, and prevents the object from being picked up:
+
+```
+@create "bar stool" from "$furniture"
+@describe "bar stool" as "A cracked vinyl stool bolted to the floor."
+@move "bar stool" to "The Bar"
+```
+
+Players can then `sit bar stool` and `stand`. Customize the experience with `_msg` properties:
+
+```
+@edit property sit_succeeded_msg on "bar stool" with "You perch on the cracked vinyl stool."
+@edit property take_failed_msg on "bar stool" with "The stool is bolted to the floor."
+```
+
+See [object-model.md](object-model.md) for the full list of `$furniture` message properties.
+
+## State Toggle (open/close, lock/unlock, fill/empty)
+
+For binary state that doesn't involve sitting, track state via a property and toggle it in a verb:
 
 ```python
 from moo.sdk import context, NoSuchPropertyError
@@ -41,12 +62,12 @@ from moo.sdk import context, NoSuchPropertyError
 occupied = this.get_property("occupied")
 if occupied:
     this.set_property("occupied", False)
-    print("You stand up.")
-    context.player.location.announce_all_but(context.player, f"{context.player.name} stands up.")
+    print("You open it.")
+    context.player.location.announce_all_but(context.player, f"{context.player.name} opens it.")
 else:
     this.set_property("occupied", True)
-    print("You sit down.")
-    context.player.location.announce_all_but(context.player, f"{context.player.name} sits down.")
+    print("You close it.")
+    context.player.location.announce_all_but(context.player, f"{context.player.name} closes it.")
 ```
 
 ## One-Shot Event (banana peel, trap, explosive)
