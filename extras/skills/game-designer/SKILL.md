@@ -130,13 +130,16 @@ python extras/skills/game-designer/tools/build_from_yaml.py \
 - `--no-hash`: Force clean name mode (override YAML setting)
 - `--host HOST --port PORT`: Custom SSH connection
 
+**For local development**, a DB refresh and server restart before each build ensures a clean state. For production deploys, just run the build against the live server. If the server is unresponsive mid-build, you can restart it yourself with `docker compose restart webapp celery` — but tell the user first.
+
 **Build process:**
-1. **Reloads verbs**: Ensures `@edit`, `@create`, `@alias` are current
-2. **Phase 1: Rooms and exits**: Creates rooms in void, digs exits, tunnels back
-3. **Phase 2: Objects**: Creates objects in void, describes, adds aliases, moves to rooms
-4. **Phase 3: NPCs**: Creates NPCs, describes, adds aliases, moves to rooms
-5. **Phase 4: Verbs**: Attaches verbs to objects/NPCs using resolved references
-6. **Phase 5: Test verb**: Generates test code, places on `$programmer`, runs verification
+1. **Phase 1: Rooms and exits**: Creates rooms in void, digs exits, tunnels back
+2. **Phase 2: Objects**: Creates objects in void, describes, adds aliases, moves to rooms
+3. **Phase 3: NPCs**: Creates NPCs, describes, adds aliases, moves to rooms
+4. **Phase 4: Verbs**: Attaches verbs to objects/NPCs using resolved references
+5. **Phase 5: Test verb**: Generates test code, places on `$programmer`, runs verification
+
+**Do not use `@reload`** — it creates duplicate verbs on a freshly-bootstrapped DB. The user handles verb state by refreshing the DB before each build.
 
 **Build time**: ~3-4 minutes for typical environments (5 rooms, 30+ objects). The build script uses automation mode (PREFIX/SUFFIX delimiters + QUIET mode) automatically — each command takes ~1.1s instead of the old ~7.5s.
 
@@ -187,10 +190,31 @@ Based on validated builds:
 
 ### Build Process
 
-1. **Always run `--dry-run` first**: Validate YAML syntax before committing to a 15-20 minute build
-2. **One build at a time**: Don't run multiple builds simultaneously (player moves between rooms)
-3. **Monitor output**: Watch for warnings about unresolved object references
-4. **Reload verbs first**: Script automatically reloads `@edit`, `@create`, `@alias` verbs
+1. **Always run `--dry-run` first**: Validate YAML syntax before committing to a 3-4 minute build
+2. **Local development**: DB refresh + server restart before each build keeps the state clean. Production deploys skip this.
+3. **One build at a time**: Don't run multiple builds simultaneously (Wizard moves between rooms)
+4. **Run in background**: Use `python ... > /tmp/build.log 2>&1 &` and monitor the log every 2 minutes
+5. **Monitor output**: Watch for `WARNING: could not get ID` (off-by-one) and traceback lines
+6. **Do not use `@reload`**: Creates duplicate verbs — user manages verb state via DB refresh
+
+### Multiline Descriptions
+
+YAML block scalars (`|` or `>`) produce Python strings with literal `\n` characters. The `describe()` function in `build_from_yaml.py` handles this correctly — it escapes `\n` as `\\n` before sending via SSH, and `at_describe.py` unescapes them when storing. **This means multiline descriptions work fine in YAML.** Write them as block scalars freely.
+
+### RestrictedPython Gotchas in Generated Verb Code
+
+The test verb (and any generated verb code) runs inside the RestrictedPython sandbox. Subscript augmented assignment is blocked:
+
+```python
+# BLOCKED — RestrictedPython compilation failure (silent: code.code = None)
+results["passed"] += 1
+
+# CORRECT — use plain variables
+passed += 1
+failed += 1
+```
+
+If a generated verb silently fails with `TypeError: exec() arg 1 must be a string, bytes or code object`, it means RestrictedPython couldn't compile it. Check for any `dict["key"] += value` patterns and replace with plain variables.
 
 ### Performance
 
@@ -204,9 +228,9 @@ Based on validated builds:
 - **"No such object" errors**: Check room names match exactly (case-sensitive)
 - **Ambiguous object errors**: Use `room` context in verb definitions
 - **Test verb failures**: Verify hash is included in object names when hash mode enabled
-- **SSH disconnects**: If a build crashes, ask the user to restart docker compose, then re-run the build script
-
-**Note**: Never attempt to restart the server or run `docker compose` commands. Server management is the user's responsibility.
+- **`TypeError: exec() arg 1 must be a string, bytes or code object`**: RestrictedPython compilation failure — check for `dict["key"] += value` patterns in generated code
+- **SSH disconnects mid-build**: Run `docker compose restart webapp celery` to restore, then re-run the build script (tell the user first)
+- **`WARNING: could not get ID` in build log**: The off-by-one bug — likely a description with unescaped newlines being sent as a split command. All descriptions are now correctly escaped; this should not recur.
 
 ## Available Build Commands
 
