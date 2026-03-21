@@ -81,13 +81,38 @@ else:
 
 Only catch these exceptions when you need to provide a different message or fall back to alternative logic.
 
-## Preposition Names
+## Preposition Names and Synonyms
 
-Common prepositions accepted by `get_pobj_str(prep)` and `has_pobj_str(prep)`:
+Prepositions are defined in `settings.PREPOSITIONS` as a list of synonym groups. Words in the same group are interchangeable — the parser normalises them all to the first word in the group before storing the result. This means:
 
-`with`, `using`, `at`, `to`, `in front of`, `in`, `inside`, `into`, `on top of`, `on`, `onto`, `upon`, `out of`, `from inside`, `from`, `over`, `through`, `under`, `underneath`, `beneath`, `behind`, `beside`, `for`, `about`, `is`, `as`, `off`, `off of`
+- A player typing `take sword using tongs` is treated the same as `take sword with tongs`
+- `get_pobj_str("with")` and `get_pobj_str("using")` both work regardless of which word the player typed
 
-The preposition string must match exactly (case-insensitive). The most common ones in default verbs are `in`, `on`, `with`, `at`, `from`, `to`.
+The synonym groups are:
+
+| Canonical (use in code) | Synonyms |
+|-------------------------|----------|
+| `with` | `using` |
+| `at` | `to` |
+| `in front of` | |
+| `in` | `inside`, `into`, `within` |
+| `on top of` | `on`, `onto`, `upon`, `above` |
+| `out of` | `from inside`, `from` |
+| `over` | |
+| `through` | |
+| `under` | `underneath`, `beneath`, `below` |
+| `around` | `round` |
+| `between` | `among` |
+| `behind` | `past` |
+| `beside` | `by`, `near`, `next to`, `along` |
+| `for` | `about` |
+| `is` | |
+| `as` | |
+| `off` | `off of` |
+
+**Use the canonical (first) form** when calling parser methods or writing `--ispec` lines — this is the form stored in the parser after normalisation. All synonyms also work transparently if passed to `get_pobj_str`, `has_pobj_str`, `get_pobj`, or `has_pobj`.
+
+The most common ones in default verbs are `in`, `on`, `with`, `at`, `from`, `to`.
 
 ## Multi-Preposition Verbs
 
