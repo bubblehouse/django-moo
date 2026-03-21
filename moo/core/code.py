@@ -269,22 +269,28 @@ def get_restricted_environment(name, writer):
     return env
 
 
-_active_caller = contextvars.ContextVar("active_caller", default=None)
-_active_player = contextvars.ContextVar("active_player", default=None)
-_active_writer = contextvars.ContextVar("active_writer", default=None)
-_active_parser = contextvars.ContextVar("active_parser", default=None)
-_active_task_id = contextvars.ContextVar("active_task_id", default=None)
-_active_start_time = contextvars.ContextVar("active_start_time", default=None)
-_active_connection = contextvars.ContextVar("active_connection", default=None)
-_verb_lookup_cache = contextvars.ContextVar("verb_lookup_cache", default=None)
-_prop_lookup_cache = contextvars.ContextVar("prop_lookup_cache", default=None)
 # A sentinel object (not a mutable default like []) so we can reliably detect whether
-# a ContextManager is active: _active_caller_stack.get() is _UNSET means no session.
-# Using a mutable list as the default would cause shared-state bugs — any code that
-# appended to it outside a context would mutate the single default object permanently.
+# a ContextManager is active: _CONTEXT_VARS["caller_stack"].get() is _UNSET means no
+# session. Using a mutable list as the default would cause shared-state bugs — any code
+# that appended to it outside a context would mutate the single default object permanently.
 _UNSET = object()
-_active_caller_stack = contextvars.ContextVar("active_caller_stack", default=_UNSET)
-_perm_cache = contextvars.ContextVar("perm_cache", default=None)
+
+# Registry mapping context-variable names to their ContextVar instances.
+# To add a new context variable: add it here AND set its initial value in
+# ContextManager.__init__._initial_values.  No other boilerplate required.
+_CONTEXT_VARS: dict[str, contextvars.ContextVar] = {
+    "caller": contextvars.ContextVar("active_caller", default=None),
+    "player": contextvars.ContextVar("active_player", default=None),
+    "writer": contextvars.ContextVar("active_writer", default=None),
+    "parser": contextvars.ContextVar("active_parser", default=None),
+    "task_id": contextvars.ContextVar("active_task_id", default=None),
+    "connection": contextvars.ContextVar("active_connection", default=None),
+    "start_time": contextvars.ContextVar("active_start_time", default=None),
+    "caller_stack": contextvars.ContextVar("active_caller_stack", default=_UNSET),
+    "perm_cache": contextvars.ContextVar("perm_cache", default=None),
+    "verb_lookup_cache": contextvars.ContextVar("verb_lookup_cache", default=None),
+    "prop_lookup_cache": contextvars.ContextVar("prop_lookup_cache", default=None),
+}
 
 
 class ContextManager:
@@ -301,22 +307,10 @@ class ContextManager:
 
     @classmethod
     def get(cls, name):
-        if name == "caller":
-            return _active_caller.get()
-        if name == "player":
-            return _active_player.get()
-        if name == "writer":
-            return _active_writer.get()
-        if name == "parser":
-            return _active_parser.get()
-        if name == "task_id":
-            return _active_task_id.get()
-        if name == "connection":
-            return _active_connection.get()
         if name == "task_time":
             from celery import current_app
 
-            start = _active_start_time.get()
+            start = _CONTEXT_VARS["start_time"].get()
             if start is None:
                 return None
             elapsed = time.monotonic() - start
@@ -324,29 +318,31 @@ class ContextManager:
             remaining = (limit - elapsed) if limit is not None else None
             return TaskTime(elapsed=elapsed, time_limit=limit, remaining=remaining)
         if name == "caller_stack":
-            stack = _active_caller_stack.get()
+            stack = _CONTEXT_VARS["caller_stack"].get()
             # Return a copy so callers cannot mutate the live stack.
             return [] if stack is _UNSET else list(stack)
+        if name in _CONTEXT_VARS:
+            return _CONTEXT_VARS[name].get()
         raise NotImplementedError(f"Unknown ContextManager variable: {name}")
 
     @classmethod
     def get_perm_cache(cls) -> dict | None:
-        return _perm_cache.get()
+        return cls.get("perm_cache")
 
     @classmethod
     def get_verb_lookup_cache(cls) -> dict | None:
-        return _verb_lookup_cache.get()
+        return cls.get("verb_lookup_cache")
 
     @classmethod
     def get_prop_lookup_cache(cls) -> dict | None:
-        return _prop_lookup_cache.get()
+        return cls.get("prop_lookup_cache")
 
     @classmethod
     def is_active(cls):
         # True only when __enter__ has been called and __exit__ has not yet run.
         # Verb.__call__ uses this to skip stack tracking for utility verb calls
         # that happen outside any user session (e.g. apply_default_permissions).
-        return _active_caller_stack.get() is not _UNSET
+        return _CONTEXT_VARS["caller_stack"].get() is not _UNSET
 
     @classmethod
     def override_caller(cls, caller, this=None, verb_name=None, origin=None, player=None):
@@ -356,91 +352,55 @@ class ContextManager:
             "caller": caller,
             "origin": origin,
             "player": player,
-            "previous_caller": _active_caller.get(),
+            "previous_caller": _CONTEXT_VARS["caller"].get(),
         }
-        _active_caller.set(caller)
-        caller_stack = _active_caller_stack.get()
+        _CONTEXT_VARS["caller"].set(caller)
+        caller_stack = _CONTEXT_VARS["caller_stack"].get()
         caller_stack.append(attributes)
-        _active_caller_stack.set(caller_stack)
+        _CONTEXT_VARS["caller_stack"].set(caller_stack)
 
     @classmethod
     def pop_caller(cls):
-        caller_stack = _active_caller_stack.get()
+        caller_stack = _CONTEXT_VARS["caller_stack"].get()
         if not caller_stack:
             raise RuntimeError("Caller stack is empty.")
         frame = caller_stack.pop()
-        _active_caller_stack.set(caller_stack)
-        _active_caller.set(frame["previous_caller"])
+        _CONTEXT_VARS["caller_stack"].set(caller_stack)
+        _CONTEXT_VARS["caller"].set(frame["previous_caller"])
 
     def __init__(self, caller, writer, task_id=None, player=None, connection=None):
-        self.caller = caller
-        self.caller_token = None
-        self.player = player if player is not None else self.caller
-        self.player_token = None
-        self.writer = writer
-        self.writer_token = None
-        self.parser = None
-        self.parser_token = None
-        self.task_id = task_id
-        self.task_id_token = None
-        self.connection = connection
-        self.connection_token = None
-        self.start_time = time.monotonic()
-        self.start_time_token = None
-        # A fresh list per instance so each session has its own isolated stack.
-        self.active_caller_stack = []
-        self.active_caller_stack_token = None
-        # A fresh dict per instance for per-session permission caching.
-        self.perm_cache = {}
-        self.perm_cache_token = None
-        # Per-session verb and property lookup caches keyed by (object_pk, name, ...).
-        self.verb_lookup_cache = {}
-        self.verb_lookup_cache_token = None
-        self.prop_lookup_cache = {}
-        self.prop_lookup_cache_token = None
+        self._tokens: dict = {}
+        self._initial_values: dict = {
+            "caller": caller,
+            "player": player if player is not None else caller,
+            "writer": writer,
+            "parser": None,
+            "task_id": task_id,
+            "connection": connection,
+            "start_time": time.monotonic(),
+            # Fresh list per instance so each session has its own isolated stack.
+            # Replacing _UNSET with a real list marks the session as active (is_active() → True)
+            # and gives override_caller a mutable list to append to.
+            "caller_stack": [],
+            # Fresh dicts per instance for per-session caching.
+            "perm_cache": {},
+            "verb_lookup_cache": {},
+            "prop_lookup_cache": {},
+        }
 
     def set_parser(self, parser):
-        self.parser = parser
-        self.parser_token = _active_parser.set(self.parser)
+        self._initial_values["parser"] = parser
+        self._tokens["parser"] = _CONTEXT_VARS["parser"].set(parser)
 
     def __enter__(self):
-        self.caller_token = _active_caller.set(self.caller)
-        self.player_token = _active_player.set(self.player)
-        self.writer_token = _active_writer.set(self.writer)
-        self.task_id_token = _active_task_id.set(self.task_id)
-        self.connection_token = _active_connection.set(self.connection)
-        self.start_time_token = _active_start_time.set(self.start_time)
-        self.parser_token = _active_parser.set(self.parser)
-        # Replacing _UNSET with a real list marks the session as active (is_active() → True)
-        # and gives override_caller a mutable list to append to.
-        self.active_caller_stack_token = _active_caller_stack.set(self.active_caller_stack)
-        self.perm_cache_token = _perm_cache.set(self.perm_cache)
-        self.verb_lookup_cache_token = _verb_lookup_cache.set(self.verb_lookup_cache)
-        self.prop_lookup_cache_token = _prop_lookup_cache.set(self.prop_lookup_cache)
+        for name, var in _CONTEXT_VARS.items():
+            self._tokens[name] = var.set(self._initial_values[name])
         return self
 
     def __exit__(self, cls, value, traceback):
-        if self.caller_token:
-            _active_caller.reset(self.caller_token)
-        if self.player_token:
-            _active_player.reset(self.player_token)
-        if self.writer_token:
-            _active_writer.reset(self.writer_token)
-        if self.parser_token:
-            _active_parser.reset(self.parser_token)
-        if self.task_id_token:
-            _active_task_id.reset(self.task_id_token)
-        if self.connection_token:
-            _active_connection.reset(self.connection_token)
-        if self.start_time_token:
-            _active_start_time.reset(self.start_time_token)
-        if self.active_caller_stack_token:
-            # reset() restores to whatever the var held before __enter__'s set() call,
-            # regardless of how many times override_caller/pop_caller mutated it since.
-            _active_caller_stack.reset(self.active_caller_stack_token)
-        if self.perm_cache_token:
-            _perm_cache.reset(self.perm_cache_token)
-        if self.verb_lookup_cache_token:
-            _verb_lookup_cache.reset(self.verb_lookup_cache_token)
-        if self.prop_lookup_cache_token:
-            _prop_lookup_cache.reset(self.prop_lookup_cache_token)
+        for name, token in self._tokens.items():
+            if token:
+                # reset() restores to whatever the var held before __enter__'s set() call,
+                # regardless of how many times override_caller/pop_caller mutated it since.
+                _CONTEXT_VARS[name].reset(token)
+        self._tokens.clear()
