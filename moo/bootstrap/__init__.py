@@ -119,7 +119,7 @@ def parse_shebang(content):
     Parse the ``#!moo verb`` shebang from verb source code.
 
     :param content: the full verb source code string
-    :returns: ``(names, dspec, ispec)`` tuple if a valid shebang is present, else ``None``
+    :returns: ``(names, on, dspec, ispec)`` tuple if a valid shebang is present, else ``None``
     """
     try:
         first_line, _ = content.split("\n", maxsplit=1)
@@ -133,7 +133,7 @@ def parse_shebang(content):
     except SystemExit:
         return None
     ispec = args.ispec if hasattr(args, "ispec") else None
-    return args.names, args.dspec, ispec
+    return args.names, args.on, args.dspec, ispec
 
 
 def load_verb_source(path, system, repo, replace=False):
@@ -141,33 +141,25 @@ def load_verb_source(path, system, repo, replace=False):
 
     with open(path, encoding="utf8") as f:
         contents = f.read()
-        try:
-            first, _ = contents.split("\n", maxsplit=1)
-        except ValueError:
-            return
-        if first.startswith("#!moo "):
-            log.debug(f"Loading verb source `{path.name}`...")
-            shebang = first[6:]
-            try:
-                args = parser.parse_args(shlex.split(shebang))
-            except SystemExit:
-                log.error(f"Invalid shebang in verb source `{path.name}`: {shebang}")
-                return
-            if args.on.startswith("$"):
-                obj = system.get_property(name=args.on[1:])
-            else:
-                obj = Object.objects.get(name=args.on)
-            obj.add_verb(
-                *args.names,
-                code=contents,
-                filename=str(path.resolve()),
-                repo=repo,
-                direct_object=args.dspec,
-                indirect_objects=args.ispec,
-                replace=replace,
-            )
-        else:
-            log.debug(f"Skipping verb source `{path.name}`...")
+    result = parse_shebang(contents)
+    if result is None:
+        log.debug(f"Skipping verb source `{path.name}`...")
+        return
+    names, on, dspec, ispec = result
+    log.debug(f"Loading verb source `{path.name}`...")
+    if on.startswith("$"):
+        obj = system.get_property(name=on[1:])
+    else:
+        obj = Object.objects.get(name=on)
+    obj.add_verb(
+        *names,
+        code=contents,
+        filename=str(path.resolve()),
+        repo=repo,
+        direct_object=dspec,
+        indirect_objects=ispec,
+        replace=replace,
+    )
 
 
 def load_verbs(repo, verb_package):
