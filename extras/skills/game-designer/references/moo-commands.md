@@ -250,6 +250,20 @@ When creating rooms in the void, you can't navigate to them with normal movement
 
 Must call `.save()` after setting `.location` because it's a Django model field.
 
+## Session Commands
+
+### `@quit`
+```
+@quit
+```
+Disconnects from the MOO server cleanly. Prints a goodbye message and closes the SSH session. This is the canonical way to exit.
+
+### `QUIT`
+```
+QUIT
+```
+Legacy disconnect command. If the current room defines a `QUIT` verb (e.g., inside an editor), it is called instead. Otherwise prints a message redirecting to `@quit`. Use `@quit` in automation scripts.
+
 ## Navigation Tip
 
 After `@dig`, you remain in the original room. To reach the new room:
