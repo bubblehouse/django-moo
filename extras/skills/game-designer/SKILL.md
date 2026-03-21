@@ -211,7 +211,7 @@ The script accepts either a file path or a directory path.
 **Build process:**
 1. **Phase 1: Rooms and exits** — Creates rooms in void, teleports to each, describes, wires exits; adds clean-name alias in hash mode
 2. **Phase 2: Objects** — Creates objects in void, describes, adds aliases (including clean-name alias in hash mode), moves to rooms
-3. **Phase 3: NPCs** — Creates NPCs, describes, adds aliases (including clean-name alias in hash mode), moves to rooms
+3. **Phase 3: NPCs** — Creates NPCs, creates a Django `Player` record (no User) for each via `Player.objects.create()`, describes, adds aliases (including clean-name alias in hash mode), moves to rooms
 4. **Phase 4: Verbs** — Applies `__hash_suffix__` substitution to verb code, attaches verbs to objects/NPCs using resolved references
 5. **Phase 5: Test verb** — Generates test code, places on `$programmer`, runs verification
 
@@ -302,6 +302,8 @@ If a verb silently fails with `TypeError: exec() arg 1 must be a string, bytes o
 - **`TypeError: exec() arg 1 must be a string, bytes or code object`**: RestrictedPython compilation failure — check for `dict["key"] += value` patterns in verb code.
 - **SSH disconnects mid-build**: Run `docker compose restart webapp celery` to restore, then re-run the build script (tell the user first).
 - **Test verb output truncated**: The SSH connection dropped while printing. The build still succeeded. Run the test verb manually in-world.
+- **`$furniture` objects stuck in the void (silent `False` in build log)**: `$furniture`'s `moveto` verb returns `False` to block player takes — this also blocks admin `moveto()` calls. The current `build_from_yaml.py` uses `obj.location = room; obj.save()` to bypass this. If you see `False` in the log after move commands, you are running an old version. Manual fix: `@eval "from moo.sdk import lookup; obj = lookup(N); room = lookup(\"Room [hash]\"); obj.location = room; obj.save()"` for each stranded object.
+- **NPCs missing player infrastructure**: `@create "NPC" from "$player"` creates the MOO Object but not the Django `Player` model record. The build script calls `Player.objects.create(); p.avatar = obj; p.save()` after each NPC. If NPCs were created by hand or with an older script, add the record via: `@eval "from moo.core.models import Player; from moo.sdk import lookup; obj = lookup(N); p = Player.objects.create(); p.avatar = obj; p.save()"`
 
 ## Available Build Commands
 
