@@ -188,6 +188,25 @@ def test_parse_with_quoted_strings_and_escapes(t_init: Object, t_wizard: Object)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_parse_double_quoted_string_with_escaped_inner_quotes(t_init: Object, t_wizard: Object):
+    # Strings ending with \" were previously corrupted by strip() removing
+    # the inner quote char from the end along with the outer closing quote.
+    lex = parse.Lexer('@describe #1 as "Top reads \\"Homer J.\\""')
+    parser = parse.Parser(lex, t_wizard)
+    result = parser.get_pobj_str("as")
+    assert result == 'Top reads "Homer J."'
+    assert not result.endswith("\\")
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_parse_double_quoted_string_with_inner_escaped_quotes(t_init: Object, t_wizard: Object):
+    lex = parse.Lexer('@describe #1 as "He said \\"hello\\""')
+    parser = parse.Parser(lex, t_wizard)
+    result = parser.get_pobj_str("as")
+    assert result == 'He said "hello"'
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_parse_with_my_object(t_init: Object, t_wizard: Object):
     room = Object.objects.create(name="test room")
     room.add_verb("accept", code="return True")
