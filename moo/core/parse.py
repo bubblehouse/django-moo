@@ -69,7 +69,9 @@ def interpret(ctx, line):
 
 
 def unquote(s):
-    return s.strip("'\"").replace("\\'", "'").replace('\\"', '"')
+    if len(s) >= 2 and s[0] in ('"', "'") and s[-1] == s[0]:
+        s = s[1:-1]
+    return s.replace("\\'", "'").replace('\\"', '"')
 
 
 class Pattern:
