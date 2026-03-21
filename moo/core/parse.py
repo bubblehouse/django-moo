@@ -82,6 +82,7 @@ class Pattern:
     PHRASE = re.compile(PHRASE_SRC)
     POBJ_TEST = re.compile(PREP_SRC + r"\s" + PHRASE_SRC)
     MULTI_WORD = re.compile(r"((\"|\').+?(?!\\).\2)|(\S+)")
+    PREP_CANONICAL = {name: group[0] for group in settings.PREPOSITIONS for name in group}
 
     @classmethod
     def initializePrepositions(cls):
@@ -184,7 +185,8 @@ class Lexer:
             if result["spec_str"] is None:
                 result["spec_str"] = ""
 
-            self.prepositions.setdefault(result["prep"], []).append([result["spec_str"], result["obj_str"], None])
+            canonical = Pattern.PREP_CANONICAL.get(result["prep"], result["prep"])
+            self.prepositions.setdefault(canonical, []).append([result["spec_str"], result["obj_str"], None])
 
 
 class Parser:  # pylint: disable=too-many-instance-attributes
@@ -457,27 +459,27 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             raise NoSuchObjectError(self.dobj_str)
         return self.dobj
 
-    def get_pobj(self, *preps, lookup=False):
+    def get_pobj(self, prep, lookup=False):
         """
-        Get the object(s) for the given preposition(s). If there was no
-        object found, raise a NoSuchObjectError; if the preposition
-        was not found, raise a NoSuchPrepositionError.
+        Get the object for the given preposition. If there was no object found,
+        raise a NoSuchObjectError; if the preposition was not found, raise a
+        NoSuchPrepositionError. Synonym prepositions (e.g. "using" for "with")
+        are resolved to their canonical form automatically.
         """
+        prep = Pattern.PREP_CANONICAL.get(prep, prep)
+        if not (prep in self.prepositions):
+            raise NoSuchPrepositionError(prep)
         matches = []
-        for prep in preps:
-            if not (prep in self.prepositions):
-                raise NoSuchPrepositionError(prep)
-            for item in self.prepositions[prep]:
-                if lookup and item[1] is not None:
-                    from moo.core import lookup
+        for item in self.prepositions[prep]:
+            if lookup and item[1] is not None:
+                from moo.core import lookup
 
-                    matches.append(lookup(item[1]))
-                elif item[2]:
-                    matches.append(item[2])
+                matches.append(lookup(item[1]))
+            elif item[2]:
+                matches.append(item[2])
         if len(matches) > 1:
-            raise AmbiguousObjectError(",".join(preps), matches)
+            raise AmbiguousObjectError(prep, matches)
         if not (matches):
-            prep = list(self.prepositions.keys())[0]
             raise NoSuchObjectError(self.prepositions[prep][0][1])
         return matches[0]
 
@@ -494,8 +496,10 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         """
         Get the object **string** for the given preposition. If there was no
         object **string** found, raise a NoSuchObjectError; if the preposition
-        was not found, raise a NoSuchPrepositionError.
+        was not found, raise a NoSuchPrepositionError. Synonym prepositions are
+        resolved to their canonical form automatically.
         """
+        prep = Pattern.PREP_CANONICAL.get(prep, prep)
         if not (prep in self.prepositions):
             raise NoSuchPrepositionError(prep)
         matches = []
@@ -515,8 +519,10 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         """
         Get the object **specifier** for the given preposition. If there was no
         object **specifier** found, return the empty string; if the preposition
-        was not found, raise a NoSuchPrepositionError.
+        was not found, raise a NoSuchPrepositionError. Synonym prepositions are
+        resolved to their canonical form automatically.
         """
+        prep = Pattern.PREP_CANONICAL.get(prep, prep)
         if not (prep in self.prepositions):
             raise NoSuchPrepositionError(prep)
         matches = []
@@ -535,22 +541,18 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         """
         return self.dobj is not None
 
-    def has_pobj(self, *preps):
+    def has_pobj(self, prep):
         """
-        Was an object for this preposition found?
+        Was an object for this preposition found? Synonym prepositions are
+        resolved to their canonical form automatically.
         """
-        found_prep = False
-        for prep in preps:
-            if prep not in self.prepositions:
-                return False
-            for item in self.prepositions[prep]:
-                if item[2]:
-                    found_prep = True
-                    break
-            else:
-                continue
-            break
-        return found_prep
+        prep = Pattern.PREP_CANONICAL.get(prep, prep)
+        if prep not in self.prepositions:
+            return False
+        for item in self.prepositions[prep]:
+            if item[2]:
+                return True
+        return False
 
     def has_dobj_str(self):
         """
@@ -560,8 +562,10 @@ class Parser:  # pylint: disable=too-many-instance-attributes
 
     def has_pobj_str(self, prep):
         """
-        Was a object string for this preposition found?
+        Was a object string for this preposition found? Synonym prepositions are
+        resolved to their canonical form automatically.
         """
+        prep = Pattern.PREP_CANONICAL.get(prep, prep)
         if prep not in self.prepositions:
             return False
 
