@@ -96,7 +96,7 @@ class MooPrompt:
         }
     )
 
-    def __init__(self, user, automation: bool = False, *a, **kw):
+    def __init__(self, user, automation: bool = False):
         """
         Initialize the prompt session for the given Django user.
 
@@ -108,6 +108,7 @@ class MooPrompt:
         self.is_exiting = False
         self.editor_queue = asyncio.Queue()
         self.paginator_queue = asyncio.Queue()
+        self.disconnect_event = asyncio.Event()
         self.last_property_write: datetime | None = None
 
         # Connection-level output configuration (session-only, not persisted)
@@ -131,8 +132,9 @@ class MooPrompt:
                 prompt_task = asyncio.ensure_future(prompt_session.prompt_async(message, style=self.style))
                 editor_task = asyncio.ensure_future(self.editor_queue.get())
                 paginator_task = asyncio.ensure_future(self.paginator_queue.get())
+                disconnect_task = asyncio.ensure_future(self.disconnect_event.wait())
                 done, pending = await asyncio.wait(
-                    [prompt_task, editor_task, paginator_task], return_when=asyncio.FIRST_COMPLETED
+                    [prompt_task, editor_task, paginator_task, disconnect_task], return_when=asyncio.FIRST_COMPLETED
                 )
                 for task in pending:
                     task.cancel()
@@ -140,7 +142,10 @@ class MooPrompt:
                         await task
                     except asyncio.CancelledError:
                         pass
-                if editor_task in done:
+                if disconnect_task in done:
+                    self.is_exiting = True
+                    break
+                elif editor_task in done:
                     await self.run_editor_session(editor_task.result())
                 elif paginator_task in done:
                     await self.run_paginator_session(paginator_task.result())
@@ -325,6 +330,9 @@ class MooPrompt:
                         if user_pk not in _session_settings:
                             _session_settings[user_pk] = {}
                         _session_settings[user_pk][message["key"]] = message["value"]
+                    elif isinstance(message, dict) and message.get("event") == "disconnect":
+                        self.is_exiting = True
+                        self.disconnect_event.set()
                     else:
                         await run_in_terminal(lambda: self.writer(message))
         except:  # pylint: disable=bare-except
