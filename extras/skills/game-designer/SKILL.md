@@ -22,7 +22,28 @@ Use web research for real-world locations. Aim for specificity — generic descr
 
 ## Phase 2: Design - Generate YAML Environment File
 
-Create a YAML environment file with this structure:
+### Single-file vs. directory layout
+
+Small environments (≤10 rooms, ≤30 objects) can live in a single YAML file:
+
+```
+extras/skills/game-designer/environments/<name>.yaml
+```
+
+Larger environments should be split into a directory of section files. The build script detects directories automatically and merges all `*.yaml` files found inside:
+
+```
+extras/skills/game-designer/environments/<name>/
+  metadata.yaml   # name, version, hash setting, parent defaults
+  rooms.yaml      # room definitions + exits
+  objects.yaml    # objects keyed by room name
+  npcs.yaml       # NPC definitions
+  verbs.yaml      # verb definitions with code blocks
+```
+
+Each section file uses the same top-level keys as the single-file format. Since the keys are distinct (`metadata`, `rooms`, `objects`, `npcs`, `verbs`), the files merge without conflicts.
+
+### YAML structure
 
 ```yaml
 metadata:
@@ -31,88 +52,140 @@ metadata:
   author: "game-designer"
   version: "1.0"
   base_parent: "$thing"    # Default parent for objects
-  npc_parent: "$player"     # Default parent for NPCs
-  use_hash_suffix: true     # Enable hash suffixes for testing
+  npc_parent: "$player"    # Default parent for NPCs
+  use_hash_suffix: true    # Enable hash suffixes for testing
 
 rooms:
-  - name: "Room Name"
+  - name: "Room Name __hash_suffix__"
     description: "Detailed room description..."
     exits:
       - direction: north
-        to: "Other Room"
+        to: "Other Room"       # Clean name — no __hash_suffix__ in exits
       - direction: south
-        to: "External Room"
-        reverse: north  # Tunnel back to existing room
+        to: "External Room"    # Exits to rooms outside this environment also use clean names
 
 objects:
-  "Room Name":
-    - name: "object name"
+  "Room Name":                 # Section key is clean room name — no __hash_suffix__
+    - name: "object name __hash_suffix__"
       description: "Object description..."
       aliases: ["alias1", "alias2"]
-      obvious: true  # Appears in room listing when players look (default: false)
-      quantity: 4  # Create 4 identical objects
+      obvious: true            # Appears in room listing when players look (default: false)
+      quantity: 4              # Create 4 identical objects
 
 npcs:
-  - name: "NPC Name"
+  - name: "NPC Name __hash_suffix__"
     description: "NPC description..."
     aliases: ["alias"]
-    room: "Room Name"
+    room: "Room Name"          # Clean name — no __hash_suffix__ in room references
 
 verbs:
   - verb: "verb_name"
-    object: "object name"
-    room: "Room Name"  # For disambiguation
+    object: "object name __hash_suffix__"   # Has __hash_suffix__ for test verb lookup
+    room: "Room Name"                        # Clean name — no __hash_suffix__
     code: |
-      from moo.sdk import context
-      # Verb implementation...
+      #!moo verb verb_name alias --on "object name __hash_suffix__" --dspec either
+      from moo.sdk import context, lookup, NoSuchObjectError
+      target = lookup("Target Room __hash_suffix__")   # lookup() calls use __hash_suffix__
+      context.player.moveto(target)
 ```
 
-When creating descriptions, review the `references/room-description-principles.md` reference for guidelines on effective writing. Key principle: room descriptions should be atmospheric, not inventories. The `obvious` object listing handles enumeration — descriptions handle character and orientation.
+### The `__hash_suffix__` placeholder system
+
+In hash mode (`use_hash_suffix: true`), the build script generates a unique 6-character hash per run (e.g., `[1e8372]`) and substitutes it for `__hash_suffix__` everywhere. This lets you rebuild repeatedly without name collisions.
+
+**Where to use `__hash_suffix__`:**
+- Room `name:` fields — the names sent to `@create`
+- Object `name:` fields — the names sent to `@create`
+- NPC `name:` fields — the names sent to `@create`
+- Verb `object:` fields — so the test verb can look up the hashed object
+- `lookup()` calls inside verb code — build script replaces before sending via `@edit`
+- The `--on "..."` argument inside verb shebang lines
+
+**Where NOT to use `__hash_suffix__` (internal YAML references):**
+- Exit `to:` fields
+- NPC `room:` fields
+- Verb `room:` fields
+- Object section dict keys (the room-name keys under `objects:`)
+
+The `room_map`, `obj_refs`, and `npc_refs` dictionaries inside the build script are all keyed by clean (stripped) names, so internal references resolve correctly regardless of hash mode.
+
+**Clean-name aliases:** In hash mode, the build script automatically adds the clean (unhashed) name as an alias to every room, object, and NPC it creates. So `lookup("Room Name")` works alongside `lookup("Room Name [1e8372]")`, and players can refer to objects by plain names in-game.
+
+**Hash mode usage:**
+- `use_hash_suffix: true` — development mode, allows repeated builds without cleanup
+- `use_hash_suffix: false` — production mode, clean names
+- `--hash` / `--no-hash` CLI flags override the YAML setting
+
+### Verb shebang syntax
+
+Every verb code block must start with a shebang line that registers the verb:
+
+```python
+#!moo verb verb_name1 [verb_name2 ...] --on "Object Name __hash_suffix__" [--dspec SPEC] [--ispec PREP:SPEC ...]
+```
+
+**Multiple verb names:** Space-separated. All names are registered as aliases for the same verb:
+```python
+#!moo verb talk speak --on "Professor Farnsworth __hash_suffix__" --dspec either --ispec to:any
+#!moo verb punch kick hit --on "punching bag __hash_suffix__" --dspec either --ispec at:this
+#!moo verb enter board --on "Planet Express Ship __hash_suffix__" --dspec either
+```
+
+**`--dspec` values:**
+- `--dspec this` — verb only matches when the object it's on is the direct object (`verb object`)
+- `--dspec any` — verb matches any direct object
+- `--dspec either` — direct object is optional; supports both `verb object` and `verb prep object` forms
+- omit — verb takes no direct object
+
+**`--ispec PREP:SPEC`** — indirect object via preposition. `SPEC` is `this`, `any`, or `none`:
+- `--ispec to:any` — matches `talk to Farnsworth` (iobj can be anything)
+- `--ispec on:this` — matches `sit on couch` (iobj must be the object the verb is on)
+- `--ispec into:any` — matches `crawl into dumpster`
+- `--ispec from:this` — matches `drink from machine`
+- `--ispec through:any` — matches `peer through scope`
+- `--ispec at:this` — matches `punch at bag`
+
+Use `--dspec either` with `--ispec` to support both `verb object` and `verb prep object` in a single verb. The verb code doesn't need to branch — `this` is set to the matched object in both dispatch paths.
+
+**Hidden room access pattern:** Place a movement verb on a physical object in a room. The verb calls `context.player.moveto(lookup("Hidden Room __hash_suffix__"))`. The hidden room needs a normal directional exit back.
+
+```python
+#!moo verb pull yank --on "laboratory bookcase __hash_suffix__" --dspec this
+from moo.sdk import context, lookup, NoSuchObjectError
+print("The bookcase swings outward on hidden hinges...")
+try:
+    context.player.moveto(lookup("Secret Sub-Lab __hash_suffix__"))
+except NoSuchObjectError:
+    print("The passage appears to be sealed.")
+```
+
+### Object visibility
 
 **For each object, decide: `obvious: true` or `obvious: false`?**
 
-- `obvious: true` — the object appears in the room listing when players `look`. Use for dominant furniture, interactive focal points, major props, anything a person would immediately notice walking in.
-- `obvious: false` (default) — hidden from the listing, discovered by examining other objects or through narrative hints. Use for small details, easter eggs, items found by searching.
+- `obvious: true` — appears in the room listing when players `look`. Use for dominant furniture, interactive focal points, major props, anything a person would immediately notice walking in.
+- `obvious: false` (default) — hidden from the listing, discovered by examining other objects or through narrative hints.
 
-Objects marked `obvious: true` should be mentioned in the room description. Non-obvious objects don't need to be — though a description can hint at them as flavor or reward for curiosity.
+Objects marked `obvious: true` should be mentioned in the room description. Room descriptions should orient and evoke, not enumerate — the `obvious` listing handles inventory.
 
-**Key sections:**
-
-1. **metadata**: Environment info, parent defaults, hash mode
-   - `use_hash_suffix: true` — Testing/development mode (adds `[abc123]` to names)
-   - `use_hash_suffix: false` — Production mode (clean names)
-2. **rooms**: List of room definitions with inline exits
-3. **objects**: Dict mapping room names to object lists (use `quantity` for duplicates)
-4. **npcs**: List of NPC definitions with starting rooms
-5. **verbs**: List of verb definitions with multi-line code blocks
-6. **test**: (Optional) Explicit test expectations, or omit for auto-generation
-
-**Hash Mode Usage:**
-- **During development**: `use_hash_suffix: true` allows repeated builds without cleanup
-- **For production**: `use_hash_suffix: false` produces clean professional names
-- **CLI override**: `--hash` or `--no-hash` flags override YAML setting
-
-**Save to**: `extras/skills/game-designer/environments/<name>.yaml`
-
-**Example**: See `environments/moes-tavern.yaml` for a complete working example
+When creating descriptions, review `references/room-description-principles.md`. Key principle: room descriptions should be atmospheric, not inventories.
 
 ## Phase 3: Review YAML (User Approval Required)
 
-After generating the YAML file:
+After generating the YAML file or directory:
 
-1. **Show the file path** to the user: `extras/skills/game-designer/environments/<name>.yaml`
+1. **Show the path** to the user: `extras/skills/game-designer/environments/<name>/` or `<name>.yaml`
 2. **Summarize what will be created**:
-   - X rooms with Y exits
+   - X rooms with Y exits (note any hidden/restricted rooms)
    - Z objects across N rooms
    - M NPCs
    - P interactive verbs
-3. **Ask the user to review** the YAML file
+3. **Ask the user to review** the YAML
 4. **Wait for explicit approval** before proceeding to Phase 4
 5. **Allow edits**: User can manually edit the YAML if needed
+6. **Run `--dry-run`** to confirm counts before presenting the summary
 
-This review step prevents committing to a multi-minute build process without user validation of the content.
-
-**Do not proceed to Phase 4 until the user approves the YAML file.**
+**Do not proceed to Phase 4 until the user approves.**
 
 ## Phase 4: Build - Invoke Build Script
 
@@ -120,8 +193,11 @@ After user approval, execute the build script **in the background** — builds t
 
 ```bash
 python extras/skills/game-designer/tools/build_from_yaml.py \
-    extras/skills/game-designer/environments/<name>.yaml
+    extras/skills/game-designer/environments/<name>/ \
+    > /tmp/<name>-build.log 2>&1
 ```
+
+The script accepts either a file path or a directory path.
 
 **Options:**
 - `--dry-run`: Parse YAML without connecting to MOO
@@ -133,80 +209,76 @@ python extras/skills/game-designer/tools/build_from_yaml.py \
 **For local development**, a DB refresh and server restart before each build ensures a clean state. For production deploys, just run the build against the live server. If the server is unresponsive mid-build, you can restart it yourself with `docker compose restart webapp celery` — but tell the user first.
 
 **Build process:**
-1. **Phase 1: Rooms and exits**: Creates rooms in void, digs exits, tunnels back
-2. **Phase 2: Objects**: Creates objects in void, describes, adds aliases, moves to rooms
-3. **Phase 3: NPCs**: Creates NPCs, describes, adds aliases, moves to rooms
-4. **Phase 4: Verbs**: Attaches verbs to objects/NPCs using resolved references
-5. **Phase 5: Test verb**: Generates test code, places on `$programmer`, runs verification
+1. **Phase 1: Rooms and exits** — Creates rooms in void, teleports to each, describes, wires exits; adds clean-name alias in hash mode
+2. **Phase 2: Objects** — Creates objects in void, describes, adds aliases (including clean-name alias in hash mode), moves to rooms
+3. **Phase 3: NPCs** — Creates NPCs, describes, adds aliases (including clean-name alias in hash mode), moves to rooms
+4. **Phase 4: Verbs** — Applies `__hash_suffix__` substitution to verb code, attaches verbs to objects/NPCs using resolved references
+5. **Phase 5: Test verb** — Generates test code, places on `$programmer`, runs verification
 
 **Do not use `@reload`** — it creates duplicate verbs on a freshly-bootstrapped DB. The user handles verb state by refreshing the DB before each build.
 
-**Build time**: ~3-4 minutes for typical environments (5 rooms, 30+ objects). The build script uses automation mode (PREFIX/SUFFIX delimiters + QUIET mode) automatically — each command takes ~1.1s instead of the old ~7.5s.
+**Build time**: ~3-4 minutes for typical environments (5 rooms, 30+ objects). Each command takes ~1.1s (automation mode: PREFIX/SUFFIX delimiters + QUIET mode).
 
-**What you'll see:**
-- Progress messages for each phase (stderr)
-- Real-time command execution trace (stdout)
-- Object IDs captured (e.g., `#45: bar stool`)
-- Warnings for any unresolved references
-- Final test results with pass/fail counts
-
-**Monitor output** for errors. The script will print progress and warnings. Each phase completes before moving to the next.
+**Monitor the log** for errors. Watch for `WARNING: Could not resolve object` (verb attachment failure) and tracebacks.
 
 ## Phase 5: Verify - Auto-Generated Test Verb
 
 The test verb is automatically generated and run by `build_from_yaml.py`.
 
-**Test verb name**:
-- With hash: `test-<env-name>-<hash>` (e.g., `test-moes-tavern-abc123`)
-- Without hash: `test-<env-name>` (e.g., `test-moes-tavern`)
+**Test verb name:**
+- With hash: `test-<env-name>-<hash>` (e.g., `test-planet-express-1e8372`)
+- Without hash: `test-<env-name>` (e.g., `test-planet-express`)
 
-**Test verb verifies**:
-- All rooms exist and are accessible
+The test verb name is printed at the end of build output. If the SSH connection drops while the test verb is running, the build still succeeded — run the test verb manually in-world.
+
+**Test verb verifies:**
+- All rooms exist and are accessible (looked up by hashed name)
 - All objects are in correct rooms
-- All NPCs are present
+- All NPCs are present (looked up by hashed name)
 - All verbs are attached to correct objects
 
-**Manual re-run**:
+**Manual re-run:**
 ```
 test-<env-name>-<hash>
 ```
 
-The test verb name is printed at the end of the build output.
-
-**Custom tests**: You can still create custom test verbs if needed, but auto-generation covers standard verification cases.
-
 ## Best Practices & Tips
-
-Based on validated builds:
 
 ### YAML Authoring
 
-1. **Use `quantity` for duplicates**: Instead of repeating object definitions, use `quantity: 4` to create multiple identical objects
-2. **Organize by room**: Group objects under their destination rooms for clarity
-3. **Mark obvious objects explicitly**: Every object that should appear in the room listing needs `obvious: true` — the default is `false`. Think: what would someone notice immediately walking in?
-4. **Write descriptions for atmosphere, not inventory**: `obvious` objects appear in the room listing automatically. Room descriptions should orient and evoke, not enumerate. A description that reads like a bullet list means too many objects are being named.
-5. **Hash mode for testing**: Set `use_hash_suffix: true` during development, `false` for production
-6. **Comment liberally**: YAML supports comments - explain non-obvious design decisions
+1. **Use directory layout for large environments**: Split rooms/objects/npcs/verbs into separate files when the environment is large enough that scrolling becomes painful. Planet Express (26 rooms, 76 objects) is the threshold — use a directory.
+2. **Use `quantity` for duplicates**: `quantity: 4` creates multiple identical objects without repeating the definition.
+3. **`__hash_suffix__` placement**: Add to all `name:` fields that get created in MOO, and to all `lookup()` calls and shebang `--on` arguments in verb code. Leave internal references (exits, room refs, section keys) clean.
+4. **Mark obvious objects explicitly**: Every object that should appear in the room listing needs `obvious: true`. Think: what would someone notice immediately walking in?
+5. **Write descriptions for atmosphere, not inventory**: `obvious` objects appear in the room listing automatically. Room descriptions should orient and evoke, not enumerate.
+6. **Comment liberally**: YAML supports comments — explain non-obvious design decisions.
+
+### Verb Design
+
+1. **Support both `verb obj` and `verb prep obj`**: Use `--dspec either --ispec PREP:any` to handle both forms with one verb. No branching needed in the code — `this` is set correctly in both cases.
+2. **Multiple verb names**: Space-separate them in the shebang: `talk speak` registers both `talk` and `speak`.
+3. **Hidden rooms**: Place a movement verb on a physical object. The verb calls `context.player.moveto(lookup("Hidden Room __hash_suffix__"))`. The hidden room should have a normal exit back.
+4. **Preposition choices**: Use prepositions players will naturally type — `to:any` for talking, `on:this` for sitting, `into:any` for entering containers, `from:this` for taking/drinking, `at:this` for attacking.
+5. **Stateful verbs**: Use `this.get_property()` / `this.set_property()` with a `NoSuchPropertyError` fallback to track object state between uses (e.g., sit/stand toggle, Slurm consumption counter).
 
 ### Build Process
 
-1. **Always run `--dry-run` first**: Validate YAML syntax before committing to a 3-4 minute build
-2. **Local development**: DB refresh + server restart before each build keeps the state clean. Production deploys skip this.
-3. **One build at a time**: Don't run multiple builds simultaneously (Wizard moves between rooms)
-4. **Run in background**: Use `python ... > /tmp/build.log 2>&1 &` and monitor the log every 2 minutes
-5. **Monitor output**: Watch for `WARNING: could not get ID` (off-by-one) and traceback lines
-6. **Do not use `@reload`**: Creates duplicate verbs — user manages verb state via DB refresh
+1. **Always run `--dry-run` first**: Validate YAML syntax and confirm counts before committing to a 3-4 minute build.
+2. **Local development**: DB refresh + server restart before each build keeps state clean.
+3. **One build at a time**: Don't run multiple builds simultaneously — the Wizard moves between rooms.
+4. **Run in background**: Redirect to a log file and monitor it every 90 seconds.
+5. **Do not use `@reload`**: Creates duplicate verbs — user manages verb state via DB refresh.
 
 ### Multiline Descriptions
 
-YAML block scalars (`|` or `>`) produce Python strings with literal `\n` characters. The `describe()` function in `build_from_yaml.py` handles this correctly — it escapes `\n` as `\\n` before sending via SSH, and `at_describe.py` unescapes them when storing. **This means multiline descriptions work fine in YAML.** Write them as block scalars freely.
+YAML block scalars (`|` or `>`) work correctly. The `describe()` function escapes `\n` as `\\n` before sending via SSH, and `at_describe.py` unescapes when storing. Write descriptions as block scalars freely.
 
-### RestrictedPython Gotchas in Generated Verb Code
+### RestrictedPython Gotchas in Verb Code
 
-The test verb (and any generated verb code) runs inside the RestrictedPython sandbox. Subscript augmented assignment is blocked:
+Subscript augmented assignment is blocked inside the sandbox:
 
 ```python
-# BLOCKED — RestrictedPython compilation failure (silent: code.code = None)
+# BLOCKED — silent RestrictedPython compilation failure
 results["passed"] += 1
 
 # CORRECT — use plain variables
@@ -214,111 +286,85 @@ passed += 1
 failed += 1
 ```
 
-If a generated verb silently fails with `TypeError: exec() arg 1 must be a string, bytes or code object`, it means RestrictedPython couldn't compile it. Check for any `dict["key"] += value` patterns and replace with plain variables.
+If a verb silently fails with `TypeError: exec() arg 1 must be a string, bytes or code object`, it means RestrictedPython couldn't compile it. Check for `dict["key"] += value` patterns.
 
 ### Performance
 
-- Each command takes ~1.1s (0.1s execution + 1s settle delay) vs the old ~7.5s
-- Typical 5-room environment: ~3-4 minutes (down from 15-20 minutes)
-- Uses clean `@alias` commands instead of verbose `@eval` calls
+- Each SSH command takes ~1.1s (0.1s execution + 1s settle delay)
+- 26-room environment with 76 objects, 8 NPCs, 20 verbs: ~3-4 minutes
 - Hash mode adds minimal overhead (suffix generation is fast)
 
 ### Troubleshooting
 
-- **"No such object" errors**: Check room names match exactly (case-sensitive)
-- **Ambiguous object errors**: Use `room` context in verb definitions
-- **Test verb failures**: Verify hash is included in object names when hash mode enabled
-- **`TypeError: exec() arg 1 must be a string, bytes or code object`**: RestrictedPython compilation failure — check for `dict["key"] += value` patterns in generated code
-- **SSH disconnects mid-build**: Run `docker compose restart webapp celery` to restore, then re-run the build script (tell the user first)
-- **`WARNING: could not get ID` in build log**: The off-by-one bug — likely a description with unescaped newlines being sent as a split command. All descriptions are now correctly escaped; this should not recur.
+- **`WARNING: Could not resolve object '...' for verb '...'`**: The verb's `object:` or `room:` doesn't match any entry in `obj_refs` or `npc_refs`. Check spelling and that the room key in `objects:` matches the verb's `room:` field exactly.
+- **Ambiguous object errors**: Use `room:` in verb definitions to disambiguate when multiple objects share a name.
+- **Test verb failures**: Check that `__hash_suffix__` is present in the verb `object:` field — the test verb uses it to build the lookup name.
+- **`TypeError: exec() arg 1 must be a string, bytes or code object`**: RestrictedPython compilation failure — check for `dict["key"] += value` patterns in verb code.
+- **SSH disconnects mid-build**: Run `docker compose restart webapp celery` to restore, then re-run the build script (tell the user first).
+- **Test verb output truncated**: The SSH connection dropped while printing. The build still succeeded. Run the test verb manually in-world.
 
 ## Available Build Commands
 
-The following specialized verbs are available for world building:
-
 ### `@alias` verb
-
-Add aliases to objects without using `@eval`:
 
 ```
 @alias #N as "alias"
 @alias "object name" as "alias"
 ```
 
-**Examples:**
-- `@alias #45 as "stool"`
-- `@alias "pool table" as "table"`
-- `@alias "jukebox" as "juke"`
-
-The verb supports global lookup (can reference objects anywhere by name or #N ID). Permissions are enforced by the object model — you can only add aliases to objects you own or have appropriate permissions for.
+Supports global lookup by name or #N ID. The build script uses this for all alias operations (clean, no `@eval` needed).
 
 **Implementation:** `moo/bootstrap/default_verbs/player/at_alias.py`
 
 ## Build Automation
 
-All environments are built using the generic `build_from_yaml.py` script. This YAML-driven approach provides:
-
-**Benefits:**
-- **Repeatable builds**: Content in YAML, logic in Python
-- **Version control**: YAML diffs show actual content changes
-- **No code knowledge needed**: Edit YAML directly, no Python required
-- **Hash mode**: Optional hash suffixes for testing (allows repeated builds)
-- **Automated testing**: Test verbs auto-generated from YAML structure
-- **Improved efficiency**: ~13% reduction in commands using `@alias` verb instead of `@eval`
+All environments are built using the generic `build_from_yaml.py` script.
 
 **Scripts:**
-- `build_from_yaml.py` — Generic YAML-driven builder (✅ tested and validated)
+- `build_from_yaml.py` — Generic YAML-driven builder (accepts file or directory)
 - `build_moes_tavern.py` — Original monolithic script (reference only)
 
-**Example environment**: `environments/moes-tavern.yaml` (complete 5-room Simpsons tavern)
-
-**Validation**: Both scripts have been tested side-by-side and produce equivalent environments. The YAML approach uses 48 `@alias` commands vs 132 `@eval` alias commands in the original, resulting in cleaner output and faster execution.
+**Example environments:**
+- `environments/burns-manor.yaml` — single-file format (7 rooms, 34 objects, 2 NPCs, 12 verbs)
+- `environments/planet-express/` — directory format (26 rooms, 76 objects, 8 NPCs, 20 verbs)
 
 See `references/build-automation.md` for YAML schema details and advanced patterns.
 
 ## Complete Workflow Example
 
-From research to verified build:
-
 ```bash
 # Phase 1: Research (manual web research)
-# Theme: Moe's Tavern from The Simpsons
-# - 5 rooms (Main Bar, Men's Room, Ladies Room, Back Room, Secret Room)
-# - 23 objects (bar counter, stools, pool table, etc.)
-# - 3 NPCs (Moe, Barney, Homer)
-# - 13 interactive verbs (call, drink, play, talk, etc.)
 
 # Phase 2: Generate YAML
-# Create: extras/skills/game-designer/environments/moes-tavern.yaml
-# (See example file for complete structure)
+# Large environment → use directory layout:
+mkdir extras/skills/game-designer/environments/my-environment/
+# Create metadata.yaml, rooms.yaml, objects.yaml, npcs.yaml, verbs.yaml
 
 # Phase 3: Validate YAML
 python extras/skills/game-designer/tools/build_from_yaml.py \
-  --dry-run extras/skills/game-designer/environments/moes-tavern.yaml
-
+  --dry-run extras/skills/game-designer/environments/my-environment/
 # Output:
-# Loaded environment: Moe's Tavern
-#   Hash mode: enabled
-#   Rooms: 5
-#   Objects: 23
-#   NPCs: 3
-#   Verbs: 13
+#   Loaded environment: My Environment
+#     Hash mode: enabled
+#     Rooms: N
+#     Objects: N
+#     NPCs: N
+#     Verbs: N
 
 # Phase 4: User reviews YAML, approves build
 
-# Phase 5: Execute build
+# Phase 5: Execute build (in background)
 python extras/skills/game-designer/tools/build_from_yaml.py \
-  extras/skills/game-designer/environments/moes-tavern.yaml
+  extras/skills/game-designer/environments/my-environment/ \
+  > /tmp/my-environment-build.log 2>&1
 
-# Output: ~1,200 lines over ~3-4 minutes
-# Result: Test verb test-moes-tavern-abc123 passes all checks
+# Monitor progress
+tail -f /tmp/my-environment-build.log
 
 # Phase 6: Verify in-game
-# SSH to MOO, run: test-moes-tavern-abc123
-# Explore the environment, test verbs
+# SSH to MOO, run the test verb printed at end of build output
+test-my-environment-abc123
 ```
-
-**Result**: Fully functional 5-room environment with interactive objects, NPCs, and verbs. Content is version-controlled in YAML and can be rebuilt at any time.
 
 ## Reference Files
 
@@ -326,6 +372,7 @@ python extras/skills/game-designer/tools/build_from_yaml.py \
 - `references/verb-patterns.md` — RestrictedPython code patterns for interactive verbs
 - `references/object-model.md` — parent classes, properties, exits, NPCs
 - `references/room-description-principles.md` — guidelines for writing effective room descriptions
-- `references/build-automation.md` — YAML schema and automated build patterns
-- `assets/test-verb-template.md` — `@test-<name>` verb template (for custom tests)
-- `environments/moes-tavern.yaml` — complete working example (5 rooms, 23 objects, 3 NPCs)
+- `references/build-automation.md` — YAML schema and advanced patterns
+- `assets/test-verb-template.md` — custom test verb template
+- `environments/burns-manor.yaml` — single-file example (7 rooms, 34 objects, 2 NPCs, 12 verbs)
+- `environments/planet-express/` — directory example (26 rooms, 76 objects, 8 NPCs, 20 verbs)
