@@ -80,7 +80,19 @@ verbs:
       this.delete()
 ```
 
-### Step 2: Run Build Script
+### Step 2: Prepare the Server
+
+For **local development**, a DB refresh and server restart before each build ensures a clean state and avoids accumulating stale objects across test runs. For **production deploys**, just run the build against the live server — no restart needed.
+
+If the server goes down mid-build, restart webapp and celery:
+
+```bash
+docker compose restart webapp celery
+```
+
+Do **not** use `@reload` — it creates duplicate verbs on a freshly-bootstrapped DB.
+
+### Step 3: Run Build Script
 
 ```bash
 # Basic build (respects use_hash_suffix from YAML)
@@ -370,6 +382,22 @@ def add_aliases_via_eval(moo, obj_ref, aliases):
         )
 ```
 
+### Describing Objects
+
+**Critical**: descriptions must have `\`, `\n`, and `"` all escaped before being sent over SSH. YAML block scalars (`|`) produce strings with literal newlines — if those aren't escaped, pexpect splits the command at each newline, sending a malformed first line and a bare `"` as the second line.
+
+```python
+def describe(moo, ref, desc):
+    """Describe an object by #N reference."""
+    # Escape backslashes first, then newlines, then double-quotes
+    escaped_desc = desc.replace("\\", "\\\\").replace("\n", "\\n").replace('"', '\\"')
+    moo.run(f'@describe {ref} as "{escaped_desc}"')
+```
+
+The `at_describe.py` verb unescapes `\\n` back to real newlines before storing, so multiline descriptions are preserved correctly in the DB.
+
+**Symptom if `\n` is missing**: the build log shows a `WARNING: could not get ID` for the object described immediately before a `@create`, and Wizard receives a lone `"` character in its output stream. The off-by-one was caused by this exact pattern across every description in the build.
+
 ### Verb Creation with Multi-line Code
 
 ```python
@@ -387,6 +415,22 @@ def set_verb(moo, verb_name, obj_ref, code):
 ```
 
 The `at_edit.py` verb unescapes `\\n` back to real newlines before storing.
+
+### RestrictedPython Constraints in Generated Code
+
+The test verb and any generated verb code runs inside the RestrictedPython sandbox. **Subscript augmented assignment is blocked at compile time:**
+
+```python
+# FAILS — RestrictedPython silently sets code.code = None, causing:
+# TypeError: exec() arg 1 must be a string, bytes or code object
+results["passed"] += 1
+
+# CORRECT — use plain variables
+passed += 1
+failed += 1
+```
+
+The symptom of a compilation failure is `TypeError: exec() arg 1 must be a string, bytes or code object` when the verb is invoked. If this appears, inspect the generated code for any `dict["key"] += value` patterns.
 
 ### Build Phase Structure
 
@@ -489,20 +533,6 @@ with MooSSH() as moo:
 
 `build_from_yaml.py` calls `enable_automation_mode()` automatically.
 
-## Limitations
-
-### Test Verb Compilation
-
-Very long test verbs (100+ lines) created via `@edit verb ... with "..."` can fail with RestrictedPython compilation errors. The verb stores correctly but won't run.
-
-**Workarounds**:
-1. Use simplified template without nested functions (see `assets/test-verb-template.md`)
-2. Create via interactive editor instead of `with` parameter
-3. Break into multiple smaller verbs
-4. Use manual verification instead of automated test
-
-The environment itself works perfectly - this only affects automated verification.
-
 ## Troubleshooting
 
 ### Common Issues and Solutions
@@ -517,10 +547,25 @@ The environment itself works perfectly - this only affects automated verificatio
 - **Solution**: Add `room` field to verb definitions for disambiguation
 - **Example**: `verb: "drink", object: "Duff beer", room: "Main Bar"`
 
+**Issue: `WARNING: could not get ID` for an object**
+- **Cause**: Description with unescaped newlines split the `@describe` command across lines, causing the output to appear in the wrong command's window. This was the root cause of the "off-by-one" bug.
+- **Solution**: The `describe()` function in `build_from_yaml.py` now correctly escapes `\\`, `\n`, and `"`. If this reappears, check that all three are being escaped in the right order.
+
+**Issue: Stray `"` appearing in Wizard output**
+- **Cause**: An unescaped `\n` in a description caused pexpect to send the command as two lines. The second line was just the closing `"`.
+- **Solution**: Covered by the `describe()` fix above.
+
+**Issue: `TypeError: exec() arg 1 must be a string, bytes or code object` in test verb**
+- **Cause**: RestrictedPython silently failed to compile the verb. Most likely a `dict["key"] += value` pattern.
+- **Solution**: Use plain variables (`passed += 1`) instead of subscript augmented assignment.
+
+**Issue: Duplicate verbs after `@reload`**
+- **Cause**: `@reload` creates a new verb entry on a freshly-bootstrapped DB even when one already exists.
+- **Solution**: Do not use `@reload`. User manages verb state by refreshing the DB before each build.
+
 **Issue: SSH disconnects during build**
 - **Cause**: Network timeout or MOO server restart
-- **Solution**: MooSSH handles reconnection automatically
-- **Prevention**: Ensure stable network, avoid very long builds (100+ objects)
+- **Solution**: Run `docker compose restart webapp celery` to restore the server, then re-run the build script
 
 **Issue: Objects not appearing in rooms**
 - **Cause**: `moveto()` failed or room name mismatch
@@ -549,16 +594,3 @@ The environment itself works perfectly - this only affects automated verificatio
 3. **Monitor stderr**: Progress messages show which phase is running
 4. **Don't run multiple builds**: Wizard moves between rooms, causes conflicts
 5. **Automation mode is automatic**: `build_from_yaml.py` calls `enable_automation_mode()` — no manual setup needed
-
-## Recommended Improvements
-
-### Improved Test Verb Storage
-
-Add SDK function to store verbs directly without going through `@edit ... with`:
-
-```python
-from moo.sdk import set_verb_code
-set_verb_code(obj, verb_name, code_string)
-```
-
-This would bypass the RestrictedPython compilation issues with very long code strings.

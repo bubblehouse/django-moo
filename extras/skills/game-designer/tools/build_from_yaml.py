@@ -36,31 +36,32 @@ from moo_ssh import MooSSH  # pylint: disable=wrong-import-position
 
 def obj_id(output):
     """Extract #N from @create output like 'Created #34 (bar stool)'."""
-    m = re.search(r"(#\d+)", output)
+    m = re.search(r"Created (#\d+)", output)
     return m.group(1) if m else None
 
 
 def create(moo, name, parent="$thing", obvious=False):
-    """Create an object via @eval and return its #N reference."""
-    # Use @eval with create() SDK function to avoid parser ambiguity when duplicates exist
-    # Set location=None to avoid enterfunc race condition
+    """Create an object via @create and return its #N reference.
+
+    Uses @create (not @eval create()) because @create output is captured
+    synchronously via the ContextManager, while @eval output goes through
+    player.tell() -> Kombu and arrives one command late.
+    """
     escaped_name = name.replace('"', '\\"')
     escaped_parent = parent.replace('"', '\\"')
-    obvious_str = "True" if obvious else "False"
-    output = moo.run(
-        f'@eval "from moo.sdk import create, lookup; '
-        f'obj = create(\\"{escaped_name}\\", parents=[lookup(\\"{escaped_parent}\\")], location=None, obvious={obvious_str}); '
-        f'print(f\\"Created {{obj}}\\"); obj"'
-    )
+    output = moo.run(f'@create "{escaped_name}" from "{escaped_parent}" in the void')
     ref = obj_id(output)
     if not ref:
         print(f"  WARNING: could not get ID for '{name}' from: {output!r}", file=sys.stderr)
+        return ref
+    if obvious:
+        moo.run(f'@eval "from moo.sdk import lookup; obj = lookup({ref[1:]}); obj.obvious = True; obj.save()"')
     return ref
 
 
 def describe(moo, ref, desc):
     """Describe an object by #N reference (unambiguous)."""
-    escaped_desc = desc.replace('"', '\\"')
+    escaped_desc = desc.replace("\\", "\\\\").replace("\n", "\\n").replace('"', '\\"')
     moo.run(f'@describe {ref} as "{escaped_desc}"')
 
 
@@ -181,7 +182,7 @@ def build_rooms(moo, env, run_hash, use_hash):
         room_name = room_map[room_def["name"]]
         teleport_to(moo, room_name)
 
-        escaped_desc = room_def["description"].replace('"', '\\"')
+        escaped_desc = room_def["description"].replace("\\", "\\\\").replace("\n", "\\n").replace('"', '\\"')
         moo.run(f'@describe here as "{escaped_desc}"')
 
         for exit_def in room_def.get("exits", []):
@@ -355,7 +356,8 @@ def generate_test_verb(env, run_hash, use_hash, room_map):
     code_parts = [
         "from moo.sdk import lookup, NoSuchObjectError, NoSuchVerbError",
         "",
-        'results = {"passed": 0, "failed": 0}',
+        "passed = 0",
+        "failed = 0",
         "",
         'print("[bold]--- Rooms ---[/bold]")',
         "rooms = {}",
@@ -367,11 +369,11 @@ def generate_test_verb(env, run_hash, use_hash, room_map):
         escaped_hash_name = hash_name.replace('"', '\\"')
         code_parts.append("try:")
         code_parts.append(f'    rooms["{room_name}"] = lookup("{escaped_hash_name}")')
-        code_parts.append('    results["passed"] += 1')
+        code_parts.append("    passed += 1")
         code_parts.append(f'    print(f"[green]PASS[/green] {room_name}")')
         code_parts.append("except NoSuchObjectError as e:")
         code_parts.append(f'    rooms["{room_name}"] = None')
-        code_parts.append('    results["failed"] += 1')
+        code_parts.append("    failed += 1")
         code_parts.append(f'    print(f"[red]FAIL[/red] {room_name}: {{e}}")')
         code_parts.append("")
 
@@ -383,10 +385,10 @@ def generate_test_verb(env, run_hash, use_hash, room_map):
             code_parts.append(f'    names = [o.name for o in rooms["{room_name}"].contents.all()]')
             for obj_name in obj_list:
                 code_parts.append(f'    if any("{obj_name}".lower() in n.lower() for n in names):')
-                code_parts.append('        results["passed"] += 1')
+                code_parts.append("        passed += 1")
                 code_parts.append(f'        print(f"[green]PASS[/green] {room_name}: {obj_name}")')
                 code_parts.append("    else:")
-                code_parts.append('        results["failed"] += 1')
+                code_parts.append("        failed += 1")
                 code_parts.append(f'        print(f"[red]FAIL[/red] {room_name}: {obj_name} (not in {{names}})")')
             code_parts.append("")
 
@@ -398,10 +400,10 @@ def generate_test_verb(env, run_hash, use_hash, room_map):
             escaped_hash_name = hash_name.replace('"', '\\"')
             code_parts.append("try:")
             code_parts.append(f'    lookup("{escaped_hash_name}")')
-            code_parts.append('    results["passed"] += 1')
+            code_parts.append("    passed += 1")
             code_parts.append(f'    print(f"[green]PASS[/green] {npc_name}")')
             code_parts.append("except NoSuchObjectError as e:")
-            code_parts.append('    results["failed"] += 1')
+            code_parts.append("    failed += 1")
             code_parts.append(f'    print(f"[red]FAIL[/red] {npc_name}: {{e}}")')
         code_parts.append("")
 
@@ -415,20 +417,20 @@ def generate_test_verb(env, run_hash, use_hash, room_map):
             code_parts.append("try:")
             code_parts.append(f'    obj = lookup("{escaped_obj_name}")')
             code_parts.append(f'    obj.get_verb("{verb_name}")')
-            code_parts.append('    results["passed"] += 1')
+            code_parts.append("    passed += 1")
             code_parts.append(f'    print(f"[green]PASS[/green] {obj_name}: {verb_name}")')
             code_parts.append("except NoSuchObjectError as e:")
-            code_parts.append('    results["failed"] += 1')
+            code_parts.append("    failed += 1")
             code_parts.append(f'    print(f"[red]FAIL[/red] {obj_name}: {verb_name} (object not found: {{e}})")')
             code_parts.append("except NoSuchVerbError:")
-            code_parts.append('    results["failed"] += 1')
+            code_parts.append("    failed += 1")
             code_parts.append(f'    print(f"[red]FAIL[/red] {obj_name}: {verb_name} (verb not found)")')
         code_parts.append("")
 
     code_parts.extend(
         [
-            'total = results["passed"] + results["failed"]',
-            "print(f\"[bold]{{results['passed']}}/{{total}} checks passed.[/bold]\")",
+            "total = passed + failed",
+            'print(f"[bold]{passed}/{total} checks passed.[/bold]")',
         ]
     )
 
@@ -485,11 +487,6 @@ def main():
     try:
         with MooSSH(host=args.host, port=args.port) as moo:
             moo.enable_automation_mode()
-
-            print("\n--- Reloading verbs ---", file=sys.stderr)
-            moo.run("@reload @edit on $programmer")
-            moo.run("@reload @create on $player")
-            moo.run("@reload @alias on $player")
 
             print("\n--- Phase 1: Rooms and exits ---", file=sys.stderr)
             room_map = build_rooms(moo, env, run_hash, use_hash)
