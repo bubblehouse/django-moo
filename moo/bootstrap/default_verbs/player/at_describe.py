@@ -17,5 +17,6 @@ if not (context.parser.has_pobj_str("as")):
     return
 
 subject = context.parser.get_dobj()
-subject.describe(context.parser.get_pobj_str("as"))
+desc = context.parser.get_pobj_str("as").replace("\\n", "\n")
+subject.describe(desc)
 print("[yellow]Description set for %s[/yellow]" % subject)
