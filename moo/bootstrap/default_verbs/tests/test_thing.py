@@ -22,7 +22,7 @@ def test_drop_from_inventory(t_init: Object, t_wizard: Object):
         with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
             parse.interpret(ctx, "drop widget")
         assert [str(x.message) for x in warnings.list] == [
-            f"ConnectionError(#{player.pk} (Player)): #{t_wizard.pk} (Wizard) drops widget."
+            f"ConnectionError(#{player.pk} (Player)): {t_wizard.name} drops widget."
         ]
 
         widget.refresh_from_db()
@@ -109,5 +109,5 @@ def test_message_verbs(t_init: Object, t_wizard: Object):
         assert widget.otake_failed_msg() == ""
         assert widget.drop_succeeded_msg() == f"You drop {widget.title()}."
         assert widget.drop_failed_msg() == f"You can't seem to drop {widget.title()} here."
-        assert widget.odrop_succeeded_msg() == f"{t_wizard} drops {widget.title()}."
-        assert widget.odrop_failed_msg() == f"{t_wizard} tries to drop {widget.title()} but fails!"
+        assert widget.odrop_succeeded_msg() == f"{t_wizard.name} drops {widget.title()}."
+        assert widget.odrop_failed_msg() == f"{t_wizard.name} tries to drop {widget.title()} but fails!"
