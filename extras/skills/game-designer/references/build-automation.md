@@ -343,19 +343,32 @@ Why `location=None`:
 
 ### Moving Objects to Rooms
 
+**Use direct location assignment, not `moveto()`.**
+
+`$furniture` objects have a `moveto` verb that returns `False` to block player takes. This also blocks `moveto()` calls from admin build code — `$furniture` objects silently end up in the void. The fix is to set `location` directly on the Django model, bypassing the verb system entirely:
+
 ```python
 def move_to_room(moo, obj_ref, room_name):
-    """Move an object from void to room using @eval with moveto()."""
+    """Move an object from void to room via direct location assignment.
+
+    Uses obj.location = room; obj.save() rather than moveto() so that
+    $furniture objects (whose moveto verb returns False) are still
+    placed correctly by admin build code.
+    """
     obj_id = obj_ref.replace('#', '')
     escaped_room = room_name.replace('"', '\\"')
 
     moo.run(
         f'@eval "from moo.sdk import lookup; '
-        f'lookup({obj_id}).moveto(lookup(\\"{escaped_room}\\"))"'
+        f'obj = lookup({obj_id}); '
+        f'room = lookup(\\"{escaped_room}\\"); '
+        f'obj.location = room; obj.save()"'
     )
 ```
 
-The `@move` command won't work on objects in the void because it uses `context.parser` which only searches the local area.
+This is the same pattern used by `teleport_to()` and the bootstrap `wizard.location = lab; wizard.save()`. It bypasses the MOO verb system entirely.
+
+The `@move` command also won't work on objects in the void because it uses `context.parser` which only searches the local area.
 
 ### Adding Aliases
 
@@ -382,6 +395,24 @@ def add_aliases_via_eval(moo, obj_ref, aliases):
             f"lookup({obj_id}).add_alias('{escaped_alias}')\""
         )
 ```
+
+### NPC Player Records
+
+`@create "NPC Name" from "$player"` creates the MOO Object but not the Django `Player` model record. Without a `Player` record, the NPC is missing the auth/messaging infrastructure that `$player` objects expect (e.g. `tell`, routing, connection tracking).
+
+After creating each NPC object, create a Player record with no User and link it:
+
+```python
+def create_player_record(moo, ref):
+    """Create a Django Player record for an NPC object (no User, avatar only)."""
+    obj_id_num = ref.replace("#", "")
+    moo.run(
+        f'@eval "from moo.core.models import Player; from moo.sdk import lookup; '
+        f'obj = lookup({obj_id_num}); p = Player.objects.create(); p.avatar = obj; p.save()"'
+    )
+```
+
+`moo.core.models` is in `WIZARD_ALLOWED_MODULES`, so this is accessible from `@eval`. Call it immediately after `create()` returns a ref, before describing or aliasing. `build_from_yaml.py` does this automatically for every NPC in the `npcs:` section.
 
 ### Describing Objects
 
@@ -572,7 +603,12 @@ with MooSSH() as moo:
 - **Cause**: `QUIT` (without `@`) is the legacy verb and only prints "please use @quit" — it does not actually close the connection, so pexpect times out waiting for EOF.
 - **Solution**: `MooSSH.disconnect()` now sends `@quit`. If you see 5-second hangs on an older server, ensure the `@quit` verb is loaded on `$player` (run `@reload @quit on $player` after a DB reset).
 
-**Issue: Objects not appearing in rooms**
+**Issue: `$furniture` objects not appearing in rooms (silent `False` in build log)**
+- **Cause**: `$furniture` has a `moveto` verb that returns `False` to prevent players from taking it. This also blocks the build script's `moveto()` calls — the objects end up stranded in the void with no error.
+- **Solution**: The fixed `move_to_room()` function uses `obj.location = room; obj.save()` instead of `moveto()`, bypassing the verb system. If you see `False` in the build log after move commands, you are running an old version of the script.
+- **Manual recovery**: For each stranded furniture object, run in-world: `@eval "from moo.sdk import lookup; obj = lookup(N); room = lookup(\"Room Name [hash]\"); obj.location = room; obj.save()"`
+
+**Issue: Objects not appearing in rooms (non-furniture)**
 - **Cause**: `moveto()` failed or room name mismatch
 - **Solution**: Check stderr output for move failures
 - **Debugging**: SSH in, use `@show #N` to check object location

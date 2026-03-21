@@ -99,13 +99,23 @@ def add_aliases(moo, ref, aliases):
 
 def move_to_room(moo, obj_ref, room_name):
     """
-    Move an object from the void to a room using @eval with moveto().
+    Move an object from the void to a room using direct location assignment.
+
+    Uses obj.location = room; obj.save() rather than moveto() so that
+    $furniture objects (whose moveto verb returns False to block player takes)
+    are still placed correctly by admin build code.
+
     obj_ref: #N reference (unquoted)
     room_name: full room name (with hash if applicable)
     """
     obj_id_num = obj_ref.replace("#", "")
     escaped_room = room_name.replace('"', '\\"')
-    moo.run(f'@eval "from moo.sdk import lookup; ' f'lookup({obj_id_num}).moveto(lookup(\\"{escaped_room}\\"))"')
+    moo.run(
+        f'@eval "from moo.sdk import lookup; '
+        f"obj = lookup({obj_id_num}); "
+        f'room = lookup(\\"{escaped_room}\\"); '
+        f'obj.location = room; obj.save()"'
+    )
 
 
 def set_verb(moo, verb_name, obj_ref, code):
@@ -307,10 +317,21 @@ def build_objects(moo, env, run_hash, use_hash, room_map):
     return obj_refs
 
 
+def create_player_record(moo, ref):
+    """Create a Django Player record for an NPC object (no User, avatar only)."""
+    obj_id_num = ref.replace("#", "")
+    moo.run(
+        f'@eval "from moo.core.models import Player; from moo.sdk import lookup; '
+        f'obj = lookup({obj_id_num}); p = Player.objects.create(); p.avatar = obj; p.save()"'
+    )
+
+
 def build_npcs(moo, env, run_hash, use_hash, room_map):
     """Create all NPCs and move to rooms.
 
     npc_refs is keyed by clean NPC name (placeholder stripped).
+    Each NPC gets a Django Player record (no User) so the object has full
+    player infrastructure (tell, announce, etc.).
     """
     npcs = env.get("npcs", [])
     parent = env["metadata"].get("npc_parent", "$player")
@@ -333,6 +354,9 @@ def build_npcs(moo, env, run_hash, use_hash, room_map):
 
         if not ref:
             continue
+
+        # Create a Player record (no User) so the NPC has full player infrastructure
+        create_player_record(moo, ref)
 
         if desc:
             describe(moo, ref, desc)
