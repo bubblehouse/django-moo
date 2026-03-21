@@ -1,3 +1,9 @@
+## [0.84.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.83.0...v0.84.0) (2026-03-21)
+
+### Features
+
+* added $furniture class for immovable sittable objects ([6122691](https://gitlab.com/bubblehouse/django-moo/commit/612269159caedd863a899972fb44b920da1027cc))
+
 ## [0.83.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.82.0...v0.83.0) (2026-03-21)
 
 ### Features
