@@ -519,3 +519,23 @@ def set_session_setting(key, value):
     if not player:
         return
     _publish_to_player(player, {"event": "session_setting", "key": key, "value": value})
+
+
+def boot_player(obj):
+    """
+
+    Disconnect the given player from the MOO server.
+
+    Publishes a ``disconnect`` event to the player's Kombu message queue,
+    which the SSH server's ``process_messages()`` loop picks up and exits cleanly.
+
+    Permission: the caller must be the player being booted, or a wizard.
+
+    :param obj: the player Object to disconnect
+    """
+    from moo.core import _publish_to_player
+
+    caller = context.caller
+    if caller and caller != obj and not caller.is_wizard():
+        raise UserError("Only wizards can boot other players.")
+    _publish_to_player(obj, {"event": "disconnect"})

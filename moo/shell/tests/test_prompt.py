@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import asyncio
+import json
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -9,7 +10,7 @@ from prompt_toolkit.document import Document
 from prompt_toolkit.key_binding import KeyBindings
 
 import moo.shell.prompt as prompt_module
-from moo.shell.prompt import MooPrompt, PROMPT_SHORTCUTS, _make_key_bindings
+from moo.shell.prompt import MooPrompt, PROMPT_SHORTCUTS, _make_key_bindings, _session_settings
 
 # ---------------------------------------------------------------------------
 # Tests
@@ -59,6 +60,8 @@ def test_init():
     assert prompt.is_exiting is False
     assert isinstance(prompt.editor_queue, asyncio.Queue)
     assert isinstance(prompt.paginator_queue, asyncio.Queue)
+    assert isinstance(prompt.disconnect_event, asyncio.Event)
+    assert not prompt.disconnect_event.is_set()
     assert prompt.last_property_write is None
 
 
@@ -249,3 +252,72 @@ def test_handle_command_writes_after_15_seconds():
     args = avatar.set_property.call_args[0]
     assert args[0] == "last_connected_time"
     assert isinstance(args[1], datetime)
+
+
+# ---------------------------------------------------------------------------
+# process_messages() dispatch tests
+# ---------------------------------------------------------------------------
+
+
+def _run_process_messages(prompt, messages):
+    """
+    Run process_messages() against a list of message dicts, then stop.
+
+    Each item in ``messages`` becomes ``content["message"]`` as seen by the
+    dispatch logic. After all messages are delivered, the helper sets
+    ``prompt.is_exiting = True`` so the loop exits cleanly.
+    """
+    MockEmpty = type("MockEmpty", (Exception,), {})
+    msg_iter = iter(messages)
+
+    def get_nowait():
+        try:
+            body_dict = next(msg_iter)
+            mock_msg = MagicMock()
+            mock_msg.body = json.dumps({"message": body_dict, "caller_id": None})
+            return mock_msg
+        except StopIteration as exc:
+            prompt.is_exiting = True
+            raise MockEmpty() from exc
+
+    mock_sb = MagicMock()
+    mock_sb.Empty = MockEmpty
+    mock_sb.get_nowait.side_effect = get_nowait
+
+    mock_conn = MagicMock()
+    mock_conn.__enter__ = MagicMock(return_value=mock_conn)
+    mock_conn.__exit__ = MagicMock(return_value=False)
+
+    with (
+        patch("asyncio.sleep", new=AsyncMock()),
+        patch("moo.shell.prompt.app.default_connection", return_value=mock_conn),
+        patch("moo.shell.prompt.simple.SimpleBuffer", return_value=mock_sb),
+        patch("moo.shell.prompt.moojson.loads", side_effect=json.loads),
+    ):
+        asyncio.run(prompt.process_messages())
+
+
+def test_disconnect_message_sets_is_exiting():
+    """process_messages() sets is_exiting and fires disconnect_event on a disconnect event."""
+    user = MagicMock()
+    user.pk = 42
+    prompt = MooPrompt(user)
+
+    _run_process_messages(prompt, [{"event": "disconnect"}])
+
+    assert prompt.is_exiting is True
+    assert prompt.disconnect_event.is_set()
+
+
+def test_session_setting_message_updates_registry():
+    """process_messages() stores a session_setting event in _session_settings."""
+    user = MagicMock()
+    user.pk = 99
+    prompt = MooPrompt(user)
+    _session_settings.pop(99, None)
+
+    try:
+        _run_process_messages(prompt, [{"event": "session_setting", "key": "quiet_mode", "value": True}])
+        assert _session_settings.get(99, {}).get("quiet_mode") is True
+    finally:
+        _session_settings.pop(99, None)
