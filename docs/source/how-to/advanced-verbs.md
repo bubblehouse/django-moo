@@ -66,6 +66,7 @@ value = kwargs['value'] + 1
 return f"A parrot squawks {value}."  # return value passed to the 'say' callback
 ```
 
+(time-aware-continuation)=
 ## Time-Aware Continuation
 
 `invoke()` gives each verb its own 3-second budget, but what if a single verb needs to do work that could take arbitrarily long — like iterating over hundreds of objects? The answer is to check how much time remains and hand the unfinished work off to a fresh task before the budget runs out.
