@@ -8,10 +8,55 @@
 
 .. toctree::
    :maxdepth: 1
-   :caption: Contents:
-   :glob:
+   :caption: Introduction
 
-   guide/*
+   explanation/introduction
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Tutorials
+
+   tutorials/first-verb
+
+.. toctree::
+   :maxdepth: 2
+   :caption: How-to Guides
+
+   how-to/creating-verbs
+   how-to/advanced-verbs
+   how-to/permissions
+   how-to/bootstrapping
+   how-to/development
+   how-to/connection-control
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Reference
+
+   reference/runtime
+   reference/objects
+   reference/properties
+   reference/verbs
+   reference/parser
+   reference/permissions
+   reference/sandbox
+   reference/caching
+   reference/tasks
+   reference/builtins
+   reference/bootstrapping
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Explanation
+
+   explanation/architecture
+   explanation/parser
+   explanation/sandbox
+
+.. toctree::
+   :maxdepth: 1
+   :caption: API Reference
+
    api
 
 Indices and tables
