@@ -1,3 +1,9 @@
+## [0.85.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.84.0...v0.85.0) (2026-03-21)
+
+### Features
+
+* support editor use with describe ([459051e](https://gitlab.com/bubblehouse/django-moo/commit/459051e64100de7bb03c20577341ce46f4ecc3b4))
+
 ## [0.84.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.83.0...v0.84.0) (2026-03-21)
 
 ### Features
