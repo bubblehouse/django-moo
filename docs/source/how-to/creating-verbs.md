@@ -127,7 +127,7 @@ The `context` object has a variety of attributes that are useful in verbs:
 3. `writer` - the Callable that prints text to the client connection
 4. `task_id` - the current Celery task ID, if applicable
 5. `parser` - the Parser object for the current task; inherited by synchronous sub-verb calls. Only `None` when a Celery task re-invokes a verb without an active player command (e.g., scheduled `invoke()` calls)
-6. `task_time` - a `TaskTime(elapsed, time_limit, remaining)` namedtuple describing how much of the current task's time budget has been used. `remaining` and `time_limit` are `None` when no limit is configured. Useful for verbs that need to hand off long-running work before the budget runs out — see [Time-Aware Continuation](12_more_verbs.md#time-aware-continuation).
+6. `task_time` - a `TaskTime(elapsed, time_limit, remaining)` namedtuple describing how much of the current task's time budget has been used. `remaining` and `time_limit` are `None` when no limit is configured. Useful for verbs that need to hand off long-running work before the budget runs out — see [Time-Aware Continuation](advanced-verbs.md#time-aware-continuation).
 
 Also present in the global namespace is `verb_name`, the specific name used when the current verb was invoked.
 
@@ -141,7 +141,7 @@ Since verb code is run in a function context, we always get a set of arguments t
 4. `args` - function arguments when run as a method, or an empty list
 5. `kwargs` - function arguments when run as a method, or an empty dict
 
-> **`this` is not the same as the caller.** Because the verb search uses "last match wins" (see [The Built-In Command Parser](07_parser.md)), `this` is set to the object on which the verb was *finally found* — typically the direct object when a `dspec` is set. Use `context.player` to identify who typed the command. Only use `this` when the verb is specifically designed to operate on the object it was dispatched on (e.g., a room's `accept` verb or an exit's `go` verb).
+> **`this` is not the same as the caller.** Because the verb search uses "last match wins" (see [How Command Parsing Works](../explanation/parser.md)), `this` is set to the object on which the verb was *finally found* — typically the direct object when a `dspec` is set. Use `context.player` to identify who typed the command. Only use `this` when the verb is specifically designed to operate on the object it was dispatched on (e.g., a room's `accept` verb or an exit's `go` verb).
 
 ### Parser Method Reference
 

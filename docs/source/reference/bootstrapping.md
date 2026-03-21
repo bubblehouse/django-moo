@@ -1,7 +1,7 @@
-# Bootstrapping
+# Bootstrapping Reference
 
 While the contents of this guide cover the essential elements of any DjangoMOO environment, to
-actually do anything interesting you need to boostrap your database with some essential objects.
+actually do anything interesting you need to bootstrap your database with some essential objects.
 
 Right now there are two datasets defined, `test` and `default`. The `test` dataset is used in the
 core unit tests. It uses no additional verb files — only the base objects created by `initialize_dataset()`.
@@ -40,9 +40,9 @@ Once all the objects are created and necessary properties created, the `moo.boot
 
 The bootstrap system is organized into several files:
 
-- **`default.py`**: Creates the production game world with rooms, players, and other game objects
-- **`test.py`**: Creates a minimal test dataset used by pytest; uses no additional verb files
-- **`default_verbs/`**: Directory containing verb files for the `default` dataset only
+- `default.py`: Creates the production game world with rooms, players, and other game objects
+- `test.py`: Creates a minimal test dataset used by pytest; uses no additional verb files
+- `default_verbs/`: Directory containing verb files for the `default` dataset only
 
 ## Verb Files in Bootstrap
 
@@ -73,45 +73,6 @@ Accept an object being moved into this verb's location.
 return True
 ```
 
-## Creating Your Own Bootstrap Dataset
-
-To create a custom bootstrap dataset:
-
-1. Create a new Python file in the bootstrap directory (e.g., `my_game.py`)
-2. Call `initialize_dataset("my_game")` to set up the base system object
-3. Create objects using `create()` and `lookup()`
-4. Set properties on objects with `set_property()`
-5. Add verbs using `add_verb()`
-6. Place verb files in a corresponding directory (e.g., `my_game_verbs/`)
-
-### Example Custom Bootstrap
-
-```python
-from moo.core import bootstrap, code
-from moo.sdk import create, lookup
-
-repo = bootstrap.initialize_dataset("my_game")
-wizard = lookup("Wizard")
-
-# Create custom game objects
-library = create("Grand Library", location=None)
-library.set_property("description", "A vast library filled with books.")
-
-# Add a verb
-library.add_verb("browse", code="""
-return "You browse the shelves..."
-""")
-```
-
-## Bootstrap Best Practices
-
-1. **Use `lookup()` to find objects**: Don't hardcode object IDs, use `lookup("object_name")` to find them
-2. **When to set inherit_owner=True for properties**: Used to keep inherited properties usable by a verb that runs as the author
-3. **Grant appropriate permissions**: Use `allow()` to set permissions for wizards, owners, and everyone
-4. **Document the object hierarchy**: Include comments about which objects should be parents of others
-5. **Test bootstrap data**: Create tests that verify the bootstrap dataset loads correctly
-6. **Keep bootstrap files focused**: Separate default game data from test data
-
 ## Running Bootstrap in Development
 
 ```bash
@@ -130,3 +91,5 @@ python manage.py shell
 >>> root.name
 'Root Class'
 ```
+
+For the step-by-step guide to creating your own bootstrap dataset, see {doc}`../how-to/bootstrapping`.
