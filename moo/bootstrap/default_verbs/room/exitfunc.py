@@ -13,4 +13,12 @@ if the object leaving is a torch, and if it is, the room could become dark. Simi
 the `enterfunc` can be used to detect this, and brighten the room accordingly.
 """
 
-pass
+from moo.sdk import NoSuchPropertyError
+
+thing = args[0]
+if thing.is_player():
+    try:
+        thing.get_property("seated_on")
+        thing.set_property("seated_on", None)
+    except NoSuchPropertyError:
+        pass
