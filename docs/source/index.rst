@@ -28,6 +28,7 @@
    how-to/bootstrapping
    how-to/development
    how-to/connection-control
+   how-to/ssh-key-management
 
 .. toctree::
    :maxdepth: 2
