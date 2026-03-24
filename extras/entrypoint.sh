@@ -11,10 +11,7 @@ elif [ "$1" = 'manage.py' ]; then
         exec /usr/app/bin/python3.11 "$@"
     fi
 elif [ "$1" = 'webssh' ]; then
-    SITE_PACKAGES=$(/usr/app/bin/python3.11 -c 'import sys; print(sys.path[-1])')
-    envsubst < "$SITE_PACKAGES/webssh/templates/index.html.tmpl" \
-             > "$SITE_PACKAGES/webssh/templates/index.html"
-    exec wssh --port=8422 --hostfile=/etc/ssh/pregenerated_known_hosts --policy=reject
+    exec wssh --port=8422 --xsrf=False --xheaders=True --hostfile=/etc/ssh/pregenerated_known_hosts --policy=reject
 elif [ "$1" = 'celery' ]; then
     if [ "$2" = 'beat' ]; then
         exec celery -A moo beat -l INFO --pidfile=/tmp/beat-liveness.pid
