@@ -1,3 +1,9 @@
+## [0.87.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.86.0...v0.87.0) (2026-03-24)
+
+### Features
+
+* merged webssh index.html into django for foture expansion ([c6ab176](https://gitlab.com/bubblehouse/django-moo/commit/c6ab176abe00f28c5fdf4c16d8b0b5dfc807fff1))
+
 ## [0.86.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.85.1...v0.86.0) (2026-03-24)
 
 ### Features
