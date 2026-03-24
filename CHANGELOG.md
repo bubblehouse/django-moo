@@ -1,3 +1,10 @@
+## [0.86.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.85.1...v0.86.0) (2026-03-24)
+
+### Features
+
+* added verbs to enable ssh key management ([8451899](https://gitlab.com/bubblehouse/django-moo/commit/845189929a0b58d98758833c5b89feb4b95ffc96))
+* added verbs to enable ssh key management ([96be4d7](https://gitlab.com/bubblehouse/django-moo/commit/96be4d7a8b0a6bdb11389235c9211931dd2f9756))
+
 ## [0.85.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.85.0...v0.85.1) (2026-03-21)
 
 ### Bug Fixes
