@@ -220,6 +220,11 @@ STATIC_URL = "admin/static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# WebSSH internal proxy settings
+WEBSSH_INTERNAL_URL = "http://webssh:8422"
+WEBSSH_HOSTNAME = "shell"
+WEBSSH_PORT = 8022
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
