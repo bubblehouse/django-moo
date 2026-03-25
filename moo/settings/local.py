@@ -39,3 +39,5 @@ CACHES = {
 # https://docs.celeryq.dev/en/stable/userguide/configuration.html
 
 CELERY_BROKER_URL = "redis://redis:6379/0"
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

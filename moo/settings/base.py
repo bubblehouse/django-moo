@@ -119,6 +119,9 @@ INSTALLED_APPS = [
     "django_extensions",
     "simplesshkey",
     "django_celery_beat",
+    "django.contrib.sites",
+    "allauth",
+    "allauth.account",
     "moo.core",
     "moo.shell",
 ]
@@ -126,6 +129,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "allauth.account.middleware.AccountMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -224,6 +228,22 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 WEBSSH_INTERNAL_URL = "http://webssh:8422"
 WEBSSH_HOSTNAME = "shell"
 WEBSSH_PORT = 8022
+
+SITE_ID = 1
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_USERNAME_REQUIRED = True
+ACCOUNT_SIGNUP_FORM_CLASS = "moo.shell.forms.SignupForm"
+
+LOGIN_REDIRECT_URL = "/"
+ACCOUNT_LOGOUT_REDIRECT_URL = "/"
 
 LOGGING = {
     "version": 1,
