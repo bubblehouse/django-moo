@@ -39,6 +39,7 @@ dependencies = [
     "django-compressor>=4.6.0",
     "django-cte>=3.0.0",
     "django-extensions>=4.1",
+    "django-allauth>=0.63.0",
 ]
 
 [project.urls]
