@@ -49,6 +49,7 @@
         {% csrf_token %}
         <button type="submit" class="btn btn-primary">Connect</button>
         <button type="reset" class="btn btn-danger">Reset</button>
+        <a href="{% url 'account_signup' %}" class="btn btn-secondary">Sign Up</a>
       </form>
     </div>
 

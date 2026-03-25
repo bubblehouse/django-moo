@@ -322,7 +322,7 @@ This document provides essential context for AI models interacting with the Djan
   - **Indexing**: Add database indexes to frequently queried fields (Django `db_index=True`)
 
 * **Testing Best Practices:**
-  - **Two test types**: Core unit tests (`moo/core/tests/`) test models and the verb execution engine without a full bootstrap. Bootstrap integration tests (`moo/bootstrap/default_verbs/tests/`) test verb behaviour against a fully initialised game world.
+  - **Three test types**: Core unit tests (`moo/core/tests/`) test models and the verb execution engine without a full bootstrap. App integration tests (e.g., `moo/shell/tests/`) test Django features (forms, views) that interact with MOO objects — use `@pytest.mark.parametrize("t_init", ["default"], indirect=True)` when the full default world is needed. Verb integration tests (`moo/bootstrap/default_verbs/tests/`) test verb behaviour against a fully bootstrapped `default` world. The `t_init` parametrize pattern is not exclusive to `default_verbs/tests/` — any test file can use it.
   - **Bootstrap test fixtures**: Both `t_init` (bootstraps `default.py`) and `t_wizard` (returns the Wizard player) come from `moo/conftest.py`. `t_init` must be requested with `@pytest.mark.parametrize("t_init", ["default"], indirect=True)` and `@pytest.mark.django_db(transaction=True, reset_sequences=True)`.
   - **Output capture**: Pass a `_writer` callback to `code.ContextManager` to capture everything `print()`ed to the player during a test.
   - **State assertions**: Call `obj.refresh_from_db()` after `parse.interpret` or a direct verb call before asserting locations or other database-backed fields.

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Sign Up — DjangoMOO</title>
+    <link href="/static/img/favicon.png" rel="icon" type="image/png">
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+    <style>
+      .container { margin-top: 40px; }
+      .form-group { margin-top: 15px; }
+      .btn { margin-top: 20px; }
+      .btn-secondary { margin-left: 5px; }
+    </style>
+  </head>
+  <body>
+    <div class="container" style="max-width: 640px;">
+      <h2>Create Account</h2>
+
+      {% if form.errors %}
+        <div class="alert alert-danger" style="margin-top: 15px;">
+          Please correct the errors below.
+        </div>
+      {% endif %}
+
+      <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+          <div class="form-group">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}
+              <small class="form-text text-muted">{{ field.help_text }}</small>
+            {% endif %}
+            {% for error in field.errors %}
+              <div class="text-danger" style="margin-top: 4px;">{{ error }}</div>
+            {% endfor %}
+          </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary">Sign Up</button>
+        <a href="/" class="btn btn-secondary">Cancel</a>
+      </form>
+
+      <p style="margin-top: 20px;">
+        Already have an account? <a href="{% url 'account_login' %}">Log in</a>
+      </p>
+    </div>
+
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+  </body>
+</html>
