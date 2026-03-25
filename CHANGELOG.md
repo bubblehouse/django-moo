@@ -1,3 +1,9 @@
+## [0.88.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.87.0...v0.88.0) (2026-03-25)
+
+### Features
+
+* added registration flow with django-allauth ([d8ee00a](https://gitlab.com/bubblehouse/django-moo/commit/d8ee00a3c026982bedcad01daa1a6fa9196b4317))
+
 ## [0.87.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.86.0...v0.87.0) (2026-03-24)
 
 ### Features
