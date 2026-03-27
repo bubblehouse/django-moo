@@ -3,10 +3,10 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-@quit — Disconnect from the MOO server.
-QUIT  — Legacy disconnect command. If the current room defines a QUIT verb it
-        wins dispatch automatically (last-match-wins); this fallback just
-        redirects to @quit.
+@quit: Disconnect from the MOO server.
+
+QUIT is a legacy disconnect command. If the current room defines a QUIT verb it
+wins dispatch automatically (last-match-wins); this fallback just redirects to @quit.
 """
 
 from moo.sdk import context, boot_player
