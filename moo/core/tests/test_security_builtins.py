@@ -316,10 +316,7 @@ def test_attribute_error_obj_is_none_for_guard_raised_errors():
     Manually raised guard errors therefore expose no hidden object reference.
     """
     printed = exec_verb(
-        "try:\n"
-        "    getattr('hello', '__class__')\n"
-        "except AttributeError as e:\n"
-        "    print(e.obj is None)\n"  # pylint: disable=implicit-str-concat
+        "try:\n    getattr('hello', '__class__')\nexcept AttributeError as e:\n    print(e.obj is None)\n"  # pylint: disable=implicit-str-concat
     )
     assert printed == [True]
 
@@ -342,10 +339,7 @@ def test_enumerate_iteration_safe():
     normally and yields (int, value) tuples with no dangerous attributes.
     """
     printed = exec_verb(
-        "pairs = []\n"
-        "for i, v in enumerate(['a', 'b']):\n"
-        "    pairs.append((i, v))\n"
-        "print(pairs)\n"  # pylint: disable=implicit-str-concat
+        "pairs = []\nfor i, v in enumerate(['a', 'b']):\n    pairs.append((i, v))\nprint(pairs)\n"  # pylint: disable=implicit-str-concat
     )
     assert printed == [[(0, "a"), (1, "b")]]
 
@@ -365,8 +359,6 @@ def test_set_operations_safe():
     the caller already had the reference.
     """
     printed = exec_verb(
-        "s = set([1, 2, 3])\n"
-        "s.add(4)\n"
-        "print(sorted(list(s)))\n"  # pylint: disable=implicit-str-concat
+        "s = set([1, 2, 3])\ns.add(4)\nprint(sorted(list(s)))\n"  # pylint: disable=implicit-str-concat
     )
     assert printed == [[1, 2, 3, 4]]

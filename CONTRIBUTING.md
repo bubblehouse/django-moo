@@ -165,10 +165,10 @@ Key files:
 
 ### Formatter
 
-The project uses [Black](https://black.readthedocs.io/) with a line length of 120 characters.
+The project uses [Ruff](https://docs.astral.sh/ruff/formatter/) with a line length of 120 characters.
 
 ```bash
-uv run black moo --line-length 120
+uv run ruff format moo
 ```
 
 ### Linter

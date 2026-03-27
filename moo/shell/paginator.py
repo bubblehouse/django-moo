@@ -25,8 +25,7 @@ _python_version = sys.version_info
 _ptk_version = prompt_toolkit.__version__
 _pypager_version = pypager.__version__
 
-HELP = (
-    HTML("""
+HELP = HTML("""
             <title>SUMMARY OF COMMANDS</title>
 
  <keys> h  H             </keys> Display this help.
@@ -81,14 +80,12 @@ HELP = (
   - Python version:         <version>%s.%s.%s</version>
   - prompt_toolkit version: <version>%s</version>
 
-""")
-    % (
-        _pypager_version,
-        _python_version[0],
-        _python_version[1],
-        _python_version[2],
-        _ptk_version,
-    )
+""") % (
+    _pypager_version,
+    _python_version[0],
+    _python_version[1],
+    _python_version[2],
+    _ptk_version,
 )
 
 
@@ -116,7 +113,9 @@ async def run_paginator(content: str = "", content_type: str = "text") -> None:
 
     kb = pager.application.key_bindings
     kb._bindings[:] = [  # pylint: disable=protected-access
-        b for b in kb._bindings if b.handler.__name__ not in _DISABLED_HANDLERS  # pylint: disable=protected-access
+        b
+        for b in kb._bindings  # pylint: disable=protected-access
+        if b.handler.__name__ not in _DISABLED_HANDLERS  # pylint: disable=protected-access
     ]
     kb._clear_cache()  # pylint: disable=protected-access
 
