@@ -30,7 +30,6 @@ bcrypt==5.0.0
     #   paramiko
 billiard==4.2.4
     # via celery
-black==26.3.1
 boto3==1.42.63
     # via django-moo
 botocore==1.42.63
@@ -52,7 +51,6 @@ charset-normalizer==3.4.5
     # via requests
 click==8.3.1
     # via
-    #   black
     #   celery
     #   click-didyoumean
     #   click-plugins
@@ -174,8 +172,6 @@ mdurl==0.1.2
     # via markdown-it-py
 more-itertools==10.8.0
     # via django-moo
-mypy-extensions==1.1.0
-    # via black
 myst-parser==3.0.1
 opentelemetry-api==1.40.0
     # via
@@ -237,7 +233,6 @@ opentelemetry-util-http==0.61b0
 packaging==26.0
     # via
     #   anybadge
-    #   black
     #   django-moo
     #   kombu
     #   opentelemetry-instrumentation
@@ -248,11 +243,8 @@ paramiko==4.0.0
     # via webssh
 parso==0.8.6
     # via jedi
-pathspec==1.0.4
-    # via black
 platformdirs==4.9.4
     # via
-    #   black
     #   pylint
     #   pylint-gitlab
 pluggy==1.6.0
@@ -325,8 +317,6 @@ python-dateutil==2.9.0.post0
     #   celery
 python-redis-cache==4.0.2
     # via django-moo
-pytokens==0.4.1
-    # via black
 pyyaml==6.0.3
     # via myst-parser
 rcssmin==1.2.2
@@ -348,6 +338,7 @@ rich==14.3.3
     # via django-moo
 rjsmin==1.2.5
     # via django-compressor
+ruff==0.15.8
 s3transfer==0.16.0
     # via boto3
 six==1.17.0
