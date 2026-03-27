@@ -20,6 +20,7 @@ __pycache__
 static/*
 compose.override.yml
 docs/build/*
+docs/_build/*
 docs/source/generated/*
 extras/pages/public/*
 extras/pages/resources/_gen/*
