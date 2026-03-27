@@ -16,4 +16,4 @@ from moo.sdk import context
 home = context.player.get_property("home") or _.player_start
 if context.player.location != home:
     context.player.moveto(home)
-this.announce(f"{context.player} has disconnected.")
+this.announce_all_but(context.player, f"{context.player} has disconnected.")

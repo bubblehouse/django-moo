@@ -201,3 +201,26 @@ Any other uncaught exception (not a `UserError`) shows `"An error occurred while
 ```python
 from moo.core import NoSuchPropertyError
 ```
+
+## Connection and Movement Hooks
+
+Override these verbs on `$room` or `$player` subclasses for custom behavior.
+
+**Movement** (fired by `object.py` on every `moveto()`; `args[1]` = the moving object):
+
+| Verb | `this` |
+|------|--------|
+| `$room:enterfunc` | destination room |
+| `$room:exitfunc` | source room |
+
+**Connection** (fired by `moo/shell/prompt.py` on SSH session start/end; no args):
+
+| Verb | `this` | Call order |
+|------|--------|-----------|
+| `$player:confunc` | player | 1st on connect |
+| `$room:confunc` | player's room | 2nd on connect |
+| `$room:disfunc` | player's room | 1st on disconnect |
+| `$player:disfunc` | player | 2nd on disconnect |
+
+`context.player` is the connecting/disconnecting player in all four cases.
+`$player:confunc` and `$player:disfunc` are no-op stubs — safe to override.
