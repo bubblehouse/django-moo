@@ -7,8 +7,8 @@ SECRET_KEY = "django-insecure-06xo%2f39ohlfrgu&)%1lsrlx6jqy)s%#_-$rc5l_z1+p6w(=r
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost"]
-CSRF_TRUSTED_ORIGINS = ["https://localhost"]
+ALLOWED_HOSTS = ["*"]
+CSRF_TRUSTED_ORIGINS = ["https://localhost", "https://*.local"]
 STATIC_ROOT = "static"
 
 # Database
