@@ -34,7 +34,15 @@ This led to a series of "revelations" that guide `django-moo` development today:
 
 ### Front-end
 
-The primary front-end interface uses SSH to create a prompt-driven TUI. There's also the typical Django admin GUI provided on the web port, but access to this isn't required for most users.
+The primary front-end interface uses SSH to create a prompt-driven TUI. The web port serves three things: the Django admin for wizard-level management, a browser-based SSH terminal (WebSSH), and a registration flow for new players.
+
+#### Player Registration
+
+New players register through a web form powered by [django-allauth](https://allauth.org/). The registration form collects the standard allauth credentials (username, email, password) plus MOO-specific fields: character name, gender, and an optional description. On successful submission, a MOO `Object` avatar is created and linked to the Django user account via a `Player` record.
+
+The form is defined in `moo/shell/forms.py` (`SignupForm`). The view in `moo/shell/views.py` (`SignupView`) overrides allauth's default behaviour so that an already-authenticated user who clicks "Sign Up" is silently logged out before the new registration proceeds, rather than being redirected away.
+
+Template overrides live in `moo/shell/templates/`. A shared `base.html` provides the Bootstrap styles used by the terminal page and all allauth pages. `allauth/layouts/base.html` is overridden so every page in the authentication flow (login, logout, email verification, password reset) inherits the same look without per-page template copies.
 
 ### Back-end
 

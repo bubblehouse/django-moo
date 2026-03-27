@@ -127,7 +127,7 @@ The `context` object has a variety of attributes that are useful in verbs:
 3. `writer` - the Callable that prints text to the client connection
 4. `task_id` - the current Celery task ID, if applicable
 5. `parser` - the Parser object for the current task; inherited by synchronous sub-verb calls. Only `None` when a Celery task re-invokes a verb without an active player command (e.g., scheduled `invoke()` calls)
-6. `task_time` - a `TaskTime(elapsed, time_limit, remaining)` namedtuple describing how much of the current task's time budget has been used. `remaining` and `time_limit` are `None` when no limit is configured. Useful for verbs that need to hand off long-running work before the budget runs out — see [Time-Aware Continuation](advanced-verbs.md#time-aware-continuation).
+6. `task_time` - a `TaskTime(elapsed, time_limit, remaining)` namedtuple describing how much of the current task's time budget has been used. `remaining` and `time_limit` are `None` when no limit is configured. Useful for verbs that need to hand off long-running work before the budget runs out — see {ref}`time-aware-continuation`.
 
 Also present in the global namespace is `verb_name`, the specific name used when the current verb was invoked.
 
