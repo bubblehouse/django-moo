@@ -18,6 +18,4 @@ for exit_obj in exits:
     exit_name = exit_obj.name
     dest_name = exit_obj.dest.name
     aliases = ", ".join([x.alias for x in exit_obj.aliases.all()])
-    print(
-        f"- [yellow]{exit_name}[/yellow] (Aliases: {aliases}) " f"to [green]{dest_name}[/green] (#{exit_obj.dest.id})"
-    )
+    print(f"- [yellow]{exit_name}[/yellow] (Aliases: {aliases}) to [green]{dest_name}[/green] (#{exit_obj.dest.id})")

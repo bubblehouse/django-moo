@@ -110,11 +110,14 @@ def test_queryset_values_bypasses_property_value_guard(t_init: Object, t_wizard:
         prop = target.properties.filter(name="secret").first()
         prop.deny(plain, "read")
 
-    src = """
+    src = (
+        """
 from moo.sdk import lookup
 obj = lookup(%d)
 rows = list(obj.properties.all().values('name', 'value'))
-""" % target.pk
+"""
+        % target.pk
+    )
 
     with ctx(plain):
         w = code.ContextManager.get("writer")

@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("core", "0011_alter_object_name_alter_object_unique_name_and_more"),
     ]
