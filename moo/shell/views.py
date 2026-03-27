@@ -11,9 +11,25 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
+from allauth.account.views import SignupView as AllauthSignupView
 from django.conf import settings
+from django.contrib.auth import logout as auth_logout
 from django.http import HttpResponseNotAllowed, JsonResponse
 from django.shortcuts import render
+
+
+class SignupView(AllauthSignupView):
+    """Allauth signup view that allows already-authenticated users to register.
+
+    Allauth normally redirects authenticated users away from the signup page.
+    This subclass logs them out first so they can create a new account without
+    needing to log out manually.
+    """
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            auth_logout(request)
+        return super().dispatch(request, *args, **kwargs)
 
 
 def terminal(request):

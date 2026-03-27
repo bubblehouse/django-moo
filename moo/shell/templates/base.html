@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>{% block title %}DjangoMOO{% endblock %}</title>
+    <link href="/static/img/favicon.png" rel="icon" type="image/png">
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
+    {% block extra_css %}{% endblock %}
+    <style>
+      .row {
+        margin-top: 15px;
+        margin-bottom: 10px;
+      }
+
+      .container {
+        margin-top: 20px;
+      }
+
+      .btn {
+        margin-top: 15px;
+      }
+
+      .btn-danger {
+        margin-left: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    {% block body %}{% endblock %}
+
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/js/popper.min.js"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>

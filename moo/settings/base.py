@@ -120,10 +120,10 @@ INSTALLED_APPS = [
     "simplesshkey",
     "django_celery_beat",
     "django.contrib.sites",
-    "allauth",
-    "allauth.account",
     "moo.core",
     "moo.shell",
+    "allauth",
+    "allauth.account",
 ]
 
 MIDDLEWARE = [
@@ -236,10 +236,9 @@ AUTHENTICATION_BACKENDS = [
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
-ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_UNIQUE_EMAIL = True
-ACCOUNT_USERNAME_REQUIRED = True
 ACCOUNT_SIGNUP_FORM_CLASS = "moo.shell.forms.SignupForm"
 
 LOGIN_REDIRECT_URL = "/"
