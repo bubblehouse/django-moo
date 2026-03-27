@@ -86,9 +86,7 @@ def r_exec(src, locals, globals, *args, filename="<string>", **kwargs):  # pylin
     return do_eval(code, locals, globals, *args, filename=filename, runtype="exec", **kwargs)
 
 
-def do_eval(
-    code, locals, globals, *args, filename="<string>", runtype="eval", **kwargs
-):  # pylint: disable=redefined-builtin
+def do_eval(code, locals, globals, *args, filename="<string>", runtype="eval", **kwargs):  # pylint: disable=redefined-builtin
     """
     Execute an expression in the provided environment.
     """

@@ -18,7 +18,7 @@ class Command(BaseCommand):
             "--bootstrap",
             type=str,
             default="default",
-            help="Optionally pass a built-in template name or a Python source file" " to bootstrap the database.",
+            help="Optionally pass a built-in template name or a Python source file to bootstrap the database.",
         )
 
     def handle(self, *args, bootstrap="default", **config):

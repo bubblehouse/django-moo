@@ -202,11 +202,11 @@ This document provides essential context for AI models interacting with the Djan
   - **Running Tests**:
     ```bash
     uv run pytest -n auto --cov
-    uv run black moo
+    uv run ruff format moo
     uv run pylint moo --load-plugins pylint_django --django-settings-module=moo.settings.test
     ```
-    Always run Black, then pylint, after pytest. All three must pass before a change is considered complete. Black runs before pylint at commit time — if Black reformats a file, pylint sees the reformatted version, so Black must be run first when checking manually.
-  - **Black and pylint interaction**: `# pylint: disable=...` comments must appear on the specific line containing the offending code, not on a closing bracket or the next line. Black may reformat expressions such that a comment on a closing `)` is no longer adjacent to the flagged code, making the suppression ineffective.
+    Always run Ruff format, then pylint, after pytest. All three must pass before a change is considered complete. Ruff format runs before pylint at commit time — if it reformats a file, pylint sees the reformatted version, so formatting must be run first when checking manually.
+  - **Ruff format and pylint interaction**: `# pylint: disable=...` comments must appear on the specific line containing the offending code, not on a closing bracket or the next line. Ruff format may reformat expressions such that a comment on a closing `)` is no longer adjacent to the flagged code, making the suppression ineffective.
   - **Verb files**: Black silently skips verb files in `moo/bootstrap/default_verbs/` because they contain module-level `return` statements, which are a `SyntaxError` in standard Python. Black cannot parse them and leaves them unchanged.
   - **Test Coverage**: Must not decrease with new code. Target: >= 80% coverage
   - **New Features**: Every feature or bug fix must include corresponding unit tests
@@ -231,7 +231,7 @@ This document provides essential context for AI models interacting with the Djan
 * **Contribution Guidelines:**
   - **Code Review Checklist**:
     - All tests must pass (`uv run pytest -n auto`)
-    - Black formatting passes (`uv run black moo`)
+    - Ruff formatting passes (`uv run ruff format moo`)
     - PyLint score must not go down (`uv run pylint moo`)
     - Test coverage must not go down (`uv run pytest -n auto --cov`)
     - Add new tests for any feature or bug fix
@@ -349,8 +349,8 @@ uv run pylint moo --load-plugins pylint_django --django-settings-module=moo.sett
 # View coverage report
 uv run coverage report
 
-# Format code with Black
-uv run black moo
+# Format code with Ruff
+uv run ruff format moo
 
 # Start development server
 docker compose up
@@ -377,7 +377,7 @@ docker compose run webapp manage.py moo_enableuser wizard Wizard
 2. Make code changes following style guidelines
 3. Add tests for new functionality
 4. Run tests locally: `uv run pytest -n auto --cov`
-5. Run Black: `uv run black moo`
+5. Run Ruff format: `uv run ruff format moo`
 6. Run linting: `uv run pylint moo --load-plugins pylint_django --django-settings-module=moo.settings.test`
 7. Fix any issues — repeat steps 4–6 until all pass cleanly
 8. Commit with Conventional Commits: `git commit -m "feat(core): add new feature"`

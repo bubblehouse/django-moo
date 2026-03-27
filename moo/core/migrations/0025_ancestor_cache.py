@@ -57,7 +57,6 @@ def populate_ancestor_cache(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("core", "0024_covering_indexes"),
     ]
