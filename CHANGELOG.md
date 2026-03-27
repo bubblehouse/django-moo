@@ -1,3 +1,9 @@
+## [0.88.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.88.1...v0.88.2) (2026-03-27)
+
+### Bug Fixes
+
+* call confunc and disfunc properly ([25065fe](https://gitlab.com/bubblehouse/django-moo/commit/25065fe15f2364ec0c276a24e392a5bd8c48efa4))
+
 ## [0.88.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.88.0...v0.88.1) (2026-03-27)
 
 ### Bug Fixes
