@@ -45,7 +45,7 @@ class SignupForm(forms.Form):
         for field in self.fields.values():
             field.widget.attrs.setdefault("class", "form-control")
 
-    def save(self, user):
+    def signup(self, request, user):
         wizard = lookup("Wizard")
         sys = lookup(1)
 
