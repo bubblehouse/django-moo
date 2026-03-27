@@ -1,3 +1,10 @@
+## [0.88.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.88.0...v0.88.1) (2026-03-27)
+
+### Bug Fixes
+
+* missing arg in signup method ([669c4cd](https://gitlab.com/bubblehouse/django-moo/commit/669c4cd08006635443a54a970d8bb970a474b53b))
+* registration style and flow issues ([e7de85d](https://gitlab.com/bubblehouse/django-moo/commit/e7de85d7301fdac2ec65e03c3b7fc94ce964cc6b))
+
 ## [0.88.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.87.0...v0.88.0) (2026-03-25)
 
 ### Features
