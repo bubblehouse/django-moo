@@ -286,3 +286,120 @@ def test_this_capitalized_with_parser(t_init: Object, t_wizard: Object):
         ctx.set_parser(parser)
         result = system.string_utils.pronoun_sub("%T illuminates the room.")
     assert result == f"{torch.title().capitalize()} illuminates the room."
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_rewrap_plain_short_string(t_init: Object, t_wizard: Object):
+    """A string already under 80 chars with no newlines is returned unchanged."""
+    with code.ContextManager(t_wizard, lambda msg: None):
+        system = lookup(1)
+        result = system.string_utils.rewrap("Hello, world.")
+    assert result == "Hello, world."
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_rewrap_collapses_single_newline(t_init: Object, t_wizard: Object):
+    """A single newline within a paragraph is replaced with a space."""
+    with code.ContextManager(t_wizard, lambda msg: None):
+        system = lookup(1)
+        result = system.string_utils.rewrap("Line one\nLine two")
+    assert result == "Line one Line two"
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_rewrap_preserves_double_newline(t_init: Object, t_wizard: Object):
+    """Double newlines between paragraphs are preserved as paragraph breaks."""
+    with code.ContextManager(t_wizard, lambda msg: None):
+        system = lookup(1)
+        result = system.string_utils.rewrap("Para one.\n\nPara two.")
+    assert result == "Para one.\n\nPara two."
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_rewrap_preserves_triple_newline_as_paragraph(t_init: Object, t_wizard: Object):
+    """Three or more consecutive newlines collapse to a single paragraph break."""
+    with code.ContextManager(t_wizard, lambda msg: None):
+        system = lookup(1)
+        result = system.string_utils.rewrap("Para one.\n\n\nPara two.")
+    assert result == "Para one.\n\nPara two."
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_rewrap_wraps_long_line(t_init: Object, t_wizard: Object):
+    """A line exceeding 80 characters is broken at a word boundary."""
+    with code.ContextManager(t_wizard, lambda msg: None):
+        system = lookup(1)
+        long_line = "word " * 20  # 100 characters
+        result = system.string_utils.rewrap(long_line.strip())
+    for line in result.split("\n"):
+        assert len(line) <= 80
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_rewrap_replaces_tabs(t_init: Object, t_wizard: Object):
+    """Tab characters are replaced with a space."""
+    with code.ContextManager(t_wizard, lambda msg: None):
+        system = lookup(1)
+        result = system.string_utils.rewrap("Hello\tworld.")
+    assert result == "Hello world."
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_rewrap_replaces_carriage_return(t_init: Object, t_wizard: Object):
+    """CRLF line endings are normalised before processing."""
+    with code.ContextManager(t_wizard, lambda msg: None):
+        system = lookup(1)
+        result = system.string_utils.rewrap("Line one\r\nLine two")
+    assert result == "Line one Line two"
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_rewrap_collapses_multiple_spaces(t_init: Object, t_wizard: Object):
+    """Multiple consecutive spaces are collapsed to one."""
+    with code.ContextManager(t_wizard, lambda msg: None):
+        system = lookup(1)
+        result = system.string_utils.rewrap("Too   many    spaces.")
+    assert result == "Too many spaces."
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_rewrap_multiline_paragraph_with_wrap(t_init: Object, t_wizard: Object):
+    """A multi-line paragraph with embedded newlines is reflowed and wrapped correctly."""
+    with code.ContextManager(t_wizard, lambda msg: None):
+        system = lookup(1)
+        text = (
+            "A cavernous laboratory filled with gadgetry of every kind,\n"
+            "this seems like a dumping ground for every piece of dusty forgotten\n"
+            "equipment a mad scientist might require."
+        )
+        result = system.string_utils.rewrap(text)
+    # Should be one paragraph, each line <= 80 chars
+    assert "\n\n" not in result
+    for line in result.split("\n"):
+        assert len(line) <= 80
+    assert "cavernous laboratory" in result
+    assert "mad scientist" in result
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_rewrap_two_paragraphs_each_wrapped(t_init: Object, t_wizard: Object):
+    """Two paragraphs are each wrapped independently and separated by a blank line."""
+    with code.ContextManager(t_wizard, lambda msg: None):
+        system = lookup(1)
+        text = ("word " * 20).strip() + "\n\n" + ("other " * 20).strip()
+        result = system.string_utils.rewrap(text)
+    parts = result.split("\n\n")
+    assert len(parts) == 2
+    for part in parts:
+        for line in part.split("\n"):
+            assert len(line) <= 80

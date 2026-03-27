@@ -19,6 +19,7 @@ except NoSuchPropertyError:
     pass
 
 if description:
+    description = _.string_utils.rewrap(description)
     return f"[deep_sky_blue1]{description}[/deep_sky_blue1]"
 else:
     return "[deep_pink4 bold]Not much to see here.[/deep_pink4 bold]"
