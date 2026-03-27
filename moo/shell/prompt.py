@@ -33,6 +33,7 @@ _session_settings = {}
 PROMPT_SHORTCUTS = {
     '"': 'say "%"',
     "'": "say '%'",
+    ":": 'emote "%"',
 }
 
 
@@ -126,6 +127,7 @@ class MooPrompt:
         cancelled. Exits cleanly on EOF or KeyboardInterrupt.
         """
         prompt_session = PromptSession(key_bindings=_make_key_bindings(self.automation))
+        await self._fire_confunc()
         try:
             while not self.is_exiting:
                 message = await self.generate_prompt()
@@ -159,6 +161,7 @@ class MooPrompt:
         except:  # pylint: disable=bare-except
             log.exception("Error in command processing")
         finally:
+            await self._fire_disfunc()
             # Clean up session settings on disconnect
             user_pk = self.user.pk
             if user_pk in _session_settings:
@@ -203,6 +206,56 @@ class MooPrompt:
         from .paginator import run_paginator
 
         await run_paginator(req.get("content", ""), req.get("content_type", "text"))
+
+    @sync_to_async
+    def _fire_confunc(self):
+        """
+        Dispatch confunc verbs on SSH connect.
+
+        Calls ``player:confunc()`` first (personal hooks: mail, news), then
+        ``player.location:confunc()`` (room hook: show room, announce arrival).
+        Both are dispatched as Celery tasks so they run asynchronously.
+        """
+        player = self.user.player.avatar
+        if player.has_verb("confunc"):
+            tasks.invoke_verb.delay(
+                caller_id=player.pk,
+                player_id=player.pk,
+                this_id=player.pk,
+                verb_name="confunc",
+            )
+        if player.location and player.location.has_verb("confunc"):
+            tasks.invoke_verb.delay(
+                caller_id=player.pk,
+                player_id=player.pk,
+                this_id=player.location.pk,
+                verb_name="confunc",
+            )
+
+    @sync_to_async
+    def _fire_disfunc(self):
+        """
+        Dispatch disfunc verbs on SSH disconnect.
+
+        Calls ``player.location:disfunc()`` first (room hook: move player home,
+        announce departure), then ``player:disfunc()`` (personal cleanup hook).
+        Both are dispatched as Celery tasks so they run asynchronously.
+        """
+        player = self.user.player.avatar
+        if player.location and player.location.has_verb("disfunc"):
+            tasks.invoke_verb.delay(
+                caller_id=player.pk,
+                player_id=player.pk,
+                this_id=player.location.pk,
+                verb_name="disfunc",
+            )
+        if player.has_verb("disfunc"):
+            tasks.invoke_verb.delay(
+                caller_id=player.pk,
+                player_id=player.pk,
+                this_id=player.pk,
+                verb_name="disfunc",
+            )
 
     @sync_to_async
     def generate_prompt(self):
