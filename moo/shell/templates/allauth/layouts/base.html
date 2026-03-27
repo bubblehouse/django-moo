@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}{% block head_title %}DjangoMOO{% endblock %}{% endblock %}
+
+{% block body %}
+    <div class="container" style="max-width: 640px;">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }}" style="margin-top: 15px;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        {% block content %}{% endblock %}
+        {% block extra_body %}{% endblock %}
+    </div>
+{% endblock %}
