@@ -23,7 +23,7 @@ def test_valid_form_creates_player_and_avatar(t_init: Object, t_wizard: Object):
         }
     )
     assert form.is_valid(), form.errors
-    form.save(user)
+    form.signup(None, user)
 
     player = Player.objects.get(user=user)
     avatar = player.avatar
@@ -40,7 +40,7 @@ def test_gender_pronouns_male(t_init: Object, t_wizard: Object):
     user = User.objects.create_user(username="heroperson", password="pw")
     form = SignupForm(data={"character_name": "Hero", "gender": "male", "description": ""})
     assert form.is_valid()
-    form.save(user)
+    form.signup(None, user)
 
     avatar = Player.objects.get(user=user).avatar
     assert avatar.get_property("ps") == "he"
@@ -54,7 +54,7 @@ def test_gender_pronouns_plural(t_init: Object, t_wizard: Object):
     user = User.objects.create_user(username="theyperson", password="pw")
     form = SignupForm(data={"character_name": "Sage", "gender": "plural", "description": ""})
     assert form.is_valid()
-    form.save(user)
+    form.signup(None, user)
 
     avatar = Player.objects.get(user=user).avatar
     assert avatar.get_property("ps") == "they"
@@ -68,7 +68,7 @@ def test_description_optional(t_init: Object, t_wizard: Object):
     user = User.objects.create_user(username="nodesc", password="pw")
     form = SignupForm(data={"character_name": "Nameless", "gender": "neuter", "description": ""})
     assert form.is_valid()
-    form.save(user)
+    form.signup(None, user)
 
     avatar = Player.objects.get(user=user).avatar
     # Inherits empty string description from $root_class — no error raised
