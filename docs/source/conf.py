@@ -59,6 +59,12 @@ intersphinx_mapping = {
 # https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html#confval-intersphinx_disabled_reftypes
 intersphinx_disabled_reftypes = ["*"]
 
+# Suppress unresolvable forward references in asyncssh's own type annotations.
+# NOTE: sphinx_autodoc_typehints emits unresolvable-forward-reference warnings
+# for asyncssh's SSHReader type (used in inherited SSHServer methods). These
+# are upstream asyncssh annotations and cannot be suppressed via suppress_warnings
+# because they use the Python logging system directly. Ignored for now.
+
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
