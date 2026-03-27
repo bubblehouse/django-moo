@@ -92,10 +92,14 @@ Then validate the Sphinx build:
 
 ```
 uv run sphinx-build -b dummy -W docs/source docs/_build/dummy
-uv run sphinx-lint docs/source/guide/
+uv run sphinx-lint docs/source/
 ```
 
 The dummy builder validates all cross-references and toctree entries. `sphinx-lint` catches RST/MyST style issues. Both must pass clean before committing doc changes.
+
+**Known pre-existing build failure:** `sphinx_autodoc_typehints` emits unresolvable-forward-reference warnings for asyncssh's `SSHReader` type (inherited methods on `moo.shell.server.SSHServer`). These cannot be suppressed via `suppress_warnings` because the extension uses Python's logging system directly, bypassing Sphinx's warning infrastructure. Ignore them — they are not caused by doc changes and were present before the Diátaxis reorganisation.
+
+**`sphinx-lint` path:** guide pages now live under `docs/source/` in Diátaxis subdirectories (`explanation/`, `how-to/`, `reference/`, `tutorials/`), not `docs/source/guide/`. Pass `docs/source/` as the root.
 
 Update the project memory sync record:
 ```

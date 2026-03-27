@@ -65,6 +65,21 @@ python manage.py moo_init
 python manage.py shell
 ```
 
+### Creating Player Accounts
+
+There are two ways to create a player account:
+
+**Management command** — use this for the initial wizard account, or any account that needs wizard privileges:
+
+```bash
+python manage.py createsuperuser --username yourname
+python manage.py moo_enableuser --wizard yourname YourWizardName
+```
+
+**Web registration** — regular players can sign up through the web interface at `/accounts/signup/`. The form creates a Django user and a linked MOO avatar in one step. Email verification is required by default (`ACCOUNT_EMAIL_VERIFICATION = "mandatory"`).
+
+The web registration form accepts: username, email, password, character name, gender (neuter/male/female/plural), and an optional description. If a user is already logged in when they reach the signup page, they are logged out automatically before the new registration is processed.
+
 ## Using VSCode with django-moo
 
 The first thing to do with your development environment is to make sure you can run the unit tests:
