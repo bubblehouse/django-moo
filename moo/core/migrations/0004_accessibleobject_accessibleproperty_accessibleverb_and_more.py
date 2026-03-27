@@ -8,7 +8,6 @@ import moo.core.models.acl
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ("core", "0003_alter_verb_ability_alter_verb_method"),

@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("core", "0013_verb_direct_object_alter_prepositionname_preposition_and_more"),
     ]

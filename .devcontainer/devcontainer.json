@@ -26,7 +26,7 @@
 				"python.testing.pytestArgs": ["--ds=moo.settings.test"],
 				// Language-specific editor settings for Python files.
 				"[python]": {
-					"editor.defaultFormatter": "ms-python.black-formatter",
+					"editor.defaultFormatter": "charliermarsh.ruff",
 					"editor.formatOnSave": true,
 					"editor.codeActionsOnSave": {
 						"source.organizeImports": "explicit"
@@ -37,8 +37,7 @@
 				"ms-python.debugpy",
 				"ms-python.python",
 				"ms-python.vscode-pylance",
-				"ms-python.black-formatter",
-				"ms-python.isort"
+				"charliermarsh.ruff"
 				// Add additional extensions here:
 			]
 		}

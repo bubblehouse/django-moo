@@ -212,11 +212,7 @@ def test_re_match_object_attributes_are_safe():
     from .utils import exec_verb
 
     printed = exec_verb(
-        "import re\n"
-        "m = re.match(r'hello', 'hello world')\n"
-        "print(m.group())\n"
-        "print(m.string)\n"
-        "print(m.pos)\n"
+        "import re\nm = re.match(r'hello', 'hello world')\nprint(m.group())\nprint(m.string)\nprint(m.pos)\n"
     )
     assert printed == ["hello", "hello world", 0]
 
@@ -226,10 +222,7 @@ def test_re_pattern_object_attributes_are_safe():
     from .utils import exec_verb
 
     printed = exec_verb(
-        "import re\n"
-        "p = re.compile(r'\\d+')\n"
-        "print(p.pattern)\n"
-        "print(p.flags > 0)\n"  # pylint: disable=implicit-str-concat
+        "import re\np = re.compile(r'\\d+')\nprint(p.pattern)\nprint(p.flags > 0)\n"  # pylint: disable=implicit-str-concat
     )
     assert printed == [r"\d+", True]
 
@@ -249,10 +242,7 @@ def test_hashlib_hash_object_attributes_are_safe():
     from .utils import exec_verb
 
     printed = exec_verb(
-        "import hashlib\n"
-        "h = hashlib.md5(b'test')\n"
-        "print(isinstance(h.hexdigest(), str))\n"
-        "print(h.digest_size)\n"
+        "import hashlib\nh = hashlib.md5(b'test')\nprint(isinstance(h.hexdigest(), str))\nprint(h.digest_size)\n"
     )
     assert printed == [True, 16]
 
@@ -286,10 +276,7 @@ def test_datetime_timedelta_is_safe():
     from .utils import exec_verb
 
     printed = exec_verb(
-        "import datetime\n"
-        "td = datetime.timedelta(days=1)\n"
-        "print(td.days)\n"
-        "print(td.seconds)\n"  # pylint: disable=implicit-str-concat
+        "import datetime\ntd = datetime.timedelta(days=1)\nprint(td.days)\nprint(td.seconds)\n"  # pylint: disable=implicit-str-concat
     )
     assert printed == [1, 0]
 
@@ -309,9 +296,6 @@ def test_time_struct_time_is_safe():
     from .utils import exec_verb
 
     printed = exec_verb(
-        "import time\n"
-        "t = time.gmtime(0)\n"
-        "print(t.tm_year)\n"
-        "print(isinstance(time.time(), float))\n"  # pylint: disable=implicit-str-concat
+        "import time\nt = time.gmtime(0)\nprint(t.tm_year)\nprint(isinstance(time.time(), float))\n"  # pylint: disable=implicit-str-concat
     )
     assert printed == [1970, True]

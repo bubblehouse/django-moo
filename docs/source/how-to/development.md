@@ -236,8 +236,8 @@ DJANGO_SETTINGS_MODULE=moo.settings.test uv run pylint moo
 # View coverage report
 uv run coverage report
 
-# Format code with Black
-uv run black moo --line-length 120
+# Format code with Ruff
+uv run ruff format moo
 ```
 
 ## Common Development Tasks
