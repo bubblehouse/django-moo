@@ -402,7 +402,7 @@ def test_invoke_moves_player(t_init: Object, t_wizard: Object):
             f"ConnectionError(#{t_wizard.pk} (Wizard)): You leave {source}.",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): [bright_yellow]{dest.name}[/bright_yellow]",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): [deep_sky_blue1]There's not much to see here.[/deep_sky_blue1]",
-            f"ConnectionError(#{t_wizard.pk} (Wizard)): You see {player.name} here.",
+            f"ConnectionError(#{t_wizard.pk} (Wizard)): {player.name} is here.",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): You arrive at {dest}.",
             f"ConnectionError(#{player.pk} (Player)): {t_wizard} arrives at {dest}.",
         ]

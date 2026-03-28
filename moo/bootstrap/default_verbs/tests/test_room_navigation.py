@@ -264,7 +264,7 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
             f"ConnectionError(#{t_wizard.pk} (Wizard)): You leave #{home_location.pk} (The Laboratory).",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): [bright_yellow]Another Room[/bright_yellow]",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): [deep_sky_blue1]There's not much to see here.[/deep_sky_blue1]",
-            f"ConnectionError(#{t_wizard.pk} (Wizard)): You see {t_player.name} here.",
+            f"ConnectionError(#{t_wizard.pk} (Wizard)): {t_player.name} is here.",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): You arrive at #{another_room.pk} (Another Room).",
             f"ConnectionError(#{t_player.pk} (Player)): #{t_wizard.pk} (Wizard) arrives at #{another_room.pk} (Another Room).",
         ]
