@@ -1,3 +1,10 @@
+## [0.89.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.89.0...v0.89.1) (2026-03-28)
+
+### Bug Fixes
+
+* dont print tracebacks for UserErrors, even to wizards ([b816055](https://gitlab.com/bubblehouse/django-moo/commit/b8160559e7a15a3265fe06e555909b460d95fc51))
+* properly display the first output (look_self) ([0dba75e](https://gitlab.com/bubblehouse/django-moo/commit/0dba75e771ae2748abf87aa618b0772d2fbb3b38))
+
 ## [0.89.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.88.3...v0.89.0) (2026-03-28)
 
 ### Features
