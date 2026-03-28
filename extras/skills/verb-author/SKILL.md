@@ -372,6 +372,8 @@ Key points:
 - Error handling catches all exceptions (can't use `e.__class__.__name__` in RestrictedPython)
 - `moo_eval()` is an SDK function that handles compilation and execution
 - Only prints non-None results (REPL-like behavior)
+- All `moo.sdk` names (`lookup`, `create`, `context`, etc.) are pre-imported into `@eval`'s execution environment — no `from moo.sdk import ...` needed inside the evaluated code
+- The `;` key in the interactive shell expands to `@eval ` — useful for quick REPL-style testing
 
 ### @alias.py — global lookup with preposition
 

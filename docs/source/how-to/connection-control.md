@@ -138,35 +138,36 @@ changes via `moveto()`. They are not limited to players.
 
 | Verb | `this` | Argument | Default behavior |
 |------|--------|----------|-----------------|
-| `$room:enterfunc` | destination room | arriving object (`args[1]`) | shows `look_self` to players; clears `blessed_object` |
-| `$room:exitfunc` | source room | departing object (`args[1]`) | clears `seated_on` property |
+| `$room.enterfunc` | destination room | arriving object (`args[1]`) | shows `look_self` to players; clears `blessed_object` |
+| `$room.exitfunc` | source room | departing object (`args[1]`) | clears `seated_on` property |
 
 ### Connection callbacks
 
 These fire when a player's SSH session starts or ends. The call order follows
 the original LambdaMOO convention.
 
-**On connect** (`player:confunc` → `player.location:confunc`):
+**On connect** (`player.confunc` → `player.location.confunc`):
 
 | Verb | `this` | `context.player` | Default behavior |
 |------|--------|-----------------|-----------------|
-| `$player:confunc` | the player | same | no-op stub |
-| `$room:confunc` | the player's room | the player | calls `look_self`, announces "has connected" |
+| `$player.confunc` | the player | same | no-op stub |
+| `$room.confunc` | the player's room | the player | calls `look_self`, announces "has connected" |
 
-**On disconnect** (`player.location:disfunc` → `player:disfunc`):
+**On disconnect** (`player.location.disfunc` → `player.disfunc`):
 
 | Verb | `this` | `context.player` | Default behavior |
 |------|--------|-----------------|-----------------|
-| `$room:disfunc` | the player's room | the player | moves player home, announces "has disconnected" |
-| `$player:disfunc` | the player | same | no-op stub |
+| `$room.disfunc` | the player's room | the player | moves player home, announces "has disconnected" |
+| `$player.disfunc` | the player | same | no-op stub |
 
-`$player:confunc` and `$player:disfunc` are intentional no-ops on the base
+`$player.confunc` and `$player.disfunc` are intentional no-ops on the base
 class — override them on a player subclass to add login/logout behavior such
 as checking mail or notifying friends.
 
-The room callbacks run as Celery tasks after the session connects or
-disconnects. Announcements to other players in the room go through their own
-message queues and are not affected by the connecting player's session state.
+The connect callbacks run as Celery tasks, but the SSH session waits for them
+to complete before showing the first prompt. This means `look_self` output
+(and any other `print()` calls in `confunc` verbs) appears above the first
+prompt, not interleaved with it. Disconnect callbacks are fire-and-forget.
 
 ## Implementation Notes
 
