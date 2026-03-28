@@ -282,6 +282,21 @@ if obj.has_property("description"):
 
 So far these examples haven't required any calls to `obj.save()`; this is only required for changes to the intrinsic object properties like `name`, `unique_name`, `obvious`, and `owner`.
 
+#### Description properties and `rewrap`
+
+When a player looks at an object, the `description` verb in `root_class/description.py` automatically passes the stored text through `_.string_utils.rewrap()` before printing it. This means you can write a multi-line description with natural line breaks and paragraph separators without worrying about terminal width:
+
+- Single newlines within a paragraph are collapsed to a space (so you can hard-wrap your source text at any column)
+- Double newlines become paragraph breaks
+- Each paragraph is word-wrapped to 80 characters
+
+If you're formatting multi-line text in a context outside of `description` (e.g., a custom help verb or a note's `read` verb), call `rewrap` explicitly:
+
+```python
+text = obj.get_property("body")
+print(_.string_utils.rewrap(text))
+```
+
 > The LambdaCore database uses several properties on `#0`, the system object, for various special purposes. For example, the value of `#0.room` is the "generic room" object, `#0.exit` is the "generic exit" object, etc. This allows MOO programs to refer to these useful objects more easily (and more readably) than using their object numbers directly. To make this usage even easier and more readable, the expression
 >
 > `$name`
