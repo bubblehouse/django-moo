@@ -37,7 +37,7 @@ def do_reload_batch(verbs):
 
 if verb_name == "reload_batch":
     verbs = list(Verb.objects.filter(pk__in=args[0]))
-    continued, count = do_do_reload_batch(verbs)
+    continued, count = do_reload_batch(verbs)
     if not continued:
         context.player.tell(f"Reloaded {count} verb(s).")
 elif context.parser.has_pobj_str("on"):

@@ -442,14 +442,14 @@ def test_reload_all_schedules_continuation_on_low_time(t_init: Object, t_wizard:
 
     # patch.object on type(sdk.context) replaces the data descriptor on the _Context class,
     # so every access to context.task_time inside the verb calls mock_tt() instead.
-    # patch("moo.sdk.invoke") intercepts the continuation call the verb makes; because
-    # verbs re-execute their imports on every call, the patched function is what the verb
-    # binds when it runs `from moo.sdk import invoke`.
+    # patch("moo.sdk.tasks.invoke") intercepts the continuation call made by
+    # schedule_continuation, which calls invoke() from its own module namespace in tasks.py.
+    # (patching moo.sdk.invoke would not intercept it because tasks.py holds its own reference)
     # pytest.warns captures the RuntimeWarning that context.player.tell() emits in the
     # test environment (write() can't reach a real connection, so it warns instead).
     with patch.object(type(sdk.context), "task_time", new_callable=PropertyMock) as mock_tt:
         mock_tt.side_effect = lambda: next(task_time_values, TaskTime(0.9, 1.0, 0.1))
-        with patch("moo.sdk.invoke") as mock_invoke:
+        with patch("moo.sdk.tasks.invoke") as mock_invoke:
             with pytest.warns(RuntimeWarning):
                 with code.ContextManager(t_wizard, lambda _: None) as ctx:
                     parse.interpret(ctx, "@reload all")

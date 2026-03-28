@@ -48,10 +48,15 @@ ALLOWED_MODULES = (
 )
 
 BLOCKED_IMPORTS = {
-    # moo.sdk internal names are protected by underscore aliases in sdk.py rather
-    # than explicit blocklist entries: ContextManager → _ContextManager (pass 7),
+    # moo.sdk internal names are protected by underscore aliases in the sdk package
+    # rather than explicit blocklist entries: ContextManager → _ContextManager (pass 7),
     # contextmanager → _contextmanager (pass 15), log → _log (pass 15).
-    # Add entries here if a future sdk.py import cannot be given an underscore alias.
+    #
+    # moo.sdk submodule names that must not be importable by verb code.  The
+    # `context` submodule is intentionally absent: its name is shadowed in
+    # __init__.py by the exported _Context() singleton, so
+    # `from moo.sdk import context` already returns the singleton, not the module.
+    "moo.sdk": {"objects", "output", "tasks", "ssh_keys", "admin"},
 }
 
 WIZARD_ALLOWED_MODULES = (
