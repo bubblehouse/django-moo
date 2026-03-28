@@ -1,6 +1,6 @@
 import pytest
 
-from moo.core import exceptions, parse
+from moo.core import code, exceptions, lookup, parse
 from moo.core.models.object import Object
 
 
@@ -286,3 +286,53 @@ def test_expand_wildcard():
     assert utils.expand_wildcard("desc*ribe") == ["desc", "descr", "descri", "describ", "describe"]
     assert utils.expand_wildcard("l*ook") == ["l", "lo", "loo", "look"]
     assert utils.expand_wildcard("l**k") == ["l", "l*", "l*k"]
+
+
+# ---------------------------------------------------------------------------
+# $do_command hook
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_do_command_truthy_return_skips_normal_dispatch(t_init, t_wizard):
+    """do_command returning True prevents normal verb dispatch."""
+    system = lookup(1)
+    t_wizard.add_verb("look", code="print('normal look ran')")
+    system.add_verb("do_command", code="return True")
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, "look")
+    assert "normal look ran" not in printed
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_do_command_falsy_return_falls_through_to_normal_dispatch(t_init, t_wizard):
+    """do_command returning False allows normal verb dispatch."""
+    system = lookup(1)
+    t_wizard.add_verb("look", code="print('normal look ran')")
+    system.add_verb("do_command", code="return False")
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, "look")
+    assert "normal look ran" in printed
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_do_command_receives_words_as_args(t_init, t_wizard):
+    """do_command receives the tokenized command words as positional args."""
+    system = lookup(1)
+    system.add_verb("do_command", code="print(args[0]); return True")
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, "look here")
+    assert "look" in printed
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_do_command_absent_falls_through_to_normal_dispatch(t_init, t_wizard):
+    """When do_command does not exist, normal dispatch runs unchanged."""
+    t_wizard.add_verb("look", code="print('normal look ran')")
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, "look")
+    assert "normal look ran" in printed

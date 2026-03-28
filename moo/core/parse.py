@@ -53,11 +53,22 @@ def interpret(ctx, line):
     """
     For a given user, execute a command.
     """
-    from . import context
+    from . import context, lookup
 
     lex = Lexer(line)
     parser = Parser(lex, context.player)
     ctx.set_parser(parser)
+
+    # Give database code a chance to handle the command first (LambdaMOO $do_command).
+    # If the system object defines a do_command verb and it returns a truthy value,
+    # the command is considered fully handled and normal dispatch is skipped.
+    system = lookup(1)
+    if system.has_verb("do_command"):
+        do_command = system.get_verb("do_command")
+        result = do_command(*parser.words)
+        if result:
+            return
+
     try:
         verb = parser.get_verb()
     except NoSuchVerbError:
