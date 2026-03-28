@@ -78,9 +78,21 @@ The parser scans every command for preposition words before splitting it into pa
 
 **If your verb's argument contains one of these words, the player must quote it:**
 
-```
+```text
 @eval from moo.sdk import lookup       ← WRONG: "from" is parsed as a preposition
-@eval "from moo.sdk import lookup"     ← CORRECT: quotes protect the whole string
+@eval "from moo.sdk import lookup"     ← CORRECT: but also unnecessary — see below
+```
+
+`@eval` pre-imports everything from `moo.sdk` automatically, so `lookup`, `create`, `context`, and the rest are available without an explicit import:
+
+```text
+@eval "lookup('$wizard').location.name"
+```
+
+The `;` key is a shortcut in the interactive shell that expands to `@eval`:
+
+```text
+; lookup('$wizard').location.name
 ```
 
 Without quotes, the parser treats "from" as a preposition boundary, breaks the command there, and your verb may not match at all (especially with `--dspec any`).
