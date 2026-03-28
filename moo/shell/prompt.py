@@ -157,7 +157,10 @@ class MooPrompt:
                     except (EOFError, KeyboardInterrupt):
                         self.is_exiting = True
                         break
-                    await self.handle_command(line)
+                    if line.strip() == ".flush":
+                        await self._drain_messages()
+                    else:
+                        await self.handle_command(line)
         except:  # pylint: disable=bare-except
             log.exception("Error in command processing")
         finally:
@@ -307,10 +310,14 @@ class MooPrompt:
         settings = _session_settings.get(user_pk, {})
         output_prefix = settings.get("output_prefix")
         output_suffix = settings.get("output_suffix")
+        output_global_prefix = settings.get("output_global_prefix")
+        output_global_suffix = settings.get("output_global_suffix")
 
         ct = tasks.parse_command.delay(caller.pk, line)
         try:
             output = ct.get()
+            if output_global_prefix:
+                self.writer(output_global_prefix)
             if output_prefix:
                 self.writer(output_prefix)
             for item in output:
@@ -322,6 +329,44 @@ class MooPrompt:
         finally:
             if output_suffix:
                 self.writer(output_suffix)
+            if output_global_suffix:
+                self.writer(output_global_suffix)
+
+    @sync_to_async
+    def _drain_messages(self):
+        """
+        Drain all pending Kombu messages and write them immediately.
+
+        This implements the ``.flush`` connection-level command: any async output
+        (tell() messages, system notices) that has accumulated in the message queue
+        since the last poll cycle is written to the terminal right now.  Session
+        setting events encountered during the drain are applied normally.
+
+        Useful for automation clients that want a clean separation between async
+        background output and the response to the next command they are about to send.
+        """
+        with app.default_connection() as conn:
+            channel = conn.channel()
+            queue = Queue(
+                "messages", Exchange("moo", type="direct", channel=channel), f"user-{self.user.pk}", channel=channel
+            )
+            sb = simple.SimpleBuffer(channel, queue, no_ack=True)
+            try:
+                while True:
+                    try:
+                        msg = sb.get_nowait()
+                    except sb.Empty:
+                        break
+                    content = moojson.loads(msg.body)
+                    message = content["message"]
+                    if isinstance(message, dict):
+                        if message.get("event") == "session_setting":
+                            user_pk = self.user.pk
+                            _session_settings.setdefault(user_pk, {})[message["key"]] = message["value"]
+                    else:
+                        self.writer(message)
+            finally:
+                sb.close()
 
     def writer(self, s, is_error=False):
         """
@@ -387,7 +432,18 @@ class MooPrompt:
                         self.is_exiting = True
                         self.disconnect_event.set()
                     else:
-                        await run_in_terminal(lambda: self.writer(message))
+                        settings = _session_settings.get(self.user.pk, {})
+                        gprefix = settings.get("output_global_prefix")
+                        gsuffix = settings.get("output_global_suffix")
+
+                        async def _write_message(msg=message, gp=gprefix, gs=gsuffix):
+                            if gp:
+                                self.writer(gp)
+                            self.writer(msg)
+                            if gs:
+                                self.writer(gs)
+
+                        await run_in_terminal(_write_message)
         except:  # pylint: disable=bare-except
             log.exception("Stopping message processing")
         log.debug("REPL is exiting, stopping messages thread...")

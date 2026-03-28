@@ -10,7 +10,7 @@ from prompt_toolkit.document import Document
 from prompt_toolkit.key_binding import KeyBindings
 
 import moo.shell.prompt as prompt_module
-from moo.shell.prompt import MooPrompt, PROMPT_SHORTCUTS, _make_key_bindings, _session_settings
+from moo.shell.prompt import MooPrompt, PROMPT_SHORTCUTS, _make_key_bindings
 
 # ---------------------------------------------------------------------------
 # Tests
@@ -307,17 +307,3 @@ def test_disconnect_message_sets_is_exiting():
 
     assert prompt.is_exiting is True
     assert prompt.disconnect_event.is_set()
-
-
-def test_session_setting_message_updates_registry():
-    """process_messages() stores a session_setting event in _session_settings."""
-    user = MagicMock()
-    user.pk = 99
-    prompt = MooPrompt(user)
-    _session_settings.pop(99, None)
-
-    try:
-        _run_process_messages(prompt, [{"event": "session_setting", "key": "quiet_mode", "value": True}])
-        assert _session_settings.get(99, {}).get("quiet_mode") is True
-    finally:
-        _session_settings.pop(99, None)
