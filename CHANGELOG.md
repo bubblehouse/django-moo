@@ -1,3 +1,9 @@
+## [0.89.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.89.2...v0.89.3) (2026-03-28)
+
+### Bug Fixes
+
+* ignore errors when calculating coverage ([c0fe3da](https://gitlab.com/bubblehouse/django-moo/commit/c0fe3da6687d47c3b3a20ed7a5502d51aeea5705))
+
 ## 1.0.0 (2026-03-28)
 
 ### Features
