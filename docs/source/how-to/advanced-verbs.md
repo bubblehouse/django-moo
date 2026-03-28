@@ -82,52 +82,45 @@ tt = context.task_time
 # tt.remaining  — seconds left before the task is killed, or None
 ```
 
-The canonical pattern is to check `remaining` before each unit of work in a loop. When it drops below a safety threshold, collect whatever is left, schedule it as a new task via `invoke()`, and return:
+Two SDK helpers make this pattern straightforward: `task_time_low()` checks whether the budget is nearly exhausted, and `schedule_continuation()` hands off the remaining work.
 
 ```python
-from moo.sdk import context, invoke
+from moo.sdk import context, task_time_low, schedule_continuation
 
-TIME_THRESHOLD = 0.5  # hand off when 0.5 s remain
-
-def process_batch(items):
+def do_process_batch(items):
     count = 0
     for i, item in enumerate(items):
-        tt = context.task_time
-        if tt and tt.remaining is not None and tt.remaining <= TIME_THRESHOLD:
-            remaining = items[i:]
-            reload_verb = context.parser.verb if context.parser else this.get_verb("process")
-            invoke(remaining, verb=reload_verb)
-            context.player.tell(f"  Continuing in a new task ({len(remaining)} item(s) remaining)...")
+        if task_time_low():
+            schedule_continuation(items[i:], this.get_verb("my_batch"))
             return True, count
         context.player.tell(f"  Processing {item}...")
-        do_work(item)
+        item.do_work()
         count += 1
     return False, count
-```
 
-A few things to note:
-
-- `context.task_time` may return `None` in test environments where no task time limit is configured. Always guard with `if tt and tt.remaining is not None`.
-- Use `context.player.tell()` (not `print()`) for progress messages inside the loop. `tell()` routes through `write()` and is delivered immediately; `print()` buffers until the verb returns.
-- Materialize the queryset to a `list()` before the loop so the DB cursor doesn't stay open across the time check.
-- Get the verb reference for `invoke()` from `context.parser.verb` (no DB hit when called from the parser), falling back to `this.get_verb(name)` in continuation mode where `context.parser` is `None`.
-- Keep the continuation args minimal — just the list of remaining work items. There's no need to pass accumulated counts or error lists since progress messages were already delivered via `tell()`.
-
-When the continuation task fires, add a branch at the top of the verb to detect that it was invoked with pre-computed work rather than through the parser:
-
-```python
-if args and isinstance(args[0], list):
-    # Continuation mode: args[0] is a list of remaining items
-    continued, count = process_batch(list(args[0]))
+if verb_name == "my_batch":
+    # Continuation mode: args[0] is a list of PKs from a prior batch
+    items = list(MyModel.objects.filter(pk__in=args[0]))
+    continued, count = do_process_batch(items)
     if not continued:
         context.player.tell(f"Done. Processed {count} item(s).")
 else:
     # Normal parser path
     items = list(get_all_items())
-    continued, count = process_batch(items)
+    continued, count = do_process_batch(items)
     if not continued:
         context.player.tell(f"Done. Processed {count} item(s).")
 ```
+
+`task_time_low(threshold=0.5)` returns `True` when the task has 0.5 seconds or fewer remaining, and `False` when no time limit is configured (such as in tests — no guard needed). `schedule_continuation(remaining_items, verb, msg=None)` extracts the PKs from the remaining items, calls `invoke()`, and notifies the player.
+
+A few other things to keep in mind:
+
+- Use `context.player.tell()` (not `print()`) for progress messages inside the loop. `tell()` is delivered immediately; `print()` buffers until the verb returns.
+- Materialize the queryset to a `list()` before the loop so the DB cursor doesn't stay open across the time check.
+- Dispatch on `verb_name` (the alias used to invoke the verb) rather than inspecting the type of `args[0]`. Defining a separate alias like `my_batch` makes the continuation entry point explicit.
+- Keep the continuation args minimal — just the list of remaining work items. There's no need to pass accumulated counts since progress messages were already delivered via `tell()`.
+- Do not assign to a variable named `verb_name` anywhere in the verb body. `verb_name` is injected by the runtime, and Python's scoping rules mean that any assignment to it anywhere in the function body makes it a local throughout — causing `UnboundLocalError` on the lines before the assignment.
 
 The `@reload` verb in `moo/bootstrap/default_verbs/programmer/at_reload.py` is the reference implementation of this pattern.
 
@@ -276,6 +269,68 @@ with set_task_perms(system):
 ```
 
 All four functions above are only callable from wizard-owned verbs.
+
+### `owned_objects(player_obj)`
+
+Returns a QuerySet of all Objects owned by `player_obj`, ordered by name.
+
+```python
+from moo.sdk import owned_objects, context
+
+for obj in owned_objects(context.player):
+    print(obj.title())
+```
+
+### `owned_objects_by_pks(pk_list)`
+
+Returns a QuerySet of Objects whose PKs are in `pk_list`, ordered by name. Used in continuation verbs where the remaining PK list was passed as `args[0]` but the original target player is not in scope.
+
+```python
+from moo.sdk import owned_objects_by_pks
+
+items = list(owned_objects_by_pks(args[0]))
+```
+
+### `task_time_low(threshold=0.5)`
+
+Returns `True` if the current task's remaining time is at or below `threshold` seconds. Returns `False` when there is no configured time limit. Intended for the time-aware continuation pattern described above.
+
+```python
+from moo.sdk import task_time_low
+
+if task_time_low():
+    # hand off remaining work
+    ...
+```
+
+### `schedule_continuation(remaining_items, verb, msg=None)`
+
+Schedules a continuation task with the PKs of `remaining_items` and notifies the current player. Pairs with `task_time_low()` to implement time-aware continuation without boilerplate.
+
+```python
+from moo.sdk import task_time_low, schedule_continuation
+
+for i, item in enumerate(items):
+    if task_time_low():
+        schedule_continuation(items[i:], this.get_verb("my_batch"))
+        return
+    # process item
+```
+
+The optional `msg` argument overrides the default player notification ("Continuing (N remaining)...").
+
+### `server_info()`
+
+Returns a dict with server version and process statistics. Wizard-owned verbs only.
+
+```python
+from moo.sdk import server_info
+
+info = server_info()
+print(f"Version: {info['version']}, PID: {info['pid']}, Memory: {info['memory_mb']} MB")
+```
+
+Keys: `version`, `python`, `pid`, `memory_mb` (may be `None` on platforms where `resource` is unavailable).
 
 ## Best Practices for Verb Development
 

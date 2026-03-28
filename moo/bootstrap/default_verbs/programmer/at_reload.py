@@ -1,4 +1,4 @@
-#!moo verb @reload --on $programmer --dspec any --ispec on:any
+#!moo verb @reload reload_batch --on $programmer --dspec any --ispec on:any
 
 # pylint: disable=return-outside-function,undefined-variable,redefined-outer-name
 
@@ -13,21 +13,17 @@ Usage:
 """
 
 from moo.core.models import Verb
-from moo.sdk import context, invoke, NoSuchVerbError, NoSuchObjectError
-
-TIME_THRESHOLD = 0.5
+from moo.sdk import context, task_time_low, schedule_continuation, NoSuchVerbError, NoSuchObjectError
 
 
-def reload_batch(verbs):
+def do_reload_batch(verbs):
     count = 0
     for i, verb in enumerate(verbs):
-        task_time = context.task_time
-        if task_time and task_time.remaining is not None and task_time.remaining <= TIME_THRESHOLD:
-            remaining_pks = [v.pk for v in verbs[i:]]
-            reload_verb = context.parser.verb if context.parser else this.get_verb("@reload")
-            invoke(remaining_pks, verb=reload_verb)
-            context.player.tell(
-                f"  Time limit approaching; continuing in a new task ({len(remaining_pks)} verb(s) remaining)..."
+        if task_time_low():
+            schedule_continuation(
+                verbs[i:],
+                this.get_verb("reload_batch"),
+                msg=f"  Time limit approaching; continuing in a new task ({len(verbs) - i} verb(s) remaining)...",
             )
             return True, count
         context.player.tell(f"  Reloading {verb}...")
@@ -39,16 +35,16 @@ def reload_batch(verbs):
     return False, count
 
 
-if args and isinstance(args[0], list):
+if verb_name == "reload_batch":
     verbs = list(Verb.objects.filter(pk__in=args[0]))
-    continued, count = reload_batch(verbs)
+    continued, count = do_do_reload_batch(verbs)
     if not continued:
         context.player.tell(f"Reloaded {count} verb(s).")
 elif context.parser.has_pobj_str("on"):
-    verb_name = context.parser.get_dobj_str()
+    target_verb_name = context.parser.get_dobj_str()
     target = context.parser.get_pobj("on", lookup=True)
     try:
-        verb = target.get_verb(verb_name)
+        verb = target.get_verb(target_verb_name)
     except NoSuchVerbError:
         return
     if not context.player.is_wizard() and not context.player.owns(verb):
@@ -62,7 +58,7 @@ else:
             print("Permission denied.")
             return
         verbs = list(Verb.objects.filter(filename__isnull=False, repo__isnull=False).exclude(filename=""))
-        continued, count = reload_batch(verbs)
+        continued, count = do_reload_batch(verbs)
         if not continued:
             context.player.tell(f"Reloaded {count} verb(s).")
     else:
@@ -77,6 +73,6 @@ else:
         verbs = list(
             Verb.objects.filter(origin=target, filename__isnull=False, repo__isnull=False).exclude(filename="")
         )
-        continued, count = reload_batch(verbs)
+        continued, count = do_reload_batch(verbs)
         if not continued:
             context.player.tell(f"Reloaded {count} verb(s) on {target.name}.")

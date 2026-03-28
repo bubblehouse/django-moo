@@ -38,6 +38,11 @@ __all__ = [
     "list_ssh_keys",
     "add_ssh_key",
     "remove_ssh_key",
+    "owned_objects",
+    "owned_objects_by_pks",
+    "task_time_low",
+    "schedule_continuation",
+    "server_info",
     "NoSuchObjectError",
     "NoSuchVerbError",
     "NoSuchPropertyError",
@@ -620,6 +625,103 @@ def remove_ssh_key(player_obj, index):
     key = keys[index - 1]
     key.delete()
     return key
+
+
+def owned_objects(player_obj):
+    """
+    Return a QuerySet of all Objects owned by *player_obj*, ordered by name.
+
+    :param player_obj: the owner Object
+    :rtype: QuerySet
+    """
+    from .core.models import Object
+
+    return Object.objects.filter(owner=player_obj).order_by("name").select_related("owner")
+
+
+def owned_objects_by_pks(pk_list):
+    """
+    Return a QuerySet of Objects with PKs in *pk_list*, ordered by name.
+
+    Used by continuation tasks (e.g. ``audit_batch``) where the target player
+    is not in scope but the remaining PK list was passed as ``args[0]``.
+
+    :param pk_list: list of integer Object PKs
+    :rtype: QuerySet
+    """
+    from .core.models import Object
+
+    return Object.objects.filter(pk__in=pk_list).order_by("name").select_related("owner")
+
+
+def task_time_low(threshold=0.5):
+    """
+    Return ``True`` if the current task's remaining time is at or below
+    *threshold* seconds.
+
+    Always returns ``False`` when there is no task-time limit (e.g. in tests
+    or interactive shells without a configured limit).
+
+    :param threshold: seconds remaining before considering time low (default 0.5)
+    :rtype: bool
+    """
+    tt = context.task_time
+    return tt is not None and tt.remaining is not None and tt.remaining <= threshold
+
+
+def schedule_continuation(remaining_items, verb, msg=None):
+    """
+    Schedule a continuation task carrying the PKs of *remaining_items* and
+    notify the current player.
+
+    Intended for use inside long-running verbs that iterate over many objects.
+    The continuation verb (e.g. ``audit_batch``, ``reload_batch``) receives
+    ``args[0]`` as the list of PKs and dispatches on ``verb_name``.
+
+    Usage::
+
+        for i, item in enumerate(items):
+            if task_time_low():
+                schedule_continuation(items[i:], this.get_verb("audit_batch"))
+                return
+            # ... process item
+
+    :param remaining_items: iterable of Objects (or any model with ``.pk``)
+    :param verb: Verb instance to invoke for the continuation
+    :param msg: optional override for the progress message shown to the player
+    """
+    pks = [x.pk for x in remaining_items]
+    invoke(pks, verb=verb)
+    context.player.tell(msg or f"  Continuing ({len(pks)} remaining)...")
+
+
+def server_info():
+    """
+    Return a dict with server version and process statistics.
+
+    Keys: ``version``, ``python``, ``pid``, ``memory_mb`` (may be ``None``
+    on platforms where ``resource`` is unavailable).
+
+    :rtype: dict
+    """
+    import sys
+    import os
+    from django.conf import settings
+
+    info = {
+        "version": getattr(settings, "VERSION", "unknown"),
+        "python": sys.version.split()[0],
+        "pid": os.getpid(),
+        "memory_mb": None,
+    }
+    try:
+        import resource
+
+        usage = resource.getrusage(resource.RUSAGE_SELF)
+        info["memory_mb"] = round(usage.ru_maxrss / 1024, 1)
+    except Exception:  # pylint: disable=broad-except
+        pass
+    return info
 
 
 def boot_player(obj):
