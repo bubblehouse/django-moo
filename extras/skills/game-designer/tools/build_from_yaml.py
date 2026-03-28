@@ -80,7 +80,7 @@ def create(moo, name, parent="$thing", obvious=False):
         print(f"  WARNING: could not get ID for '{name}' from: {output!r}", file=sys.stderr)
         return ref
     if obvious:
-        moo.run(f'@eval "from moo.sdk import lookup; obj = lookup({ref[1:]}); obj.obvious = True; obj.save()"')
+        moo.run(f'@eval "obj = lookup({ref[1:]}); obj.obvious = True; obj.save()"')
     return ref
 
 
@@ -110,12 +110,7 @@ def move_to_room(moo, obj_ref, room_name):
     """
     obj_id_num = obj_ref.replace("#", "")
     escaped_room = room_name.replace('"', '\\"')
-    moo.run(
-        f'@eval "from moo.sdk import lookup; '
-        f"obj = lookup({obj_id_num}); "
-        f'room = lookup(\\"{escaped_room}\\"); '
-        f'obj.location = room; obj.save()"'
-    )
+    moo.run(f'@eval "obj = lookup({obj_id_num}); room = lookup(\\"{escaped_room}\\"); obj.location = room; obj.save()"')
 
 
 def set_verb(moo, verb_name, obj_ref, code):
@@ -189,11 +184,7 @@ def generate_hash():
 def teleport_to(moo, room_name):
     """Teleport the player to a room by name using @eval."""
     escaped = room_name.replace('"', '\\"')
-    moo.run(
-        f'@eval "from moo.sdk import lookup, context; '
-        f'context.player.location = lookup(\\"{escaped}\\"); '
-        f'context.player.save()"'
-    )
+    moo.run(f'@eval "context.player.location = lookup(\\"{escaped}\\"); context.player.save()"')
 
 
 def build_rooms(moo, env, run_hash, use_hash):
@@ -370,7 +361,7 @@ def create_player_record(moo, ref):
     """Create a Django Player record for an NPC object (no User, avatar only)."""
     obj_id_num = ref.replace("#", "")
     moo.run(
-        f'@eval "from moo.core.models import Player; from moo.sdk import lookup; '
+        f'@eval "from moo.core.models import Player; '
         f'obj = lookup({obj_id_num}); p = Player.objects.create(); p.avatar = obj; p.save()"'
     )
 

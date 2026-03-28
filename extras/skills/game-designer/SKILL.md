@@ -323,8 +323,8 @@ If a verb silently fails with `TypeError: exec() arg 1 must be a string, bytes o
 - **`TypeError: exec() arg 1 must be a string, bytes or code object`**: RestrictedPython compilation failure — check for `dict["key"] += value` patterns in verb code.
 - **SSH disconnects mid-build**: Run `docker compose restart webapp celery` to restore, then re-run the build script (tell the user first).
 - **Test verb output truncated**: The SSH connection dropped while printing. The build still succeeded. Run the test verb manually in-world.
-- **`$furniture` objects stuck in the void (silent `False` in build log)**: `$furniture`'s `moveto` verb returns `False` to block player takes — this also blocks admin `moveto()` calls. The current `build_from_yaml.py` uses `obj.location = room; obj.save()` to bypass this. If you see `False` in the log after move commands, you are running an old version. Manual fix: `@eval "from moo.sdk import lookup; obj = lookup(N); room = lookup(\"Room [hash]\"); obj.location = room; obj.save()"` for each stranded object.
-- **NPCs missing player infrastructure**: `@create "NPC" from "$player"` creates the MOO Object but not the Django `Player` model record. The build script calls `Player.objects.create(); p.avatar = obj; p.save()` after each NPC. If NPCs were created by hand or with an older script, add the record via: `@eval "from moo.core.models import Player; from moo.sdk import lookup; obj = lookup(N); p = Player.objects.create(); p.avatar = obj; p.save()"`
+- **`$furniture` objects stuck in the void (silent `False` in build log)**: `$furniture`'s `moveto` verb returns `False` to block player takes — this also blocks admin `moveto()` calls. The current `build_from_yaml.py` uses `obj.location = room; obj.save()` to bypass this. If you see `False` in the log after move commands, you are running an old version. Manual fix: `@eval "obj = lookup(N); room = lookup(\"Room [hash]\"); obj.location = room; obj.save()"` for each stranded object.
+- **NPCs missing player infrastructure**: `@create "NPC" from "$player"` creates the MOO Object but not the Django `Player` model record. The build script calls `Player.objects.create(); p.avatar = obj; p.save()` after each NPC. If NPCs were created by hand or with an older script, add the record via: `@eval "from moo.core.models import Player; obj = lookup(N); p = Player.objects.create(); p.avatar = obj; p.save()"`
 - **Missing or incorrect room connections**: `@tunnel` silently fails if the current room already has an exit in the requested direction — it prints a red message but the build script never sees it. The build script uses DFS to wire exits, tracking `(room, direction)` pairs in a `created_exits` set. If you see `SKIP duplicate exit` lines in the build log, there is a duplicate exit declaration in the YAML (two exits with the same direction on the same room). If rooms are missing connections after a build, check whether any prior build run left stale exits behind — a fresh DB reset before rebuilding is the cleanest fix.
 
 ## Available Build Commands
@@ -404,7 +404,9 @@ test-my-environment-abc123
 - `references/verb-patterns.md` — RestrictedPython code patterns for interactive verbs
 - `references/object-model.md` — parent classes, properties, exits, NPCs
 - `references/room-description-principles.md` — guidelines for writing effective room descriptions
-- `references/build-automation.md` — YAML schema and advanced patterns
+- `references/build-automation.md` — workflow guide: running builds, phases, troubleshooting
+- `references/yaml-schema.md` — full YAML schema (metadata, rooms, objects, npcs, verbs)
+- `references/build-script-internals.md` — Python implementation patterns for build_from_yaml.py
 - `assets/test-verb-template.md` — custom test verb template
 - `environments/burns-manor.yaml` — single-file example (7 rooms, 34 objects, 2 NPCs, 12 verbs)
 - `environments/planet-express/` — directory example (26 rooms, 76 objects, 8 NPCs, 20 verbs)

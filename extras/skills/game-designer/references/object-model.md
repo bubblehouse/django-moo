@@ -176,10 +176,10 @@ The fix is to use direct Django model assignment, which bypasses the verb system
 
 ```python
 # WRONG — $furniture's moveto verb returns False, object stays in void
-@eval "from moo.sdk import lookup; lookup(45).moveto(lookup(\"The Bar\"))"
+@eval "lookup(45).moveto(lookup(\"The Bar\"))"
 
 # CORRECT — direct field assignment bypasses all verbs
-@eval "from moo.sdk import lookup; obj = lookup(45); room = lookup(\"The Bar\"); obj.location = room; obj.save()"
+@eval "obj = lookup(45); room = lookup(\"The Bar\"); obj.location = room; obj.save()"
 ```
 
 `build_from_yaml.py` uses the correct approach for all object placement.
