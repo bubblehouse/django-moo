@@ -128,7 +128,9 @@ class MooPrompt:
         cancelled. Exits cleanly on EOF or KeyboardInterrupt.
         """
         prompt_session = PromptSession(key_bindings=_make_key_bindings(self.automation))
-        await self._fire_confunc()
+        confunc_tasks = await self._fire_confunc()
+        await self._await_tasks(confunc_tasks)
+        await self._drain_messages()
         try:
             while not self.is_exiting:
                 message = await self.generate_prompt()
@@ -216,33 +218,58 @@ class MooPrompt:
         """
         Dispatch confunc verbs on SSH connect.
 
-        Calls ``player:confunc()`` first (personal hooks: mail, news), then
-        ``player.location:confunc()`` (room hook: show room, announce arrival).
+        Calls ``player.confunc()`` first (personal hooks: mail, news), then
+        ``player.location.confunc()`` (room hook: show room, announce arrival).
         Both are dispatched as Celery tasks so they run asynchronously.
+
+        Returns the list of AsyncResult objects so the caller can wait for
+        completion before draining the message queue.
         """
         player = self.user.player.avatar
+        results = []
         if player.has_verb("confunc"):
-            tasks.invoke_verb.delay(
-                caller_id=player.pk,
-                player_id=player.pk,
-                this_id=player.pk,
-                verb_name="confunc",
+            results.append(
+                tasks.invoke_verb.delay(
+                    caller_id=player.pk,
+                    player_id=player.pk,
+                    this_id=player.pk,
+                    verb_name="confunc",
+                )
             )
         if player.location and player.location.has_verb("confunc"):
-            tasks.invoke_verb.delay(
-                caller_id=player.pk,
-                player_id=player.pk,
-                this_id=player.location.pk,
-                verb_name="confunc",
+            results.append(
+                tasks.invoke_verb.delay(
+                    caller_id=player.pk,
+                    player_id=player.pk,
+                    this_id=player.location.pk,
+                    verb_name="confunc",
+                )
             )
+        return results
+
+    @sync_to_async
+    def _await_tasks(self, task_results):
+        """
+        Block until all Celery tasks in ``task_results`` have completed.
+
+        Uses the result backend so the caller knows it is safe to drain the
+        message queue — any ``print()`` output published by those tasks will
+        already be in the queue.  Failures are swallowed so a broken confunc
+        verb does not prevent the prompt from appearing.
+        """
+        for result in task_results:
+            try:
+                result.get(timeout=10, propagate=False)
+            except Exception:  # pylint: disable=broad-except
+                log.exception("confunc task failed")
 
     @sync_to_async
     def _fire_disfunc(self):
         """
         Dispatch disfunc verbs on SSH disconnect.
 
-        Calls ``player.location:disfunc()`` first (room hook: move player home,
-        announce departure), then ``player:disfunc()`` (personal cleanup hook).
+        Calls ``player.location.disfunc()`` first (room hook: move player home,
+        announce departure), then ``player.disfunc()`` (personal cleanup hook).
         Both are dispatched as Celery tasks so they run asynchronously.
         """
         player = self.user.player.avatar

@@ -297,6 +297,67 @@ def _run_process_messages(prompt, messages):
         asyncio.run(prompt.process_messages())
 
 
+# ---------------------------------------------------------------------------
+# _fire_confunc() / _await_tasks() tests
+# ---------------------------------------------------------------------------
+
+
+def _make_avatar(has_confunc=True, has_location_confunc=True):
+    """Return a mock avatar with optional confunc verbs on self and location."""
+    location = MagicMock()
+    location.has_verb.return_value = has_location_confunc
+
+    avatar = MagicMock()
+    avatar.has_verb.return_value = has_confunc
+    avatar.location = location
+
+    user = MagicMock()
+    user.pk = 1
+    user.player.avatar = avatar
+    return user, avatar
+
+
+def test_fire_confunc_returns_task_results():
+    """_fire_confunc() returns one AsyncResult per dispatched task."""
+    user, _ = _make_avatar(has_confunc=True, has_location_confunc=True)
+    prompt = MooPrompt(user)
+    task_result = MagicMock()
+    with patch("moo.shell.prompt.tasks.invoke_verb") as mock_task:
+        mock_task.delay.return_value = task_result
+        results = asyncio.run(prompt._fire_confunc())  # pylint: disable=protected-access
+    assert results == [task_result, task_result]
+    assert mock_task.delay.call_count == 2
+
+
+def test_fire_confunc_skips_missing_verbs():
+    """_fire_confunc() returns an empty list when the player has no confunc verbs."""
+    user, _ = _make_avatar(has_confunc=False, has_location_confunc=False)
+    prompt = MooPrompt(user)
+    with patch("moo.shell.prompt.tasks.invoke_verb") as mock_task:
+        results = asyncio.run(prompt._fire_confunc())  # pylint: disable=protected-access
+    assert results == []
+    mock_task.delay.assert_not_called()
+
+
+def test_await_tasks_waits_for_each_result():
+    """_await_tasks() calls .get() on every task result."""
+    user = MagicMock()
+    prompt = MooPrompt(user)
+    r1, r2 = MagicMock(), MagicMock()
+    asyncio.run(prompt._await_tasks([r1, r2]))  # pylint: disable=protected-access
+    r1.get.assert_called_once_with(timeout=10, propagate=False)
+    r2.get.assert_called_once_with(timeout=10, propagate=False)
+
+
+def test_await_tasks_swallows_task_failure():
+    """_await_tasks() does not propagate exceptions so a broken confunc verb cannot block login."""
+    user = MagicMock()
+    prompt = MooPrompt(user)
+    bad_result = MagicMock()
+    bad_result.get.side_effect = Exception("confunc exploded")
+    asyncio.run(prompt._await_tasks([bad_result]))  # pylint: disable=protected-access  # must not raise
+
+
 def test_disconnect_message_sets_is_exiting():
     """process_messages() sets is_exiting and fires disconnect_event on a disconnect event."""
     user = MagicMock()
