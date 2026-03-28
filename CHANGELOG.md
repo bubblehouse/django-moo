@@ -1,3 +1,15 @@
+## [0.89.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.88.3...v0.89.0) (2026-03-28)
+
+### Features
+
+* added ; shortcut for [@eval](https://gitlab.com/eval) ([449036e](https://gitlab.com/bubblehouse/django-moo/commit/449036ed398c1be45a7138da30063b43150c1bac))
+* added $do_command support, closes [#7](https://gitlab.com/bubblehouse/django-moo/issues/7) ([fee1d87](https://gitlab.com/bubblehouse/django-moo/commit/fee1d8741d9dc8e3b1eb36aa85031b868f8efb41))
+* implemented OUTPUTPREFIX, OUTPUTSUFFIX and .flush. closes [#6](https://gitlab.com/bubblehouse/django-moo/issues/6) ([0984956](https://gitlab.com/bubblehouse/django-moo/commit/09849563630073056a2ab59512146c309d01b0df))
+
+### Bug Fixes
+
+* pre-import moo.sdk.* when running [@eval](https://gitlab.com/eval) ([21f2110](https://gitlab.com/bubblehouse/django-moo/commit/21f21108f173206868894d049174148c9fe6fbb0))
+
 ## [0.88.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.88.2...v0.88.3) (2026-03-28)
 
 ### Bug Fixes
