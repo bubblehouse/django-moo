@@ -519,6 +519,21 @@ with MooSSH() as moo:
 
 `expect(pexpect.TIMEOUT, timeout=N)` waits exactly N seconds (wall time), not "until output arrives". The delimiter approach avoids this entirely.
 
+### Async Output and .flush
+
+Build commands like `@create` and `@describe` fire confunc/disfunc verbs in the background via Celery. These can produce `tell()` output that arrives *between* commands, appearing in the pre-PREFIX noise buffer of the next `run()` call. For most builds this is harmless (the output is outside the PREFIX/SUFFIX window and is discarded), but if a background task is slow it could appear mid-window.
+
+`.flush` is a connection-level command that drains the Kombu message queue and writes any pending async output immediately. Sending it before a command-and-capture cycle guarantees a clean input for the next `run()`:
+
+```python
+with MooSSH() as moo:
+    moo.enable_automation_mode()
+    moo.run(".flush")       # drain any async tells from previous commands
+    output = moo.run("look")
+```
+
+`build_from_yaml.py` does not currently call `.flush` automatically, but you can add it if a build produces inconsistent output due to async background activity.
+
 ## Build Script Best Practices
 
 1. **Generate unique identifiers per run** - allows repeated builds

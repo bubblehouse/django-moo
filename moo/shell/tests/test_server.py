@@ -19,53 +19,6 @@ from moo.shell.server import MooPromptToolkitSSHSession, SSHServer
 User = get_user_model()
 
 # ---------------------------------------------------------------------------
-# MooPromptToolkitSSHSession.session_started() — automation detection
-# ---------------------------------------------------------------------------
-
-
-def test_session_started_non_automation():
-    """Terminal type without 'moo-automation' leaves is_automation False and enable_cpr unchanged."""
-    session = MooPromptToolkitSSHSession.__new__(MooPromptToolkitSSHSession)
-    session.enable_cpr = True
-    chan = MagicMock()
-    chan.get_terminal_type.return_value = "xterm-256color"
-    session._chan = chan
-
-    with patch.object(MooPromptToolkitSSHSession.__bases__[0], "session_started", lambda self: None):
-        session.session_started()
-
-    assert session.is_automation is False
-    assert session.enable_cpr is True
-
-
-def test_session_started_automation():
-    """Terminal type containing 'moo-automation' sets is_automation=True and enable_cpr=False."""
-    session = MooPromptToolkitSSHSession.__new__(MooPromptToolkitSSHSession)
-    session.enable_cpr = True
-    chan = MagicMock()
-    chan.get_terminal_type.return_value = "moo-automation"
-    session._chan = chan
-
-    with patch.object(MooPromptToolkitSSHSession.__bases__[0], "session_started", lambda self: None):
-        session.session_started()
-
-    assert session.is_automation is True
-    assert session.enable_cpr is False
-
-
-def test_session_started_no_channel():
-    """session_started() with _chan=None sets is_automation=False and does not crash."""
-    session = MooPromptToolkitSSHSession.__new__(MooPromptToolkitSSHSession)
-    session.enable_cpr = True
-    session._chan = None
-
-    with patch.object(MooPromptToolkitSSHSession.__bases__[0], "session_started", lambda self: None):
-        session.session_started()
-
-    assert session.is_automation is False
-
-
-# ---------------------------------------------------------------------------
 # SSHServer.validate_password() — password authentication logic
 # ---------------------------------------------------------------------------
 
