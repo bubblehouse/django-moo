@@ -86,38 +86,41 @@ Use `invoke` when a sub-verb would exceed the 3-second verb time limit, or when 
 
 ### Time-aware continuation pattern
 
-For verbs that loop over many items, check `context.task_time.remaining` before each iteration and hand off remaining work when time is nearly exhausted:
+For verbs that loop over many items, use `task_time_low()` and `schedule_continuation()` to hand off remaining work before the budget runs out:
 
 ```python
-TIME_THRESHOLD = 0.5  # seconds
+from moo.sdk import context, invoke, task_time_low, schedule_continuation
 
-def process_batch(items):
+def do_process_batch(items):
     count = 0
     for i, item in enumerate(items):
-        tt = context.task_time
-        if tt and tt.remaining is not None and tt.remaining <= TIME_THRESHOLD:
-            remaining_pks = [x.pk for x in items[i:]]
-            verb = context.parser.verb if context.parser else this.get_verb("myverb")
-            invoke(remaining_pks, verb=verb)
-            context.player.tell(f"  Continuing ({len(remaining_pks)} remaining)...")
+        if task_time_low():
+            schedule_continuation(items[i:], this.get_verb("my_batch"))
             return True, count
         context.player.tell(f"  Processing {item}...")
         item.do_work()
         count += 1
     return False, count
 
-# Top of the verb — detect continuation mode
-if args and isinstance(args[0], list):
+# Dispatch on verb_name — "my_batch" is the continuation alias
+if verb_name == "my_batch":
     items = list(MyModel.objects.filter(pk__in=args[0]))
-    continued, count = process_batch(items)
+    continued, count = do_process_batch(items)
+    if not continued:
+        context.player.tell(f"Done. Processed {count}.")
+else:
+    items = list(MyModel.objects.filter(...))
+    continued, count = do_process_batch(items)
     if not continued:
         context.player.tell(f"Done. Processed {count}.")
 ```
 
 Rules:
-- Pass only `args[0] = list[int]` of remaining PKs — no accumulated counts or errors (those were already told to the player via `tell()` in real time)
-- Helper function names must not start with `_` (RestrictedPython blocks them)
-- `context.parser` is `None` in continuation mode — use `this.get_verb(name)` as fallback
+- `task_time_low(threshold=0.5)` — returns `True` when `remaining <= threshold`; returns `False` in tests (no limit). No manual guard needed.
+- `schedule_continuation(remaining_items, verb, msg=None)` — extracts PKs, calls `invoke()`, tells the player. Replaces three-line inline boilerplate.
+- Dispatch on `verb_name`, not `isinstance(args[0], list)` — more explicit and avoids confusion with other verbs that accept list args.
+- Do NOT assign to `verb_name` anywhere in the verb body (see Pitfalls in SKILL.md).
+- Helper function names must not start with `_` (RestrictedPython blocks them).
 - Reference implementation: `moo/bootstrap/default_verbs/programmer/at_reload.py`
 
 ## `open_editor(obj, initial_content, callback_verb, *args, content_type="text")`
@@ -141,6 +144,83 @@ open_paginator(context.player, long_text, content_type="python")
 ```
 
 - Wizard-owned verbs only.
+
+## `owned_objects(player_obj)`
+
+Return a QuerySet of all Objects owned by `player_obj`, ordered by name.
+
+```python
+from moo.sdk import owned_objects
+
+for obj in owned_objects(context.player):
+    print(obj.title())
+```
+
+## `owned_objects_by_pks(pk_list)`
+
+Return a QuerySet of Objects whose PKs are in `pk_list`, ordered by name.
+
+Used in continuation verbs where the target player is not in scope but the
+remaining PK list was passed as `args[0]`.
+
+```python
+from moo.sdk import owned_objects_by_pks
+
+items = list(owned_objects_by_pks(args[0]))
+```
+
+## `task_time_low(threshold=0.5)`
+
+Return `True` if the current task's remaining time is at or below `threshold`
+seconds (default 0.5). Returns `False` when there is no configured time limit
+(e.g. in tests).
+
+```python
+from moo.sdk import task_time_low
+
+if task_time_low():
+    # hand off remaining work
+    ...
+```
+
+Replaces the manual `tt = context.task_time; if tt and tt.remaining is not None and tt.remaining <= 0.5` guard.
+
+## `schedule_continuation(remaining_items, verb, msg=None)`
+
+Schedule a continuation task with the PKs of `remaining_items` and notify the
+current player.
+
+```python
+from moo.sdk import task_time_low, schedule_continuation
+
+for i, item in enumerate(items):
+    if task_time_low():
+        schedule_continuation(items[i:], this.get_verb("my_batch"))
+        return
+    # process item
+```
+
+- `remaining_items` — iterable of Objects (or any model with `.pk`)
+- `verb` — Verb instance to invoke for the continuation
+- `msg` — optional override for the player notification message
+
+The continuation verb receives `args[0]` as a list of integer PKs.
+
+## `server_info()`
+
+Return a dict with server version and process statistics.
+
+```python
+from moo.sdk import server_info
+
+info = server_info()
+# info["version"]   — e.g. "0.89.1"
+# info["python"]    — Python version string
+# info["pid"]       — process ID
+# info["memory_mb"] — RSS memory in MB, or None if unavailable
+```
+
+Wizard-owned verbs only.
 
 ## `players()`
 

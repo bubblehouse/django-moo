@@ -1,4 +1,5 @@
 import datetime
+from unittest.mock import patch
 
 import pytest
 
@@ -167,3 +168,63 @@ def test_messages_shows_msg_props(t_init: Object, t_wizard: Object, setup_item):
         widget.set_property("test_msg", "hello world")
         parse.interpret(ctx, "@messages widget")
     assert any("test_msg" in line and "hello world" in line for line in printed)
+
+
+# --- @who ---
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_who_prints_header(t_init: Object, t_wizard: Object):
+    """@who prints the 'Connected players:' header when players are online."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        with patch("moo.sdk.connected_players", return_value=[t_wizard]):
+            parse.interpret(ctx, "@who")
+    assert any("Connected" in line for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_who_no_connected_players(t_init: Object, t_wizard: Object):
+    """@who prints a 'no players' message when connected_players() returns empty."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        with patch("moo.sdk.connected_players", return_value=[]):
+            parse.interpret(ctx, "@who")
+    assert any("No players" in line or "no players" in line for line in printed)
+
+
+# --- @quit ---
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_at_quit_publishes_disconnect(t_init: Object, t_wizard: Object):
+    """@quit publishes a disconnect event to the player's message queue."""
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        with pytest.warns(RuntimeWarning) as w:
+            parse.interpret(ctx, "@quit")
+    messages = [str(x.message) for x in w.list]
+    assert any("disconnect" in m for m in messages)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_at_quit_prints_goodbye(t_init: Object, t_wizard: Object):
+    """@quit prints a goodbye message containing the player's name."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        with pytest.warns(RuntimeWarning):
+            parse.interpret(ctx, "@quit")
+    assert any("Goodbye" in line and "Wizard" in line for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_quit_fallback_prints_message(t_init: Object, t_wizard: Object):
+    """QUIT with no room override prints a redirect to @quit."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, "QUIT")
+    assert any("@quit" in line for line in printed)

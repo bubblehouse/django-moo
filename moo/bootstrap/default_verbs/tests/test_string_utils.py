@@ -403,3 +403,99 @@ def test_rewrap_two_paragraphs_each_wrapped(t_init: Object, t_wizard: Object):
     for part in parts:
         for line in part.split("\n"):
             assert len(line) <= 80
+
+
+# --- english_list ---
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_english_list_empty(t_init: Object, t_wizard: Object):
+    """english_list([]) returns an empty string."""
+    with code.ContextManager(t_wizard, lambda _: None):
+        system = lookup(1)
+        result = system.string_utils.english_list([])
+    assert result == ""
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_english_list_one(t_init: Object, t_wizard: Object):
+    """english_list(["a"]) returns the single item."""
+    with code.ContextManager(t_wizard, lambda _: None):
+        system = lookup(1)
+        result = system.string_utils.english_list(["apple"])
+    assert result == "apple"
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_english_list_two(t_init: Object, t_wizard: Object):
+    """english_list(["a", "b"]) returns 'a and b'."""
+    with code.ContextManager(t_wizard, lambda _: None):
+        system = lookup(1)
+        result = system.string_utils.english_list(["cats", "dogs"])
+    assert result == "cats and dogs"
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_english_list_three(t_init: Object, t_wizard: Object):
+    """english_list(["a", "b", "c"]) returns 'a, b, and c'."""
+    with code.ContextManager(t_wizard, lambda _: None):
+        system = lookup(1)
+        result = system.string_utils.english_list(["red", "green", "blue"])
+    assert result == "red, green, and blue"
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_english_list_four(t_init: Object, t_wizard: Object):
+    """english_list with four items uses Oxford comma."""
+    with code.ContextManager(t_wizard, lambda _: None):
+        system = lookup(1)
+        result = system.string_utils.english_list(["a", "b", "c", "d"])
+    assert result == "a, b, c, and d"
+
+
+# --- match_string ---
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_match_string_prefix(t_init: Object, t_wizard: Object):
+    """match_string returns candidates whose prefix matches the query."""
+    with code.ContextManager(t_wizard, lambda _: None):
+        system = lookup(1)
+        result = system.string_utils.match_string("sw", ["sword", "shield", "axe"])
+    assert result == ["sword"]
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_match_string_multiple(t_init: Object, t_wizard: Object):
+    """match_string returns all matching candidates."""
+    with code.ContextManager(t_wizard, lambda _: None):
+        system = lookup(1)
+        result = system.string_utils.match_string("s", ["sword", "shield", "axe"])
+    assert result == ["sword", "shield"]
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_match_string_no_match(t_init: Object, t_wizard: Object):
+    """match_string returns empty list when nothing matches."""
+    with code.ContextManager(t_wizard, lambda _: None):
+        system = lookup(1)
+        result = system.string_utils.match_string("z", ["sword", "shield"])
+    assert result == []
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_match_string_case_insensitive(t_init: Object, t_wizard: Object):
+    """match_string is case-insensitive."""
+    with code.ContextManager(t_wizard, lambda _: None):
+        system = lookup(1)
+        result = system.string_utils.match_string("SW", ["Sword", "Shield", "Axe"])
+    assert result == ["Sword"]

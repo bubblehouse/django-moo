@@ -134,6 +134,35 @@ No holes found. The `random` module was systematically evaluated across all atta
 
 ---
 
+## Pass 18 — 1 hole sealed + 1 capability added
+
+**Date:** 2026-03-28
+**Focus:** LambdaMOO feature gap review — property ownership entrust enforcement and `remove_parent()` helper
+
+### Hole sealed
+
+51. **`Property.save()` now enforces `entrust` for owner changes** — `Property.owner` was documented as requiring `entrust` permission, but the guard only checked `write`. A verb author with write access to an object could reach a `Property` instance via `obj.property_set.filter(...).first()`, set `prop.owner = attacker_obj`, and call `.save()` — transferring ownership without entrust. Fix: added `_original_owner_id` tracking via `from_db()` (same pattern as `Object._original_owner`); `save()` now calls `origin.can_caller("entrust", self)` when `owner_id` changes.
+
+Note: `from_db()` guard uses `if "owner_id" in field_names` to handle deferred-field QuerySets (e.g., from `bulk_update(["owner", "inherit_owner"])`), which only load a subset of fields.
+
+### Capability added
+
+- **`Object.remove_parent(parent)`** — symmetric counterpart to `add_parent()`. `obj.parents.remove()` is blocked by `_QUERYSET_ALLOWED` (ManyToMany mutation methods absent from allowed set), so there was no path for verb authors to remove a parent. The `m2m_changed` signal fires `can_caller("transmute")` + `can_caller("derive")` for both `pre_add` and `pre_remove`, providing double coverage alongside the explicit `can_caller("write")` check in the method body.
+
+### Tests added
+
+6 new tests in `moo/core/tests/test_security_models.py`:
+- `test_property_owner_change_requires_entrust` — non-owner writer cannot transfer property ownership
+- `test_property_owner_change_allowed_with_entrust` — wizard can transfer property ownership
+- `test_property_value_change_does_not_require_entrust` — value-only change still only needs write (regression)
+- `test_remove_parent_works` — wizard removes a parent; parent chain updated
+- `test_remove_parent_requires_write` — read-only caller cannot remove a parent
+- `test_add_parent_regression` — `add_parent()` unaffected
+
+**Total:** 18 passes, 51 holes sealed, 781 tests (3 skipped).
+
+---
+
 ## Known Gaps (Summary)
 
 See [known-gaps.md](known-gaps.md) for full details.
