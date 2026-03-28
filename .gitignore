@@ -24,5 +24,6 @@ docs/_build/*
 docs/source/generated/*
 extras/pages/public/*
 extras/pages/resources/_gen/*
+extras/skills/game-designer/environments/*
 node_modules/*
 prof/*

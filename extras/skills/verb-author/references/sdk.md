@@ -202,6 +202,52 @@ Any other uncaught exception (not a `UserError`) shows `"An error occurred while
 from moo.core import NoSuchPropertyError
 ```
 
+## `$string_utils` Verbs
+
+Two utility verbs live on the `$string_utils` object (accessed as `_.string_utils`).
+
+### `rewrap(text)`
+
+Reflows a block of text for terminal display.
+
+```python
+result = _.string_utils.rewrap(some_text)
+```
+
+- Normalizes line endings (`\r\n`, `\r` → `\n`)
+- Collapses whitespace gremlins (tabs, non-breaking spaces) to single spaces
+- Collapses runs of multiple spaces
+- Splits on paragraph breaks (two or more newlines)
+- Within each paragraph, collapses single newlines to spaces, then word-wraps to 80 characters
+- Rejoins paragraphs with `\n\n`
+
+`description` properties are passed through `rewrap` automatically before display (see `root_class/description.py`). You only need to call it manually when formatting multi-line text in other contexts.
+
+### `pronoun_sub(text, who=None)`
+
+Substitutes pronoun format codes in `text` using properties of `who` (defaults to `context.player`).
+
+```python
+result = _.string_utils.pronoun_sub("%N picks up %t.", actor)
+```
+
+| Code | Property | Default | Example |
+|------|----------|---------|---------|
+| `%%` | — | `%` | — |
+| `%s` / `%S` | `who.ps` / `who.psc` | he/she/it | He |
+| `%o` / `%O` | `who.po` / `who.poc` | him/her/it | Him |
+| `%p` / `%P` | `who.pp` / `who.ppc` | his/her/its | His |
+| `%r` / `%R` | `who.pr` / `who.prc` | himself/herself/itself | Himself |
+| `%n` / `%N` | `who.name` | — | (capitalized for `%N`) |
+| `%d` / `%D` | `dobj.name` (from parser) | unchanged | (capitalized for `%D`) |
+| `%i(prep)` / `%I(prep)` | `pobj.name` for `prep` | unchanged | (capitalized for `%I`) |
+| `%t` / `%T` | `parser.this.name` | unchanged | (capitalized for `%T`) |
+| `%x(prop)` / `%X(prop)` | `who.prop` (any property) | unchanged | (capitalized for `%X`) |
+
+Uppercase codes capitalize the result. Codes that require a parser context (`%d`, `%i`, `%t`) are left unchanged when `context.parser` is `None`.
+
+`_msg` properties on `$furniture`, `$container`, `$thing`, and similar objects use these codes. Override them per-instance to customize flavor text.
+
 ## Connection and Movement Hooks
 
 Override these verbs on `$room` or `$player` subclasses for custom behavior.

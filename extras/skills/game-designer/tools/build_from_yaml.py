@@ -198,12 +198,24 @@ def teleport_to(moo, room_name):
 
 def build_rooms(moo, env, run_hash, use_hash):
     """
-    Create all rooms and exits.
+    Create all rooms and exits using a depth-first search traversal.
 
     Phase 1: Create every room in the void (no navigation required).
-    Phase 2: Teleport to each room, describe it, and tunnel all exits.
-             All rooms already exist by this point, so @tunnel works for
-             every exit regardless of direction or graph depth.
+    Phase 2: DFS from the first room — teleport to each room, describe it,
+             wire all its exits, then recurse into unvisited neighbors.
+
+    The DFS approach prevents two classes of silent failure that occur with a
+    flat YAML-order loop:
+
+    1. @tunnel checks ``source.match_exit(direction)`` and silently returns
+       early if that direction already exists. A flat loop that revisits an
+       exit pair will drop one side with no error output.
+    2. The ``created_exits`` set detects duplicate exit declarations in the
+       YAML itself (same room + direction defined twice) and skips them with
+       a warning rather than letting @tunnel silently fail.
+
+    Rooms unreachable from the first room (disconnected subgraph) are detected
+    and warned about, then still built so the environment is complete.
 
     room_map is keyed by the clean room name (placeholder stripped) and
     maps to the fully resolved name (with hash applied). Internal YAML
@@ -212,46 +224,83 @@ def build_rooms(moo, env, run_hash, use_hash):
 
     Returns: room_map dict {clean_name: resolved_name}
     """
-    rooms = env["rooms"]
-    room_map = {}
+    rooms_list = env["rooms"]
+    room_map = {}  # clean_name -> resolved (hashed) name
+    room_defs = {}  # clean_name -> room definition dict
+    adjacency = {}  # clean_name -> [(direction, to_clean_name)]
 
-    if not rooms:
+    if not rooms_list:
         return room_map
 
     # Phase 1: Create all rooms in the void
     print("  Creating rooms:", file=sys.stderr)
-    for room_def in rooms:
+    for room_def in rooms_list:
         clean_name = strip_hash_placeholder(room_def["name"])
         room_name = apply_hash(room_def["name"], run_hash, use_hash)
         room_map[clean_name] = room_name
+        room_defs[clean_name] = room_def
+        adjacency[clean_name] = [(e["direction"], e["to"]) for e in room_def.get("exits", [])]
         escaped = room_name.replace('"', '\\"')
         moo.run(f'@create "{escaped}" from "$room" in the void')
         print(f"    {room_name}", file=sys.stderr)
 
-    # Phase 2: Teleport to each room, describe it, wire exits
-    print("  Describing rooms and wiring exits:", file=sys.stderr)
-    for room_def in rooms:
-        clean_name = strip_hash_placeholder(room_def["name"])
-        room_name = room_map[clean_name]
-        teleport_to(moo, room_name)
+    # Phase 2: DFS — describe rooms and wire exits
+    print("  Describing rooms and wiring exits (DFS):", file=sys.stderr)
+    visited = set()
+    created_exits = set()  # (clean_from, direction) pairs already tunnelled
 
+    def dfs(clean_name):
+        if clean_name in visited:
+            return
+        visited.add(clean_name)
+
+        room_name = room_map[clean_name]
+        room_def = room_defs[clean_name]
+
+        # Teleport to this room and describe it
+        teleport_to(moo, room_name)
         escaped_desc = room_def["description"].replace("\\", "\\\\").replace("\n", "\\n").replace('"', '\\"')
         moo.run(f'@describe here as "{escaped_desc}"')
 
-        # In hash mode, alias the clean name so lookup("Room Name") works without the hash
+        # In hash mode, alias the clean name so lookup("Room Name") works
         if use_hash and run_hash:
             escaped_clean = clean_name.replace('"', '\\"')
             moo.run(f'@alias here as "{escaped_clean}"')
 
-        for exit_def in room_def.get("exits", []):
-            direction = exit_def["direction"]
-            to_room = exit_def["to"]
-            # to_room is a clean name (no placeholder); look up resolved name.
-            # Falls back to the raw value for exits to rooms outside this environment.
-            to_room_resolved = room_map.get(to_room, to_room)
-            escaped_to = to_room_resolved.replace('"', '\\"')
+        # Wire all exits for this room before recursing into neighbors.
+        # Separating the two loops ensures we are still teleported to this
+        # room when @tunnel runs — recursion would move us elsewhere.
+        for direction, to_clean in adjacency[clean_name]:
+            exit_key = (clean_name, direction)
+            if exit_key in created_exits:
+                print(
+                    f"    SKIP duplicate exit: {clean_name} -{direction}-> (already wired)",
+                    file=sys.stderr,
+                )
+                continue
+            to_resolved = room_map.get(to_clean, to_clean)
+            escaped_to = to_resolved.replace('"', '\\"')
             moo.run(f'@tunnel {direction} to "{escaped_to}"')
-            print(f"    {room_name} -{direction}-> {to_room_resolved}", file=sys.stderr)
+            created_exits.add(exit_key)
+            print(f"    {room_name} -{direction}-> {to_resolved}", file=sys.stderr)
+
+        # Recurse depth-first into unvisited neighbors (in YAML exit order)
+        for _direction, to_clean in adjacency[clean_name]:
+            if to_clean in room_defs and to_clean not in visited:
+                dfs(to_clean)
+
+    # Start DFS from the first room in the YAML list
+    first_clean = strip_hash_placeholder(rooms_list[0]["name"])
+    dfs(first_clean)
+
+    # Detect and warn about rooms not reachable from the first room
+    for clean_name in room_defs:
+        if clean_name not in visited:
+            print(
+                f"  WARNING: '{clean_name}' is not reachable from '{first_clean}' — check exit definitions",
+                file=sys.stderr,
+            )
+            dfs(clean_name)
 
     return room_map
 

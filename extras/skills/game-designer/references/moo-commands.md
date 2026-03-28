@@ -20,6 +20,13 @@ Example:
 ```
 Creates an exit from the current location to an *existing* room. Use this for reverse exits after `@dig`.
 
+**Silent failure:** `@tunnel` checks whether an exit in the given direction already exists in the current room (`source.match_exit(direction)`). If one does, it prints a red error message and returns without creating anything. The build script does not inspect command output, so this failure is completely silent — the exit is simply absent with no warning.
+
+This means:
+- `@tunnel` must always be run from the intended source room (teleport first)
+- The same `(room, direction)` pair must never be tunnelled twice — the second call is silently dropped
+- Build scripts should track which `(room, direction)` pairs have been created and skip duplicates
+
 Example:
 ```
 # After digging north to "The Bar", go to The Bar and run:

@@ -52,6 +52,8 @@ Scan the layers for common drift types. Work through this checklist:
 
 **New object classes** — `$furniture`, `$container`, `$note` additions need coverage in `game-designer` skill and potentially `04_objects.md`.
 
+**Skill README files** — each skill directory has a `README.md` targeting human developers (not AI agents). When a skill's capabilities change — new reference files added, trigger phrases updated, workflow phases added or renamed — update the relevant `README.md` alongside the `SKILL.md`. Also update `extras/skills/README.md` if new skills are added or removed.
+
 **Sphinx toctree** — any new guide page not referenced in a `toctree` directive is orphaned and generates a build warning. Confirm new files are included in `docs/source/index.rst` or the relevant toctree.
 
 ## Phase 3: Port
@@ -112,3 +114,5 @@ Add a note of what was synced and the date, so the next pass knows where to star
 
 - [layers.md](references/layers.md) — canonical file list for each layer, scope boundaries, and how to read each
 - [translation.md](references/translation.md) — audience translation rules for porting between layers
+- `extras/skills/README.md` — index of all skills and symlink setup; update when skills are added or renamed
+- `extras/skills/*/README.md` — human-facing docs for each skill; keep in sync with `SKILL.md` capability changes
