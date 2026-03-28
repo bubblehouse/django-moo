@@ -1,6 +1,9 @@
 [run]
 branch = True
 
+[report]
+ignore_errors = True
+
 omit =
     # omit bootstrap verb code
     # omit Django boilerplate
