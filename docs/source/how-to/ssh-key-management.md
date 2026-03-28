@@ -69,7 +69,7 @@ Removed SSH key: [ssh-ed25519] SHA256:abc123...  user@host
 
 ## How It Works
 
-The verbs are implemented as wizard-owned verbs on `$player`. They call three SDK functions — `add_ssh_key`, `list_ssh_keys`, `remove_ssh_key` — defined in `moo/sdk.py`. Those functions access the `simplesshkey.UserKey` model directly; verb code in the sandbox cannot import `simplesshkey` itself.
+The verbs are implemented as wizard-owned verbs on `$player`. They call three SDK functions — `add_ssh_key`, `list_ssh_keys`, `remove_ssh_key` — defined in `moo/sdk/ssh_keys.py`. Those functions access the `simplesshkey.UserKey` model directly; verb code in the sandbox cannot import `simplesshkey` itself.
 
 Each player's SSH keys are stored as `UserKey` records linked to their Django `User` account. The SSH server in `moo/shell/server.py` validates keys during login via `validate_public_key`.
 

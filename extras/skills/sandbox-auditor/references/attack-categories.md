@@ -109,7 +109,7 @@ def save(self, *args, **kwargs):
 - **`_Context` non-data descriptor shadowing** (pass 3): `context.caller` was a non-data descriptor. `setattr(context, 'caller', wizard)` created an instance attribute that shadowed it, poisoning `context.caller.is_wizard()` for the rest of the worker process. Fix: `_Context.__set__` and `__delete__` now raise `AttributeError`, making it a data descriptor.
 - **`caller_stack` live list return** (pass 2): `ContextManager.get("caller_stack")` returned the live list. Appending forged caller frames poisoned the stack. Fix: return `list(stack)` — a copy.
 
-**Ongoing risk**: Any new module-level or class-level mutable object in `code.py`, `sdk.py`, or `ContextManager` that is either injected into the sandbox environment or reachable via `context.*`. When adding new context variables, use data descriptors (`__set__` raises `AttributeError`) for any attribute that affects wizard-level checks.
+**Ongoing risk**: Any new module-level or class-level mutable object in `code.py`, the `moo/sdk/` package, or `ContextManager` that is either injected into the sandbox environment or reachable via `context.*`. When adding new context variables, use data descriptors (`__set__` raises `AttributeError`) for any attribute that affects wizard-level checks.
 
 ---
 
@@ -122,15 +122,19 @@ def save(self, *args, **kwargs):
 - `restricted_import()` in `code.py` enforces `BLOCKED_IMPORTS` for `from X import Y` syntax.
 - `get_protected_attribute` and `safe_getattr` enforce `BLOCKED_IMPORTS` for attribute-access paths on `ModuleType` objects (e.g., `import moo.sdk as sdk; sdk.ContextManager`).
 - `ModuleType` guard: if attribute access on a module returns another `ModuleType` whose `__name__` is not in `ALLOWED_MODULES` or `WIZARD_ALLOWED_MODULES`, `AttributeError` is raised.
-- `_` alias pattern in `sdk.py`: blocked names are imported as `_Name` (e.g., `ContextManager as _ContextManager`) so the underscore prefix blocks them from both `get_protected_attribute` and compile-time RestrictedPython checks.
+- `_` alias pattern in `moo/sdk/`: blocked names are imported as `_Name` (e.g., `ContextManager as _ContextManager`) so the underscore prefix blocks them from both `get_protected_attribute` and compile-time RestrictedPython checks.
 
 **Attack paths attempted**:
 
 - `import moo.sdk as sdk; sdk.ContextManager` — `_ContextManager` alias + `ModuleType`+`BLOCKED_IMPORTS` guard
 - `import moo.sdk` (binds `moo`); `moo.core` — `ModuleType` guard rejects `core` since it is not in `ALLOWED_MODULES`
-- `from moo.sdk import contextmanager` — `contextmanager` is now `_contextmanager` in `sdk.py`
-- `from moo.sdk import log` — `log` is now `_log` in `sdk.py`
+- `from moo.sdk import contextmanager` — `contextmanager` is now `_contextmanager` in `moo/sdk/context.py`
+- `from moo.sdk import log` — `log` is now `_log` in the sdk submodule that uses it
+- `from moo.sdk import tasks` — `tasks` submodule name is in `BLOCKED_IMPORTS["moo.sdk"]`, blocking direct submodule imports
+- `from moo.sdk import context` (submodule) — same; submodule names are blocked so the `context` name resolves to the `_Context` singleton, not the submodule
 
 **`WIZARD_ALLOWED_MODULES`** currently: `moo.core.models`, `moo.core.models.object`, `moo.core.models.verb`, `moo.core.models.property`. Any new submodule added here must be audited for names that expose mutation paths not covered by `_QUERYSET_ALLOWED`.
 
-**Ongoing risk**: New public names added to `moo/sdk.py` without underscore aliases. New `WIZARD_ALLOWED_MODULES` entries. New `ALLOWED_MODULES` entries returning objects with format-string methods or ORM references.
+**SDK package structure** (`moo/sdk/` — as of pass 19): The SDK was refactored from a single file into a package. Submodules (`context`, `objects`, `output`, `tasks`, `ssh_keys`, `admin`) are blocked by name in `BLOCKED_IMPORTS["moo.sdk"]`. The `__init__.py` re-exports all public names so `from moo.sdk import X` continues to work. Blocked names that were previously aliased with `_` in `sdk.py` retain their `_Name` import aliases in the relevant submodule.
+
+**Ongoing risk**: New public names added to `moo/sdk/__init__.py` without underscore aliases. New submodule files added to `moo/sdk/` without adding the submodule name to `BLOCKED_IMPORTS["moo.sdk"]`. New `WIZARD_ALLOWED_MODULES` entries. New `ALLOWED_MODULES` entries returning objects with format-string methods or ORM references.
