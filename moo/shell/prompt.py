@@ -34,6 +34,7 @@ PROMPT_SHORTCUTS = {
     '"': 'say "%"',
     "'": "say '%'",
     ":": 'emote "%"',
+    ";": '@eval "%"',
 }
 
 
