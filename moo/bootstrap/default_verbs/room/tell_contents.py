@@ -68,22 +68,16 @@ ctype = this.content_list_type
 if ctype == 3:
     to_be = ("is", "are")[int(len(players) > 1)]
     if items:
-        if len(items) == 1:
-            print(f"You see {items[0]} here.")
-        else:
-            print(f"You see {', '.join(items[:-1])} and {items[-1]} here.")
+        print(f"You see {_.string_utils.english_list(items)} here.")
     if players:
         if len(players) == 1:
-            print(f"You see {players[0]} here.")
+            print(f"{players[0]} is here.")
         else:
-            print(f"{', '.join(players[:-1])} and {players[-1]} {to_be} here.")
+            print(f"{_.string_utils.english_list(players)} {to_be} here.")
 elif ctype == 2:
-    items = players + items
-    if items:
-        if len(items) == 1:
-            print(f"You see {items[0]} here.")
-        else:
-            print(f"You see {', '.join(items[:-1])} and {items[-1]} here.")
+    all_items = players + items
+    if all_items:
+        print(f"You see {_.string_utils.english_list(all_items)} here.")
 elif ctype == 1:
     for item in players:
         print(f"{item} is here")
