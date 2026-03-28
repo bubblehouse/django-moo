@@ -383,12 +383,16 @@ def moo_eval(code_string: str):
     globals_dict = get_default_globals()
     globals_dict.update(get_restricted_environment("@eval", context.writer))
 
-    # Add standard verb variables to locals
-    locals_dict = {
-        "this": context.player,
-        "passthrough": lambda: None,
-        "_": lookup(1),
-    }
+    # Add standard verb variables to locals, plus all moo.sdk exports
+    _sdk_globals = globals()
+    locals_dict = {name: _sdk_globals[name] for name in __all__}
+    locals_dict.update(
+        {
+            "this": context.player,
+            "passthrough": lambda: None,
+            "_": lookup(1),
+        }
+    )
 
     # Try to evaluate as an expression first (for REPL-like behavior)
     try:
