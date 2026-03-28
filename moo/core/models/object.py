@@ -441,6 +441,17 @@ class Object(models.Model, AccessibleMixin):
         parent.can_caller("derive", parent)
         self.parents.add(parent)
 
+    def remove_parent(self, parent: "Object"):
+        """
+        Remove a parent from this object's inheritance chain.
+
+        :param parent: the parent Object to remove
+        :raises PermissionError: if the caller does not have write permission on this object
+        """
+        self.can_caller("write", self)
+        parent.can_caller("derive", parent)
+        self.parents.remove(parent)
+
     def invoke_verb(self, name, *args, **kwargs):
         """
         Invoke a :class:`.Verb` defined on the given object, traversing the inheritance tree until it's found.

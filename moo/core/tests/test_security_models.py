@@ -808,6 +808,156 @@ def test_passthrough_raises_when_unbound():
 
 
 # ---------------------------------------------------------------------------
+# Property.save() must require entrust to change owner
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_property_owner_change_requires_entrust(t_init: Object, t_wizard: Object):
+    """
+
+    Property.owner is documented as requiring `entrust` permission to change,
+    but Property.save() previously only checked `write`. A verb author with write
+    access to an object could reassign a property's owner to any arbitrary object
+    by fetching the Property instance and calling .save() with a new owner set.
+    Property.save() now also calls can_caller("entrust") when owner_id changes.
+    """
+    from moo.sdk import create
+    from moo.core.exceptions import AccessError
+
+    with ctx(t_wizard):
+        target = create("prop_entrust_target")
+        target.set_property("guarded", "value")
+        writer = create("prop_entrust_writer")
+        new_owner = create("prop_entrust_new_owner")
+        target.allow(writer, "write")
+
+    prop = target.properties.filter(name="guarded").first()
+    assert prop is not None
+
+    prop_reloaded = prop.__class__.objects.get(pk=prop.pk)
+    prop_reloaded.owner = new_owner
+
+    with ctx(writer):
+        with pytest.raises((PermissionError, AccessError)):
+            prop_reloaded.save()
+
+    prop.refresh_from_db()
+    assert prop.owner == t_wizard
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_property_owner_change_allowed_with_entrust(t_init: Object, t_wizard: Object):
+    """Wizard (who has entrust on everything) can transfer property ownership."""
+    from moo.sdk import create
+
+    with ctx(t_wizard):
+        target = create("prop_entrust_ok_target")
+        target.set_property("transferable", "value")
+        new_owner = create("prop_entrust_ok_new_owner")
+
+    prop = target.properties.filter(name="transferable").first()
+    assert prop is not None
+
+    prop_reloaded = prop.__class__.objects.get(pk=prop.pk)
+    prop_reloaded.owner = new_owner
+
+    with ctx(t_wizard):
+        prop_reloaded.save()
+
+    prop.refresh_from_db()
+    assert prop.owner == new_owner
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_property_value_change_does_not_require_entrust(t_init: Object, t_wizard: Object):
+    """Changing a property's value (without changing owner) still only needs write — regression."""
+    from moo.sdk import create
+
+    with ctx(t_wizard):
+        target = create("prop_value_change_target")
+        target.set_property("editable", "original")
+        writer = create("prop_value_change_writer")
+
+    prop = target.properties.filter(name="editable").first()
+    assert prop is not None
+
+    with ctx(t_wizard):
+        prop.allow(writer, "write")
+
+    prop_reloaded = prop.__class__.objects.get(pk=prop.pk)
+    prop_reloaded.value = '"updated"'
+
+    with ctx(writer):
+        prop_reloaded.save()
+
+    prop.refresh_from_db()
+    assert prop.value == '"updated"'
+
+
+# ---------------------------------------------------------------------------
+# Object.remove_parent() must require write permission
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_remove_parent_works(t_init: Object, t_wizard: Object):
+    """Wizard can remove a parent from an object they own."""
+    from moo.sdk import create
+
+    with ctx(t_wizard):
+        base = create("remove_parent_base")
+        child = create("remove_parent_child")
+        child.add_parent(base)
+
+    assert child.parents.filter(pk=base.pk).exists()
+
+    with ctx(t_wizard):
+        child.remove_parent(base)
+
+    assert not child.parents.filter(pk=base.pk).exists()
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_remove_parent_requires_write(t_init: Object, t_wizard: Object):
+    """
+
+    remove_parent() calls can_caller("write") on the child object before
+    removing the parent. A caller with only read access must not be able to
+    strip parents from an object, which could alter verb dispatch and break
+    permission inheritance.
+    """
+    from moo.sdk import create
+    from moo.core.exceptions import AccessError
+
+    with ctx(t_wizard):
+        base = create("remove_parent_req_base")
+        child = create("remove_parent_req_child")
+        child.add_parent(base)
+        plain = create("remove_parent_req_plain")
+        child.allow(plain, "read")
+
+    with ctx(plain):
+        with pytest.raises((PermissionError, AccessError)):
+            child.remove_parent(base)
+
+    assert child.parents.filter(pk=base.pk).exists()
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_add_parent_regression(t_init: Object, t_wizard: Object):
+    """add_parent() still works correctly after remove_parent() was added — regression."""
+    from moo.sdk import create
+
+    with ctx(t_wizard):
+        base = create("add_parent_reg_base")
+        child = create("add_parent_reg_child")
+        child.add_parent(base)
+
+    assert child.parents.filter(pk=base.pk).exists()
+
+
+# ---------------------------------------------------------------------------
 # Wizard ORM access via WIZARD_ALLOWED_MODULES
 # ---------------------------------------------------------------------------
 
