@@ -209,7 +209,7 @@ The script accepts either a file path or a directory path.
 **For local development**, a DB refresh and server restart before each build ensures a clean state. For production deploys, just run the build against the live server. If the server is unresponsive mid-build, you can restart it yourself with `docker compose restart webapp celery` — but tell the user first.
 
 **Build process:**
-1. **Phase 1: Rooms and exits** — Creates all rooms in the void, then DFS-traverses the exit graph from the first room: teleports to each room, describes it, wires all its exits, then recurses into unvisited neighbors. A `created_exits` set tracks `(room, direction)` pairs to detect and skip duplicates (which would otherwise fail silently inside `@tunnel`). Rooms unreachable from the first room are warned about and still built.
+1. **Phase 1: Rooms and exits** — Creates all rooms in the void, then DFS-traverses the exit graph from the first room: teleports to each room via `@move me to "<room>"`, describes it, wires all its exits, then recurses into unvisited neighbors. A `created_exits` set tracks `(room, direction)` pairs to detect and skip duplicates (which would otherwise fail silently inside `@tunnel`). Rooms unreachable from the first room are warned about and still built.
 2. **Phase 2: Objects** — Creates objects in void, describes, adds aliases (including clean-name alias in hash mode), moves to rooms
 3. **Phase 3: NPCs** — Creates NPCs, creates a Django `Player` record (no User) for each via `Player.objects.create()`, describes, adds aliases (including clean-name alias in hash mode), moves to rooms
 4. **Phase 4: Verbs** — Applies `__hash_suffix__` substitution to verb code, attaches verbs to objects/NPCs using resolved references

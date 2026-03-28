@@ -75,14 +75,16 @@ Examples:
 ```
 @move "<object>" to "<location>"
 @move #N to "<location>"
+@move me to "<location>"
 ```
-Moves an object to a room or container. Use `#N` (unquoted) to avoid ambiguity when multiple objects share the same name.
+Moves an object to a room or container. Use `#N` (unquoted) to avoid ambiguity when multiple objects share the same name. Use `me` to teleport yourself directly to any room by name — this is the simplest way to navigate to rooms that are not connected by exits yet.
 
 Examples:
 ```
 @move "Moe" to "Moe's Tavern"
 @move "the jukebox" to "Moe's Tavern"
 @move #34 to "Moe's Tavern - Main Bar"
+@move me to "The Laboratory"
 ```
 
 ### `@gender`
@@ -249,7 +251,15 @@ For programmatic access in build scripts, you can also use `@eval`:
 
 ### Setting Player Location Directly
 
-When creating rooms in the void, you can't navigate to them with normal movement commands. Use `@eval` to set your location:
+When creating rooms in the void, you can't navigate to them with normal movement commands. Use `@move me to`:
+
+```
+@move me to "Moe's Tavern - Main Bar"
+```
+
+This works for any room in the database, not just rooms reachable by exits. It is the preferred approach — cleaner than `@eval` and no `.save()` required.
+
+If the room was just created in the void and `@move` can't find it by name (e.g., due to hash suffix ambiguity), fall back to `@eval`:
 
 ```
 @eval "from moo.sdk import lookup, context; context.player.location = lookup(\"Moe's Tavern - Main Bar\"); context.player.save()"
