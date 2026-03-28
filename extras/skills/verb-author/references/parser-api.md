@@ -39,6 +39,7 @@ To distinguish "was this verb triggered directly by a player command vs. called 
 |-----------|------|-------------|
 | `words` | list[str] | All words in the command as typed |
 | `verb` | str | The verb name that was matched |
+| `command` | str | The full raw command string exactly as the player typed it |
 
 ## The `_str` vs Object Distinction
 
@@ -131,6 +132,23 @@ else:
 
 if not this.moveto(container):
     print(f"You can't put {this.title()} there.")
+```
+
+## $do_command Hook
+
+If the system object (#1) defines a verb named `do_command`, `interpret()` calls it before normal dispatch, passing the tokenised command words as positional `args`. The raw line is `context.parser.command`.
+
+- Return a **truthy** value → command is fully handled; normal dispatch skipped.
+- Return a **falsy** value (or verb absent) → parsing continues normally.
+
+```python
+#!moo verb do_command --on $system_object
+
+# Log every command and let normal dispatch continue.
+from moo.sdk import context
+
+print(f"[log] {context.player.name}: {context.parser.command}")
+return False
 ```
 
 ## Accessing Raw Words
