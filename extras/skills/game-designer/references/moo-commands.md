@@ -196,12 +196,12 @@ Lists all `_msg` properties (take/drop/look messages) on an object and its paren
 ```
 @eval "<python-code>"
 ```
-Evaluates Python code directly using the RestrictedPython sandbox. Has access to `context`, `this`, and can import from `moo.sdk`. Useful for operations that don't have dedicated commands.
+Evaluates Python code directly using the RestrictedPython sandbox. All `moo.sdk` exports (`lookup`, `create`, `context`, `NoSuchObjectError`, etc.) are pre-imported — no import statement needed. Also has access to `this` and `_`. Useful for operations that don't have dedicated commands.
 
 Examples:
 ```
 @eval "print(context.player.location)"
-@eval "from moo.sdk import lookup; obj = lookup('Moe'); print(obj.name)"
+@eval "obj = lookup('Moe'); print(obj.name)"
 ```
 
 ### Test Verbs
@@ -219,7 +219,7 @@ Runs the environment verification verb. Must be placed on `$programmer`.
 When creating 3+ objects with the same name, `@create` fails with `AmbiguousObjectError` because the parser resolves names *before* the verb runs. Use `@eval` with the SDK `create()` function instead:
 
 ```
-@eval "from moo.sdk import create, lookup; obj = create(\"bar stool\", parents=[lookup(\"$thing\")], location=None); print(f\"Created {obj}\"); obj"
+@eval "obj = create(\"bar stool\", parents=[lookup(\"$thing\")], location=None); print(f\"Created {obj}\"); obj"
 ```
 
 This bypasses parser name resolution and always succeeds. The `location=None` parameter avoids race conditions with `enterfunc`. Capture the returned `#N` object ID from the output (e.g., `Created #45 (bar stool)`).
@@ -229,7 +229,7 @@ This bypasses parser name resolution and always succeeds. The `location=None` pa
 Objects created with `location=None` exist in the void and won't appear in any room. Move them using `moveto()`:
 
 ```
-@eval "from moo.sdk import lookup; lookup(45).moveto(lookup(\"Moe's Tavern - Main Bar\"))"
+@eval "lookup(45).moveto(lookup(\"Moe's Tavern - Main Bar\"))"
 ```
 
 The `@move` command won't work on objects in the void because it tries to look them up via `context.parser`, which only searches the local area.
@@ -246,7 +246,7 @@ Use the `@alias` command (see Object Commands section above):
 For programmatic access in build scripts, you can also use `@eval`:
 
 ```
-@eval "from moo.sdk import lookup; lookup(45).add_alias('stool')"
+@eval "lookup(45).add_alias('stool')"
 ```
 
 ### Setting Player Location Directly
@@ -262,7 +262,7 @@ This works for any room in the database, not just rooms reachable by exits. It i
 If the room was just created in the void and `@move` can't find it by name (e.g., due to hash suffix ambiguity), fall back to `@eval`:
 
 ```
-@eval "from moo.sdk import lookup, context; context.player.location = lookup(\"Moe's Tavern - Main Bar\"); context.player.save()"
+@eval "context.player.location = lookup(\"Moe's Tavern - Main Bar\"); context.player.save()"
 ```
 
 Must call `.save()` after setting `.location` because it's a Django model field.
