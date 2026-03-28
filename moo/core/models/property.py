@@ -30,6 +30,14 @@ class Property(models.Model, AccessibleMixin):
     inherit_owner = models.BooleanField(default=False)
 
     __original_inherit_owner = None
+    _original_owner_id = None
+
+    @classmethod
+    def from_db(cls, db, field_names, values):
+        instance = super().from_db(db, field_names, values)
+        if "owner_id" in field_names:
+            instance._original_owner_id = values[field_names.index("owner_id")]  # pylint: disable=protected-access
+        return instance
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -49,6 +57,8 @@ class Property(models.Model, AccessibleMixin):
             self.origin.can_caller("write", self.origin)  # pylint: disable=no-member
         else:
             self.origin.can_caller("write", self)  # pylint: disable=no-member
+            if self._original_owner_id != self.owner_id:
+                self.origin.can_caller("entrust", self)  # pylint: disable=no-member
         super().save(*args, **kwargs)
         if self.inherit_owner and not self.__original_inherit_owner:
             for child in self.origin.get_descendents():  # pylint: disable=no-member
