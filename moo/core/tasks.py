@@ -41,10 +41,6 @@ def parse_command(self, caller_id: int, line: str) -> list[Any]:
             except exceptions.UserError as e:
                 log.error(f"{caller}: {e}")
                 output.append(f"[bold red]{e}[/bold red]")
-                if caller.is_wizard():
-                    import traceback
-
-                    output.append(f"[bold red]{traceback.format_exc()}[/bold red]")
             except Exception as e:  # pylint: disable=broad-exception-caught
                 log.exception(f"Error executing command for {caller}: {e}")
                 output.append("[bold red]An error occurred while executing the command.[/bold red]")
