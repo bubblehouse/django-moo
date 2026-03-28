@@ -1,6 +1,6 @@
 # Audit History
 
-Seventeen passes, 50 holes sealed, 644 tests (3 skipped). This file is the canonical in-repo record. The project memory file (`~/.claude/projects/-Users-philchristensen-Workspace-bubblehouse-django-moo/memory/project_security_audit.md`) mirrors this content — keep both in sync after each pass.
+Nineteen passes, 51 holes sealed, 781 tests (3 skipped). This file is the canonical in-repo record. The project memory file (`~/.claude/projects/-Users-philchristensen-Workspace-bubblehouse-django-moo/memory/project_security_audit.md`) mirrors this content — keep both in sync after each pass.
 
 ---
 
@@ -160,6 +160,31 @@ Note: `from_db()` guard uses `if "owner_id" in field_names` to handle deferred-f
 - `test_add_parent_regression` — `add_parent()` unaffected
 
 **Total:** 18 passes, 51 holes sealed, 781 tests (3 skipped).
+
+---
+
+## Pass 19 — 0 holes + SDK package refactoring hardening
+
+**Date:** 2026-03-28
+**Focus:** `moo/sdk.py` → `moo/sdk/` package refactoring; no new attack surface introduced
+
+No new holes. The single-file `moo/sdk.py` was split into a package with submodules (`context`, `objects`, `output`, `tasks`, `ssh_keys`, `admin`). The `__init__.py` re-exports all public names; the verb-author API is unchanged.
+
+**Security hardening applied:**
+
+- `BLOCKED_IMPORTS["moo.sdk"]` extended with all submodule names: `context`, `objects`, `output`, `tasks`, `ssh_keys`, `admin`. Without this, `from moo.sdk import tasks` would import the submodule rather than fail, exposing `invoke`, `set_task_perms`, and `moo_eval` at the module level.
+- The `ModuleType` guard in `get_protected_attribute` / `safe_getattr` (pass 7) blocks attribute traversal to submodule objects (e.g., `import moo.sdk as sdk; sdk.tasks`). The BLOCKED_IMPORTS extension provides an additional explicit layer.
+- Blocked names in submodules retain their `_Name` underscore aliases (e.g., `_ContextManager` in `context.py`, `_log` and `_contextmanager` in the relevant submodule).
+
+**Attack surface analysis:**
+
+- No new module-level names introduced. All names accessible via `from moo.sdk import X` are identical to the pre-refactoring set.
+- Submodule imports blocked by name: a verb author cannot reach `moo.sdk.tasks.moo_eval` or `moo.sdk.context._ContextManager` through the submodule path.
+- `moo.bootstrap` remains in `WIZARD_ALLOWED_MODULES` (unchanged from pass 15); the shebang parser in `moo/bootstrap/__init__.py` does not expose new mutation paths.
+
+**No tests added** — no new attack surface to cover. Existing security tests continue to pass (781 tests, 3 skipped).
+
+**Total:** 19 passes, 51 holes sealed, 781 tests (3 skipped).
 
 ---
 
