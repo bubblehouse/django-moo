@@ -4,6 +4,7 @@ from moo.core import code, parse
 from moo.sdk import create, lookup
 from moo.core.models import Object
 from moo.core.models.verb import Verb, VerbName
+from moo.core.exceptions import UsageError
 from .utils import save_quietly
 
 # --- whodunnit ---
@@ -272,3 +273,82 @@ def test_alias_multiple_aliases(t_init: Object, t_wizard: Object, setup_item):
     # Verify both aliases were added
     assert widget.aliases.filter(alias="table").exists()
     assert widget.aliases.filter(alias="pool").exists()
+
+
+# --- @rename ---
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_rename_own_object(t_init: Object, t_wizard: Object, setup_item):
+    """@rename <obj> to <name> changes the object's name."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        widget = setup_item(t_wizard.location, "widget")
+        parse.interpret(ctx, "@rename widget to gadget")
+        widget.refresh_from_db()
+    assert widget.name == "gadget"
+    assert any("gadget" in line for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_rename_permission_denied(t_init: Object, t_wizard: Object, setup_item):
+    """Non-owner cannot rename an object."""
+    player_npc = lookup("Player")
+    with code.ContextManager(t_wizard, lambda _: None):
+        widget = setup_item(t_wizard.location, "widget")
+    printed = []
+    with code.ContextManager(player_npc, printed.append) as ctx:
+        parse.interpret(ctx, "@rename widget to gadget")
+        widget.refresh_from_db()
+    assert widget.name == "widget"
+    assert any("Permission denied" in line for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_rename_requires_to_clause(t_init: Object, t_wizard: Object, setup_item):
+    """@rename without 'to' raises UsageError."""
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        setup_item(t_wizard.location, "widget")
+        with pytest.raises(UsageError):
+            parse.interpret(ctx, "@rename widget")
+
+
+# --- @version / @memory ---
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_version_wizard(t_init: Object, t_wizard: Object):
+    """@version prints version, python, and PID lines for a wizard."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, "@version")
+    output = "\n".join(printed)
+    assert "Version:" in output
+    assert "Python:" in output
+    assert "PID:" in output
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_version_non_wizard_denied(t_init: Object, t_wizard: Object):
+    """@version is denied for non-wizards."""
+    player_npc = lookup("Player")
+    printed = []
+    with code.ContextManager(player_npc, printed.append) as ctx:
+        parse.interpret(ctx, "@version")
+    assert any("Permission denied" in line for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_memory_wizard(t_init: Object, t_wizard: Object):
+    """@memory prints memory info or an unavailable message for a wizard."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, "@memory")
+    output = "\n".join(printed)
+    assert "Memory" in output or "unavailable" in output

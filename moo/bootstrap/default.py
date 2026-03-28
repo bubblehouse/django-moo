@@ -128,6 +128,9 @@ with code.ContextManager(wizard, log.info):
     string_utils = create("String Utilities", location=None)
     sys.set_property("string_utils", string_utils)
 
+    match_utils = create("Match Utilities", location=None)
+    sys.set_property("match_utils", match_utils)
+
     gender_utils = create("Gender Utilities", location=None)
     sys.set_property("gender_utils", gender_utils)
     gender_utils.set_property("pronouns", ["ps", "po", "pp", "pr", "pq", "psc", "poc", "ppc", "prc", "pqc"])
