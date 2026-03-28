@@ -105,7 +105,7 @@ def test_tell_contents_ctype3_single_player(t_init: Object, t_wizard: Object):
         player.location = room
         save_quietly(player)
         room.tell_contents()
-    assert printed == ["You see Player here."]
+    assert printed == ["Player is here."]
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -150,7 +150,7 @@ def test_tell_contents_ctype3_mixed(t_init: Object, t_wizard: Object):
             player.location = room
             player.save()
         room.tell_contents()
-    assert printed == ["You see red ball here.", "You see Player here."]
+    assert printed == ["You see red ball here.", "Player is here."]
 
 
 # --- tell_contents: ctype 2 ---

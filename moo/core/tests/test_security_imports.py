@@ -170,6 +170,25 @@ def test_sdk_log_blocked():
     )
 
 
+def test_sdk_submodule_import_blocked():
+    """
+
+    Now that moo.sdk is a package, verb code must not be able to reach its
+    submodules directly.  `from moo.sdk.objects import lookup` names a module
+    that is not in ALLOWED_MODULES, so restricted_import raises ImportError.
+    The attribute-access path `import moo.sdk as sdk; sdk.objects` is also
+    blocked by the ModuleType guard in get_protected_attribute.
+    """
+    raises_in_verb(
+        "from moo.sdk.objects import lookup",
+        ImportError,
+    )
+    raises_in_verb(
+        "import moo.sdk as sdk\nx = sdk.objects",
+        (ImportError, AttributeError),
+    )
+
+
 # ---------------------------------------------------------------------------
 # django_celery_beat not importable even by wizards
 # ---------------------------------------------------------------------------
