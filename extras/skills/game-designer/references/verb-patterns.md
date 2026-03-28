@@ -308,3 +308,70 @@ this                  # The object the verb is defined on (or matched via dspec)
 args                  # List of positional args passed to the verb
 kwargs                # Dict of keyword args
 ```
+
+## Hidden Room via Interactive Object
+
+An object in a visible room teleports the player to a hidden room. The hidden room has no listed exit in-world — the only entry point is this verb. Give the hidden room a normal directional exit back.
+
+Full copy-paste template: `snippets/hidden-room.yaml`
+
+```python
+from moo.sdk import context, lookup, NoSuchObjectError
+print("The bookcase swings outward on hidden hinges, revealing a passage.")
+try:
+    context.player.moveto(lookup("The Secret Room __hash_suffix__"))
+except NoSuchObjectError:
+    print("The passage appears to be sealed.")
+```
+
+Use `--dspec this` on the shebang so the verb only fires when the player explicitly targets this object. Multiple trigger verb names (e.g. `pull yank`) are space-separated on the shebang line.
+
+## Stateful Counter with Escalating Flavor Text
+
+A numeric property counts uses; each tier produces different output. Good for consumables, actions with diminishing returns, or anything that should feel progressively different across many sessions.
+
+Full copy-paste template: `snippets/stateful-counter.yaml`
+
+```python
+from moo.sdk import context, NoSuchPropertyError
+try:
+    pours = this.get_property("pours")
+except NoSuchPropertyError:
+    pours = 0
+pours += 1
+this.set_property("pours", pours)
+if pours == 1:
+    print("First time. Exceptional.")
+elif pours == 2:
+    print("Second time. Still good.")
+elif pours <= 4:
+    ordinal = ["third", "fourth"][pours - 3]
+    print(f"This is your {ordinal} time.")
+else:
+    print("You reconsider.")
+```
+
+**RestrictedPython note:** `results["key"] += 1` is blocked. Use a plain local variable (`pours += 1`), then call `set_property` with the updated value.
+
+## One-Shot State Change
+
+A boolean property records whether an action has happened. First call: shows the full reveal and sets the flag. All subsequent calls: shows a brief summary of the already-changed state.
+
+Good for sealed documents, puzzle items, locked boxes that stay open, one-time discoveries.
+
+Full copy-paste template: `snippets/one-shot-state.yaml`
+
+```python
+from moo.sdk import context, NoSuchPropertyError
+try:
+    opened = this.get_property("opened")
+except NoSuchPropertyError:
+    opened = False
+if opened:
+    print("Already opened. Inside: ...")
+else:
+    this.set_property("opened", True)
+    print("You open it for the first time.")
+    print("The reveal happens here.")
+    context.player.location.announce_all_but(context.player, f"{context.player.name} opens it.")
+```

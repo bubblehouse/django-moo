@@ -155,7 +155,7 @@ Objects descended from `$thing` inherit these `_msg` properties (set via `@edit 
 - `drop_failed_msg` — shown to player when drop fails
 - `odrop_failed_msg` — shown to room when drop fails
 
-All values use `pronoun_sub` format codes: `%N` = actor name, `%t` = object name. Override per-instance to customize flavor.
+All values use `pronoun_sub` format codes: `%N` = actor name, `%t` = object name, `%s`/`%o`/`%p`/`%r` = subject/object/possessive/reflexive pronouns. Override per-instance to customize flavor. See the verb-author skill `sdk.md` for the full format-code table.
 
 ## `$furniture` Message Properties
 

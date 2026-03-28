@@ -209,7 +209,7 @@ The script accepts either a file path or a directory path.
 **For local development**, a DB refresh and server restart before each build ensures a clean state. For production deploys, just run the build against the live server. If the server is unresponsive mid-build, you can restart it yourself with `docker compose restart webapp celery` — but tell the user first.
 
 **Build process:**
-1. **Phase 1: Rooms and exits** — Creates rooms in void, teleports to each, describes, wires exits; adds clean-name alias in hash mode
+1. **Phase 1: Rooms and exits** — Creates all rooms in the void, then DFS-traverses the exit graph from the first room: teleports to each room, describes it, wires all its exits, then recurses into unvisited neighbors. A `created_exits` set tracks `(room, direction)` pairs to detect and skip duplicates (which would otherwise fail silently inside `@tunnel`). Rooms unreachable from the first room are warned about and still built.
 2. **Phase 2: Objects** — Creates objects in void, describes, adds aliases (including clean-name alias in hash mode), moves to rooms
 3. **Phase 3: NPCs** — Creates NPCs, creates a Django `Player` record (no User) for each via `Player.objects.create()`, describes, adds aliases (including clean-name alias in hash mode), moves to rooms
 4. **Phase 4: Verbs** — Applies `__hash_suffix__` substitution to verb code, attaches verbs to objects/NPCs using resolved references
@@ -325,6 +325,7 @@ If a verb silently fails with `TypeError: exec() arg 1 must be a string, bytes o
 - **Test verb output truncated**: The SSH connection dropped while printing. The build still succeeded. Run the test verb manually in-world.
 - **`$furniture` objects stuck in the void (silent `False` in build log)**: `$furniture`'s `moveto` verb returns `False` to block player takes — this also blocks admin `moveto()` calls. The current `build_from_yaml.py` uses `obj.location = room; obj.save()` to bypass this. If you see `False` in the log after move commands, you are running an old version. Manual fix: `@eval "from moo.sdk import lookup; obj = lookup(N); room = lookup(\"Room [hash]\"); obj.location = room; obj.save()"` for each stranded object.
 - **NPCs missing player infrastructure**: `@create "NPC" from "$player"` creates the MOO Object but not the Django `Player` model record. The build script calls `Player.objects.create(); p.avatar = obj; p.save()` after each NPC. If NPCs were created by hand or with an older script, add the record via: `@eval "from moo.core.models import Player; from moo.sdk import lookup; obj = lookup(N); p = Player.objects.create(); p.avatar = obj; p.save()"`
+- **Missing or incorrect room connections**: `@tunnel` silently fails if the current room already has an exit in the requested direction — it prints a red message but the build script never sees it. The build script uses DFS to wire exits, tracking `(room, direction)` pairs in a `created_exits` set. If you see `SKIP duplicate exit` lines in the build log, there is a duplicate exit declaration in the YAML (two exits with the same direction on the same room). If rooms are missing connections after a build, check whether any prior build run left stale exits behind — a fresh DB reset before rebuilding is the cleanest fix.
 
 ## Available Build Commands
 
@@ -347,11 +348,19 @@ All environments are built using the generic `build_from_yaml.py` script.
 - `build_from_yaml.py` — Generic YAML-driven builder (accepts file or directory)
 - `build_moes_tavern.py` — Original monolithic script (reference only)
 
-**Example environments:**
-- `environments/burns-manor.yaml` — single-file format (7 rooms, 34 objects, 2 NPCs, 12 verbs)
-- `environments/planet-express/` — directory format (26 rooms, 76 objects, 8 NPCs, 20 verbs)
+The `environments/` directory is gitignored — it holds local build artifacts that go stale between runs and are recreated fresh each build.
 
 See `references/build-automation.md` for YAML schema details and advanced patterns.
+
+## Snippets
+
+`snippets/` contains copy-paste-ready YAML verb patterns extracted from real environments. Use these as starting points rather than writing from scratch.
+
+| File | Pattern | Use when |
+|------|---------|----------|
+| `snippets/hidden-room.yaml` | Interactive object teleports player to a hidden room | Secret passages, concealed entrances, puzzle doors |
+| `snippets/stateful-counter.yaml` | Numeric counter with different output per tier | Consumables, escalating effects, repeated actions that change over time |
+| `snippets/one-shot-state.yaml` | Boolean flag: full reveal on first use, summary on repeat | Sealed documents, one-time discoveries, puzzle items that change permanently |
 
 ## Complete Workflow Example
 
