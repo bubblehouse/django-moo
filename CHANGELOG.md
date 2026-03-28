@@ -1,3 +1,9 @@
+## [0.88.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.88.2...v0.88.3) (2026-03-28)
+
+### Bug Fixes
+
+* rewrap description paragraphs before output ([dcabc59](https://gitlab.com/bubblehouse/django-moo/commit/dcabc59519e9331dd1da4d6ce82c74c504cf15c9))
+
 ## [0.88.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.88.1...v0.88.2) (2026-03-27)
 
 ### Bug Fixes
