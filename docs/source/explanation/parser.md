@@ -51,4 +51,12 @@ Once created with a command string, a Lexer object has the following instance at
 
 The `Lexer` instance gets passed to the Parser object along with a reference to the calling user (the "caller").
 
+## $do_command Hook
+
+Before the built-in parser runs, `interpret()` checks whether the system object (#1) defines a verb named `do_command`. If it does, that verb is called with the tokenised command words as positional `args`. The raw command line is accessible inside the verb as `context.parser.command`.
+
+If `do_command` returns a truthy value, the command is considered fully handled and normal dispatch is skipped entirely. If it returns a falsy value (or the verb does not exist), parsing continues normally.
+
+This is the standard LambdaMOO `$do_command` extension point — it is useful for command logging, rate limiting, or routing commands to a custom handler before the parser inspects them.
+
 For the full reference — object resolution order, preposition synonym table, verb search order, and dispatch rules — see {doc}`../reference/parser`.

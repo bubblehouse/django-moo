@@ -51,6 +51,8 @@ All verb files must start with a "shebang" line that defines metadata:
 
 Understanding what `this` refers to is critical when writing verbs that take arguments.
 
+**`$do_command` pre-hook**: Before searching for a verb, `interpret()` checks whether the system object (#1) defines a verb named `do_command`. If it does, that verb is called with the tokenised command words as positional `args` (and `context.parser.command` holds the raw line). If it returns a truthy value, normal dispatch is skipped entirely. If it returns falsy or does not exist, parsing continues as below.
+
 **Search order** (`moo/core/parse.py`): For any command, the parser searches for a matching verb in this order:
 1. The caller (player who typed the command)
 2. Contents of the caller's inventory
