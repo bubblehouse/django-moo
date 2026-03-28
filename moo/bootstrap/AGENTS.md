@@ -541,13 +541,19 @@ except Exception as e:
 
 ## Connection Control Verbs and Session Settings
 
-Three verbs on `$player` allow automation clients to control how command output is delivered. They are implemented in `default_verbs/player/` and use the `set_session_setting` / `get_session_setting` SDK functions.
+Five verbs on `$player` allow automation clients to control how command output is delivered. They are implemented in `default_verbs/player/` and use the `set_session_setting` / `get_session_setting` SDK functions.
 
 | Verb | Usage | Effect |
 |------|-------|--------|
 | `PREFIX <marker>` | `PREFIX >>START<<` | Emits `<marker>` before each command's output |
 | `SUFFIX <marker>` | `SUFFIX >>END<<` | Emits `<marker>` after each command's output |
+| `OUTPUTPREFIX <marker>` | `OUTPUTPREFIX >>>` | Emits `<marker>` before **all** output, including async tells |
+| `OUTPUTSUFFIX <marker>` | `OUTPUTSUFFIX <<<` | Emits `<marker>` after **all** output, including async tells |
 | `QUIET enable\|disable` | `QUIET enable` | Suppresses ANSI color codes; simplifies prompt to `$ ` |
+
+When both layers are active, global markers are outermost: `OUTPUTPREFIX` → `PREFIX` → output → `SUFFIX` → `OUTPUTSUFFIX`.
+
+There is also a connection-level command `.flush` that is **not** a verb — it is intercepted by the SSH shell before reaching the verb parser. `.flush` drains the Kombu message queue and writes any pending async output immediately. Useful in automation scripts to ensure async background output does not intermix with the next command's response.
 
 ### How Session Settings Work
 
@@ -562,7 +568,7 @@ prefix = get_session_setting('output_prefix')       # reads from the SSH server'
 
 `set_session_setting` publishes a `{"event": "session_setting", ...}` message to the player's Kombu queue. The SSH server's `process_messages()` loop picks it up and updates its own in-process registry. This is the same cross-process bridge used by `open_editor` and `open_paginator`.
 
-**Key names**: `output_prefix`, `output_suffix`, `quiet_mode` (bool).
+**Key names**: `output_prefix`, `output_suffix`, `output_global_prefix`, `output_global_suffix`, `quiet_mode` (bool).
 
 All settings are session-scoped — they are cleared automatically when the player disconnects.
 

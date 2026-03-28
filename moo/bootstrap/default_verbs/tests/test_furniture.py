@@ -19,16 +19,17 @@ def setup_furniture(location, name="couch"):
 def test_sit(t_init: Object, t_wizard: Object):
     printed = []
 
-    with code.ContextManager(t_wizard, printed.append) as ctx:
-        lab = t_wizard.location
-        couch = setup_furniture(lab)
+    with pytest.warns(RuntimeWarning):
+        with code.ContextManager(t_wizard, printed.append) as ctx:
+            lab = t_wizard.location
+            couch = setup_furniture(lab)
 
-        parse.interpret(ctx, "sit couch")
+            parse.interpret(ctx, "sit couch")
 
-        t_wizard.refresh_from_db()
-        seated = t_wizard.get_property("seated_on")
-        assert seated == couch
-        assert printed == [f"You sit on {couch.title()}."]
+            t_wizard.refresh_from_db()
+            seated = t_wizard.get_property("seated_on")
+            assert seated == couch
+            assert printed == [f"You sit on {couch.title()}."]
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -36,15 +37,16 @@ def test_sit(t_init: Object, t_wizard: Object):
 def test_sit_already_sitting_same(t_init: Object, t_wizard: Object):
     printed = []
 
-    with code.ContextManager(t_wizard, printed.append) as ctx:
-        lab = t_wizard.location
-        couch = setup_furniture(lab)
+    with pytest.warns(RuntimeWarning):
+        with code.ContextManager(t_wizard, printed.append) as ctx:
+            lab = t_wizard.location
+            couch = setup_furniture(lab)
 
-        parse.interpret(ctx, "sit couch")
-        printed.clear()
-        parse.interpret(ctx, "sit couch")
+            parse.interpret(ctx, "sit couch")
+            printed.clear()
+            parse.interpret(ctx, "sit couch")
 
-        assert printed == [f"You are already sitting on {couch.title()}."]
+            assert printed == [f"You are already sitting on {couch.title()}."]
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -52,16 +54,17 @@ def test_sit_already_sitting_same(t_init: Object, t_wizard: Object):
 def test_sit_already_sitting_other(t_init: Object, t_wizard: Object):
     printed = []
 
-    with code.ContextManager(t_wizard, printed.append) as ctx:
-        lab = t_wizard.location
-        _ = setup_furniture(lab, name="couch")
-        setup_furniture(lab, name="chair")
+    with pytest.warns(RuntimeWarning):
+        with code.ContextManager(t_wizard, printed.append) as ctx:
+            lab = t_wizard.location
+            _ = setup_furniture(lab, name="couch")
+            setup_furniture(lab, name="chair")
 
-        parse.interpret(ctx, "sit couch")
-        printed.clear()
-        parse.interpret(ctx, "sit chair")
+            parse.interpret(ctx, "sit couch")
+            printed.clear()
+            parse.interpret(ctx, "sit chair")
 
-        assert printed == ["You're already sitting down."]
+            assert printed == ["You're already sitting down."]
 
 
 # --- stand ---
@@ -72,18 +75,19 @@ def test_sit_already_sitting_other(t_init: Object, t_wizard: Object):
 def test_stand_no_dobj(t_init: Object, t_wizard: Object):
     printed = []
 
-    with code.ContextManager(t_wizard, printed.append) as ctx:
-        lab = t_wizard.location
-        couch = setup_furniture(lab)
+    with pytest.warns(RuntimeWarning):
+        with code.ContextManager(t_wizard, printed.append) as ctx:
+            lab = t_wizard.location
+            couch = setup_furniture(lab)
 
-        parse.interpret(ctx, "sit couch")
-        printed.clear()
-        parse.interpret(ctx, "stand")
+            parse.interpret(ctx, "sit couch")
+            printed.clear()
+            parse.interpret(ctx, "stand")
 
-        t_wizard.refresh_from_db()
-        seated = t_wizard.get_property("seated_on")
-        assert seated is None
-        assert printed == [f"You stand up from {couch.title()}."]
+            t_wizard.refresh_from_db()
+            seated = t_wizard.get_property("seated_on")
+            assert seated is None
+            assert printed == [f"You stand up from {couch.title()}."]
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -91,18 +95,19 @@ def test_stand_no_dobj(t_init: Object, t_wizard: Object):
 def test_stand_with_dobj(t_init: Object, t_wizard: Object):
     printed = []
 
-    with code.ContextManager(t_wizard, printed.append) as ctx:
-        lab = t_wizard.location
-        couch = setup_furniture(lab)
+    with pytest.warns(RuntimeWarning):
+        with code.ContextManager(t_wizard, printed.append) as ctx:
+            lab = t_wizard.location
+            couch = setup_furniture(lab)
 
-        parse.interpret(ctx, "sit couch")
-        printed.clear()
-        parse.interpret(ctx, "stand couch")
+            parse.interpret(ctx, "sit couch")
+            printed.clear()
+            parse.interpret(ctx, "stand couch")
 
-        t_wizard.refresh_from_db()
-        seated = t_wizard.get_property("seated_on")
-        assert seated is None
-        assert printed == [f"You stand up from {couch.title()}."]
+            t_wizard.refresh_from_db()
+            seated = t_wizard.get_property("seated_on")
+            assert seated is None
+            assert printed == [f"You stand up from {couch.title()}."]
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -124,16 +129,17 @@ def test_stand_not_sitting(t_init: Object, t_wizard: Object):
 def test_stand_wrong_furniture(t_init: Object, t_wizard: Object):
     printed = []
 
-    with code.ContextManager(t_wizard, printed.append) as ctx:
-        lab = t_wizard.location
-        _ = setup_furniture(lab, name="couch")
-        chair = setup_furniture(lab, name="chair")
+    with pytest.warns(RuntimeWarning):
+        with code.ContextManager(t_wizard, printed.append) as ctx:
+            lab = t_wizard.location
+            _ = setup_furniture(lab, name="couch")
+            chair = setup_furniture(lab, name="chair")
 
-        parse.interpret(ctx, "sit couch")
-        printed.clear()
-        parse.interpret(ctx, "stand chair")
+            parse.interpret(ctx, "sit couch")
+            printed.clear()
+            parse.interpret(ctx, "stand chair")
 
-        assert printed == [f"You aren't sitting on {chair.title()}."]
+            assert printed == [f"You aren't sitting on {chair.title()}."]
 
 
 # --- exitfunc clears seated_on ---
@@ -142,19 +148,20 @@ def test_stand_wrong_furniture(t_init: Object, t_wizard: Object):
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_stand_clears_on_room_exit(t_init: Object, t_wizard: Object):
-    with code.ContextManager(t_wizard, lambda msg: None) as ctx:
-        lab = t_wizard.location
-        couch = setup_furniture(lab)
+    with pytest.warns(RuntimeWarning):
+        with code.ContextManager(t_wizard, lambda msg: None) as ctx:
+            lab = t_wizard.location
+            couch = setup_furniture(lab)
 
-        parse.interpret(ctx, "sit couch")
-        t_wizard.refresh_from_db()
-        assert t_wizard.get_property("seated_on") == couch
+            parse.interpret(ctx, "sit couch")
+            t_wizard.refresh_from_db()
+            assert t_wizard.get_property("seated_on") == couch
 
-        # exitfunc is invoked asynchronously in production; call it directly here
-        lab.invoke_verb("exitfunc", t_wizard)
+            # exitfunc is invoked asynchronously in production; call it directly here
+            lab.invoke_verb("exitfunc", t_wizard)
 
-        t_wizard.refresh_from_db()
-        assert t_wizard.get_property("seated_on") is None
+            t_wizard.refresh_from_db()
+            assert t_wizard.get_property("seated_on") is None
 
 
 # --- take is blocked ---
@@ -165,15 +172,16 @@ def test_stand_clears_on_room_exit(t_init: Object, t_wizard: Object):
 def test_take_fails(t_init: Object, t_wizard: Object):
     printed = []
 
-    with code.ContextManager(t_wizard, printed.append) as ctx:
-        lab = t_wizard.location
-        couch = setup_furniture(lab)
+    with pytest.warns(RuntimeWarning):
+        with code.ContextManager(t_wizard, printed.append) as ctx:
+            lab = t_wizard.location
+            couch = setup_furniture(lab)
 
-        parse.interpret(ctx, "take couch")
+            parse.interpret(ctx, "take couch")
 
-        couch.refresh_from_db()
-        assert couch.location == lab
-        assert printed == ["It's not possible to move something like this."]
+            couch.refresh_from_db()
+            assert couch.location == lab
+            assert printed == ["It's not possible to move something like this."]
 
 
 # --- message verbs ---

@@ -34,6 +34,63 @@ You see nothing special.
 
 Both markers are session-specific and are cleared when the player disconnects.
 
+## OUTPUTPREFIX and OUTPUTSUFFIX
+
+`OUTPUTPREFIX` and `OUTPUTSUFFIX` wrap *all* output sent to the client — including asynchronous messages from other players (via `tell()`) — not just responses to commands. They complement `PREFIX`/`SUFFIX`, which only frame command output.
+
+```
+OUTPUTPREFIX >>>
+OUTPUTSUFFIX <<<
+look
+>>>
+The Laboratory(#3)
+You see nothing special.
+<<<
+```
+
+If both layers are active, the global markers are outermost:
+
+```
+>>>           ← OUTPUTPREFIX
+>>START<<     ← PREFIX (if set)
+...output...
+>>END<<       ← SUFFIX (if set)
+<<<           ← OUTPUTSUFFIX
+```
+
+An async `tell()` from another player will also be wrapped:
+
+```
+>>>
+Wizard pages: "hello"
+<<<
+```
+
+**Syntax**:
+
+| Command | Effect |
+|---------|--------|
+| `OUTPUTPREFIX <marker>` | Emit `<marker>` before all output |
+| `OUTPUTPREFIX` | Show the current global prefix |
+| `OUTPUTPREFIX clear` | Remove the global prefix |
+| `OUTPUTSUFFIX <marker>` | Emit `<marker>` after all output |
+| `OUTPUTSUFFIX` | Show the current global suffix |
+| `OUTPUTSUFFIX clear` | Remove the global suffix |
+
+Both markers are session-specific and cleared on disconnect.
+
+## .flush
+
+`.flush` drains the pending async output queue immediately. Any `tell()` messages or system notices that have accumulated since the last poll cycle are written to the terminal right now, before the next command is sent.
+
+```
+.flush
+```
+
+This is especially useful in automation scripts: sending `.flush` before each command ensures that async background output (such as `confunc`/`disfunc` messages from earlier build steps) does not intermix with the next command's response.
+
+`.flush` is a connection-level command — it is not dispatched through the verb parser and does not require any verb to be defined.
+
 ## QUIET
 
 `QUIET` disables Rich color markup in command output and simplifies the prompt to a bare `$ `. This removes ANSI escape sequences so automation clients receive clean plain text.
@@ -115,4 +172,4 @@ message queues and are not affected by the connecting player's session state.
 
 Session settings cross the Celery / SSH server process boundary via the Kombu message queue — the same mechanism used by the text editor and paginator. `set_session_setting()` in `moo/sdk.py` publishes a `{"event": "session_setting", ...}` message; the SSH server's `process_messages()` loop applies it to the connection's own registry.
 
-See `moo/bootstrap/default_verbs/player/PREFIX.py`, `SUFFIX.py`, and `QUIET.py` for the verb implementations.
+See `moo/bootstrap/default_verbs/player/PREFIX.py`, `SUFFIX.py`, `OUTPUTPREFIX.py`, `OUTPUTSUFFIX.py`, and `QUIET.py` for the verb implementations. `.flush` is handled directly in `moo/shell/prompt.py` (`process_commands` and `_drain_messages`).
