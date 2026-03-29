@@ -464,7 +464,7 @@ class MooPrompt:
                         gprefix = settings.get("output_global_prefix")
                         gsuffix = settings.get("output_global_suffix")
 
-                        async def _write_message(msg=message, gp=gprefix, gs=gsuffix):
+                        def _write_message(msg=message, gp=gprefix, gs=gsuffix):
                             if gp:
                                 self.writer(gp)
                             self.writer(msg)

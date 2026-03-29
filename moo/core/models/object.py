@@ -505,6 +505,8 @@ class Object(models.Model, AccessibleMixin):
         """
         Check if this parser instance could refer to a verb on this object.
         """
+        if not parser.words:
+            return None
         result = []
         for verb in self._lookup_verb(parser.words[0], recurse=True, return_first=False):
             if verb.direct_object == "this" and parser.dobj != self:
