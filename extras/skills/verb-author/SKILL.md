@@ -18,6 +18,7 @@ Every verb file must start with a shebang line:
 **`name1 [name2 ...]`** — space-separated verb names (aliases). Example: `take get`
 
 **`--on $object`** — the object to attach the verb to, using `$name` syntax to reference a property on the system object (#1). Common targets:
+
 - `$root_class` — all objects
 - `$room` — room commands
 - `$player` — player commands
@@ -28,6 +29,7 @@ Every verb file must start with a shebang line:
 Although there hasn't been a need yet, you could also target arbitrary objects by name, e.g., `--on "magic wand"`. This is a global lookup, so it's important to ensure the name is unique and doesn't cause conflicts.
 
 **`--dspec SPEC`** — direct object specifier:
+
 - omitted — verb will not match if a dobj is typed
 - `any` — verb requires a dobj string
 - `this` — dobj must resolve to the object the verb is on
@@ -45,6 +47,7 @@ Indirect object specifiers can seem like they are optional, but they help the pa
 The parser automatically scans for prepositions (from `settings.PREPOSITIONS`: `in`, `on`, `with`, `at`, `from`, `to`, `under`, `behind`, `through`, etc.) and splits commands at these boundaries. This means:
 
 **If your verb needs arguments containing preposition keywords, you MUST use quoted strings:**
+
 ```python
 # WRONG - parser splits at "from"
 @eval from moo.sdk import lookup
@@ -54,16 +57,19 @@ The parser automatically scans for prepositions (from `settings.PREPOSITIONS`: `
 ```
 
 **Why this matters:**
+
 - `@eval from moo.sdk import lookup` → Parser treats "from" as a preposition, creates pobj instead of dobj
 - `@eval "from moo.sdk import lookup"` → Parser treats the whole thing as a single dobj string
 - With `--dspec any`, the verb won't match without a dobj, so unquoted prepositions cause lookup failures
 
 **Parser methods handle quoted strings correctly:**
+
 - `parser.words` — tokenized list with quotes removed: `['@eval', 'from moo.sdk import lookup']`
 - `parser.get_dobj_str()` — returns the dobj with quotes removed: `'from moo.sdk import lookup'`
 - `parser.command` — raw command string: `'@eval "from moo.sdk import lookup"'`
 
 Examples:
+
 ```python
 #!moo verb accept --on $room
 #!moo verb drop --on $thing --dspec this
@@ -107,6 +113,7 @@ Allowed builtins: `dict`, `enumerate`, `getattr`, `hasattr`, `list`, `set`, `sor
 Verbs cannot: import arbitrary modules, access the filesystem, open network connections, use `__import__`, `exec`, or `eval`.
 
 **RestrictedPython Naming Restrictions:**
+
 - Cannot use `eval` as a function name (it's blocked as the built-in)
 - Cannot access dunder attributes: `obj.__class__`, `obj.__name__`, etc.
 - `type()` builtin is not available
@@ -168,12 +175,14 @@ room.announce_all_but(obj, msg)          # all occupants except obj
 ## Performance Rules
 
 1. Assign to a local when a property or method result is used more than once:
+
    ```python
    title = this.title()   # one query; reuse title below
    print(f"You take {title}.")
    ```
 
 2. Use `try/except NoSuchPropertyError` instead of `has_property` + `get_property`:
+
    ```python
    try:
        free_entry = dest.get_property("free_entry")
@@ -182,6 +191,7 @@ room.announce_all_but(obj, msg)          # all occupants except obj
    ```
 
 3. Pre-fetch `contents.all()` before multiple announce calls:
+
    ```python
    source_contents = list(source.contents.all())
    dest_contents = list(dest.contents.all())
@@ -196,6 +206,7 @@ room.announce_all_but(obj, msg)          # all occupants except obj
 When a verb needs to access restricted functionality (compilation, wizard-only modules, etc.), create a function in `moo/sdk.py` rather than trying to import from `moo.core.*` in verb code.
 
 **Pattern for SDK functions:**
+
 ```python
 # In moo/sdk.py
 def privileged_operation(args):
@@ -215,11 +226,13 @@ result = privileged_operation(data)
 ```
 
 **Examples in the codebase:**
+
 - `write(obj, msg)` — bypasses filtering, requires wizard permissions
 - `open_editor(obj, ...)` — publishes editor events, requires wizard permissions
 - `moo_eval(code)` — compiles and executes code in RestrictedPython sandbox
 
 **Why this pattern:**
+
 - SDK functions can import from `moo.core.*` modules
 - Verbs can only import from `moo.sdk` and a few allowed modules
 - Centralizes privilege checks and error handling
@@ -230,6 +243,7 @@ result = privileged_operation(data)
 See [sdk.md](references/sdk.md) for the full `moo.sdk` API.
 
 Common import lines:
+
 ```python
 from moo.sdk import context
 from moo.sdk import context, lookup, create, invoke, write
@@ -367,13 +381,14 @@ except Exception as e:
 ```
 
 Key points:
+
 - `--dspec any` required so verb matches when dobj present
 - Quotes required to protect code from parser's preposition scanning
 - Error handling catches all exceptions (can't use `e.__class__.__name__` in RestrictedPython)
 - `moo_eval()` is an SDK function that handles compilation and execution
 - Only prints non-None results (REPL-like behavior)
 - All `moo.sdk` names (`lookup`, `create`, `context`, etc.) are pre-imported into `@eval`'s execution environment — no `from moo.sdk import ...` needed inside the evaluated code
-- The `;` key in the interactive shell expands to `@eval ` — useful for quick REPL-style testing
+- The `;` key in the interactive shell expands to `@eval` — useful for quick REPL-style testing
 
 ### @alias.py — global lookup with preposition
 
@@ -417,6 +432,7 @@ print(f"[yellow]Added alias '{alias}' to {obj}[/yellow]")
 ```
 
 Key points:
+
 - `get_dobj(lookup=True)` performs global lookup (not just local area)
 - Supports both object names and `#N` object ID references
 - `get_pobj_str("as")` extracts the string after the preposition
@@ -430,6 +446,7 @@ Key points:
 Letting `get_dobj()` raise `NoSuchObjectError` is intentional: if the player typed a name that doesn't exist, they will see `"There is no 'X' here."` with no extra code in the verb.
 
 Use `UsageError` to signal bad syntax or missing arguments:
+
 ```python
 from moo.sdk import UsageError
 
@@ -438,6 +455,7 @@ if not context.parser.has_dobj_str():
 ```
 
 Only catch `UserError` subclasses when you need different behaviour from the default message:
+
 ```python
 try:
     target = context.parser.get_dobj()
@@ -480,6 +498,7 @@ else:
 ```
 
 Rules:
+
 - `task_time_low(threshold=0.5)` returns `True` when `context.task_time.remaining <= threshold`. Returns `False` in test environments (no time limit). No manual guard needed.
 - `schedule_continuation(remaining_items, verb, msg=None)` extracts PKs from the items, calls `invoke()`, and tells the player. Replaces the three-line inline boilerplate.
 - Use a separate verb alias (e.g. `reload_batch`) as the continuation entry point, dispatched via `verb_name == "reload_batch"` at the top of the verb. Do NOT assign to `verb_name` anywhere in the verb body — see Pitfalls.

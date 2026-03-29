@@ -19,16 +19,16 @@ A final goal is for the software to be cheap to deploy, but that has several var
 
 ### antioch, a predecessor to django-moo
 
-A lot of the architecture decisions and proofs of concepts for `django-moo` come from lessons learned building (antioch)[https://github.com/philchristensen/antioch].
+A lot of the architecture decisions and proofs of concepts for `django-moo` come from lessons learned building [antioch](https://github.com/philchristensen/antioch).
 
 The original goals for antioch were to add on to the MOO concept in a way that allowed for a fully graphical UI. These goals also predated Django and other helpful frameworks; as antioch's inception was in 1999-2000, many of these tools didn't exist or were in their infancy. Although over time antioch began to modernize, there was a lot of custom code that would be better replaced by standard libraries.
 
 This led to a series of "revelations" that guide `django-moo` development today:
 
- * As a niche project, any third-party library that can reduce development overhead is worth it.
- * As a gaming-adjacent project, it's impossible to complete with modern graphical games, so don't prioritize that.
- * The graphical limitations of the Telnet era of MOO were actually a storytelling benefit.
- * For something of this size, ease of testing needs to be planned for from the beginning.
+* As a niche project, any third-party library that can reduce development overhead is worth it.
+* As a gaming-adjacent project, it's impossible to complete with modern graphical games, so don't prioritize that.
+* The graphical limitations of the Telnet era of MOO were actually a storytelling benefit.
+* For something of this size, ease of testing needs to be planned for from the beginning.
 
 ## Overview
 

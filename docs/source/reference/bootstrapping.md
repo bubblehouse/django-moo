@@ -40,9 +40,9 @@ Once all the objects are created and necessary properties created, the `moo.boot
 
 The bootstrap system is organized into several files:
 
-- `default.py`: Creates the production game world with rooms, players, and other game objects
-- `test.py`: Creates a minimal test dataset used by pytest; uses no additional verb files
-- `default_verbs/`: Directory containing verb files for the `default` dataset only
+* `default.py`: Creates the production game world with rooms, players, and other game objects
+* `test.py`: Creates a minimal test dataset used by pytest; uses no additional verb files
+* `default_verbs/`: Directory containing verb files for the `default` dataset only
 
 ## Verb Files in Bootstrap
 
@@ -53,9 +53,10 @@ Bootstrap verb files follow a specific format with a shebang line that defines m
 ```
 
 The shebang line specifies:
-- Verb name(s) - the name(s) by which the verb can be invoked
-- `--on` - the object to attach the verb to (uses `$property` syntax to reference system object properties)
-- Optional flags like `--dspec` and `--ispec` for direct/indirect object specifiers
+
+* Verb name(s) - the name(s) by which the verb can be invoked
+* `--on` - the object to attach the verb to (uses `$property` syntax to reference system object properties)
+* Optional flags like `--dspec` and `--ispec` for direct/indirect object specifiers
 
 After the shebang line, the verb code follows (without a function wrapper - RestrictedPython adds that).
 

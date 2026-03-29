@@ -54,6 +54,7 @@ python build_from_yaml.py --no-test environments/moes-tavern.yaml
 Do **not** use `@reload` — it creates duplicate verbs on a freshly-bootstrapped DB.
 
 If the server goes down mid-build:
+
 ```bash
 docker compose restart webapp celery
 ```

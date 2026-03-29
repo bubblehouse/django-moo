@@ -49,16 +49,19 @@ NPCs use `$player` as parent to get the full messaging infrastructure (tell, ann
 ## Exits
 
 `@dig <dir> to "<room>"` creates:
+
 - A new room
 - A one-way exit from current location in `<dir>`
 
 The exit object has:
+
 - `dest` property: the destination room Object
 - Verb aliases for the direction word (e.g., `go north` and just `north`)
 
 `@tunnel <dir> to "<room>"` adds a reverse exit from the current location (after navigating to the new room).
 
 **Exit connectivity check pattern** (used in test verbs):
+
 ```python
 exits = room.get_property("exits")  # or room.exits.all()
 for exit_obj in exits:
@@ -72,6 +75,7 @@ for exit_obj in exits:
 - **Verbs** hold behavior: `drink`, `sit`, `speak`, `throw`, `read`, `pull`
 
 Properties set via `@edit property name on "obj" with <json-value>` where the value is JSON-encoded:
+
 - String: `with "text"`
 - Number: `with 42`
 - Boolean: `with true` or `with false`
@@ -209,6 +213,7 @@ The `take_failed_msg` property is particularly useful for explaining *why* somet
 `$container` is a child of `$thing`. Use it for any object that holds other objects and can be opened and closed: treasure chests, cabinets, safes, drawers, toolboxes, backpacks.
 
 **Built-in verbs:**
+
 - `open <container>` — sets state to open
 - `close <container>` — sets state to closed
 - `put <obj> in <container>` / `insert <obj> in <container>` — places an item inside (only when open)
@@ -216,6 +221,7 @@ The `take_failed_msg` property is particularly useful for explaining *why* somet
 - `@lock_for_open <container> with <key>` — requires the key to open
 
 **Key properties:**
+
 - `open` (bool, default `false`) — current open/closed state
 - `open_key` (null or key expression) — if set, container requires the matching key to open
 - `opaque` (bool, default `false`) — if `true`, contents are hidden when container is closed
@@ -261,12 +267,14 @@ Set a descriptive `take_failed_msg` so the player knows why they can't move it:
 Use `$note` for anything with readable text content: signs, menus, letters, plaques, books, newspapers, bulletin boards, wanted posters. The player types `read <object>` to see the text.
 
 **Built-in verbs:**
+
 - `read <note>` (also `r <note>`) — prints the `text` property to the player
 - `edit <note>` — opens the in-game text editor to change the text
 - `erase <note>` — clears the text
 - `@lock_for_read <note> with <key>` — restricts reading to players holding the key
 
 **Key properties:**
+
 - `text` (string) — the content shown when the player reads it. Set via `@edit property text on "sign" with "..."` or via `@edit` to use the interactive editor.
 - `read_key` (null or key expression) — if set, reading requires the matching key
 
@@ -322,6 +330,7 @@ If an object should be fixed in place but doesn't make sense to sit on (a statue
 ```
 
 Verb body:
+
 ```python
 return False
 ```

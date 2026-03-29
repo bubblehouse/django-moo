@@ -17,6 +17,7 @@ To distinguish "was this verb triggered directly by a player command vs. called 
 | `has_dobj_str()` | bool | — | Check if any dobj string was typed |
 
 **Local vs Global Lookup:**
+
 - Without `lookup=True`: searches only the player's inventory and current room
 - With `lookup=True`: searches the entire database by name, alias, or `#N` object ID reference
 - Use global lookup for admin commands that need to reference objects anywhere (e.g., `@alias #45 as "thing"`)
@@ -46,6 +47,7 @@ To distinguish "was this verb triggered directly by a player command vs. called 
 `get_dobj()` and `get_pobj(prep)` perform a database lookup. They resolve the string the player typed into a game Object. If the string does not match any real object, they raise `NoSuchObjectError`.
 
 `get_dobj_str()` and `get_pobj_str(prep)` return the raw string exactly as typed. They never perform a DB lookup. Use these when:
+
 - The argument is a message (`say Hello there`)
 - The argument is a name for a new object (`@create My Widget`)
 - The argument is a numeric value or any plain text

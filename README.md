@@ -1,4 +1,5 @@
 # DjangoMOO
+>
 > "LambdaMOO on Django"
 
 ![release](https://gitlab.com/bubblehouse/django-moo/-/badges/release.svg)
@@ -10,6 +11,7 @@
 DjangoMOO is a game server for hosting text-based online MOO-like games.
 
 ## Quick Start
+
 Checkout the project and use Docker Compose to run the necessary components:
 
     git clone https://gitlab.com/bubblehouse/django-moo
@@ -24,7 +26,7 @@ Run `migrate`, `collectstatic`, and bootstrap the initial database with some sam
     docker compose run webapp manage.py createsuperuser --username phil
     docker compose run webapp manage.py moo_enableuser --wizard phil Wizard
 
-Now you should be able to connect to https://localhost/ and login with the superuser you just created, described below.
+Now you should be able to connect to <https://localhost/> and login with the superuser you just created, described below.
 
 ## Login via Web
 

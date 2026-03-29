@@ -7,7 +7,7 @@ work on the core functions of django-moo.
 
 * Docker
 * VSCode
-  *  with [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) plugin
+  * with [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) plugin
 * Git
 
 ## Getting Started
@@ -119,20 +119,21 @@ uv run pytest --pdb
 
 ### Test Organization
 
-- **Core bootstrap data**: Defined in `moo/bootstrap/test.py`, used by the Core tests
-- **Core tests**: `moo/core/tests/` - Tests for models, permissions, verb execution engine
-- **Default bootstrap data**: Defined in `moo/bootstrap/default.py`, used to create playable databases
-- **Default verb sources**: `moo/bootstrap/default_verbs/` - MOO verb definitions for the `default` dataset only
-- **Default tests**: `moo/bootstrap/default_verbs/tests/` - Tests for the default objects and their verbs
+* **Core bootstrap data**: Defined in `moo/bootstrap/test.py`, used by the Core tests
+* **Core tests**: `moo/core/tests/` - Tests for models, permissions, verb execution engine
+* **Default bootstrap data**: Defined in `moo/bootstrap/default.py`, used to create playable databases
+* **Default verb sources**: `moo/bootstrap/default_verbs/` - MOO verb definitions for the `default` dataset only
+* **Default tests**: `moo/bootstrap/default_verbs/tests/` - Tests for the default objects and their verbs
 
 Shared pytest fixtures live in `moo/conftest.py` and provide a pre-seeded game world for integration tests.
 
 ### Writing Tests
 
 All tests should:
-- Use `@pytest.mark.django_db` decorator to access the database
-- Test both success and failure cases
-- Follow PEP 8 naming conventions (test functions start with `test_`)
+
+* Use `@pytest.mark.django_db` decorator to access the database
+* Test both success and failure cases
+* Follow PEP 8 naming conventions (test functions start with `test_`)
 
 #### Core tests
 
@@ -167,8 +168,8 @@ Tests in `moo/bootstrap/default_verbs/tests/` exercise verbs against a fully boo
 
 They use two shared fixtures from `moo/conftest.py`:
 
-- **`t_init`**: Bootstraps the full game world by running `default.py`. Yields the system object (`#1`). Must be requested with `@pytest.mark.parametrize("t_init", ["default"], indirect=True)`.
-- **`t_wizard`**: Returns the Wizard player object, which starts in The Laboratory.
+* **`t_init`**: Bootstraps the full game world by running `default.py`. Yields the system object (`#1`). Must be requested with `@pytest.mark.parametrize("t_init", ["default"], indirect=True)`.
+* **`t_wizard`**: Returns the Wizard player object, which starts in The Laboratory.
 
 Output sent to the player is captured via a `_writer` callback passed to `code.ContextManager`. Commands are executed with `parse.interpret`. After a verb modifies database state, call `refresh_from_db()` before asserting:
 
@@ -311,18 +312,19 @@ open build/html/index.html
 ```
 
 Always include docstrings on:
-- All classes and methods
-- All module-level functions
-- Complex verb code
+
+* All classes and methods
+* All module-level functions
+* Complex verb code
 
 ## Git Workflow
 
 1. Create a feature branch: `git checkout -b feat/my-feature`
 2. Make changes and test locally
 3. Follow Conventional Commits for commit messages:
-   - `feat(core): add new feature`
-   - `fix(shell): handle disconnect`
-   - `docs(context): update docstring`
+   * `feat(core): add new feature`
+   * `fix(shell): handle disconnect`
+   * `docs(context): update docstring`
 4. Push and create a merge request targeting `main`
 5. Address review feedback and ensure CI passes
 
