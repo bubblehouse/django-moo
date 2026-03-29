@@ -27,3 +27,4 @@ if obj.is_player():
 obj.moveto(destination)
 if obj.is_player():
     destination.announce(_.string_utils.pronoun_sub("%D materializes out of thin air in %i(to)."))
+print(f"Moved {obj} to {destination}.")
