@@ -561,9 +561,13 @@ class Object(models.Model, AccessibleMixin):
                     .select_related("owner")
                     .prefetch_related("indirect_objects__preposition__names")
                 )
-                if vcache is not None:
-                    vcache[cache_key] = result
-                return result
+                if result:
+                    if vcache is not None:
+                        vcache[cache_key] = result
+                    return result
+                # Stale cache entry — PKs no longer exist (e.g. after moo_reset).
+                # Evict and fall through to the DB query below.
+                cache.delete(redis_key)
 
         # Self always takes priority — check before touching ancestors
         qs = (
