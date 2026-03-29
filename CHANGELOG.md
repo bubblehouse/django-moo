@@ -858,7 +858,6 @@
 
 * time limit is overrideable by env var (d102bd4)
 
-
 ### Bug Fixes
 
 * commit to force release (bf5145b)
@@ -882,7 +881,6 @@
 ### Features
 
 * use S3 for static assets (5f31fc4)
-
 
 ### Bug Fixes
 
@@ -910,7 +908,6 @@
 
 * add redis as a chart dependency (4832e3d)
 
-
 ### Bug Fixes
 
 * the real issue was using `command` instead of `args` (0621b3d)
@@ -929,7 +926,6 @@
 * provide readiness and liveness files (7983595)
 * update helm chart with missing components (4e48cd2)
 
-
 ### Bug Fixes
 
 * run as www-data at the container level, dont drop permissions (fdb64dc)
@@ -943,7 +939,6 @@
 
 * added lookup boolean to parser methods (ec2b356)
 
-
 ### Bug Fixes
 
 * update Celery configuration to use external file (9cc5742)
@@ -954,7 +949,6 @@
 
 * added [@reload](https://gitlab.com/reload) verb to update filesystem-resident verbs in the database (3e7f8e6)
 
-
 ### Bug Fixes
 
 * resolve split dev dependency sections and upgrade packages (65bf181)
@@ -964,7 +958,6 @@
 ### Features
 
 * lookup support $var syntax (59c0619)
-
 
 ### Bug Fixes
 
@@ -983,7 +976,6 @@
 * added more verbs for $player (44130f8)
 * implemented context.caller_stack to see the list of callers (7ad7be4)
 * write() and set_task_perms() can ony be called by Wizard-owned code (36f7db9)
-
 
 ### Bug Fixes
 
@@ -1004,7 +996,6 @@
 
 * added $gender_utils and tests (4ef8f8f)
 
-
 ### Bug Fixes
 
 * propertly handle "dark" rooms (3c227e2)
@@ -1014,7 +1005,6 @@
 ### Features
 
 * added $string_utils and tests (8df685a)
-
 
 ### Bug Fixes
 
@@ -1032,7 +1022,6 @@
 
 * added improved handling of multple prepositions (de58915)
 * implementing container support (8116fc2)
-
 
 ### Bug Fixes
 
@@ -1052,7 +1041,6 @@
 
 * added remaining room functions (5ffddba)
 * added remaining root_class functions, ensure all objects use $root_class if it exists (5b7af13)
-
 
 ### Bug Fixes
 
@@ -1082,7 +1070,6 @@
 
 * add webssh deployment to helm chart (f314d3c)
 
-
 ### Bug Fixes
 
 * webapp port clobbered (7ac881f)
@@ -1093,7 +1080,6 @@
 ### Features
 
 * removed Accessible- proxy objects (1ad9f2d)
-
 
 ### Bug Fixes
 
@@ -1107,7 +1093,6 @@
 * added key support and parsing, modify tests to use variable PKs (6b6ecaf)
 * implement add_entrance and add_exit, convert dig and tunnel to use those (4f4d1ee)
 * implemented support verbs for exits (adf7100)
-
 
 ### Bug Fixes
 
@@ -1163,7 +1148,6 @@
 
 * first release to PyPI (9357b30)
 
-
 ### Bug Fixes
 
 * allow use of external packages, update docstrings (8ee3261)
@@ -1176,7 +1160,6 @@
 
 * added preliminary door support (e77ddef)
 * implement getattr support for props and verbs (f2d1cf7)
-
 
 ### Bug Fixes
 
@@ -1193,7 +1176,6 @@
 ### Features
 
 * install a web-based ssh client on the root page (1216a1c)
-
 
 ### Bug Fixes
 
@@ -1225,7 +1207,6 @@
 
 * implement serialization for moo types (2c2470f)
 
-
 ### Bug Fixes
 
 * allow more look scenarios, update test (69f60f2)
@@ -1248,7 +1229,6 @@
 
 * added has_property (e13f961)
 
-
 ### Bug Fixes
 
 * restore default bootstrap after mistaking it for test (3312f1d)
@@ -1261,7 +1241,6 @@
 * first pass at room movement verbs (3d38859)
 * improve verb loading (f14bbb5)
 * move common boostrap code for universe into initialize_dataset (f3df4f5)
-
 
 ### Bug Fixes
 
@@ -1280,7 +1259,6 @@
 ### Features
 
 * proper location change behavior, closes [#12](https://gitlab.com/bubblehouse/django-moo/issues/12) (32e94cb)
-
 
 ### Bug Fixes
 
@@ -1305,7 +1283,6 @@
 
 * began implementing support for background tasks (0e79a9a)
 
-
 ### Bug Fixes
 
 * added db_index to important fields (1e72ccc)
@@ -1317,7 +1294,6 @@
 ### Features
 
 * improved prompt, some refactoring (3ec3b2d)
-
 
 ### Bug Fixes
 
@@ -1348,7 +1324,6 @@
 * configure django/celery intergration (88654f7)
 * run verb code in Celery workers instead of the web application (bab48ee)
 
-
 ### Bug Fixes
 
 * only run watchedo on moo_shell invocations (ffcf3f4)
@@ -1365,7 +1340,6 @@
 
 * use ACE editor inside the Django admin for editing Verbs (2c0a1d6)
 
-
 ### Bug Fixes
 
 * handle direct object ID lookups (aec1cf5)
@@ -1376,7 +1350,6 @@
 
 * add intrinsic `obvious` property to improve object searching (97a7d62)
 * added contents to look output (92b41ea)
-
 
 ### Bug Fixes
 
@@ -1389,7 +1362,6 @@
 
 * enable Rich-based markup processing on output (b3a3e27)
 
-
 ### Bug Fixes
 
 * improve var handling (acd163c)
@@ -1400,7 +1372,6 @@
 ### Features
 
 * formally released as django-moo (e519798)
-
 
 ### Bug Fixes
 
@@ -1430,7 +1401,6 @@
 * get_property will now recurse the inheritance tree (12090ee)
 * ssh prompt now defaults to sentence parser (15d1251)
 
-
 ### Bug Fixes
 
 * changed location of chart (083e2f7)
@@ -1458,7 +1428,6 @@
 
 * use a context manager around code invocations (f82a23c)
 
-
 ### Bug Fixes
 
 * provide an output for the context (02a09d6)
@@ -1482,7 +1451,6 @@
 ### Features
 
 * integrate Python shell with restricted environment (f1155e3)
-
 
 ### Bug Fixes
 
@@ -1510,7 +1478,6 @@
 
 * ownership and ACL support (a1c96ca)
 
-
 ### Bug Fixes
 
 * raw id field (a79710d)
@@ -1530,7 +1497,6 @@
 ### Features
 
 * created db init script (6436a54)
-
 
 ### Bug Fixes
 
@@ -1556,7 +1522,6 @@
 * fully interactive SSH prompt using `python-prompt-toolkit` (d9e567d)
 * setup postgres settings for dev and local (7361ccf)
 
-
 ### Bug Fixes
 
 * force release (014d462)
@@ -1569,7 +1534,6 @@
 ### Features
 
 * add shell to compose file (7704588)
-
 
 ### Bug Fixes
 
@@ -1585,7 +1549,6 @@
 ### Features
 
 * implement a trivial SSH server as a Django Management command (9291f50)
-
 
 ### Bug Fixes
 
@@ -1606,7 +1569,6 @@
 ### Features
 
 * added Rich library (72787b5)
-
 
 ### Bug Fixes
 

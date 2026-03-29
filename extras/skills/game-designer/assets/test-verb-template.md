@@ -1,6 +1,7 @@
 # `@test-<name>` Verb Template
 
 Place this verb on `$programmer` so any programmer can run it:
+
 ```
 @edit verb test-<name> on "$programmer"
 ```
@@ -12,11 +13,14 @@ Then paste the code below, replacing all `# TODO` placeholders.
 **Very Long Code Warning**: When test verbs exceed ~100 lines, creating them via `@edit verb ... with "..."` can fail with compilation errors in RestrictedPython's execution context. The verb gets stored correctly but fails to run.
 
 **Workarounds**:
+
 1. **Simplify the test**: Use a dictionary-based approach instead of nested functions and reduce formatting:
+
    ```python
    results = {"passed": 0, "failed": 0}
    # ... inline pass/fail logic without helper functions ...
    ```
+
 2. **Use the interactive editor**: Run `@edit verb test-<name> on "$programmer"` without `with`, then paste the full code in the editor
 3. **Create via multiple @eval chunks**: Break the verb into smaller sections and concatenate
 

@@ -135,6 +135,7 @@ def test_model_save_allowed_for_owner(t_init, t_wizard):
 ```
 
 Notes:
+
 - Accept both `PermissionError` and `AccessError` — the guard may raise either depending on the code path.
 - Always call `obj.refresh_from_db()` before asserting DB-backed state after a save.
 - For delete tests, use `pytest.raises(exceptions.NoSuchObjectError)` after `lookup(name)` to confirm the object is gone (or assert it still exists for blocked cases).
@@ -205,12 +206,14 @@ def test_something_allowed_for_wizard():
 ### Dunder Attribute Syntax
 
 **Problem:** `obj.__class__` is rejected at compile time by RestrictedPython's AST transformer:
+
 ```python
 # This raises TypeError: exec() arg 1 must be a string, bytes or code object
 raises_in_verb("x = obj.__class__", AttributeError)  # WRONG
 ```
 
 **Solution:** Use `getattr()` to access dunder attributes, which is checked at runtime:
+
 ```python
 # This correctly tests the runtime guard
 raises_in_verb("x = getattr(obj, '__class__')", AttributeError)  # CORRECT
@@ -219,6 +222,7 @@ raises_in_verb("x = getattr(obj, '__class__')", AttributeError)  # CORRECT
 ### Underscore-Prefixed Attributes
 
 Similar issue with any `_`-prefixed attribute:
+
 ```python
 raises_in_verb("x = getattr(obj, '_private')", AttributeError)  # Use this
 # NOT: raises_in_verb("x = obj._private", AttributeError)
@@ -227,6 +231,7 @@ raises_in_verb("x = getattr(obj, '_private')", AttributeError)  # Use this
 ### Removed Builtins
 
 `dir()` and `type()` were removed from `ALLOWED_BUILTINS` in pass 1:
+
 ```python
 # These raise NameError, not what we're testing
 # raises_in_verb("for attr in dir(obj): ...", NameError)  # WRONG
@@ -234,6 +239,7 @@ raises_in_verb("x = getattr(obj, '_private')", AttributeError)  # Use this
 ```
 
 **Solutions for tests that need to inspect objects:**
+
 - Use `isinstance(obj, SomeType)` instead of `type(obj)`
 - Use `callable(obj)` to check if something is callable
 - Spot-check known attributes with `hasattr(obj, 'attr_name')`

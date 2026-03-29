@@ -23,8 +23,8 @@ The `transmute` bit specifies whether or not the subject can create new objects 
 
 The 3 existing object groups the permission structure is currently aware of are:
 
-- `owners` - The owner of the object (typically set via the `owner` field)
-- `wizards` - Special administrative users (typically marked with `wizard=True`)
-- `everyone` - All other users
+* `owners` - The owner of the object (typically set via the `owner` field)
+* `wizards` - Special administrative users (typically marked with `wizard=True`)
+* `everyone` - All other users
 
 For code patterns on checking and setting permissions, see {doc}`../how-to/permissions`.

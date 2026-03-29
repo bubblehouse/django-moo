@@ -36,6 +36,7 @@ Use this direction when porting a gotcha, correction, or API clarification from 
 **Replace WRONG/CORRECT tables with prose explanations.**
 
 Agent facing:
+
 ```
 WRONG: return "Player not found."
 CORRECT: print("Player not found."); return
@@ -47,6 +48,7 @@ Human facing:
 **Replace terse bullet rules with paragraphs that include context.**
 
 Agent facing:
+
 ```
 - obj.parents.all() required — ManyToManyField, not directly iterable
 ```

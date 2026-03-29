@@ -11,6 +11,7 @@ The `moo` package is organized as a Django project with the following main compo
 **Purpose**: Contains all core MOO game logic, models, and utilities.
 
 **Key Components**:
+
 - `models/`: Django ORM models for game objects
   - `object.py`: The `Object` model - core entity in the MOO world
   - `verb.py`: The `Verb` model - functions/methods that objects can execute
@@ -25,6 +26,7 @@ The `moo` package is organized as a Django project with the following main compo
 - `tasks.py`: Celery task definitions for async operations
 
 **Important Patterns**:
+
 - Objects use Django's ORM model inheritance
 - Properties support inheritance; child objects inherit parent properties
 - Verbs are Python code compiled and sandboxed via RestrictedPython
@@ -35,6 +37,7 @@ The `moo` package is organized as a Django project with the following main compo
 **Purpose**: Contains bootstrap datasets and verb files that initialize the game database.
 
 **Key Components**:
+
 - `default.py`: Creates the production game world with rooms, players, and other game objects
 - `test.py`: Creates a minimal test dataset used by pytest
 - `default_verbs/`: Directory containing verb files for the default dataset
@@ -44,11 +47,13 @@ The `moo` package is organized as a Django project with the following main compo
 **Purpose**: Provides SSH server implementation and interactive terminal for players.
 
 **Key Components**:
+
 - `server.py`: AsyncSSH server implementation
 - `prompt.py`: Interactive REPL and command processing
 - `management/commands/`: Commands for shell startup
 
 **Important Patterns**:
+
 - Uses asyncio for concurrent connections
 - Integrates with Django's user authentication
 - Supports both password and SSH key authentication
@@ -58,12 +63,14 @@ The `moo` package is organized as a Django project with the following main compo
 **Purpose**: Django settings modules for different environments.
 
 **Files**:
+
 - `base.py`: Core settings shared across all environments
 - `dev.py`: Development environment overrides
 - `local.py`: Local/Docker environment overrides
 - `test.py`: Test environment configuration for pytest
 
 **Important Settings to Know**:
+
 - `ALLOWED_MODULES`: Python modules accessible to verb code
 - `ALLOWED_BUILTINS`: Builtin functions accessible to verbs
 - `DEFAULT_PERMISSIONS`: Core permission strings for the ACL system
@@ -109,6 +116,7 @@ this.emote1(message)
 ```
 
 When executing a verb:
+
 - The execution context includes special variables: `this`, `passthrough`, `_`, `args`, `kwargs`, and `verb_name`
   - `this` – the object where the verb was found
   - `passthrough()` - when used by a child object, passes control to the verb of the same name defined on a parent object

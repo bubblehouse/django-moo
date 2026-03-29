@@ -46,6 +46,7 @@ Three layers carry the project's knowledge. Each has a different audience, style
 Python docstrings must use RST format: `:param x:`, `:type x:`, `:return:`, `:rtype:`, `:raises ExcType:`. Napoleon is **not** installed — Google/NumPy-style docstrings will silently render wrong. When syncing content that touches Python modules, check that any new docstrings follow RST syntax, not Google style.
 
 **What Sphinx does NOT cover:**
+
 - AI agent workflow instructions
 - Step-by-step audit passes or skill procedures
 - Internal implementation details not relevant to verb authors
@@ -75,6 +76,7 @@ Python docstrings must use RST format: `:param x:`, `:type x:`, `:return:`, `:rt
 | Validation | `skills-ref validate ./skill-name/` checks frontmatter and naming conventions. |
 
 **What skills do NOT cover:**
+
 - Human-readable explanations of "why"
 - Narrative introductions for newcomers
 - Detailed conceptual background (point to Sphinx instead)
@@ -103,12 +105,14 @@ Python docstrings must use RST format: `:param x:`, `:type x:`, `:return:`, `:rt
 6. **Clear boundaries** — what the agent must never touch (secrets, vendor dirs, production configs)
 
 **Limits and quality rules:**
+
 - Maximum 32 KiB (default limit enforced by most AI coding tools)
 - Specificity beats vagueness: "uv run pytest -x moo/core/tests/" beats "run the tests"
 - Treat as living documentation: update when commands or conventions change
 - Avoid duplicating content that is already in skills — link instead
 
 **What AGENTS.md does NOT cover:**
+
 - Step-by-step procedures (those belong in skills)
 - Beginner explanations (those belong in Sphinx)
 - Content that is already derivable from reading the code

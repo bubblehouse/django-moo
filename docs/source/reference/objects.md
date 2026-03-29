@@ -46,6 +46,7 @@ There are several fundamental attributes to every object, defined by `moo.core.m
 ```
 
 A bigger change to the DjangoMOO architecture starts to emerge here, around how permissions are specified.
+
 * Player information is kept in a separate table, and `Player.avatar` is set to the Object the player controls.
 * This Player instance also includes a reference to the Django `user` object and the `wizard` `Boolean` field.
 

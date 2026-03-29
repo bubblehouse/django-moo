@@ -6,16 +6,19 @@ This document provides specific guidance for working with the DjangoMOO bootstra
 
 The bootstrap system initializes the game database with default game objects, classes, and verbs. It consists of:
 
-### Files:
+### Files
+
 - `default.py`: Creates the `default` game world with rooms, players, and other game entities
 - `test.py`: Creates the `test` dataset used by pytest
 - `default_verbs/`: Directory of verb files that are installed on `default` game objects
 
-### Datasets:
+### Datasets
+
 - **default**: The production game world. Used when running the server normally.
 - **test**: A minimal dataset used by core pytest tests in `moo/core/tests/`.
 
-### Testing:
+### Testing
+
 - `moo/core/tests` – The core pytest tests for basic functionality shared by all MOO universes
 - `moo/bootstrap/default_verbs/tests/` — pytest integration tests for the verbs installed on the `default` dataset. These are the tests to write when adding or changing a `default_verbs/` verb.
 
@@ -36,6 +39,7 @@ All verb files must start with a "shebang" line that defines metadata:
 ```
 
 **Parameters**:
+
 - `verb_name`: The name(s) of the verb (space-separated for aliases)
 - `--on`: Object ID to attach verb to. Supports the `$<name>` syntax to refer to properties on the system object
 - `--dspec`: Direct object specifier
@@ -54,6 +58,7 @@ Understanding what `this` refers to is critical when writing verbs that take arg
 **`$do_command` pre-hook**: Before searching for a verb, `interpret()` checks whether the system object (#1) defines a verb named `do_command`. If it does, that verb is called with the tokenised command words as positional `args` (and `context.parser.command` holds the raw line). If it returns a truthy value, normal dispatch is skipped entirely. If it returns falsy or does not exist, parsing continues as below.
 
 **Search order** (`moo/core/parse.py`): For any command, the parser searches for a matching verb in this order:
+
 1. The caller (player who typed the command)
 2. Contents of the caller's inventory
 3. The caller's location (room)
@@ -123,6 +128,7 @@ def verb(this, passthrough, _, *args, **kwargs):
 Access is limited to (from settings):
 
 **`ALLOWED_MODULES`**:
+
 - `moo.sdk` - Public verb API (lookup, create, context, invoke, exceptions, etc.)
 - `hashlib` - Hashing functions
 - `re` - Regular expressions
@@ -130,6 +136,7 @@ Access is limited to (from settings):
 - `time` - Time utilities
 
 **`ALLOWED_BUILTINS`**:
+
 - `dict` - Dictionary creation
 - `enumerate` - Enumerate iterables
 - `getattr` - Get attributes
@@ -141,6 +148,7 @@ Access is limited to (from settings):
 ### Important Restrictions
 
 Verbs **must not**:
+
 - Import arbitrary modules (security restriction)
 - Access filesystem directly
 - Open network connections
@@ -148,6 +156,7 @@ Verbs **must not**:
 - Use `__import__` or `exec`/`eval`
 
 Verbs **should not**:
+
 - Perform long-running operations (use invoke() instead)
 - Access database directly (use the ORM instead)
 - Create threads or subprocesses (use invoke() instead)
@@ -248,6 +257,7 @@ print(f"Created {new_obj.name}")
 ```
 
 Common imports:
+
 - `from moo.sdk import create, lookup` - Create/find objects
 - `from moo.core.models import Object, Verb, Property` - Models
 - `from moo.sdk import context` - Access the caller and other context
@@ -376,6 +386,7 @@ Verbs in `default_verbs/` are loaded by `bootstrap.load_verbs()` at the end of `
 ## Best Practices for Verb Development
 
 ### 1. Check Permissions Early
+
 ```python
 if not this.can_caller("write"):
     return "Permission denied."
@@ -384,6 +395,7 @@ if not this.can_caller("write"):
 ### 2. Validate Arguments
 
 Raise `UsageError` for bad input — it is caught by the task runner and shown to the player as a red message:
+
 ```python
 from moo.sdk import UsageError
 
@@ -396,11 +408,13 @@ if not context.parser.has_dobj_str():
 All `UserError` subclasses (`NoSuchObjectError`, `NoSuchVerbError`, `NoSuchPropertyError`, `UsageError`, `QuotaError`, etc.) are automatically caught by the task runner (`moo/core/tasks.py:parse_command`) and their message is displayed to the player as a bold red line. You do not need to wrap parser calls in `try/except` just to display error messages.
 
 Letting `get_dobj()` raise `NoSuchObjectError` is intentional and correct — the player sees "There is no 'X' here." without any extra handling in the verb:
+
 ```python
 key = context.parser.get_pobj("with")   # raises NoSuchObjectError if target doesn't exist
 ```
 
 Only catch these exceptions when you need to provide a different message or take alternative action:
+
 ```python
 try:
     target = context.parser.get_dobj()
@@ -412,12 +426,14 @@ except NoSuchObjectError:
 Any other uncaught exception (not a `UserError`) shows a generic `"An error occurred while executing the command."` to regular players and a full traceback to wizards.
 
 ### 4. Use Descriptive Returns
+
 - Return `True/False` for success/failure from helper verbs
 - Use `print()` for player-facing messages in command verbs (not `return "..."`)
 
 ### 5. Handle Non-UserError Errors Gracefully
 
 Only catch non-UserError exceptions when they represent truly recoverable conditions:
+
 ```python
 try:
     result = int(context.parser.get_dobj_str())
@@ -464,6 +480,7 @@ else:
 ```
 
 Key rules:
+
 - Use `context.player.tell()` for progress messages inside the loop — it delivers immediately via `write()`. `print()` buffers until the verb returns.
 - Pass only the list of remaining PKs as `args[0]`. No need to carry accumulated counts or error strings — those were already told to the player.
 - Materialize the queryset to `list()` before the loop so the DB cursor doesn't span the time check.
@@ -489,6 +506,7 @@ kitchen.set_property("description", "A cozy kitchen.")
 Do: Create verb file in `default_verbs/`
 
 Do Not: Add verb directly in bootstrap code:
+
 ```python
 obj = lookup("some object")
 obj.add_verb("my_verb", code='return "verb result"')
@@ -496,7 +514,8 @@ obj.add_verb("my_verb", code='return "verb result"')
 
 ## Common Mistakes
 
-### ❌ Don't:
+### ❌ Don't
+
 - Assume variables are defined (they might be inherited differently)
 - Perform blocking I/O operations
 - Access the filesystem
@@ -507,7 +526,8 @@ obj.add_verb("my_verb", code='return "verb result"')
 - Call `context.parser.get_dobj()` when you want a string message — it performs a DB lookup and raises `NoSuchObjectError` if the string isn't a real object. Use `get_dobj_str()` for plain strings.
 - Use `get_pobj_string()` / `has_pobj_string()` — these methods do not exist; the correct names are `get_pobj_str()` / `has_pobj_str()`.
 
-### ✓ Do:
+### ✓ Do
+
 - Trust that `set_property()` and `add_verb()` automatically invalidate the attribute cache — no manual cache eviction is needed from verb code.
 - Use `context.player` to identify who initiated a command (the sender/initiator)
 - Use `this` only when the verb genuinely needs the object it was dispatched on (e.g., a room's `accept` or an exit's `go`)
@@ -522,6 +542,7 @@ obj.add_verb("my_verb", code='return "verb result"')
 ## Debugging Verbs
 
 ### In Django Shell
+
 ```python
 from moo.sdk import lookup
 
@@ -531,6 +552,7 @@ print(result)
 ```
 
 ### With Try/Except Blocks
+
 ```python
 #!moo verb debug_verb --on $player
 
@@ -551,7 +573,7 @@ Five verbs on `$player` allow automation clients to control how command output i
 | `SUFFIX <marker>` | `SUFFIX >>END<<` | Emits `<marker>` after each command's output |
 | `OUTPUTPREFIX <marker>` | `OUTPUTPREFIX >>>` | Emits `<marker>` before **all** output, including async tells |
 | `OUTPUTSUFFIX <marker>` | `OUTPUTSUFFIX <<<` | Emits `<marker>` after **all** output, including async tells |
-| `QUIET enable\|disable` | `QUIET enable` | Suppresses ANSI color codes; simplifies prompt to `$ ` |
+| `QUIET enable\|disable` | `QUIET enable` | Suppresses ANSI color codes; simplifies prompt to `$` |
 
 When both layers are active, global markers are outermost: `OUTPUTPREFIX` → `PREFIX` → output → `SUFFIX` → `OUTPUTSUFFIX`.
 
@@ -581,5 +603,5 @@ All settings are session-scoped — they are cleared automatically when the play
 ## Additional Resources
 
 - See `default_verbs/` for example verbs in this repository
-- RestrictedPython documentation: https://restrictedpython.readthedocs.io/
-- Django ORM documentation: https://docs.djangoproject.com/en/stable/topics/db/models/
+- RestrictedPython documentation: <https://restrictedpython.readthedocs.io/>
+- Django ORM documentation: <https://docs.djangoproject.com/en/stable/topics/db/models/>

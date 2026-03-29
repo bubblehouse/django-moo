@@ -44,7 +44,7 @@ Thank you for your interest in contributing to DjangoMOO! This guide is meant to
 
 ## Code of Conduct
 
-This project follows a simple principle: be respectful, constructive, and collaborative. Harassment, discrimination, or bad-faith behaviour will not be tolerated. If you experience a problem, contact the maintainer at phil@bubblehouse.org.
+This project follows a simple principle: be respectful, constructive, and collaborative. Harassment, discrimination, or bad-faith behaviour will not be tolerated. If you experience a problem, contact the maintainer at <phil@bubblehouse.org>.
 
 ---
 
@@ -127,8 +127,8 @@ docker compose run webapp manage.py moo_enableuser --wizard wizard Wizard
 
 | Service | URL |
 |---------|-----|
-| WebSSH client | https://localhost/ |
-| Django admin | https://localhost/admin |
+| WebSSH client | <https://localhost/> |
+| Django admin | <https://localhost/admin> |
 | SSH direct | `ssh localhost -p 8022` |
 
 ---
@@ -301,6 +301,7 @@ BREAKING CHANGE: Use Object.get_property() instead.
 ## Merge Request Process
 
 1. **Branch** off `main`:
+
    ```bash
    git checkout -b feat/my-feature
    ```
@@ -308,6 +309,7 @@ BREAKING CHANGE: Use Object.get_property() instead.
 2. **Make your changes** following the style and testing guidelines above.
 
 3. **Run checks locally** before pushing:
+
    ```bash
    uv run pytest -n auto --cov
    DJANGO_SETTINGS_MODULE=moo.settings.test uv run pylint moo
@@ -412,6 +414,6 @@ Write an integration test in `moo/bootstrap/default_verbs/tests/` using the `t_i
 
 ## Getting Help
 
-- **Issues:** https://gitlab.com/bubblehouse/django-moo/-/issues
-- **Documentation:** https://django-moo.readthedocs.io/
-- **Email:** phil@bubblehouse.org
+- **Issues:** <https://gitlab.com/bubblehouse/django-moo/-/issues>
+- **Documentation:** <https://django-moo.readthedocs.io/>
+- **Email:** <phil@bubblehouse.org>

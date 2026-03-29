@@ -82,6 +82,7 @@ If a verb accepts args or kwargs, those should be passed as well, e.g. `passthro
 ## Verb Lookup and Caching
 
 Verb lookups go through a three-tier cache:
+
 1. Per-`ContextManager` session dict (fastest)
 2. Redis cross-session store keyed by `moo:verb:…`
 3. `AncestorCache` denormalized table

@@ -49,3 +49,4 @@ repos:
     rev: v0.44.0
     hooks:
       - id: markdownlint-fix
+        exclude: ^(CHANGELOG\.md|extras/helm/README\.md)
