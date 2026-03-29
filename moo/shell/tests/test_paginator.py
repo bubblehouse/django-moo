@@ -6,6 +6,7 @@ from moo.core import code
 from moo.sdk import create, lookup, open_paginator
 from moo.core.exceptions import UserError
 from moo.core.models import Object
+from moo.shell import prompt as prompt_module
 
 # ---------------------------------------------------------------------------
 # Helper verb bodies
@@ -77,3 +78,16 @@ def test_open_paginator_non_wizard_raises(t_init: Object, t_wizard: Object):
     with code.ContextManager(player_npc, lambda _: None):
         with pytest.raises(UserError):
             open_paginator(player_npc, "some text")
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_open_paginator_automation_mode_still_publishes_event(t_init: Object, t_wizard: Object):
+    """open_paginator always publishes a paginator event regardless of automation mode.
+    The SSH server (process_messages) intercepts it and writes content directly
+    when automation is set in _session_settings."""
+    with code.ContextManager(t_wizard, lambda _: None):
+        with pytest.warns(RuntimeWarning) as w:
+            open_paginator(t_wizard, "automation content")
+    messages = [str(warning.message) for warning in w.list]
+    assert any("'event': 'paginator'" in m for m in messages)
