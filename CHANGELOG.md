@@ -1,3 +1,13 @@
+## [0.90.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.90.0...v0.90.1) (2026-03-29)
+
+### Bug Fixes
+
+* dont display output separators ([89aff7e](https://gitlab.com/bubblehouse/django-moo/commit/89aff7e5d09e2a9b227bca335a1d74d5e247d2e3))
+* edge case when db is reset but redis is not ([e211a46](https://gitlab.com/bubblehouse/django-moo/commit/e211a4686b3df4448c54aef3c036d0ee9a3acc89))
+* futher agent bugs ([32805f4](https://gitlab.com/bubblehouse/django-moo/commit/32805f413118faf1257535c3b8c54b4d5d2aec5f))
+* improve agent text handling ([739087d](https://gitlab.com/bubblehouse/django-moo/commit/739087de947a0182dc06f197e6c1bf009407a9c6))
+* more agent edge cases ([12728f3](https://gitlab.com/bubblehouse/django-moo/commit/12728f34185bdb1ecb8789f5f7d987a7ea90502e))
+
 ## [0.90.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.89.3...v0.90.0) (2026-03-29)
 
 ### Features
