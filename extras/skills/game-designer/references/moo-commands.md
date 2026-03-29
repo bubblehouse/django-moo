@@ -240,11 +240,19 @@ Lists all `_msg` properties (take/drop/look messages) on an object and its paren
 
 Evaluates Python code directly using the RestrictedPython sandbox. All `moo.sdk` exports are pre-imported — no import statement needed. Also has access to `this` (= `context.player`) and `_` (system object). `args` is not available. Useful for operations that don't have dedicated commands.
 
+**Single-line only.** `@eval` does not support multi-line Python. Do not use `\n` in the code string — it is not processed as a newline and causes a `SyntaxError`. For multi-step inspection, use `SCRIPT:` with individual `@show` commands instead.
+
 Examples:
 
 ```
 @eval "print(context.player.location)"
 @eval "obj = lookup('Moe'); print(obj.name)"
+```
+
+To inspect multiple rooms in sequence, use SCRIPT: with @show:
+
+```
+SCRIPT: @move me to "Room A" | @show here | @move me to "Room B" | @show here
 ```
 
 ### Test Verbs
