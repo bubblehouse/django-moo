@@ -132,7 +132,14 @@ class MooPrompt:
         prompt_session = PromptSession(key_bindings=_make_key_bindings(self.automation))
         confunc_tasks = await self._fire_confunc()
         await self._await_tasks(confunc_tasks)
-        await self._drain_messages()
+        startup_pieces = await self._drain_messages()
+        if startup_pieces:
+
+            def _write_startup(pieces=startup_pieces):
+                for piece in pieces:
+                    self.writer(piece)
+
+            await run_in_terminal(_write_startup)
         try:
             while not self.is_exiting:
                 message = await self.generate_prompt()
@@ -163,9 +170,23 @@ class MooPrompt:
                         self.is_exiting = True
                         break
                     if line.strip() == ".flush":
-                        await self._drain_messages()
+                        drain_pieces = await self._drain_messages()
+                        if drain_pieces:
+
+                            def _write_drain(pieces=drain_pieces):
+                                for piece in pieces:
+                                    self.writer(piece)
+
+                            await run_in_terminal(_write_drain)
                     else:
-                        await self.handle_command(line)
+                        output_pieces = await self.handle_command(line)
+                        if output_pieces:
+
+                            def _write_command_output(pieces=output_pieces):
+                                for piece in pieces:
+                                    self.writer(piece)
+
+                            await run_in_terminal(_write_command_output)
         except:  # pylint: disable=bare-except
             log.exception("Error in command processing")
         finally:
@@ -315,7 +336,7 @@ class MooPrompt:
         ]
 
     @sync_to_async
-    def handle_command(self, line: str) -> object:
+    def handle_command(self, line: str) -> list:
         """
         Parse the command and execute it.
 
@@ -323,9 +344,12 @@ class MooPrompt:
         to avoid excessive property writes. Any exception from the Celery task is
         caught and rendered as a red traceback in the terminal.
 
-        Emits PREFIX and SUFFIX markers if set by the user for machine-readable output.
+        Returns a list of Rich markup strings to be written by the caller via
+        ``run_in_terminal``, so that output is safely delivered from the async
+        event loop thread rather than from this sync executor thread.
 
         :param line: raw input string typed by the user
+        :returns: list of Rich markup strings to write to the terminal
         """
         caller = self.user.player.avatar
         now = datetime.now(timezone.utc)
@@ -344,37 +368,43 @@ class MooPrompt:
         output_global_suffix = settings.get("output_global_suffix")
 
         ct = tasks.parse_command.delay(caller.pk, line)
+        to_write = []
         try:
             output = ct.get()
             if output_global_prefix:
-                self.writer(output_global_prefix)
+                to_write.append(output_global_prefix)
             if output_prefix:
-                self.writer(output_prefix)
+                to_write.append(output_prefix)
             for item in output:
-                self.writer(item)
+                to_write.append(item)
         except:  # pylint: disable=bare-except
             import traceback
 
-            self.writer(f"[bold red]{traceback.format_exc()}[/bold red]")
+            to_write.append(f"[bold red]{traceback.format_exc()}[/bold red]")
         finally:
             if output_suffix:
-                self.writer(output_suffix)
+                to_write.append(output_suffix)
             if output_global_suffix:
-                self.writer(output_global_suffix)
+                to_write.append(output_global_suffix)
+        return to_write
 
     @sync_to_async
     def _drain_messages(self):
         """
-        Drain all pending Kombu messages and write them immediately.
+        Drain all pending Kombu messages and return them for writing.
 
         This implements the ``.flush`` connection-level command: any async output
         (tell() messages, system notices) that has accumulated in the message queue
-        since the last poll cycle is written to the terminal right now.  Session
-        setting events encountered during the drain are applied normally.
+        since the last poll cycle is collected here.  Session setting events
+        encountered during the drain are applied normally.
+
+        Returns a list of Rich markup strings; the caller writes them via
+        ``run_in_terminal`` so they are delivered from the event loop thread.
 
         Useful for automation clients that want a clean separation between async
         background output and the response to the next command they are about to send.
         """
+        to_write = []
         with app.default_connection() as conn:
             channel = conn.channel()
             queue = Queue(
@@ -397,9 +427,10 @@ class MooPrompt:
                             user_pk = self.user.pk
                             _session_settings.setdefault(user_pk, {})[message["key"]] = message["value"]
                     else:
-                        self.writer(message)
+                        to_write.append(message)
             finally:
                 sb.close()
+        return to_write
 
     def writer(self, s, is_error=False):
         """
