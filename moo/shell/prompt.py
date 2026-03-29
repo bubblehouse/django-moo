@@ -378,7 +378,10 @@ class MooPrompt:
         with app.default_connection() as conn:
             channel = conn.channel()
             queue = Queue(
-                "messages", Exchange("moo", type="direct", channel=channel), f"user-{self.user.pk}", channel=channel
+                f"messages.{self.user.pk}",
+                Exchange("moo", type="direct", channel=channel),
+                f"user-{self.user.pk}",
+                channel=channel,
             )
             sb = simple.SimpleBuffer(channel, queue, no_ack=True)
             try:
@@ -432,7 +435,10 @@ class MooPrompt:
             with app.default_connection() as conn:
                 channel = conn.channel()
                 queue = Queue(
-                    "messages", Exchange("moo", type="direct", channel=channel), f"user-{self.user.pk}", channel=channel
+                    f"messages.{self.user.pk}",
+                    Exchange("moo", type="direct", channel=channel),
+                    f"user-{self.user.pk}",
+                    channel=channel,
                 )
                 while not self.is_exiting:
                     sb = simple.SimpleBuffer(channel, queue, no_ack=True)
