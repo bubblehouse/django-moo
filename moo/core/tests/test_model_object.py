@@ -305,6 +305,30 @@ def test_object_add_verb_replace(t_init, t_wizard):
     assert obj.verbs.filter(names__name="action").count() == 1
 
 
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_object_add_verb_replace_wildcard(t_init, t_wizard):
+    with _ctx(t_wizard):
+        obj = create("replaceable wc")
+        obj.add_verb("i*nventory", code="return 'v1'")
+        obj.add_verb("i*nventory", code="return 'v2'", replace=True)
+        result = obj.invoke_verb("inventory")
+    assert result == "v2"
+    assert obj.verbs.filter(names__name="inventory").count() == 1
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_object_add_verb_replace_by_filename(t_init, t_wizard, tmp_path):
+    src = tmp_path / "myverb.py"
+    src.write_text("#!moo verb myverb --on $root_class\nreturn 'v1'\n")
+    with _ctx(t_wizard):
+        obj = create("replaceable fn")
+        obj.add_verb("myverb", code="return 'v1'", filename=str(src))
+        obj.add_verb("myverb", code="return 'v2'", filename=str(src), replace=True)
+        result = obj.invoke_verb("myverb")
+    assert result == "v2"
+    assert obj.verbs.filter(names__name="myverb").count() == 1
+
+
 # ---------------------------------------------------------------------------
 # Properties
 # ---------------------------------------------------------------------------
