@@ -366,8 +366,12 @@ class Object(models.Model, AccessibleMixin):
         if filename and not code:
             code = bootstrap.get_source(filename, dataset=repo.slug)
         verb = None
-        if replace and names:
-            verb = Verb.objects.filter(origin=self, names__name=names[0]).first()
+        if replace:
+            if filename:
+                verb = Verb.objects.filter(origin=self, filename=filename).first()
+            elif names:
+                expanded = utils.expand_wildcard(names[0])
+                verb = Verb.objects.filter(origin=self, names__name=expanded[-1]).first()
         if verb is not None:
             verb.owner = owner
             verb.repo = repo
