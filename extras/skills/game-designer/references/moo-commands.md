@@ -79,6 +79,8 @@ Examples:
 ```
 Moves an object to a room or container. Use `#N` (unquoted) to avoid ambiguity when multiple objects share the same name. Use `me` to teleport yourself directly to any room by name — this is the simplest way to navigate to rooms that are not connected by exits yet.
 
+Prints a confirmation line on success: `Moved <object> to <location>.` Use this to verify the move in build scripts.
+
 Examples:
 ```
 @move "Moe" to "Moe's Tavern"
@@ -196,7 +198,7 @@ Lists all `_msg` properties (take/drop/look messages) on an object and its paren
 ```
 @eval "<python-code>"
 ```
-Evaluates Python code directly using the RestrictedPython sandbox. All `moo.sdk` exports (`lookup`, `create`, `context`, `NoSuchObjectError`, etc.) are pre-imported — no import statement needed. Also has access to `this` and `_`. Useful for operations that don't have dedicated commands.
+Evaluates Python code directly using the RestrictedPython sandbox. All `moo.sdk` exports are pre-imported — no import statement needed. Also has access to `this` (= `context.player`) and `_` (system object). `args` is not available. Useful for operations that don't have dedicated commands.
 
 Examples:
 ```
