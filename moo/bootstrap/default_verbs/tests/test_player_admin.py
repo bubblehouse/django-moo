@@ -225,6 +225,20 @@ def test_show_object_details(t_init: Object, t_wizard: Object, setup_item):
     assert any("Verbs:" in line for line in printed)
 
 
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_show_global_lookup(t_init: Object, t_wizard: Object, setup_item):
+    """@show resolves objects globally, not just in the current room."""
+    other_room = create("Other Room", parents=[lookup("$room")])
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        # Place the widget in a different room from the wizard
+        setup_item(other_room, "remote_widget")
+        parse.interpret(ctx, "@show remote_widget")
+    assert any("Owner:" in line for line in printed)
+    assert any("Location:" in line for line in printed)
+
+
 # --- @alias ---
 
 
