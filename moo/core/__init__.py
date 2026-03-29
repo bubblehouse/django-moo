@@ -74,7 +74,10 @@ def _publish_to_player(obj, message):
     with app.default_connection() as conn:
         channel = conn.channel()
         queue = Queue(
-            "messages", Exchange("moo", type="direct", channel=channel), f"user-{player.user.pk}", channel=channel
+            f"messages.{player.user.pk}",
+            Exchange("moo", type="direct", channel=channel),
+            f"user-{player.user.pk}",
+            channel=channel,
         )
         with app.producer_or_acquire() as producer:
             caller = ContextManager.get("caller")
