@@ -3,6 +3,7 @@ __pycache__
 .coverage
 .dccache
 .DS_Store
+.local/*
 .reload
 .tm_properties
 *.egg
@@ -14,14 +15,14 @@ __pycache__
 *.sqlite
 *.sqlite3
 *.tgz
-.local/*
-static/*
 compose.override.yml
-docs/build/*
 docs/_build/*
+docs/build/*
 docs/source/generated/*
+extras/agents/builder/logs/*
 extras/pages/public/*
 extras/pages/resources/_gen/*
 extras/skills/game-designer/environments/*
 node_modules/*
 prof/*
+static/*

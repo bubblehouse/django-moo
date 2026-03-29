@@ -13,7 +13,7 @@ from moo.sdk import context, open_paginator
 parser = context.parser
 player = context.player
 if not parser.has_pobj_str("on"):
-    obj = parser.get_dobj()
+    obj = parser.get_dobj(lookup=True)
 else:
     target = parser.get_pobj("on", lookup=True)
     name = parser.get_dobj_str()
