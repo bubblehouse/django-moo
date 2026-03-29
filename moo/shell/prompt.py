@@ -108,6 +108,8 @@ class MooPrompt:
         self.user = user
         self.automation = automation
         self.is_exiting = False
+        if automation:
+            _session_settings.setdefault(self.user.pk, {})["automation"] = True
         self.editor_queue = asyncio.Queue()
         self.paginator_queue = asyncio.Queue()
         self.disconnect_event = asyncio.Event()
@@ -450,7 +452,24 @@ class MooPrompt:
                     if isinstance(message, dict) and message.get("event") == "editor":
                         await self.editor_queue.put(message)
                     elif isinstance(message, dict) and message.get("event") == "paginator":
-                        await self.paginator_queue.put(message)
+                        settings = _session_settings.get(self.user.pk, {})
+                        if settings.get("automation"):
+                            content = message.get("content", "")
+
+                            def _write_paginator(
+                                msg=content,
+                                gp=settings.get("output_global_prefix"),
+                                gs=settings.get("output_global_suffix"),
+                            ):
+                                if gp:
+                                    self.writer(gp)
+                                self.writer(msg)
+                                if gs:
+                                    self.writer(gs)
+
+                            await run_in_terminal(_write_paginator)
+                        else:
+                            await self.paginator_queue.put(message)
                     elif isinstance(message, dict) and message.get("event") == "session_setting":
                         user_pk = self.user.pk
                         if user_pk not in _session_settings:
