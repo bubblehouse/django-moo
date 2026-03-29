@@ -37,7 +37,8 @@
 				"ms-python.debugpy",
 				"ms-python.python",
 				"ms-python.vscode-pylance",
-				"charliermarsh.ruff"
+				"charliermarsh.ruff",
+				"DavidAnson.vscode-markdownlint"
 				// Add additional extensions here:
 			]
 		}
