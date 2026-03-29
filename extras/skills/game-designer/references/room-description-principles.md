@@ -43,12 +43,14 @@ This property changes the Chekhov's Gun calculation:
 ### Which objects deserve `obvious: true`?
 
 Mark an object obvious when:
+
 - It would be the first thing a person would notice walking into the room
 - It has an interactive verb and players need to discover it
 - It's a major architectural feature (fireplace, desk, bar counter)
 - It's an NPC-scale presence (large taxidermy, a throne, a painting that dominates a wall)
 
 Leave an object non-obvious when:
+
 - It's a small detail discovered by examining a larger object (a poker by the fireplace, a ribbon in a crate)
 - It's an Easter egg or reward for exploration (a hidden skeleton, a suspicious camera)
 - Creating many copies via `quantity` — individual instances of fungible items usually don't need to appear in the listing
@@ -89,6 +91,7 @@ rooms:
 ```
 
 **How to break by topic:**
+
 - Paragraph 1 — overall atmosphere, first impression (what the room feels like)
 - Paragraph 2 — the dominant object or focal point (the thing your eye goes to)
 - Paragraph 3 — secondary details, exits, or interactive elements worth noting
@@ -111,4 +114,4 @@ Three paragraphs is usually enough. Two is fine. One long paragraph is almost al
 ### Source
 
 Toronto Film School — "Chekhov's Gun: Definition, Examples, and Tips"
-https://www.torontofilmschool.ca/blog/chekhovs-gun-definition-examples-and-tips/
+<https://www.torontofilmschool.ca/blog/chekhovs-gun-definition-examples-and-tips/>

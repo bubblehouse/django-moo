@@ -31,13 +31,13 @@ One of the most common tasks of the Parser is to find an object in the context o
 1. If `spec` is "my", search the player's inventory for the name
 2. If `spec` is a possessive, search the target's contents for the name
 3. Otherwise `Object.find()` to search the player's location
-  1. uses a case-insensitive match of the object name
-  2. also searches for case-insensitive Aliases
-  3. if nothing is found, `Object.find()` to search the player's inventory
-4. If no object was found,
-  1. ...but the string is "here", return the location.
-  2. ...but the string is "me", return the player.
-  3. ...but the string is a number starting with '#', return that Object by ID
+4. uses a case-insensitive match of the object name
+5. also searches for case-insensitive Aliases
+6. if nothing is found, `Object.find()` to search the player's inventory
+7. If no object was found,
+8. ...but the string is "here", return the location.
+9. ...but the string is "me", return the player.
+10. ...but the string is a number starting with '#', return that Object by ID
 
 ### Preposition Synonym Groups
 
@@ -92,8 +92,8 @@ The search iterates through all candidate objects in the order listed above and 
 
 **Consequence for `--dspec any` or `--dspec this` verbs on `$player`**: if both the caller (the player who typed the command) and the direct object are `$player` instances — or both inherit the same verb from a common ancestor — then the direct object wins, because it appears later in the search order. Inside the executing verb:
 
-- `this` = the **direct object** (not the caller)
-- `context.player` = the **caller** (the player who typed the command)
+* `this` = the **direct object** (not the caller)
+* `context.player` = the **caller** (the player who typed the command)
 
 ```
 @gag Player   →   this = Player (dobj), context.player = Wizard (caller)

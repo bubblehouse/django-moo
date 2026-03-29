@@ -65,6 +65,7 @@ with code.ContextManager(t_wizard, printed.append) as ctx:
 The `writer` callable receives everything `print()` sends to the player during the context.
 
 For tests that don't care about output:
+
 ```python
 with code.ContextManager(t_wizard, lambda msg: None) as ctx:
     parse.interpret(ctx, "look")

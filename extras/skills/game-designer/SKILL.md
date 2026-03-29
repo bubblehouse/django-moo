@@ -94,6 +94,7 @@ verbs:
 In hash mode (`use_hash_suffix: true`), the build script generates a unique 6-character hash per run (e.g., `[1e8372]`) and substitutes it for `__hash_suffix__` everywhere. This lets you rebuild repeatedly without name collisions.
 
 **Where to use `__hash_suffix__`:**
+
 - Room `name:` fields — the names sent to `@create`
 - Object `name:` fields — the names sent to `@create`
 - NPC `name:` fields — the names sent to `@create`
@@ -102,6 +103,7 @@ In hash mode (`use_hash_suffix: true`), the build script generates a unique 6-ch
 - The `--on "..."` argument inside verb shebang lines
 
 **Where NOT to use `__hash_suffix__` (internal YAML references):**
+
 - Exit `to:` fields
 - NPC `room:` fields
 - Verb `room:` fields
@@ -112,6 +114,7 @@ The `room_map`, `obj_refs`, and `npc_refs` dictionaries inside the build script 
 **Clean-name aliases:** In hash mode, the build script automatically adds the clean (unhashed) name as an alias to every room, object, and NPC it creates. So `lookup("Room Name")` works alongside `lookup("Room Name [1e8372]")`, and players can refer to objects by plain names in-game.
 
 **Hash mode usage:**
+
 - `use_hash_suffix: true` — development mode, allows repeated builds without cleanup
 - `use_hash_suffix: false` — production mode, clean names
 - `--hash` / `--no-hash` CLI flags override the YAML setting
@@ -125,6 +128,7 @@ Every verb code block must start with a shebang line that registers the verb:
 ```
 
 **Multiple verb names:** Space-separated. All names are registered as aliases for the same verb:
+
 ```python
 #!moo verb talk speak --on "Professor Farnsworth __hash_suffix__" --dspec either --ispec to:any
 #!moo verb punch kick hit --on "punching bag __hash_suffix__" --dspec either --ispec at:this
@@ -132,12 +136,14 @@ Every verb code block must start with a shebang line that registers the verb:
 ```
 
 **`--dspec` values:**
+
 - `--dspec this` — verb only matches when the object it's on is the direct object (`verb object`)
 - `--dspec any` — verb matches any direct object
 - `--dspec either` — direct object is optional; supports both `verb object` and `verb prep object` forms
 - omit — verb takes no direct object
 
 **`--ispec PREP:SPEC`** — indirect object via preposition. `SPEC` is `this`, `any`, or `none`:
+
 - `--ispec to:any` — matches `talk to Farnsworth` (iobj can be anything)
 - `--ispec on:this` — matches `sit on couch` (iobj must be the object the verb is on)
 - `--ispec into:any` — matches `crawl into dumpster`
@@ -200,6 +206,7 @@ python extras/skills/game-designer/tools/build_from_yaml.py \
 The script accepts either a file path or a directory path.
 
 **Options:**
+
 - `--dry-run`: Parse YAML without connecting to MOO
 - `--no-test`: Skip test verb creation
 - `--hash`: Force hash suffix mode (override YAML setting)
@@ -209,6 +216,7 @@ The script accepts either a file path or a directory path.
 **For local development**, a DB refresh and server restart before each build ensures a clean state. For production deploys, just run the build against the live server. If the server is unresponsive mid-build, you can restart it yourself with `docker compose restart webapp celery` — but tell the user first.
 
 **Build process:**
+
 1. **Phase 1: Rooms and exits** — Creates all rooms in the void, then DFS-traverses the exit graph from the first room: teleports to each room via `@move me to "<room>"`, describes it, wires all its exits, then recurses into unvisited neighbors. A `created_exits` set tracks `(room, direction)` pairs to detect and skip duplicates (which would otherwise fail silently inside `@tunnel`). Rooms unreachable from the first room are warned about and still built.
 2. **Phase 2: Objects** — Creates objects in void, describes, adds aliases (including clean-name alias in hash mode), moves to rooms
 3. **Phase 3: NPCs** — Creates NPCs, creates a Django `Player` record (no User) for each via `Player.objects.create()`, describes, adds aliases (including clean-name alias in hash mode), moves to rooms
@@ -226,18 +234,21 @@ The script accepts either a file path or a directory path.
 The test verb is automatically generated and run by `build_from_yaml.py`.
 
 **Test verb name:**
+
 - With hash: `test-<env-name>-<hash>` (e.g., `test-planet-express-1e8372`)
 - Without hash: `test-<env-name>` (e.g., `test-planet-express`)
 
 The test verb name is printed at the end of build output. If the SSH connection drops while the test verb is running, the build still succeeded — run the test verb manually in-world.
 
 **Test verb verifies:**
+
 - All rooms exist and are accessible (looked up by hashed name)
 - All objects are in correct rooms
 - All NPCs are present (looked up by hashed name)
 - All verbs are attached to correct objects
 
 **Manual re-run:**
+
 ```
 test-<env-name>-<hash>
 ```
@@ -345,6 +356,7 @@ Supports global lookup by name or #N ID. The build script uses this for all alia
 All environments are built using the generic `build_from_yaml.py` script.
 
 **Scripts:**
+
 - `build_from_yaml.py` — Generic YAML-driven builder (accepts file or directory)
 - `build_moes_tavern.py` — Original monolithic script (reference only)
 

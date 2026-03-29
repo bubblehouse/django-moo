@@ -18,8 +18,6 @@ Technically, a Verb can use any kind of Python value, but since all MOO code is 
 
 There's no equivalent concept to the LambdaMOO object notation, the only way to fetch object references is via the Python API:
 
-
-
 ```{eval-rst}
 .. autofunction:: moo.core.lookup()
    :no-index:

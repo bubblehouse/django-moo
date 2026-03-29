@@ -93,7 +93,7 @@ This is especially useful in automation scripts: sending `.flush` before each co
 
 ## QUIET
 
-`QUIET` disables Rich color markup in command output and simplifies the prompt to a bare `$ `. This removes ANSI escape sequences so automation clients receive clean plain text.
+`QUIET` disables Rich color markup in command output and simplifies the prompt to a bare `$`. This removes ANSI escape sequences so automation clients receive clean plain text.
 
 ```
 QUIET enable

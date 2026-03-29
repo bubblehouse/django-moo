@@ -28,6 +28,7 @@ git log --oneline --since="2 weeks ago"
 ```
 
 Adjust the `--since` window to cover everything since the last `docs:` commit. Look for:
+
 - `feat:` commits — new features that need documentation in all three layers
 - `fix:` commits — bug fixes that may have corrected API assumptions in skills or AGENTS.md
 - `docs:` commits — check what was updated and what adjacent areas were left untouched
@@ -35,6 +36,7 @@ Adjust the `--since` window to cover everything since the last `docs:` commit. L
 For each notable commit, ask: which layer did this change land in? Do the others reflect it?
 
 Also check the project memory for recent additions:
+
 ```
 ~/.claude/projects/-Users-philchristensen-Workspace-bubblehouse-django-moo/memory/
 ```
@@ -64,6 +66,7 @@ Scan the layers for common drift types. Work through this checklist:
 **Skill README files** — each skill directory has a `README.md` targeting human developers (not AI agents). When a skill's capabilities change — new reference files added, trigger phrases updated, workflow phases added or renamed — update the relevant `README.md` alongside the `SKILL.md`. Also update `extras/skills/README.md` if new skills are added or removed.
 
 **Agent SOUL.md files** — `extras/agents/*/SOUL.md` are operational documents for autonomous agents. Check them when:
+
 - The game-designer skill adds or changes command syntax (new `@create` forms, `@dig` syntax changes, `@eval` patterns for setting properties or adding verbs)
 - Game design principles change (new parent class guidance, new `obvious` property rules, updated description principles)
 - MOO command names change or new wizard commands are added
@@ -80,6 +83,7 @@ For each gap found in Phase 2, port the content to the missing layer.
 **Direction: Skills/AGENTS.md → Sphinx**
 
 Skills and AGENTS.md tend to be ahead. When porting to Sphinx:
+
 - Translate for human readers (see [translation.md](references/translation.md))
 - Add "why it matters" context, not just the rule
 - Anchor the content to a realistic verb scenario
@@ -92,6 +96,7 @@ Less common. When Sphinx gets a major structural update, check whether skills ne
 **Direction: game-designer skill → Agent SOUL.md**
 
 When game-designer command syntax, parent class guidance, or design principles change, port the relevant facts into any SOUL.md that covers building. The SOUL.md audience is an autonomous agent with no fallback — it cannot look up a reference file if a command fails. Translate game-designer content into:
+
 - Concrete command examples with exact syntax
 - Short principles stated as rules ("Use `$container` when players might want to put something inside it, even if the object is immovable")
 - Explicit corrected forms for any commands the LLM tends to get wrong (e.g. LambdaMOO `@verb`/`@set` syntax vs DjangoMOO `@eval` equivalents)
@@ -101,6 +106,7 @@ When game-designer command syntax, parent class guidance, or design principles c
 Memory files capture ephemeral investigations. If a memory file contains a stable fact (an API name, a gotcha, a behavioral rule), that fact belongs in at least one documentation layer. Port it and leave the memory as a pointer.
 
 For each change, make one commit per destination layer:
+
 ```
 docs: update 11_creating_verbs.md with correct output mechanism names
 docs: update verb-author skill with $furniture pattern
@@ -128,6 +134,7 @@ The dummy builder validates all cross-references and toctree entries. `sphinx-li
 **`sphinx-lint` path:** guide pages now live under `docs/source/` in Diátaxis subdirectories (`explanation/`, `how-to/`, `reference/`, `tutorials/`), not `docs/source/guide/`. Pass `docs/source/` as the root.
 
 Update the project memory sync record:
+
 ```
 ~/.claude/projects/-Users-philchristensen-Workspace-bubblehouse-django-moo/memory/project_doc_sync_pattern.md
 ```

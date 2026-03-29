@@ -28,6 +28,7 @@ The full syntax is:
 ```
 
 **Parameters**:
+
 - `verb_name`: The name(s) of the verb (space-separated for aliases like `#!moo verb put give`)
 - `--on`: Object to attach the verb to. Supports the special `$property_name` syntax to refer to properties on the system object
 - `--dspec`: Direct object specifier (defaults to `none`)
@@ -109,6 +110,7 @@ All verb code is compiled and executed within RestrictedPython's sandboxed envir
 - Warnings about undefined variables can be ignored for injected variables like `this`, `passthrough`, `_`, `args`, and `kwargs`
 
 **Whitelisted Modules**:
+
 - `moo.sdk` - Public verb API (lookup, create, context, invoke, exceptions, etc.)
 - `hashlib` - Hashing functions
 - `re` - Regular expressions
@@ -116,6 +118,7 @@ All verb code is compiled and executed within RestrictedPython's sandboxed envir
 - `time` - Time utilities
 
 **Whitelisted Built-ins**:
+
 - `dict()` - Create dictionaries
 - `enumerate()` - Enumerate iterables
 - `getattr()` - Get attributes dynamically

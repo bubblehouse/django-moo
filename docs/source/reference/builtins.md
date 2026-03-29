@@ -1,4 +1,5 @@
 # Built-in Functions
+
 ```{eval-rst}
 .. py:currentmodule:: moo.core
 .. autofunction:: moo.core.connected_players()
@@ -22,6 +23,7 @@
 ```
 
 ## Object Attributes
+
 ```{eval-rst}
 .. py:currentmodule:: moo.core.models
 .. autoattribute:: Object.name
@@ -39,6 +41,7 @@
 ```
 
 ## Object Methods
+
 ```{eval-rst}
 .. py:currentmodule:: moo.core.models
 .. automethod:: Object.find()
@@ -64,6 +67,7 @@
 ```
 
 ## Property Attributes
+
 ```{eval-rst}
 .. py:currentmodule:: moo.core.models
 .. autoattribute:: Property.name
@@ -81,6 +85,7 @@
 ```
 
 ## Verb Attributes
+
 ```{eval-rst}
 .. py:currentmodule:: moo.core.models
 .. autoattribute:: Verb.code

@@ -116,6 +116,7 @@ else:
 ```
 
 Rules:
+
 - `task_time_low(threshold=0.5)` — returns `True` when `remaining <= threshold`; returns `False` in tests (no limit). No manual guard needed.
 - `schedule_continuation(remaining_items, verb, msg=None)` — extracts PKs, calls `invoke()`, tells the player. Replaces three-line inline boilerplate.
 - Dispatch on `verb_name`, not `isinstance(args[0], list)` — more explicit and avoids confusion with other verbs that accept list args.
@@ -268,6 +269,7 @@ All importable from `moo.sdk`:
 | `QuotaError(message)` | The message string | Quota exceeded during `create()` |
 
 `UsageError` is useful when a verb wants to exit cleanly with a usage message:
+
 ```python
 from moo.sdk import UsageError
 
@@ -278,6 +280,7 @@ if not context.parser.has_dobj_str():
 Any other uncaught exception (not a `UserError`) shows `"An error occurred while executing the command."` to regular players, and a full traceback to wizards.
 
 `NoSuchPropertyError` is also importable directly from `moo.core`:
+
 ```python
 from moo.core import NoSuchPropertyError
 ```
