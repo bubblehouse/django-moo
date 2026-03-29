@@ -130,6 +130,11 @@ class MooPrompt:
         cancelled. Exits cleanly on EOF or KeyboardInterrupt.
         """
         prompt_session = PromptSession(key_bindings=_make_key_bindings(self.automation))
+        # Clear any session settings left over from a previous connection on
+        # this account (e.g. an agent that enabled QUIET/OUTPUTPREFIX).
+        _session_settings.pop(self.user.pk, None)
+        if self.automation:
+            _session_settings.setdefault(self.user.pk, {})["automation"] = True
         confunc_tasks = await self._fire_confunc()
         await self._await_tasks(confunc_tasks)
         startup_pieces = await self._drain_messages()
@@ -423,9 +428,11 @@ class MooPrompt:
                     content = moojson.loads(msg.body)
                     message = content["message"]
                     if isinstance(message, dict):
-                        if message.get("event") == "session_setting":
-                            user_pk = self.user.pk
-                            _session_settings.setdefault(user_pk, {})[message["key"]] = message["value"]
+                        # Discard session_setting events during startup drain — they are
+                        # always leftovers from a previous session (e.g. an agent that
+                        # enabled QUIET/OUTPUTPREFIX before disconnecting) and must not
+                        # bleed into the new session.
+                        pass
                     else:
                         to_write.append(message)
             finally:
