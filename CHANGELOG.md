@@ -1,3 +1,14 @@
+## [0.90.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.89.3...v0.90.0) (2026-03-29)
+
+### Features
+
+* implemented moo-agent for autonomous experiments ([76c2b1b](https://gitlab.com/bubblehouse/django-moo/commit/76c2b1b8324d0cba3644d82b8b96e29300d9b38f))
+
+### Bug Fixes
+
+* more scroll handling, other agent fixes ([4fc5770](https://gitlab.com/bubblehouse/django-moo/commit/4fc57709e9b78feb1a9f49c3de1926c12d408ff7))
+* scroll handling in agent TUI ([16bf6ac](https://gitlab.com/bubblehouse/django-moo/commit/16bf6ac84fa124b5cf251919242c6779adde6c4c))
+
 ## [0.89.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.89.2...v0.89.3) (2026-03-28)
 
 ### Bug Fixes
