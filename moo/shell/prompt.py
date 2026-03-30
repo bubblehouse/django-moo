@@ -458,13 +458,12 @@ class MooPrompt:
                         break
                     content = moojson.loads(msg.body)
                     message = content["message"]
-                    if isinstance(message, dict):
-                        # Discard session_setting events during startup drain — they are
-                        # always leftovers from a previous session (e.g. an agent that
-                        # enabled QUIET/OUTPUTPREFIX before disconnecting) and must not
-                        # bleed into the new session.
-                        pass
-                    else:
+                    if isinstance(message, dict) and message.get("event") == "session_setting":
+                        user_pk = self.user.pk
+                        if user_pk not in _session_settings:
+                            _session_settings[user_pk] = {}
+                        _session_settings[user_pk][message["key"]] = message["value"]
+                    elif not isinstance(message, dict):
                         to_write.append(message)
             finally:
                 sb.close()
@@ -483,6 +482,8 @@ class MooPrompt:
         :param s: Rich markup string to render
         :param is_error: reserved for future use; currently unused
         """
+        if not isinstance(s, str):
+            s = str(s)
         settings = _session_settings.get(self.user.pk, {})
         color_system = None if settings.get("quiet_mode", False) else "truecolor"
         console = Console(color_system=color_system)
