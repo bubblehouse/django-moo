@@ -85,6 +85,7 @@ def _run_drain_messages(prompt, messages):
     Run _drain_messages() against a list of message dicts.
 
     Each item in ``messages`` becomes ``content["message"]``.
+    Returns the list of strings returned by _drain_messages().
     """
     MockEmpty = type("MockEmpty", (Exception,), {})
     msg_iter = iter(messages)
@@ -111,7 +112,7 @@ def _run_drain_messages(prompt, messages):
         patch("moo.shell.prompt.simple.SimpleBuffer", return_value=mock_sb),
         patch("moo.shell.prompt.moojson.loads", side_effect=json.loads),
     ):
-        asyncio.run(prompt._drain_messages())
+        return asyncio.run(prompt._drain_messages())
 
 
 # ---------------------------------------------------------------------------
@@ -192,23 +193,21 @@ def test_handle_command_emits_global_prefix_and_suffix():
     user_pk = prompt.user.pk
     _session_settings[user_pk] = {"output_global_prefix": ">>>", "output_global_suffix": "<<<"}
 
-    written = []
     try:
         with (
             patch("moo.shell.prompt.tasks.parse_command") as mock_task,
             patch("moo.shell.prompt.code.ContextManager") as mock_ctx,
-            patch.object(prompt, "writer", side_effect=written.append),
         ):
             mock_task.delay.return_value = parse_result
             mock_ctx.return_value.__enter__ = MagicMock(return_value=None)
             mock_ctx.return_value.__exit__ = MagicMock(return_value=False)
-            asyncio.run(prompt.handle_command("look"))
+            result = asyncio.run(prompt.handle_command("look"))
     finally:
         _session_settings.pop(user_pk, None)
 
-    assert written[0] == ">>>"
-    assert "room output" in written
-    assert written[-1] == "<<<"
+    assert result[0] == ">>>"
+    assert "room output" in result
+    assert result[-1] == "<<<"
 
 
 def test_handle_command_global_markers_are_outermost():
@@ -223,22 +222,20 @@ def test_handle_command_global_markers_are_outermost():
         "output_suffix": "CMD_END",
     }
 
-    written = []
     try:
         with (
             patch("moo.shell.prompt.tasks.parse_command") as mock_task,
             patch("moo.shell.prompt.code.ContextManager") as mock_ctx,
-            patch.object(prompt, "writer", side_effect=written.append),
         ):
             mock_task.delay.return_value = parse_result
             mock_ctx.return_value.__enter__ = MagicMock(return_value=None)
             mock_ctx.return_value.__exit__ = MagicMock(return_value=False)
-            asyncio.run(prompt.handle_command("look"))
+            result = asyncio.run(prompt.handle_command("look"))
     finally:
         _session_settings.pop(user_pk, None)
 
-    assert written.index("G_START") < written.index("CMD_START")
-    assert written.index("CMD_END") < written.index("G_END")
+    assert result.index("G_START") < result.index("CMD_START")
+    assert result.index("CMD_END") < result.index("G_END")
 
 
 # ---------------------------------------------------------------------------
@@ -275,16 +272,14 @@ def test_plain_message_wrapped_with_global_prefix_suffix():
 
 
 def test_drain_messages_writes_pending_text():
-    """_drain_messages() calls writer() for each plain text message in the queue."""
+    """_drain_messages() returns each plain text message in the queue."""
     user = MagicMock()
     user.pk = 88
     prompt = MooPrompt(user)
 
-    written = []
-    with patch.object(prompt, "writer", side_effect=written.append):
-        _run_drain_messages(prompt, ["msg one", "msg two"])
+    result = _run_drain_messages(prompt, ["msg one", "msg two"])
 
-    assert written == ["msg one", "msg two"]
+    assert result == ["msg one", "msg two"]
 
 
 def test_drain_messages_processes_session_settings():
