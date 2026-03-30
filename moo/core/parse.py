@@ -482,12 +482,12 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             raise NoSuchPrepositionError(prep)
         matches = []
         for item in self.prepositions[prep]:
-            if lookup and item[1] is not None:
+            if item[2]:
+                matches.append(item[2])
+            elif lookup and item[1] is not None:
                 from moo.core import lookup
 
                 matches.append(lookup(item[1]))
-            elif item[2]:
-                matches.append(item[2])
         if len(matches) > 1:
             raise AmbiguousObjectError(prep, matches)
         if not (matches):
