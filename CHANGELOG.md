@@ -1,3 +1,30 @@
+## [0.91.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.90.1...v0.91.0) (2026-03-30)
+
+### Features
+
+* added agent support for local inference....one day ([a106b8c](https://gitlab.com/bubblehouse/django-moo/commit/a106b8c9331f70800f634d01a3e1d8545377090a))
+* support Bedrock in moo-agent ([1f78557](https://gitlab.com/bubblehouse/django-moo/commit/1f78557f65bdd3ee87613cbd1398bd5775ed5101))
+
+### Bug Fixes
+
+* added response to [@move](https://gitlab.com/move) ([f92ce4c](https://gitlab.com/bubblehouse/django-moo/commit/f92ce4c0f9df0b7a28d3b7bdbbf97f8f10dffd5a))
+* after a script, print a summary of what you did ([0438162](https://gitlab.com/bubblehouse/django-moo/commit/04381628bdba8e444ebf7a41b508db6dcdef2905))
+* agent should pre-generate a list of commands rather than doing each one by one ([78891a1](https://gitlab.com/bubblehouse/django-moo/commit/78891a1a8e6a0f825f73a4c2c5c76bcc68d7a931))
+* create unique message queue names ([7ea6613](https://gitlab.com/bubblehouse/django-moo/commit/7ea66139fe7f580adeb7ccb4c3750e3fa0d04f74))
+* dont silently discard extra markdown blocks ([bdf1c78](https://gitlab.com/bubblehouse/django-moo/commit/bdf1c7814174e86112c0bf96ab566a8fe0851dfa))
+* eagerly flush the buffer so content doesnt get lost by the agent ([76f8ae2](https://gitlab.com/bubblehouse/django-moo/commit/76f8ae270ddd733cb28d13c6c92311ddfbbe443a))
+* encourage agent to pre-generate a script of commands it needs to run ([b40d08e](https://gitlab.com/bubblehouse/django-moo/commit/b40d08e387304b5f5905d0e5f932dc6389b0822f))
+* ignore connection settings leftover from previous connections ([fc60821](https://gitlab.com/bubblehouse/django-moo/commit/fc6082150a14d542f49116fb7cd7f5ae2f5a227e))
+* improve agent context and resume behavior ([2e51e36](https://gitlab.com/bubblehouse/django-moo/commit/2e51e364aa34cc898f52258b53d247e443839e39))
+* more agent edge cases ([0122372](https://gitlab.com/bubblehouse/django-moo/commit/012237206d92cb652244b4320c6225dba5be2f98))
+* more agent edge cases ([174e903](https://gitlab.com/bubblehouse/django-moo/commit/174e9033a354e72a038b044d600d91e1e9031bf7))
+* more script handling issues ([5612634](https://gitlab.com/bubblehouse/django-moo/commit/5612634a9c45e04e009ab6946a664571d1c5d470))
+* properly reload verbs with asterisks ([ef85af9](https://gitlab.com/bubblehouse/django-moo/commit/ef85af903388bbf184def37ed246d5afbadeaa8c))
+* shell and [@edit](https://gitlab.com/edit) edge-case handling, agent fixes ([3af9108](https://gitlab.com/bubblehouse/django-moo/commit/3af9108ea678aeef3c4e741801eafb19854cded2))
+* style update ([529a590](https://gitlab.com/bubblehouse/django-moo/commit/529a5903d0b45d8b0ee0d7db0d815ab3ec6fca7e))
+* timing and race issues in shell ([71e29c8](https://gitlab.com/bubblehouse/django-moo/commit/71e29c8889bb3e2c3ade653fe0808c674977d839))
+* use bedrock by default, other startup fixes ([309eef6](https://gitlab.com/bubblehouse/django-moo/commit/309eef6c5089412c2100d5f2b13f29e4a9a2c9d0))
+
 ## [0.90.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.90.0...v0.90.1) (2026-03-29)
 
 ### Bug Fixes
