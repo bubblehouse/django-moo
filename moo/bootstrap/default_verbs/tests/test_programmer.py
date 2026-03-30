@@ -159,6 +159,23 @@ def test_edit_verb_with_creates_new_verb(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_edit_verb_with_creates_verb_on_thing_child(t_init: Object, t_wizard: Object):
+    """@edit verb <inherited-name> on <$thing child> with <content> creates verb directly on child."""
+    system = lookup(1)
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        obj = create("clock", parents=[system.thing], location=t_wizard.location)
+        # moveto is inherited from $root_class via $thing; should create directly on clock
+        parse.interpret(ctx, '@edit verb moveto on clock with "return False"')
+    obj.refresh_from_db()
+    assert obj.has_verb("moveto", recurse=False)
+    v = obj.get_verb("moveto", recurse=False)
+    assert "return False" in v.code
+    assert any("Created verb moveto" in str(m) for m in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_edit_property_with_creates_new_property(t_init: Object, t_wizard: Object):
     """@edit property <name> on <obj> with <content> creates new property."""
     system = lookup(1)
