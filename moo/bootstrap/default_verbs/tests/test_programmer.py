@@ -242,6 +242,26 @@ def test_edit_property_with_json_boolean(t_init: Object, t_wizard: Object):
     assert any("Created property full" in str(m) for m in printed)
 
 
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_edit_property_where_name_matches_inherited_verb(t_init: Object, t_wizard: Object):
+    """@edit property <name> on <obj> with <content> creates a new property even when
+    an inherited verb with the same name exists on the parent."""
+    lookup(1)
+    furniture = lookup("$furniture")
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        obj = create("test settee", parents=[furniture], location=t_wizard.location)
+        # sit_succeeded_msg is a verb on $furniture, not a property — this should
+        # still create the property cleanly and print a confirmation.
+        parse.interpret(ctx, '@edit property sit_succeeded_msg on "test settee" with "You sink in. It holds."')
+    obj.refresh_from_db()
+    assert obj.has_property("sit_succeeded_msg")
+    prop = obj.get_property("sit_succeeded_msg", recurse=False, original=True)
+    assert prop.value == '"You sink in. It holds."'
+    assert any("sit_succeeded_msg" in str(m) for m in printed), f"No confirmation in output: {printed}"
+
+
 def _write_verb_file(path: pathlib.Path, on: str, verb_name: str, body: str) -> pathlib.Path:
     """Write a minimal verb source file to *path* and return it."""
     path.write_text(f"#!moo verb {verb_name} --on {on}\n{body}\n", encoding="utf8")

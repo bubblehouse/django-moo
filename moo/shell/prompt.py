@@ -165,7 +165,34 @@ class MooPrompt:
                     self.is_exiting = True
                     break
                 elif editor_task in done:
-                    await self.run_editor_session(editor_task.result())
+                    if self.automation:
+                        # The editor TUI cannot run in automation mode — doing so
+                        # hangs app.run_async() waiting for keystrokes that never
+                        # arrive, which corrupts the run_in_terminal Future chain
+                        # and breaks every subsequent command in the session.
+                        # Send a delimited error so the automation client can retry
+                        # with `@edit ... with "..."`.
+                        settings = _session_settings.get(self.user.pk, {})
+                        gp = settings.get("output_global_prefix")
+                        gs = settings.get("output_global_suffix")
+                        err = (
+                            "[bold red]Error: editor not available in automation mode. "
+                            "Use '@edit ... with \"...\"' to set content directly.[/bold red]"
+                        )
+                        error_pieces = []
+                        if gp:
+                            error_pieces.append(gp)
+                        error_pieces.append(err)
+                        if gs:
+                            error_pieces.append(gs)
+
+                        def _write_editor_error(pieces=error_pieces):  # pylint: disable=dangerous-default-value
+                            for piece in pieces:
+                                self.writer(piece)
+
+                        await run_in_terminal(_write_editor_error)
+                    else:
+                        await self.run_editor_session(editor_task.result())
                 elif paginator_task in done:
                     await self.run_paginator_session(paginator_task.result())
                 elif prompt_task in done:
@@ -373,20 +400,24 @@ class MooPrompt:
         output_global_suffix = settings.get("output_global_suffix")
 
         ct = tasks.parse_command.delay(caller.pk, line)
-        to_write = []
+        content = []
         try:
-            output = ct.get()
+            output = ct.get(timeout=30)
+            content.extend(output)
+        except:  # pylint: disable=bare-except
+            import traceback
+
+            content.append(f"[bold red]{traceback.format_exc()}[/bold red]")
+        # Only wrap with prefix/suffix delimiters when there is actual content.
+        # Sending empty-content delimiter frames in automation mode leaves an
+        # unresolved run_in_terminal future and hangs process_commands.
+        to_write = []
+        if content:
             if output_global_prefix:
                 to_write.append(output_global_prefix)
             if output_prefix:
                 to_write.append(output_prefix)
-            for item in output:
-                to_write.append(item)
-        except:  # pylint: disable=bare-except
-            import traceback
-
-            to_write.append(f"[bold red]{traceback.format_exc()}[/bold red]")
-        finally:
+            to_write.extend(content)
             if output_suffix:
                 to_write.append(output_suffix)
             if output_global_suffix:
