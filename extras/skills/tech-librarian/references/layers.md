@@ -129,3 +129,33 @@ Python docstrings must use RST format: `:param x:`, `:type x:`, `:return:`, `:rt
 | What does AGENTS.md say about test patterns? | `Read moo/AGENTS.md` |
 | What got added to the SDK recently? | `git log --oneline -- moo/sdk.py` |
 | What verbs were added recently? | `git log --oneline -- moo/bootstrap/default_verbs/` |
+| What autonomous agents exist and what do they do? | `Read extras/agents/README.md`, then each agent's `README.md` |
+| How does the builder agent work? | `Read extras/agents/builder/README.md` and `extras/agents/builder/SOUL.md` |
+
+---
+
+## Layer 5: Agent README Files
+
+**Audience:** Human developers setting up or maintaining autonomous agents.
+**Style:** Practical setup guide. Purpose, prerequisites, config options, SOUL.md section reference.
+**Location:** `extras/agents/README.md` (index) and `extras/agents/*/README.md` (per-agent)
+
+| File | Scope |
+|------|-------|
+| `extras/agents/README.md` | Index of all agents, how agent directories are structured |
+| `extras/agents/builder/README.md` | Builder agent: purpose, run instructions, SOUL.md structure |
+
+**What agent READMEs cover:**
+
+- What the agent does in-world and why it exists
+- Prerequisites (server access, credentials, LLM provider config)
+- How to init a config directory and run the agent
+- `SOUL.md` section breakdown: which sections are present and what they control
+- Agent-specific config settings in `settings.toml`
+- Notable `## Context` links loaded into the agent's system prompt
+
+**What agent READMEs do NOT cover:**
+
+- Full moo-agent CLI reference (that lives in `docs/source/how-to/moo-agent.md`)
+- SOUL architecture internals (covered in the Sphinx how-to)
+- Game-designer command syntax (covered in `extras/skills/game-designer/references/`)
