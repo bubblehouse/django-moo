@@ -65,6 +65,8 @@ Scan the layers for common drift types. Work through this checklist:
 
 **Skill README files** — each skill directory has a `README.md` targeting human developers (not AI agents). When a skill's capabilities change — new reference files added, trigger phrases updated, workflow phases added or renamed — update the relevant `README.md` alongside the `SKILL.md`. Also update `extras/skills/README.md` if new skills are added or removed.
 
+**Agent README files** — each agent config directory under `extras/agents/` should have a `README.md` targeting human developers. When an agent's `SOUL.md` or `settings.toml` structure changes — new sections added, new `## Context` references, changed rule patterns — update the relevant `README.md`. Also update `extras/agents/README.md` if new agents are added or removed. Agent READMEs should document: purpose, how to run, config structure, and what makes that agent's `SOUL.md` distinct from the baseline.
+
 **Agent SOUL.md files** — `extras/agents/*/SOUL.md` are operational documents for autonomous agents. Check them when:
 
 - The game-designer skill adds or changes command syntax (new `@create` forms, `@dig` syntax changes, `@eval` patterns for setting properties or adding verbs)
@@ -147,4 +149,6 @@ Add a note of what was synced and the date, so the next pass knows where to star
 - [translation.md](references/translation.md) — audience translation rules for porting between layers
 - `extras/skills/README.md` — index of all skills and symlink setup; update when skills are added or renamed
 - `extras/skills/*/README.md` — human-facing docs for each skill; keep in sync with `SKILL.md` capability changes
+- `extras/agents/README.md` — index of all autonomous agents; update when agents are added or removed
+- `extras/agents/*/README.md` — human-facing docs for each agent; keep in sync with `SOUL.md` and `settings.toml` structure changes
 - `extras/agents/*/SOUL.md` — autonomous agent souls; sync with game-designer when command syntax or design principles change

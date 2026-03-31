@@ -33,90 +33,6 @@ context.player.location.announce_all("A thing happens.")
 
 Never use `return "message"` — returned values are not displayed. Use `print()` for player-visible output and bare `return` for early exit.
 
-## Readable Objects — Use `$note`
-
-For any object with readable text (sign, menu, letter, plaque, book, bulletin board), use `$note` as the parent. The player types `read <object>` to see the `text` property. No custom verb needed.
-
-```
-@create "chalkboard menu" from "$note"
-@describe "chalkboard menu" as "Today's specials are scrawled on the chalkboard."
-@edit property text on "chalkboard menu" with "Duff Draft - $2\nNachoBeer - $3\nFlaming Moe - $5"
-@move "chalkboard menu" to "The Bar"
-```
-
-For a fixed sign (not portable), add a `moveto` verb returning `False`:
-
-```
-@create "warning sign" from "$note"
-@edit verb moveto on "warning sign"
-```
-
-Verb body:
-
-```python
-return False
-```
-
-**Aliases for disambiguation.** If a room has more than one readable object, every `$note` object needs specific aliases so `read sign` resolves correctly. Include the generic word (`sign`, `menu`, `letter`) and at least one more specific alias:
-
-```
-@alias "chalkboard menu" as "menu"
-@alias "chalkboard menu" as "chalkboard"
-@alias "chalkboard menu" as "board"
-```
-
-**Signs and room descriptions:** Put the sign's text in the `text` property, not in the room description. The room description should acknowledge the sign's presence; the player reads it themselves:
-
-```
-# Room description:
-A chalkboard hangs behind the bar with today's specials.
-
-# NOT in the room description:
-A chalkboard lists Duff Draft ($2), NachoBeer ($3), Flaming Moe ($5).
-```
-
-The exception: if the text is essential context (a room name carved in stone, a one-word warning), it can appear in the room description. Use judgment — if a player could plausibly skip reading it, use `$note`.
-
-## Openable Containers — Use `$container`
-
-For any object a player can open, close, and store things inside (chest, cabinet, safe, bag, drawer), use `$container` as the parent. It provides `open`/`close`/`put`/`take` verbs automatically, tracks the open/closed state, and — because it extends `$thing` — is portable by default.
-
-```
-@create "oak cabinet" from "$container"
-@describe "oak cabinet" as "A tall oak cabinet with iron hinges."
-@move "oak cabinet" to "The Study"
-```
-
-Players can then `open oak cabinet`, `put book in oak cabinet`, and `get book from oak cabinet`.
-
-To make a container immovable (a built-in cabinet, a heavy safe), add a `moveto` verb that returns `False`:
-
-```
-@edit verb moveto on "oak cabinet"
-```
-
-Verb body:
-
-```python
-return False
-```
-
-Then set a `take_failed_msg` to explain why:
-
-```
-@edit property take_failed_msg on "oak cabinet" with "The cabinet is built into the wall."
-```
-
-To lock a container so it requires a key:
-
-```
-@lock_for_open "oak cabinet" with "brass key"
-```
-
-The player must hold an object named `brass key` to open it.
-
-**`$container` vs `$thing`:** Use `$container` any time the object can hold things and be opened. Use `$thing` for sealed props that never open. Do not use `$furniture` for containers — it adds `sit`/`stand` instead of `open`/`close`.
-
 ## Sittable Objects — Use `$furniture`
 
 For any object a player can sit on (chair, bench, couch, crate, boulder), use `$furniture` as the parent instead of `$thing`. It provides `sit`/`stand` verbs automatically, tracks seated state on the player, and prevents the object from being picked up:
@@ -313,13 +229,11 @@ kwargs                # Dict of keyword args
 
 An object in a visible room teleports the player to a hidden room. The hidden room has no listed exit in-world — the only entry point is this verb. Give the hidden room a normal directional exit back.
 
-Full copy-paste template: `snippets/hidden-room.yaml`
-
 ```python
 from moo.sdk import context, lookup, NoSuchObjectError
 print("The bookcase swings outward on hidden hinges, revealing a passage.")
 try:
-    context.player.moveto(lookup("The Secret Room __hash_suffix__"))
+    context.player.moveto(lookup("The Secret Room"))
 except NoSuchObjectError:
     print("The passage appears to be sealed.")
 ```

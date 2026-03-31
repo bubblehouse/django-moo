@@ -144,6 +144,21 @@ Examples:
 
 Multiple aliases can be added to the same object by running the command multiple times.
 
+### `@obvious` / `@nonobvious`
+
+```
+@obvious "<object>"
+@nonobvious "<object>"
+```
+
+Controls whether an object appears in the room contents listing when a player types `look`.
+`obvious` is a model attribute — **do not use `@edit property obvious`**, it will have no effect.
+
+```
+@obvious "brass desk lamp"      — lamp now shows up in look output
+@nonobvious "hidden lever"      — lever is invisible until interacted with directly
+```
+
 ### `@lock`
 
 ```

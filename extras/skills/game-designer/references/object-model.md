@@ -226,32 +226,30 @@ The `take_failed_msg` property is particularly useful for explaining *why* somet
 - `open_key` (null or key expression) — if set, container requires the matching key to open
 - `opaque` (bool, default `false`) — if `true`, contents are hidden when container is closed
 
-**YAML example (portable container):**
+**Portable container (SSH commands):**
 
-```yaml
-- name: "leather satchel __hash_suffix__"
-  parent: "$container"
-  description: "A worn leather satchel with a brass clasp."
-  aliases: ["satchel", "bag"]
-  obvious: true
+```
+@create "leather satchel" from "$container"
+@describe "leather satchel" as "A worn leather satchel with a brass clasp."
+@alias "leather satchel" as "satchel"
+@alias "leather satchel" as "bag"
+@obvious "leather satchel"
 ```
 
 **Fixed containers** (cabinets, built-in drawers, a heavy safe) should use `$container` as the parent and add a `moveto` verb that returns `False` — same pattern as `$thing`-based immovable objects, but you keep all the open/close/put/take behavior:
 
-```yaml
-- name: "oak cabinet __hash_suffix__"
-  parent: "$container"
-  description: "A tall oak cabinet with iron hinges."
-  aliases: ["cabinet"]
-  obvious: true
+```
+@create "oak cabinet" from "$container"
+@describe "oak cabinet" as "A tall oak cabinet with iron hinges."
+@alias "oak cabinet" as "cabinet"
+@obvious "oak cabinet"
+@edit verb moveto on "oak cabinet"
+```
 
-verbs:
-  - verb: "moveto"
-    object: "oak cabinet __hash_suffix__"
-    room: "Study"
-    code: |
-      #!moo verb moveto --on "oak cabinet __hash_suffix__"
-      return False
+Verb body:
+
+```python
+return False
 ```
 
 Set a descriptive `take_failed_msg` so the player knows why they can't move it:
@@ -261,6 +259,8 @@ Set a descriptive `take_failed_msg` so the player knows why they can't move it:
 ```
 
 **Do not use `$furniture` for containers.** `$furniture` adds `sit`/`stand` verbs and doesn't give you `open`/`close`. A chest or cabinet should always be `$container`, even if it's also immovable.
+
+**Do not use `$furniture` for shelves or racks.** A bookshelf, weapon rack, or display shelf is not something players sit on. Use `$thing` with a `moveto` verb returning `False` for a fixed decorative shelf. Use `$container` if players should be able to `put` items on/inside it. `@move item to furniture` will always fail with a PermissionError — `$furniture` does not accept items placed inside it.
 
 ## `$note` — Readable Text Objects
 
@@ -280,20 +280,20 @@ Use `$note` for anything with readable text content: signs, menus, letters, plaq
 
 **Signs and fixed notices** are the most common use case. They are portable by default (child of `$thing`), so add a `moveto` verb returning `False` to fix them in place:
 
-```yaml
-- name: "welcome sign __hash_suffix__"
-  parent: "$note"
-  description: "A wooden sign hangs by the entrance."
-  aliases: ["sign", "wooden sign", "notice"]
-  obvious: true
+```
+@create "welcome sign" from "$note"
+@describe "welcome sign" as "A wooden sign hangs by the entrance."
+@alias "welcome sign" as "sign"
+@alias "welcome sign" as "wooden sign"
+@alias "welcome sign" as "notice"
+@obvious "welcome sign"
+@edit verb moveto on "welcome sign"
+```
 
-verbs:
-  - verb: "moveto"
-    object: "welcome sign __hash_suffix__"
-    room: "Entrance"
-    code: |
-      #!moo verb moveto --on "welcome sign __hash_suffix__"
-      return False
+Verb body:
+
+```python
+return False
 ```
 
 Set the text content with `@edit property`:
