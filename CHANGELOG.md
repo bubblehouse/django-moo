@@ -1,3 +1,12 @@
+## [0.91.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.91.0...v0.91.1) (2026-03-31)
+
+### Bug Fixes
+
+* added with support to [@edit](https://gitlab.com/edit) on $note ([8a7cd5f](https://gitlab.com/bubblehouse/django-moo/commit/8a7cd5f2516a6a68726ea21ccd12198d71dd7bee))
+* agent stall on non-response ([e596407](https://gitlab.com/bubblehouse/django-moo/commit/e5964071ff9119d796658d8d5ed2665708e6da40))
+* brain updates for gemma ([d0ecab3](https://gitlab.com/bubblehouse/django-moo/commit/d0ecab3e0fef96512d0a2efaf7947bc3376c241b))
+* parser bug when using here in certain scenarios ([e7477e3](https://gitlab.com/bubblehouse/django-moo/commit/e7477e370e3b770bf78603c5e62958ea1fee3b3e))
+
 ## [0.91.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.90.1...v0.91.0) (2026-03-30)
 
 ### Features
