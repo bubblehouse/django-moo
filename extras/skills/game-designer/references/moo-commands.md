@@ -89,10 +89,12 @@ Examples:
 ```
 @move "<object>" to "<location>"
 @move #N to "<location>"
+@move "<object>" to #N
 @move me to "<location>"
+@move me to #N
 ```
 
-Moves an object to a room or container. Use `#N` (unquoted) to avoid ambiguity when multiple objects share the same name. Use `me` to teleport yourself directly to any room by name — this is the simplest way to navigate to rooms that are not connected by exits yet.
+Moves an object to a room or container. Use `#N` (unquoted) for either the object or the destination to avoid ambiguity and name spelling errors. Use `me` to teleport yourself directly to any room — by name or by ID.
 
 Prints a confirmation line on success: `Moved <object> to <location>.` Use this to verify the move in build scripts.
 
@@ -102,7 +104,9 @@ Examples:
 @move "Moe" to "Moe's Tavern"
 @move "the jukebox" to "Moe's Tavern"
 @move #34 to "Moe's Tavern - Main Bar"
+@move #34 to #28
 @move me to "The Laboratory"
+@move me to #28
 ```
 
 ### `@gender`
