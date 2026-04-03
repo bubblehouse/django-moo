@@ -24,7 +24,23 @@ obj = parser.get_dobj()
 destination = lookup(parser.get_pobj_str("to"))
 if obj.is_player():
     obj.announce(_.string_utils.pronoun_sub("%D disappears suddenly for parts %i(to)."))
-obj.moveto(destination)
+result = obj.moveto(destination)
+if result is False:
+    dobj_str = parser.get_dobj_str()
+    matches = lookup(dobj_str, return_first=False)
+    if not matches:
+        print(f"[red]{obj} cannot be moved.[/red]")
+    elif len(matches) == 1:
+        loc = matches[0].location
+        where = str(loc) if loc else "the void"
+        print(f"[red]{obj} cannot be moved (currently in {where}).[/red]")
+    else:
+        print(f"[red]{obj} cannot be moved. Objects named '{dobj_str}':[/red]")
+        for m in matches:
+            loc = m.location
+            where = str(loc) if loc else "the void"
+            print(f"  {m} — {where}")
+    return
 if obj.is_player():
     destination.announce(_.string_utils.pronoun_sub("%D materializes out of thin air in %i(to)."))
 print(f"Moved {obj} to {destination}.")

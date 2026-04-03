@@ -5,6 +5,11 @@ from moo.sdk import create, lookup
 from moo.core.models import Object
 
 
+def get_player():
+    """Return the Player NPC (non-wizard) from the default bootstrap."""
+    return Object.objects.get(name="Player")
+
+
 def setup_furniture(location, name="couch"):
     """Create a $furniture child in the given location."""
     system = lookup(1)
@@ -172,16 +177,20 @@ def test_stand_clears_on_room_exit(t_init: Object, t_wizard: Object):
 def test_take_fails(t_init: Object, t_wizard: Object):
     printed = []
 
-    with pytest.warns(RuntimeWarning):
-        with code.ContextManager(t_wizard, printed.append) as ctx:
-            lab = t_wizard.location
-            couch = setup_furniture(lab)
+    player = get_player()
+    lab = t_wizard.location
+    player.location = lab
+    player.save()
 
-            parse.interpret(ctx, "take couch")
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        couch = setup_furniture(lab)
 
-            couch.refresh_from_db()
-            assert couch.location == lab
-            assert printed == ["It's not possible to move something like this."]
+    with code.ContextManager(player, printed.append) as ctx:
+        parse.interpret(ctx, "take couch")
+
+        couch.refresh_from_db()
+        assert couch.location == lab
+        assert printed == ["It's not possible to move something like this."]
 
 
 # --- message verbs ---

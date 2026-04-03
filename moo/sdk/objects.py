@@ -15,14 +15,16 @@ from ..core.exceptions import (
 from .context import context
 
 
-def lookup(x: Union[int, str]):
+def lookup(x: Union[int, str], return_first: bool = True):
     """
     Lookup an object globally by PK, name, or alias.
 
     :param x: lookup value
-    :return: the result of the lookup
-    :rtype: Object
-    :raises NoSuchObjectError: when a result cannot be found
+    :param return_first: when True (default), return the first match or raise
+        NoSuchObjectError; when False, return a list of all matches (may be empty)
+    :return: the result of the lookup, or a list when return_first is False
+    :rtype: Object | list[Object]
+    :raises NoSuchObjectError: when a result cannot be found and return_first is True
     """
     from django.db.models import Q
     from ..core.models import Object
@@ -34,6 +36,8 @@ def lookup(x: Union[int, str]):
             system = lookup(1)
             return system.get_property(name=x[1:])
         qs = Object.objects.filter(Q(name__iexact=x) | Q(aliases__alias__iexact=x)).distinct()
+        if not return_first:
+            return list(qs)
         if not qs:
             if context.parser:
                 obj = context.parser.get_pronoun_object(x)
