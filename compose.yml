@@ -54,7 +54,7 @@ services:
       - redis
     environment:
       DJANGO_SETTINGS_MODULE: moo.settings.local
-      OTEL_PYTHON_DJANGO_INSTRUMENT: 'False'
+      OTEL_SDK_DISABLED: 'true'
   # The `celery` container runs a single Celery worker, along with the Beat scheduler.
   # Note that in production, you'll want to run multiple workers for better performance,
   # and you'll want to run the scheduler separately.
@@ -70,7 +70,7 @@ services:
       - redis
     environment:
       DJANGO_SETTINGS_MODULE: moo.settings.local
-      OTEL_PYTHON_DJANGO_INSTRUMENT: 'False'
+      OTEL_SDK_DISABLED: 'true'
   # The `shell` container runs the SSH server that displays the MOO interface.
   # As part of the Dockerfile we create pregenerate an SSH host file that's used
   # by the webssh container to restrict connections to this host.
@@ -88,7 +88,7 @@ services:
       - redis
     environment:
       DJANGO_SETTINGS_MODULE: moo.settings.local
-      OTEL_PYTHON_DJANGO_INSTRUMENT: 'False'
+      OTEL_SDK_DISABLED: 'true'
   # The PostgreSQL database needs to define a moo user with an appropriate password.
   # This is a simple deployment, so we're not using a production-ready PostgreSQL container.
   postgres:
