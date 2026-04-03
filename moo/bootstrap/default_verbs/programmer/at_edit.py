@@ -118,6 +118,9 @@ if verb_name == "@edit":
             dspec = "none"
             ispec = None
             shebang_names = None
+            if new_content.lstrip().startswith("#!moo verb") and not shebang_result:
+                print("Error: malformed shebang — check --dspec/--ispec spelling and --on argument.")
+                return
             if shebang_result:
                 shebang_names, _, dspec, ispec = shebang_result
 
@@ -171,6 +174,9 @@ elif verb_name == "edit_callback":
         import moo.bootstrap
 
         shebang_result = moo.bootstrap.parse_shebang(content)
+        if content.lstrip().startswith("#!moo verb") and not shebang_result:
+            print("Error: malformed shebang — check --dspec/--ispec spelling and --on argument.")
+            return
         if shebang_result:
             _, _, dspec, ispec = shebang_result
             obj.direct_object = dspec
