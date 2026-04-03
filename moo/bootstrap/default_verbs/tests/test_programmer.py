@@ -143,6 +143,70 @@ def test_edit_with_sets_existing_property_directly(t_init: Object, t_wizard: Obj
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_edit_verb_with_malformed_shebang_prints_error(t_init: Object, t_wizard: Object):
+    """@edit verb on <obj> with a malformed #!moo shebang prints an error and does not create the verb."""
+    system = lookup(1)
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        obj = create("widget", parents=[system.root_class], location=t_wizard.location)
+        parse.interpret(ctx, '@edit verb newverb on widget with "#!moo verb newverb --dsppec any\\nprint(\'hi\')"')
+    assert any("malformed shebang" in str(m).lower() or "Error:" in str(m) for m in printed)
+    obj.refresh_from_db()
+    assert not obj.has_verb("newverb", recurse=False)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_edit_verb_with_valid_shebang_sets_dspec(t_init: Object, t_wizard: Object):
+    """@edit verb on <obj> with a valid shebang sets direct_object on the created verb."""
+    system = lookup(1)
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        obj = create("widget", parents=[system.root_class], location=t_wizard.location)
+        parse.interpret(ctx, '@edit verb newverb on widget with "#!moo verb newverb --on $thing --dspec any\\nprint(\'hi\')"')
+    obj.refresh_from_db()
+    assert obj.has_verb("newverb", recurse=False)
+    v = obj.get_verb("newverb", recurse=False)
+    assert v.direct_object == "any"
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_edit_callback_malformed_shebang_prints_error(t_init: Object, t_wizard: Object):
+    """edit_callback with a malformed #!moo shebang prints an error and does not save the verb."""
+    system = lookup(1)
+    printed = []
+    with code.ContextManager(t_wizard, printed.append):
+        obj = create("widget", parents=[system.root_class], location=t_wizard.location)
+        v = Verb.objects.create(origin=obj, owner=t_wizard, code='print("original")', direct_object="none")
+        VerbName.objects.create(verb=v, name="myverb")
+        programmer = system.get_property("programmer")
+        callback = programmer.get_verb("edit_callback")
+        callback("#!moo verb myverb --dsppec any\nprint('hi')", v.pk, "verb")
+    v.refresh_from_db()
+    assert any("malformed shebang" in str(m).lower() or "Error:" in str(m) for m in printed)
+    assert "original" in v.code
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_edit_callback_valid_shebang_sets_dspec(t_init: Object, t_wizard: Object):
+    """edit_callback with a valid shebang updates direct_object on the verb."""
+    system = lookup(1)
+    with code.ContextManager(t_wizard, lambda _: None):
+        obj = create("widget", parents=[system.root_class], location=t_wizard.location)
+        v = Verb.objects.create(origin=obj, owner=t_wizard, code='print("original")', direct_object="none")
+        VerbName.objects.create(verb=v, name="myverb")
+        programmer = system.get_property("programmer")
+        callback = programmer.get_verb("edit_callback")
+        callback("#!moo verb myverb --on $thing --dspec any\nprint('updated')", v.pk, "verb")
+    v.refresh_from_db()
+    assert "updated" in v.code
+    assert v.direct_object == "any"
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_edit_verb_with_creates_new_verb(t_init: Object, t_wizard: Object):
     """@edit verb <name> on <obj> with <content> creates new verb."""
     system = lookup(1)

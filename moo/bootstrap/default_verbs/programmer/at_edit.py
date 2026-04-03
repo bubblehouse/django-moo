@@ -161,7 +161,7 @@ if verb_name == "@edit":
             else:
                 print(f"Set property {attribute} on {target}")
 elif verb_name == "edit_callback":
-    from moo.core.models.verb import Verb, PrepositionName, PrepositionSpecifier
+    from moo.core.models.verb import Verb, set_indirect_objects
     from moo.core.models.property import Property
 
     content = args[0]
@@ -180,21 +180,7 @@ elif verb_name == "edit_callback":
         if shebang_result:
             _, _, dspec, ispec = shebang_result
             obj.direct_object = dspec
-            obj.indirect_objects.clear()
-            if ispec:
-                for prep, specifier in ispec.items():
-                    if prep in ["any", "none"]:
-                        p = None
-                        prep_specifier = prep
-                    else:
-                        pn = PrepositionName.objects.get(name=prep)
-                        p = pn.preposition
-                        prep_specifier = "none"
-                    obj.indirect_objects.add(
-                        PrepositionSpecifier.objects.update_or_create(
-                            preposition=p, preposition_specifier=prep_specifier, specifier=specifier
-                        )[0]
-                    )
+            set_indirect_objects(obj, ispec)
     elif obj_kind == "property":
         obj = Property.objects.get(pk=obj_pk)
         obj.value = content
