@@ -387,7 +387,7 @@ def testinvoked_object_write_blocked(t_init: Object, t_wizard: Object):
         g.update(code.get_restricted_environment("__main__", w))
         g["verb_obj"] = verb_obj
         g["other"] = other
-        with pytest.raises((AttributeError, TypeError)):
+        with pytest.raises((AttributeError, TypeError, SyntaxError)):
             code.r_exec("verb_obj._invoked_object = other", {}, g)
 
 
@@ -415,7 +415,7 @@ def testinvoked_name_write_blocked(t_init: Object, t_wizard: Object):
         g = code.get_default_globals()
         g.update(code.get_restricted_environment("__main__", w))
         g["verb_obj"] = verb_obj
-        with pytest.raises((AttributeError, TypeError)):
+        with pytest.raises((AttributeError, TypeError, SyntaxError)):
             code.r_exec("verb_obj._invoked_name = 'hijacked'", {}, g)
 
 
@@ -442,7 +442,7 @@ def testinvoked_object_read_blocked(t_init: Object, t_wizard: Object):
         g = code.get_default_globals()
         g.update(code.get_restricted_environment("__main__", w))
         g["verb_obj"] = verb_obj
-        with pytest.raises((AttributeError, TypeError)):
+        with pytest.raises((AttributeError, TypeError, SyntaxError)):
             code.r_exec("_ = verb_obj._invoked_object", {}, g)
 
 
@@ -675,7 +675,7 @@ def test_original_owner_write_blocked(t_init: Object, t_wizard: Object):
         g.update(code.get_restricted_environment("__main__", w))
         g["victim"] = victim
         g["attacker"] = attacker
-        with pytest.raises((AttributeError, TypeError)):
+        with pytest.raises((AttributeError, TypeError, SyntaxError)):
             code.r_exec("victim._original_owner = attacker.pk", {}, g)
 
     victim.refresh_from_db()
@@ -739,7 +739,7 @@ def test_original_location_write_blocked(t_init: Object, t_wizard: Object):
         g.update(code.get_restricted_environment("__main__", w))
         g["obj"] = obj
         g["room"] = room
-        with pytest.raises((AttributeError, TypeError)):
+        with pytest.raises((AttributeError, TypeError, SyntaxError)):
             code.r_exec("obj._original_location = room.pk", {}, g)
 
 

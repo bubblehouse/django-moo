@@ -47,9 +47,9 @@ if verb_name == "@edit":
         # Repair a common LLM generation error: a bare \ before a letter that
         # isn't a recognised Python escape (e.g. \import, \from) gets treated
         # as a newline.  This turns "context\import" into "context\nimport".
-        import re as _re
+        import re
 
-        new_content = _re.sub(r"\\([a-zA-Z_])", lambda m: "\n" + m.group(1), new_content)
+        new_content = re.sub(r"\\([a-zA-Z_])", lambda m: "\n" + m.group(1), new_content)
 
     # Find the object to edit
     obj = None
