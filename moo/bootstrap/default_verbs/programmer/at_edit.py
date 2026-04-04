@@ -44,6 +44,12 @@ if verb_name == "@edit":
         # Allow \n in the with-content to represent real newlines, enabling
         # multi-line verb code without the full-screen editor
         new_content = new_content.replace("\\n", "\n")
+        # Repair a common LLM generation error: a bare \ before a letter that
+        # isn't a recognised Python escape (e.g. \import, \from) gets treated
+        # as a newline.  This turns "context\import" into "context\nimport".
+        import re as _re
+
+        new_content = _re.sub(r"\\([a-zA-Z_])", lambda m: "\n" + m.group(1), new_content)
 
     # Find the object to edit
     obj = None
@@ -119,7 +125,9 @@ if verb_name == "@edit":
             ispec = None
             shebang_names = None
             if new_content.lstrip().startswith("#!moo verb") and not shebang_result:
-                print("Error: malformed shebang — check --dspec/--ispec spelling and --on argument.")
+                print(
+                    "Error: malformed shebang — check --dspec (or --dobj) / --ispec (or --iobj) spelling and --on argument."
+                )
                 return
             if shebang_result:
                 shebang_names, _, dspec, ispec = shebang_result
@@ -175,7 +183,9 @@ elif verb_name == "edit_callback":
 
         shebang_result = moo.bootstrap.parse_shebang(content)
         if content.lstrip().startswith("#!moo verb") and not shebang_result:
-            print("Error: malformed shebang — check --dspec/--ispec spelling and --on argument.")
+            print(
+                "Error: malformed shebang — check --dspec (or --dobj) / --ispec (or --iobj) spelling and --on argument."
+            )
             return
         if shebang_result:
             _, _, dspec, ispec = shebang_result
