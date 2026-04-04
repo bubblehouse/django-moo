@@ -33,10 +33,10 @@ def test_publish_to_player_not_importable():
     """
 
     _publish_to_player must not be accessible from verb code.
-    RestrictedPython rejects _-prefixed names at compile time (TypeError on exec),
+    RestrictedPython rejects _-prefixed names at compile time (SyntaxError),
     and BLOCKED_IMPORTS provides defense-in-depth at the import level.
     """
-    raises_in_verb("from moo.sdk import _publish_to_player", (ImportError, TypeError))
+    raises_in_verb("from moo.sdk import _publish_to_player", (ImportError, TypeError, SyntaxError))
 
 
 # ---------------------------------------------------------------------------

@@ -78,10 +78,9 @@ def test_dunder_syntax_blocked():
     """
 
     Dunder attribute syntax (obj.__class__) is rejected at compile time by
-    RestrictedPython — code.code is None, so exec raises TypeError.
-    Either way, access is denied.
+    RestrictedPython and raises SyntaxError. Access is denied before execution.
     """
-    raises_in_verb("x = ''.__class__", (AttributeError, TypeError))
+    raises_in_verb("x = ''.__class__", (AttributeError, TypeError, SyntaxError))
 
 
 # ---------------------------------------------------------------------------
