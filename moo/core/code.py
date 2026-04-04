@@ -72,8 +72,16 @@ def _cached_compile(body, filename):
 def compile_verb_code(body, filename):
     """
     Take a given piece of verb code and wrap it in a function.
+
+    Raises SyntaxError if RestrictedPython rejects the code (restricted
+    construct, underscore-aliased import, etc.). The error messages from
+    the compiler are included so the caller can report them to the user.
     """
-    return _cached_compile(body, filename)
+    result = _cached_compile(body, filename)
+    if result.code is None or result.errors:
+        msgs = "; ".join(result.errors) if result.errors else "compilation failed"
+        raise SyntaxError(msgs)
+    return result
 
 
 def r_eval(src, locals, globals, *args, filename="<string>", **kwargs):  # pylint: disable=redefined-builtin
