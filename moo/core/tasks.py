@@ -41,6 +41,9 @@ def parse_command(self, caller_id: int, line: str) -> list[Any]:
             except exceptions.UserError as e:
                 log.error(f"{caller}: {e}")
                 output.append(f"[bold red]{e}[/bold red]")
+            except PermissionError as e:
+                log.error(f"{caller}: PermissionError: {e}")
+                output.append(f"[bold red]PermissionError: {e}[/bold red]")
             except Exception as e:  # pylint: disable=broad-exception-caught
                 log.exception(f"Error executing command for {caller}: {e}")
                 output.append("[bold red]An error occurred while executing the command.[/bold red]")
