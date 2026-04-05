@@ -119,6 +119,20 @@ class Pattern:
         return words, qotd_matches
 
 
+def _check_quotes(command: str) -> None:
+    """
+    Raise UsageError if the command contains an unclosed quoted string.
+
+    Scans for `"` characters that are not preceded by a backslash.  If the
+    count is odd the last string was never closed, and any verb that runs
+    with the misquoted token will receive a name that starts with `"` —
+    almost certainly a bug.
+    """
+    unescaped_count = sum(1 for i, ch in enumerate(command) if ch == '"' and (i == 0 or command[i - 1] != "\\"))
+    if unescaped_count % 2 != 0:
+        raise UsageError("Unmatched quote in command.")
+
+
 class Lexer:
     """
     An instance of this class will identify the various parts of a imperative
@@ -130,6 +144,8 @@ class Lexer:
 
         self.dobj_str = None
         self.dobj_spec_str = None
+
+        _check_quotes(command)
 
         pattern = Pattern()
         self.words, qotd_matches = pattern.tokenize(command)
