@@ -49,3 +49,8 @@ print("  Properties:")
 for prop in obj.properties.select_related("owner").all():
     if player.is_allowed("read", prop):
         print(f"    {prop.name}: {prop.value}")
+contents = obj.contents.all()
+if contents.exists():
+    print("  Contents:")
+    for item in contents:
+        print(f"    {item}")
