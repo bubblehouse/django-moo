@@ -336,3 +336,28 @@ def test_do_command_absent_falls_through_to_normal_dispatch(t_init, t_wizard):
     with code.ContextManager(t_wizard, printed.append) as ctx:
         parse.interpret(ctx, "look")
     assert "normal look ran" in printed
+
+
+def test_unmatched_double_quote_raises_usage_error():
+    """Unclosed double quote in a command should raise UsageError immediately."""
+    with pytest.raises(exceptions.UsageError, match="Unmatched quote"):
+        parse.Lexer('@create "marble')
+
+
+def test_three_unescaped_quotes_raises_usage_error():
+    """Three unescaped quotes (odd) should raise UsageError."""
+    with pytest.raises(exceptions.UsageError, match="Unmatched quote"):
+        parse.Lexer('@create "marble" from "$thing" as "broken')
+
+
+def test_balanced_double_quotes_no_error():
+    """Correctly balanced quotes should parse without error."""
+    lex = parse.Lexer('@create "marble pedestal" from "$furniture"')
+    assert "marble pedestal" in lex.words
+
+
+def test_escaped_quotes_do_not_count_as_unmatched():
+    """Escaped quotes inside a string should not trigger the unmatched-quote check."""
+    # Two outer quotes + two escaped inner quotes = 2 unescaped quotes (even).
+    lex = parse.Lexer(r'@describe here as "He said \"hello\""')
+    assert lex.words[0] == "@describe"
