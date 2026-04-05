@@ -2,11 +2,14 @@ import logging
 from datetime import datetime, timezone
 from time import time
 
+from django.contrib.auth import get_user_model
+
 from moo import bootstrap
 from moo.core import code, create, lookup
 from moo.core.models import Player
 
 log = logging.getLogger(__name__)
+User = get_user_model()
 
 repo = bootstrap.initialize_dataset("default")
 wizard = lookup("Wizard")
@@ -166,6 +169,39 @@ with code.ContextManager(wizard, log.info):
     new_player.parents.add(player)
     new_player.owner = new_player
     new_player.save()
+
+    # The Tradesmen — autonomous builder agents
+    # Mason ($player): digs rooms and wires exits
+    mason_obj = create(name="Mason", unique_name=True, location=lab)
+    mason_obj.parents.add(player)
+    mason_obj.owner = mason_obj
+    mason_obj.save()
+    mason_user = User.objects.create_user(username="mason", password="Mxq7vB2nKpL4")
+    Player.objects.create(user=mason_user, avatar=mason_obj)
+
+    # Tinker ($programmer): writes verbs for interactive objects and secret exits
+    tinker_obj = create(name="Tinker", unique_name=True, location=lab)
+    tinker_obj.parents.add(programmers)
+    tinker_obj.owner = tinker_obj
+    tinker_obj.save()
+    tinker_user = User.objects.create_user(username="tinker", password="Pw9cX3mZrT6y")
+    Player.objects.create(user=tinker_user, avatar=tinker_obj)
+
+    # Joiner ($player): creates furniture and containers
+    joiner_obj = create(name="Joiner", unique_name=True, location=lab)
+    joiner_obj.parents.add(player)
+    joiner_obj.owner = joiner_obj
+    joiner_obj.save()
+    joiner_user = User.objects.create_user(username="joiner", password="Hn4kD8sQvY2f")
+    Player.objects.create(user=joiner_user, avatar=joiner_obj)
+
+    # Harbinger ($programmer): creates NPCs, uses @eval for random roll and tell verb
+    harbinger_obj = create(name="Harbinger", unique_name=True, location=lab)
+    harbinger_obj.parents.add(programmers)
+    harbinger_obj.owner = harbinger_obj
+    harbinger_obj.save()
+    harbinger_user = User.objects.create_user(username="harbinger", password="Bt6wF5jRcU3e")
+    Player.objects.create(user=harbinger_user, avatar=harbinger_obj)
 
     root.get_verb("accept").delete()
 
