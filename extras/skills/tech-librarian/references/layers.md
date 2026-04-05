@@ -130,7 +130,7 @@ Python docstrings must use RST format: `:param x:`, `:type x:`, `:return:`, `:rt
 | What got added to the SDK recently? | `git log --oneline -- moo/sdk.py` |
 | What verbs were added recently? | `git log --oneline -- moo/bootstrap/default_verbs/` |
 | What autonomous agents exist and what do they do? | `Read extras/agents/README.md`, then each agent's `README.md` |
-| How does the builder agent work? | `Read extras/agents/builder/README.md` and `extras/agents/builder/SOUL.md` |
+| How does a specific Tradesman work? | `Read extras/agents/<name>/README.md` and `extras/agents/<name>/SOUL.md` |
 
 ---
 
@@ -143,7 +143,10 @@ Python docstrings must use RST format: `:param x:`, `:type x:`, `:return:`, `:rt
 | File | Scope |
 |------|-------|
 | `extras/agents/README.md` | Index of all agents, how agent directories are structured |
-| `extras/agents/builder/README.md` | Builder agent: purpose, run instructions, SOUL.md structure |
+| `extras/agents/mason/README.md` | Mason: room architect, $player, digs/describes/wires exits |
+| `extras/agents/tinker/README.md` | Tinker: object-maker, $programmer, $thing objects and verbs |
+| `extras/agents/joiner/README.md` | Joiner: furniture-maker, $player, $furniture and $container |
+| `extras/agents/harbinger/README.md` | Harbinger: NPC-summoner, $programmer, ~10% room population |
 
 **What agent READMEs cover:**
 
