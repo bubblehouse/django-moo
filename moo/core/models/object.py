@@ -341,13 +341,13 @@ class Object(models.Model, AccessibleMixin):
 
     def add_verb(
         self,
-        *names: list[str],
-        code: str = None,
-        owner: "Object" = None,
+        *names: str,
+        code: str | None = None,
+        owner: "Object | None" = None,
         repo=None,
-        filename: str = None,
+        filename: str | None = None,
         direct_object: str = "none",
-        indirect_objects: dict[str, str] = None,
+        indirect_objects: dict[str, str] | None = None,
         replace: bool = False,
     ):
         """
@@ -696,7 +696,7 @@ class Object(models.Model, AccessibleMixin):
                     if session_key is not None:
                         pcache[session_key] = _PROP_MISSING
                     raise NoSuchPropertyError(name)
-                value = moojson.loads(raw)
+                value = moojson.filter_nothing(moojson.loads(raw))
                 if session_key is not None:
                     pcache[session_key] = value
                 return value
@@ -704,7 +704,7 @@ class Object(models.Model, AccessibleMixin):
         # Self always takes priority
         prop = Property.objects.filter(origin=self, name=name).first()
         if prop is not None:
-            value = prop if original else moojson.loads(prop.value)
+            value = prop if original else moojson.filter_nothing(moojson.loads(prop.value))
             if session_key is not None:
                 pcache[session_key] = value
             if cache_key is not None:
@@ -736,7 +736,7 @@ class Object(models.Model, AccessibleMixin):
             if cache_key is not None:
                 cache.set(cache_key, _CACHE_PROP_MISSING, timeout=_cache_ttl)
             raise NoSuchPropertyError(name)
-        value = prop if original else moojson.loads(prop.value)
+        value = prop if original else moojson.filter_nothing(moojson.loads(prop.value))
         if session_key is not None:
             pcache[session_key] = value
         if cache_key is not None:
@@ -780,12 +780,15 @@ class Object(models.Model, AccessibleMixin):
             from .. import moojson
 
             return moojson.loads(prop.value)
+        from .. import moojson as _moojson
+        _nothing = _moojson._get_nothing()
+        _nothing_pk = _nothing.pk if _nothing is not None else None
         ids = [
             int(k[2:])
             for item in raw
             if isinstance(item, dict)
             for k in item
-            if len(k) > 2 and k[0] == "o" and k[1] == "#"
+            if len(k) > 2 and k[0] == "o" and k[1] == "#" and int(k[2:]) != _nothing_pk
         ]
         if not ids:
             return []
@@ -810,10 +813,30 @@ class Object(models.Model, AccessibleMixin):
             name=name,
         ).exists()
 
+    def _replace_stale_refs(self):
+        """
+        Before deletion, replace every property reference to this object with
+        the $nothing sentinel so callers get a safe value instead of a crash.
+        """
+        from .. import moojson
+        from .property import Property
+
+        ref_key = f'"o#{self.pk}"'
+        nothing = moojson._get_nothing()
+        if nothing is None:
+            return  # Bootstrap hasn't defined $nothing yet; skip silently
+        for prop in Property.objects.filter(value__contains=ref_key).iterator():
+            try:
+                prop.value = moojson.replace_object_refs(prop.value, self.pk, nothing)
+                prop.save(update_fields=["value"])
+            except Exception:  # pylint: disable=broad-except
+                log.warning("Failed to replace stale ref #%d in property %d", self.pk, prop.pk)
+
     def delete(self, *args, **kwargs):
         self.can_caller("write", self)
         if self.has_verb("recycle", recurse=False):
             self.invoke_verb("recycle")
+        self._replace_stale_refs()
         try:
             quota = self.owner.get_property("ownership_quota", recurse=False)
             if quota is not None:
