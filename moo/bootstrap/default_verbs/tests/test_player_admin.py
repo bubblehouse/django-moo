@@ -451,12 +451,12 @@ def test_memory_wizard(t_init: Object, t_wizard: Object):
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_add_parent_by_id(t_init: Object, t_wizard: Object):
-    """@add_parent #N to <parent> adds a parent to the object."""
+    """@add_parent <parent> to #N adds a parent to the object."""
     system = lookup(1)
     printed = []
     with code.ContextManager(t_wizard, printed.append) as ctx:
         obj = create("plain thing", location=t_wizard)
-        parse.interpret(ctx, f"@add_parent #{obj.pk} to $thing")
+        parse.interpret(ctx, f"@add_parent $thing to #{obj.pk}")
     obj.refresh_from_db()
     assert obj.parents.filter(pk=system.thing.pk).exists()
     assert any("Added" in line for line in printed)
@@ -465,14 +465,14 @@ def test_add_parent_by_id(t_init: Object, t_wizard: Object):
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_remove_parent_by_id(t_init: Object, t_wizard: Object):
-    """@remove_parent #N from <parent> removes a parent from the object."""
+    """@remove_parent <parent> from #N removes a parent from the object."""
     system = lookup(1)
     printed = []
     with code.ContextManager(t_wizard, printed.append) as ctx:
         obj = create("plain thing", location=t_wizard)
         obj.parents.add(system.thing)
         assert obj.parents.filter(pk=system.thing.pk).exists()
-        parse.interpret(ctx, f"@remove_parent #{obj.pk} from $thing")
+        parse.interpret(ctx, f"@remove_parent $thing from #{obj.pk}")
     obj.refresh_from_db()
     assert not obj.parents.filter(pk=system.thing.pk).exists()
     assert any("Removed" in line for line in printed)
@@ -491,14 +491,14 @@ def test_reparent_move_pattern(t_init: Object, t_wizard: Object):
         obj = create("oak bench", parents=[system.furniture], location=room_a)
         pk = obj.pk
         # Add $thing first so moveto is reachable during the move
-        parse.interpret(ctx, f"@add_parent #{pk} to $thing")
+        parse.interpret(ctx, f"@add_parent $thing to #{pk}")
         # Strip $furniture (its moveto blocks non-wizard movement)
-        parse.interpret(ctx, f"@remove_parent #{pk} from $furniture")
+        parse.interpret(ctx, f"@remove_parent $furniture from #{pk}")
         # Move using $thing.moveto
         parse.interpret(ctx, f"@move #{pk} to #{room_b.pk}")
         # Clean up the temporary $thing parent, restore $furniture
-        parse.interpret(ctx, f"@remove_parent #{pk} from $thing")
-        parse.interpret(ctx, f"@add_parent #{pk} to $furniture")
+        parse.interpret(ctx, f"@remove_parent $thing from #{pk}")
+        parse.interpret(ctx, f"@add_parent $furniture to #{pk}")
     obj.refresh_from_db()
     assert obj.location == room_b
     assert obj.parents.filter(pk=system.furniture.pk).exists()
