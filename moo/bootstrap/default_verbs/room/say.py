@@ -18,7 +18,7 @@ if context.parser.words:
 else:
     message = " ".join(args)
 
-context.caller.tell("You: " + message)
+context.player.tell("You: " + message)
 for obj in this.contents.all():
-    if obj != context.caller:
-        obj.tell(context.caller.name + ": " + message)
+    if obj != context.player:
+        obj.tell(context.player.name + ": " + message)
