@@ -7,6 +7,83 @@ from moo.core.models.verb import Verb, VerbName
 from moo.core.exceptions import UsageError
 from .utils import save_quietly
 
+# --- @create ---
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_create_basic_lands_in_inventory(t_init: Object, t_wizard: Object):
+    """@create <name> creates an object and places it in the player's inventory."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, '@create "red ball"')
+    assert any("Created" in line for line in printed)
+    assert t_wizard.contents.filter(name="red ball").exists()
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_create_from_parent(t_init: Object, t_wizard: Object):
+    """@create <name> from <parent> creates an object with the specified parent."""
+    system = lookup(1)
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, '@create "widget" from $thing')
+    assert any("Created" in line for line in printed)
+    assert any("Transmuted" in line for line in printed)
+    obj = t_wizard.contents.filter(name="widget").first()
+    assert obj is not None
+    assert obj.parents.filter(pk=system.thing.pk).exists()
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_create_in_void(t_init: Object, t_wizard: Object):
+    """@create <name> in void creates an object with no location."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, '@create "ghost" in void')
+    assert any("Created" in line for line in printed)
+    assert any("void" in line for line in printed)
+    obj = Object.objects.filter(name="ghost").first()
+    assert obj is not None
+    assert obj.location is None
+    assert not t_wizard.contents.filter(name="ghost").exists()
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_create_in_location(t_init: Object, t_wizard: Object):
+    """@create <name> in <room> creates an object placed in the given room."""
+    system = lookup(1)
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        room = create("Test Room", parents=[system.room])
+        parse.interpret(ctx, '@create "token" in "Test Room"')
+    assert any("Created" in line for line in printed)
+    obj = Object.objects.filter(name="token").first()
+    assert obj is not None
+    room.refresh_from_db()
+    assert obj.location == room
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_create_from_parent_in_void(t_init: Object, t_wizard: Object):
+    """@create <name> from <parent> in void combines both prepositions."""
+    system = lookup(1)
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, '@create "phantom" from $thing in void')
+    assert any("Created" in line for line in printed)
+    assert any("Transmuted" in line for line in printed)
+    assert any("void" in line for m in printed for line in [str(m)])
+    obj = Object.objects.filter(name="phantom").first()
+    assert obj is not None
+    assert obj.location is None
+    assert obj.parents.filter(pk=system.thing.pk).exists()
+
+
 # --- whodunnit ---
 
 
