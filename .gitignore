@@ -19,7 +19,8 @@ compose.override.yml
 docs/_build/*
 docs/build/*
 docs/source/generated/*
-extras/agents/builder/logs/*
+extras/agents/*/logs/*
+extras/agents/*/builds/*
 extras/pages/public/*
 extras/pages/resources/_gen/*
 extras/skills/game-designer/environments/*
