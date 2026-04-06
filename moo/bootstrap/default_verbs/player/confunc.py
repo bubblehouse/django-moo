@@ -22,4 +22,12 @@ sending a suitable message to them if they are connected. Similarly, you may wis
 room you are in when you connect.
 """
 
-pass
+from moo.sdk import context, lookup
+from moo.core import NoSuchObjectError
+
+if not context.player.location:
+    try:
+        lab = lookup("The Laboratory")
+        context.player.move(lab)
+    except NoSuchObjectError:
+        pass

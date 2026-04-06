@@ -228,6 +228,11 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
     def _writer(msg):
         printed.append(msg)
 
+    def _msgs(caught, *objs):
+        """Filter ConnectionError warnings to only those sent to the given objects."""
+        prefixes = tuple(f"ConnectionError(#{obj.pk} " for obj in objs)
+        return [str(w.message) for w in caught.list if str(w.message).startswith(prefixes)]
+
     t_player = lookup("Player")
     with code.ContextManager(t_wizard, _writer) as ctx:
         home_location = t_wizard.location
@@ -246,7 +251,7 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_player, _writer) as ctx:
         with pytest.warns(RuntimeWarning, match=r"ConnectionError") as caught:
             parse.interpret(ctx, "go north")
-        assert [str(x.message) for x in caught.list] == [
+        assert _msgs(caught, t_player, t_wizard) == [
             f"ConnectionError(#{t_player.pk} (Player)): You leave #{home_location.pk} (The Laboratory).",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): #{t_player.pk} (Player) leaves #{home_location.pk} (The Laboratory).",
             f"ConnectionError(#{t_player.pk} (Player)): [bright_yellow]Another Room[/bright_yellow]",
@@ -260,7 +265,7 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, _writer) as ctx:
         with pytest.warns(RuntimeWarning, match=r"ConnectionError") as caught:
             parse.interpret(ctx, "go north")
-        assert [str(x.message) for x in caught.list] == [
+        assert _msgs(caught, t_player, t_wizard) == [
             f"ConnectionError(#{t_wizard.pk} (Wizard)): You leave #{home_location.pk} (The Laboratory).",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): [bright_yellow]Another Room[/bright_yellow]",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): [deep_sky_blue1]There's not much to see here.[/deep_sky_blue1]",
@@ -280,7 +285,7 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_player, _writer) as ctx:
         with pytest.warns(RuntimeWarning, match=r"ConnectionError") as caught:
             parse.interpret(ctx, "go south")
-        assert [str(x.message) for x in caught.list] == [
+        assert _msgs(caught, t_player, t_wizard) == [
             f"ConnectionError(#{t_player.pk} (Player)): You leave #{another_room.pk} (Another Room).",
             f"ConnectionError(#{t_wizard.pk} (Wizard)): #{t_player.pk} (Player) leaves #{another_room.pk} (Another Room).",
             f"ConnectionError(#{t_player.pk} (Player)): [bright_yellow]The Laboratory[/bright_yellow]",

@@ -172,7 +172,7 @@ with code.ContextManager(wizard, log.info):
 
     # The Tradesmen — autonomous builder agents
     # Mason ($player): digs rooms and wires exits
-    mason_obj = create(name="Mason", unique_name=True, location=lab)
+    mason_obj = create(name="Mason", unique_name=True, location=None)
     mason_obj.parents.add(player)
     mason_obj.owner = mason_obj
     mason_obj.save()
@@ -180,7 +180,7 @@ with code.ContextManager(wizard, log.info):
     Player.objects.create(user=mason_user, avatar=mason_obj)
 
     # Tinker ($programmer): writes verbs for interactive objects and secret exits
-    tinker_obj = create(name="Tinker", unique_name=True, location=lab)
+    tinker_obj = create(name="Tinker", unique_name=True, location=None)
     tinker_obj.parents.add(programmers)
     tinker_obj.owner = tinker_obj
     tinker_obj.save()
@@ -188,7 +188,7 @@ with code.ContextManager(wizard, log.info):
     Player.objects.create(user=tinker_user, avatar=tinker_obj)
 
     # Joiner ($player): creates furniture and containers
-    joiner_obj = create(name="Joiner", unique_name=True, location=lab)
+    joiner_obj = create(name="Joiner", unique_name=True, location=None)
     joiner_obj.parents.add(player)
     joiner_obj.owner = joiner_obj
     joiner_obj.save()
@@ -196,7 +196,7 @@ with code.ContextManager(wizard, log.info):
     Player.objects.create(user=joiner_user, avatar=joiner_obj)
 
     # Harbinger ($programmer): creates NPCs, uses @eval for random roll and tell verb
-    harbinger_obj = create(name="Harbinger", unique_name=True, location=lab)
+    harbinger_obj = create(name="Harbinger", unique_name=True, location=None)
     harbinger_obj.parents.add(programmers)
     harbinger_obj.owner = harbinger_obj
     harbinger_obj.save()
