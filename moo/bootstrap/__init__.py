@@ -97,6 +97,11 @@ def initialize_dataset(dataset="default"):
 
     repo = models.Repository.objects.get(slug=dataset)
     system = models.Object.objects.create(name="System Object", unique_name=True)
+    # LambdaMOO-style sentinel objects — created immediately after the system object
+    # so they receive the lowest possible PKs (2, 3, 4).
+    nothing = models.Object.objects.create(name="nothing", unique_name=True)
+    ambiguous_match = models.Object.objects.create(name="ambiguous_match", unique_name=True)
+    failed_match = models.Object.objects.create(name="failed_match", unique_name=True)
     containers = models.Object.objects.create(name="container class")
     containers.add_verb("accept", code="return True")
     # Create the first real user
@@ -107,6 +112,13 @@ def initialize_dataset(dataset="default"):
     # Wizard gets a User and Player record so is_wizard() works
     user = User.objects.create_user(username="wizard")
     Player.objects.create(user=user, avatar=wizard, wizard=True)
+    # Wizard owns the sentinel objects
+    nothing.owner = wizard
+    nothing.save()
+    ambiguous_match.owner = wizard
+    ambiguous_match.save()
+    failed_match.owner = wizard
+    failed_match.save()
     # Wizard owns containers
     containers.owner = wizard
     containers.save()
