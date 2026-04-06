@@ -22,6 +22,11 @@ containers.save()
 with code.ContextManager(wizard, log.info):
     sys = lookup(1)
 
+    # LambdaMOO special sentinel references (mirrors $nothing, $ambiguous_match, $failed_match)
+    sys.set_property("nothing", lookup("nothing"))
+    sys.set_property("ambiguous_match", lookup("ambiguous_match"))
+    sys.set_property("failed_match", lookup("failed_match"))
+
     sys.set_property("container", containers)
     containers.set_property("open_key", None)
     containers.set_property("open", False, inherit_owner=True)
