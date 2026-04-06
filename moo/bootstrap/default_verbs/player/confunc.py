@@ -27,6 +27,6 @@ from moo.sdk import context, lookup, NoSuchObjectError
 if not context.player.location:
     try:
         lab = lookup("The Laboratory")
-        context.player.move(lab)
+        context.player.moveto(lab)
     except NoSuchObjectError:
         pass
