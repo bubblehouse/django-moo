@@ -41,4 +41,4 @@ door.set_property("dest", dest)
 source.add_exit(door)
 dest.add_entrance(door)
 
-print(f'[yellow]{action} an exit {direction} to "{dest.name}".[/yellow]')
+print(f'[yellow]{action} an exit {direction} to "{dest.name}" (#{dest.pk}).[/yellow]')
