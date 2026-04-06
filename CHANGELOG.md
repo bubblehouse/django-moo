@@ -1,3 +1,9 @@
+## [0.93.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.93.0...v0.93.1) (2026-04-06)
+
+### Bug Fixes
+
+* mypy typing errors ([ab68605](https://gitlab.com/bubblehouse/django-moo/commit/ab68605fdfe3cb8ca9ead617fe97fe7ff8bfac01))
+
 ## [0.93.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.92.0...v0.93.0) (2026-04-06)
 
 ### Features
