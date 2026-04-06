@@ -7,6 +7,7 @@ import asyncio
 import json
 import logging
 import os
+from typing import cast
 
 import asyncssh
 from asgiref.sync import sync_to_async
@@ -50,9 +51,10 @@ async def interact(ssh_session: PromptToolkitSSHSession) -> None:
 
     :param ssh_session: the session being started
     """
-    automation = getattr(ssh_session, "is_automation", False)
-    await embed(ssh_session.user, automation=automation)
-    log.info(f"{ssh_session.user} disconnected.")
+    session = cast(MooPromptToolkitSSHSession, ssh_session)
+    automation = getattr(session, "is_automation", False)
+    await embed(session.user, automation=automation)
+    log.info(f"{session.user} disconnected.")
 
 
 async def server(port=8022):
