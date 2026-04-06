@@ -28,7 +28,7 @@ log = logging.getLogger(__name__)
 # Session-specific output settings registry
 # Keyed by user_pk, stores {output_prefix, output_suffix, quiet_mode, color_system}
 # Settings are cleared when user disconnects
-_session_settings = {}
+_session_settings: dict[int, dict] = {}
 
 PROMPT_SHORTCUTS = {
     '"': 'say "%"',
@@ -110,8 +110,8 @@ class MooPrompt:
         self.is_exiting = False
         if automation:
             _session_settings.setdefault(self.user.pk, {})["automation"] = True
-        self.editor_queue = asyncio.Queue()
-        self.paginator_queue = asyncio.Queue()
+        self.editor_queue: asyncio.Queue = asyncio.Queue()
+        self.paginator_queue: asyncio.Queue = asyncio.Queue()
         self.disconnect_event = asyncio.Event()
         self.last_property_write: datetime | None = None
 

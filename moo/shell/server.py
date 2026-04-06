@@ -36,10 +36,10 @@ class MooPromptToolkitSSHSession(PromptToolkitSSHSession):
         self.is_automation = False
         if self._chan:
             term = self._chan.get_terminal_type()
-            print(f"[MOO-DEBUG] Terminal type: {term!r}, enable_cpr={self.enable_cpr}", file=sys.stderr, flush=True)
+            print(f"[MOO-DEBUG] Terminal type: {term!r}, enable_cpr={self.enable_cpr}", file=sys.stderr, flush=True)  # type: ignore[has-type]
             if term and "moo-automation" in term.lower():
                 print("[MOO-DEBUG] Disabling CPR for automation", file=sys.stderr, flush=True)
-                self.enable_cpr = False
+                self.enable_cpr = False  # type: ignore[attr-defined]
                 self.is_automation = True
         super().session_started()
 

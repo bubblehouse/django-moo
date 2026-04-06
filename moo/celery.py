@@ -56,12 +56,12 @@ def beat_ready(**kwargs):
 
 
 @worker_ready.connect
-def worker_ready(**kwargs):
+def on_worker_ready(**kwargs):
     WORKER_READINESS_FILE.touch()
 
 
 @worker_shutdown.connect
-def worker_shutdown(**kwargs):
+def on_worker_shutdown(**kwargs):
     WORKER_READINESS_FILE.unlink(missing_ok=True)
 
 

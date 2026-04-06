@@ -30,7 +30,7 @@ def parse_command(self, caller_id: int, line: str) -> list[Any]:
     :return: a list of output lines
     :raises UserError: if a verb failure happens
     """
-    output = []
+    output: list[Any] = []
     task_id = self.request.id
     caller = Object.objects.get(pk=caller_id)
     with code.ContextManager(caller, output.append, task_id=task_id) as ctx:
@@ -55,7 +55,7 @@ def parse_command(self, caller_id: int, line: str) -> list[Any]:
 
 
 @shared_task(bind=True)
-def parse_code(self, caller_id: int, source: str, runtype: str = "exec") -> list[list[Any], Any]:
+def parse_code(self, caller_id: int, source: str, runtype: str = "exec") -> tuple[list[Any], Any]:
     """
     Execute code in a task.
 
@@ -63,7 +63,7 @@ def parse_code(self, caller_id: int, source: str, runtype: str = "exec") -> list
     :param source: the Python code to execute
     :return: a list of output lines and the result value, if any
     """
-    output = []
+    output: list[Any] = []
     task_id = self.request.id
     caller = Object.objects.get(pk=caller_id)
     with code.ContextManager(caller, output.append, task_id=task_id):
@@ -76,10 +76,10 @@ def parse_code(self, caller_id: int, source: str, runtype: str = "exec") -> list
 def invoke_verb(
     self,
     *args,
-    caller_id: int = None,
+    caller_id: Optional[int] = None,
     player_id: Optional[int] = None,
-    this_id: int = None,
-    verb_name: int = None,
+    this_id: Optional[int] = None,
+    verb_name: Optional[int] = None,
     callback_this_id: Optional[int] = None,
     callback_verb_name: Optional[int] = None,
     **kwargs,
