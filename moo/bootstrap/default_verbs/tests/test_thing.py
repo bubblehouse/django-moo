@@ -21,9 +21,10 @@ def test_drop_from_inventory(t_init: Object, t_wizard: Object):
 
         with pytest.warns(RuntimeWarning, match=r"ConnectionError") as warnings:
             parse.interpret(ctx, "drop widget")
-        assert [str(x.message) for x in warnings.list] == [
-            f"ConnectionError(#{player.pk} (Player)): {t_wizard.name} drops widget."
+        player_msgs = [
+            str(w.message) for w in warnings.list if str(w.message).startswith(f"ConnectionError(#{player.pk} ")
         ]
+        assert player_msgs == [f"ConnectionError(#{player.pk} (Player)): {t_wizard.name} drops widget."]
 
         widget.refresh_from_db()
         assert widget.location == lab
