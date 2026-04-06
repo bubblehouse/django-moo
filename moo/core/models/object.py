@@ -5,7 +5,7 @@ The primary Object class
 
 import logging
 
-from django.db import models
+from django.db import models, transaction
 from django.db.models import IntegerField, Value
 from django.db.models.expressions import F
 from django.db.models.query import Q, QuerySet
@@ -864,10 +864,14 @@ class Object(models.Model, AccessibleMixin):
             if original_location_id:
                 _prev_location = Object.objects.get(pk=original_location_id)
                 if _prev_location.has_verb("exitfunc"):
-                    invoke(self, verb=_prev_location.get_verb("exitfunc"))
+                    _exitfunc = _prev_location.get_verb("exitfunc")
+                    _self = self
+                    transaction.on_commit(lambda: invoke(_self, verb=_exitfunc))
             # the optional `enterfunc` Verb will be called asyncronously
             if self.location and self.location.has_verb("enterfunc"):
-                invoke(self, verb=self.location.get_verb("enterfunc"))
+                _enterfunc = self.location.get_verb("enterfunc")
+                _self = self
+                transaction.on_commit(lambda: invoke(_self, verb=_enterfunc))
             self._original_location = self.location_id
 
     # Django gets upset if this meddles with anything in RESERVED_NAMES
