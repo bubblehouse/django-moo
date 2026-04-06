@@ -32,9 +32,9 @@ def parse_command(self, caller_id: int, line: str) -> list[Any]:
     """
     output = []
     task_id = self.request.id
-    with transaction.atomic():
-        caller = Object.objects.get(pk=caller_id)
-        with code.ContextManager(caller, output.append, task_id=task_id) as ctx:
+    caller = Object.objects.get(pk=caller_id)
+    with code.ContextManager(caller, output.append, task_id=task_id) as ctx:
+        with transaction.atomic():
             try:
                 log.info(f"{caller}: {line}")
                 parse.interpret(ctx, line)
@@ -65,9 +65,9 @@ def parse_code(self, caller_id: int, source: str, runtype: str = "exec") -> list
     """
     output = []
     task_id = self.request.id
-    with transaction.atomic():
-        caller = Object.objects.get(pk=caller_id)
-        with code.ContextManager(caller, output.append, task_id=task_id):
+    caller = Object.objects.get(pk=caller_id)
+    with code.ContextManager(caller, output.append, task_id=task_id):
+        with transaction.atomic():
             result = code.interpret(source, "__main__", runtype=runtype)
     return output, result
 
