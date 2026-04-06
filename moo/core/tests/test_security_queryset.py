@@ -283,7 +283,7 @@ def test_passthrough_still_works_after_execute_check(t_init: Object, t_wizard: O
         child = create("passthrough_child", parents=[parent])
         child.add_verb("greet", code="passthrough()")
 
-    printed = []
+    printed: list[str] = []
     with ctx(t_wizard, printed.append):
         child.invoke_verb("greet")
     assert "hello from parent" in printed
@@ -356,7 +356,7 @@ obj = lookup(1)
 verbs = list(obj.verbs.select_related('owner').all())
 print(len(verbs) >= 0)
 """
-    printed = []
+    printed: list[str] = []
     with ctx(t_wizard, printed.append):
         w = code.ContextManager.get("writer")
         g = code.get_default_globals()

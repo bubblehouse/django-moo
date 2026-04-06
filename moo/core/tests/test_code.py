@@ -558,7 +558,7 @@ def test_r_eval_returns_value(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_r_exec_print_calls_writer(t_init: Object, t_wizard: Object):
-    printed = []
+    printed: list[str] = []
     with _ctx(t_wizard, printed.append):
         g = _make_globals(printed.append)
         code.r_exec("print('hello')", {}, g)

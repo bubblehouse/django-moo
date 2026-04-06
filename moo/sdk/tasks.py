@@ -11,7 +11,7 @@ from ..core.exceptions import UserError
 from .context import context
 
 
-def invoke(*args, verb=None, callback=None, delay: int = 0, periodic: bool = False, cron: str = None, **kwargs):
+def invoke(*args, verb=None, callback=None, delay: int = 0, periodic: bool = False, cron: str | None = None, **kwargs):
     """
     Asynchronously execute a Verb, optionally returning the result to another Verb.
     This is often a better alternative than using `__call__`-syntax to invoke
