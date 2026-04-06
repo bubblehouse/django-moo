@@ -137,3 +137,32 @@ def test_tunnel_to_existing_room(t_init: Object, t_wizard: Object):
         t_wizard.refresh_from_db()
     assert t_wizard.location.match_exit("east") is not None
     assert lookup("Far Away").id == existing_room.id
+
+
+# --- teleport ---
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_teleport_moves_player(t_init: Object, t_wizard: Object):
+    """teleport #N moves the player directly to the target room."""
+    system = lookup(1)
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        dest = create("The Observatory", parents=[system.room], location=None)
+        parse.interpret(ctx, f"teleport #{dest.pk}")
+        t_wizard.refresh_from_db()
+    assert t_wizard.location.pk == dest.pk
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_teleport_rejects_non_room(t_init: Object, t_wizard: Object, setup_item):
+    """teleport prints an error when the target object is not a room."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        item = setup_item(t_wizard, "widget")
+        original_location = t_wizard.location
+        parse.interpret(ctx, f"teleport #{item.pk}")
+        t_wizard.refresh_from_db()
+    assert any("not a room" in line.lower() for line in printed)
+    assert t_wizard.location.pk == original_location.pk
