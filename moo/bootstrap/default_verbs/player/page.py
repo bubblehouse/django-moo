@@ -50,7 +50,7 @@ does, then we print the player's subjective pronoun, capitalised. If it doesn't,
 from moo.sdk import context
 
 player = context.player
-who = context.parser.get_dobj()
+who = context.parser.get_dobj(lookup=True)
 if context.parser.has_pobj_str("with"):
     message = context.parser.get_pobj_str("with")
 else:
