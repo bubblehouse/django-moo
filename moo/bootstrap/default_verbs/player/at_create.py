@@ -12,14 +12,27 @@ Special syntax: @create "name" from "parent" in the void
   Creates object with location = None (not in player's inventory or any room)
 """
 
-from moo.sdk import context, create, lookup, NoSuchObjectError
+from moo.sdk import context, create, set_task_perms
 
 if not (context.parser.has_dobj_str()):
     print("[yellow]What do you want to create?[/yellow]")
     return
 
 name = context.parser.get_dobj_str()
-new_obj = create(name, location=None, owner=context.player)
+
+# Resolve location before calling create() so it can be placed via ORM,
+# bypassing any moveto verb (e.g. $furniture.moveto returns False for non-wizards).
+location = None
+place_in_void = False
+if context.parser.has_pobj_str("in"):
+    location_str = context.parser.get_pobj_str("in").lower()
+    if location_str == "void":
+        place_in_void = True
+    else:
+        location = context.parser.get_pobj("in", lookup=True)
+
+with set_task_perms(context.player):
+    new_obj = create(name, location=location)
 print("[yellow]Created %s[/yellow]" % new_obj)
 
 if context.parser.has_pobj_str("from"):
@@ -27,19 +40,8 @@ if context.parser.has_pobj_str("from"):
     new_obj.add_parent(parent)
     print("[yellow]Transmuted %s to %s[/yellow]" % (new_obj, parent))
 
-# Handle location: check for "void" (parser strips "the" article)
-if context.parser.has_pobj_str("in"):
-    location_str = context.parser.get_pobj_str("in").lower()
-    if location_str == "void":
-        # Keep location = None (object exists in the void)
-        print("[yellow]%s exists in the void[/yellow]" % new_obj)
-    else:
-        # Normal case: look up location object
-        try:
-            location = context.parser.get_pobj("in", lookup=True)
-            new_obj.moveto(location)
-        except NoSuchObjectError:
-            print("[bold red]There is no '%s' here.[/bold red]" % location_str)
-            new_obj.moveto(context.player)
-else:
+if place_in_void:
+    print("[yellow]%s exists in the void[/yellow]" % new_obj)
+elif location is None:
+    # No "in" specified — place in player's inventory
     new_obj.moveto(context.player)
