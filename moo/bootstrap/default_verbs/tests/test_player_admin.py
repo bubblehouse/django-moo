@@ -490,11 +490,14 @@ def test_reparent_move_pattern(t_init: Object, t_wizard: Object):
         # Create furniture in room_a directly (bypasses moveto)
         obj = create("oak bench", parents=[system.furniture], location=room_a)
         pk = obj.pk
-        # Strip $furniture so moveto works
+        # Add $thing first so moveto is reachable during the move
+        parse.interpret(ctx, f"@add_parent #{pk} to $thing")
+        # Strip $furniture (its moveto blocks non-wizard movement)
         parse.interpret(ctx, f"@remove_parent #{pk} from $furniture")
-        # Move to room_b
+        # Move using $thing.moveto
         parse.interpret(ctx, f"@move #{pk} to #{room_b.pk}")
-        # Restore $furniture parent
+        # Clean up the temporary $thing parent, restore $furniture
+        parse.interpret(ctx, f"@remove_parent #{pk} from $thing")
         parse.interpret(ctx, f"@add_parent #{pk} to $furniture")
     obj.refresh_from_db()
     assert obj.location == room_b
