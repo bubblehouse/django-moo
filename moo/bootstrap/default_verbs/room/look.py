@@ -1,4 +1,4 @@
-#!moo verb look inspect --on $room --dspec either --ispec at:any
+#!moo verb look inspect --on $room --dspec either --ispec at:any --ispec through:any
 
 # pylint: disable=return-outside-function,undefined-variable
 
@@ -24,6 +24,16 @@ Any ambiguous or failed matches produce suitable error messages.
 """
 
 from moo.sdk import context
+
+if context.parser.has_pobj_str("through"):
+    direction = context.parser.get_pobj_str("through")
+    exit_obj = context.player.location.match_exit(direction)
+    if not exit_obj:
+        print(f"[red]There is no exit called '{direction}' here.[/red]")
+        return
+    dest = exit_obj.get_property("dest")
+    dest.look_self()
+    return
 
 if context.parser.has_pobj_str("in"):
     container = context.parser.get_pobj("in")
