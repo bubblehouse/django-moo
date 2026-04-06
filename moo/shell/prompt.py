@@ -488,7 +488,7 @@ class MooPrompt:
         color_system = None if settings.get("quiet_mode", False) else "truecolor"
         console = Console(color_system=color_system)
         with console.capture() as capture:
-            console.print(s)
+            console.print(s, end="")
         content = capture.get()
         print_formatted_text(ANSI(content))
 
