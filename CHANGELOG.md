@@ -1,3 +1,29 @@
+## [0.92.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.91.1...v0.92.0) (2026-04-06)
+
+### Features
+
+* added tool use support to moo-agent ([df4ff8d](https://gitlab.com/bubblehouse/django-moo/commit/df4ff8d1013ee4ecb6577a77741ed0bf509e1f04))
+* split builder agent into mutiple simpler agents ([c8b5862](https://gitlab.com/bubblehouse/django-moo/commit/c8b5862cf8f26f10f7790f1f3fe8397a3a5e84c1))
+
+### Bug Fixes
+
+* [@create](https://gitlab.com/create) should use the current player as the owner ([d68b769](https://gitlab.com/bubblehouse/django-moo/commit/d68b769e4375f2eb2ae2fbd245d8b651ee55774d))
+* [@edit](https://gitlab.com/edit) improvements for stupid agents ([c2f77d2](https://gitlab.com/bubblehouse/django-moo/commit/c2f77d21084d78a37ca719eb0b0a8d4e87be5cfa))
+* add synonyms for dspec and ispec ([294a2f1](https://gitlab.com/bubblehouse/django-moo/commit/294a2f15a638481049f9979b2934c1d2c0179d47))
+* agent updates to self-train after mistakes ([ed9ec6a](https://gitlab.com/bubblehouse/django-moo/commit/ed9ec6a23c187bb96b7b0896f49fc246e4c7832c))
+* argument handling for [@move](https://gitlab.com/move) ([973bd89](https://gitlab.com/bubblehouse/django-moo/commit/973bd89020bd492c55b6c3c81e41b474ca3a3c92))
+* edit edge case behavior ([0cbce0e](https://gitlab.com/bubblehouse/django-moo/commit/0cbce0e18590314857451a3b4b374053c62989ae))
+* edit test fixes ([62ec327](https://gitlab.com/bubblehouse/django-moo/commit/62ec3279b73c3078878316837b0c73ea9a4238ba))
+* error handling for bad shebang ([498667b](https://gitlab.com/bubblehouse/django-moo/commit/498667bd9df10947171f2326681a7b60e98e9b6e))
+* import error ([820211e](https://gitlab.com/bubblehouse/django-moo/commit/820211e374a18ff4624858d9776daf7e32c7a138))
+* improve agent permission and multiuser performance ([669c787](https://gitlab.com/bubblehouse/django-moo/commit/669c787733c9e3043cdec3f6aad8b659d0df96f8))
+* improve quote handling ([1f4f600](https://gitlab.com/bubblehouse/django-moo/commit/1f4f6002ce7985636ebca522f66a4ab8af8430bd))
+* moveto improvements ([eda4603](https://gitlab.com/bubblehouse/django-moo/commit/eda4603a09b43df374f40713125362ad01f448ae))
+* put agent users in the void so tests dont fail ([57fa09d](https://gitlab.com/bubblehouse/django-moo/commit/57fa09d5580f001f49128fa10adc19e46ae0a0c2))
+* raise permissionerror to user ([0cbccaf](https://gitlab.com/bubblehouse/django-moo/commit/0cbccaff61d1cdb77e58708aec75968ca744f143))
+* say routing fixes ([7546cd9](https://gitlab.com/bubblehouse/django-moo/commit/7546cd96af3fd46a865dffb96b89e6ed8e217371))
+* try to translate bare tool-call syntax before sending as MOO command ([6284d7e](https://gitlab.com/bubblehouse/django-moo/commit/6284d7ef736dfa734b1ed12af002942fdaaf1733))
+
 ## [0.91.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.91.0...v0.91.1) (2026-03-31)
 
 ### Bug Fixes
