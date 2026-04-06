@@ -443,3 +443,59 @@ def test_memory_wizard(t_init: Object, t_wizard: Object):
         parse.interpret(ctx, "@memory")
     output = "\n".join(printed)
     assert "Memory" in output or "unavailable" in output
+
+
+# --- @add_parent / @remove_parent ---
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_add_parent_by_id(t_init: Object, t_wizard: Object):
+    """@add_parent #N to <parent> adds a parent to the object."""
+    system = lookup(1)
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        obj = create("plain thing", location=t_wizard)
+        parse.interpret(ctx, f"@add_parent #{obj.pk} to $thing")
+    obj.refresh_from_db()
+    assert obj.parents.filter(pk=system.thing.pk).exists()
+    assert any("Added" in line for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_remove_parent_by_id(t_init: Object, t_wizard: Object):
+    """@remove_parent #N from <parent> removes a parent from the object."""
+    system = lookup(1)
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        obj = create("plain thing", location=t_wizard)
+        obj.parents.add(system.thing)
+        assert obj.parents.filter(pk=system.thing.pk).exists()
+        parse.interpret(ctx, f"@remove_parent #{obj.pk} from $thing")
+    obj.refresh_from_db()
+    assert not obj.parents.filter(pk=system.thing.pk).exists()
+    assert any("Removed" in line for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_reparent_move_pattern(t_init: Object, t_wizard: Object):
+    """Remove $furniture parent, move object, re-add parent — the reparent-move pattern."""
+    system = lookup(1)
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        room_a = create("Room A", parents=[system.room], location=t_wizard.location)
+        room_b = create("Room B", parents=[system.room], location=t_wizard.location)
+        # Create furniture in room_a directly (bypasses moveto)
+        obj = create("oak bench", parents=[system.furniture], location=room_a)
+        pk = obj.pk
+        # Strip $furniture so moveto works
+        parse.interpret(ctx, f"@remove_parent #{pk} from $furniture")
+        # Move to room_b
+        parse.interpret(ctx, f"@move #{pk} to #{room_b.pk}")
+        # Restore $furniture parent
+        parse.interpret(ctx, f"@add_parent #{pk} to $furniture")
+    obj.refresh_from_db()
+    assert obj.location == room_b
+    assert obj.parents.filter(pk=system.furniture.pk).exists()
