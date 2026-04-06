@@ -22,8 +22,7 @@ sending a suitable message to them if they are connected. Similarly, you may wis
 room you are in when you connect.
 """
 
-from moo.sdk import context, lookup
-from moo.core import NoSuchObjectError
+from moo.sdk import context, lookup, NoSuchObjectError
 
 if not context.player.location:
     try:
