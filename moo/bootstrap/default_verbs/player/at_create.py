@@ -19,7 +19,7 @@ if not (context.parser.has_dobj_str()):
     return
 
 name = context.parser.get_dobj_str()
-new_obj = create(name, location=None)
+new_obj = create(name, location=None, owner=context.player)
 print("[yellow]Created %s[/yellow]" % new_obj)
 
 if context.parser.has_pobj_str("from"):
