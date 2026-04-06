@@ -17,7 +17,7 @@ is printed to the objects in the destination room. No messages are printed if an
 problem is found, it is reported to the player who typed the command.
 """
 
-from moo.sdk import context
+from moo.sdk import context, lookup
 
 parser = context.parser
 obj = parser.get_dobj()
