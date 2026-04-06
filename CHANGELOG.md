@@ -1,3 +1,25 @@
+## [0.93.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.92.0...v0.93.0) (2026-04-06)
+
+### Features
+
+* add [@create](https://gitlab.com/create)...in support ([73b32e2](https://gitlab.com/bubblehouse/django-moo/commit/73b32e2f3efc4c63936c9c8ecfd56d9a3f9f30d3))
+* add $nothing sentinel objects and stale-ref replacement ([c5106ce](https://gitlab.com/bubblehouse/django-moo/commit/c5106ceea58cc847f87402819b7c43816c806150))
+* add agent-optimized navigation and inspection verbs ([7d00f82](https://gitlab.com/bubblehouse/django-moo/commit/7d00f82af17af336367f2420c7ac926dc476bca1))
+* added [@add](https://gitlab.com/add)_parent and [@remove](https://gitlab.com/remove)_parent verbs ([f894b26](https://gitlab.com/bubblehouse/django-moo/commit/f894b26b5af88c4073fd5666599df702e7aa1d83))
+* added [@add](https://gitlab.com/add)_parent and [@remove](https://gitlab.com/remove)_parent verbs ([0c25994](https://gitlab.com/bubblehouse/django-moo/commit/0c25994e7986feb40deda4db440ea8bbd2bb4b23))
+* configure tradesmen agents into iterative loop ([2852275](https://gitlab.com/bubblehouse/django-moo/commit/285227511d58c1cfc19a83755b1226c37cb44f4c))
+* expose new navigation verbs as agent tool specs ([0ab4b54](https://gitlab.com/bubblehouse/django-moo/commit/0ab4b545cc0c6f657007c38d030211a9dbd7994e))
+
+### Bug Fixes
+
+* derive to everyone on all standard system classes ([991a841](https://gitlab.com/bubblehouse/django-moo/commit/991a841b91bbc3b283bd38067a236d6780d8e104))
+* enterfunc/exitfunc json decode issue ([cdbdbfd](https://gitlab.com/bubblehouse/django-moo/commit/cdbdbfd1d3bd5af3c5ac7f7a5d571ecc07982976))
+* improved verb handling ([cdcd1c8](https://gitlab.com/bubblehouse/django-moo/commit/cdcd1c8dfd46c1aa96b0e4771295e2a118e61cd3))
+* move import lookup ([9700334](https://gitlab.com/bubblehouse/django-moo/commit/9700334aa12c6dfdac5f8a00b4846762071954e4))
+* page should use a global lookup ([ff49ab0](https://gitlab.com/bubblehouse/django-moo/commit/ff49ab024219ea4e7e50d4852e27ccddb6c1324f))
+* remove spurious LF in print() output ([4e5f4ed](https://gitlab.com/bubblehouse/django-moo/commit/4e5f4ede4383c2bbe8c53d4f844016d8b1df36e9))
+* the transaction needs to be inside the contextmanager, not vice-versa ([ca69346](https://gitlab.com/bubblehouse/django-moo/commit/ca69346d78e96b0474033a6aa28d31e19900f3d6))
+
 ## [0.92.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.91.1...v0.92.0) (2026-04-06)
 
 ### Features

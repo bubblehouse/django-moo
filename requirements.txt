@@ -283,6 +283,7 @@ paramiko==4.0.0
     # via webssh
 parso==0.8.6
     # via jedi
+pexpect==4.9.0
 platformdirs==4.9.4
     # via
     #   pylint
@@ -305,6 +306,8 @@ psycopg2-binary==2.9.11
     # via django-moo
 ptpython==3.0.32
     # via django-moo
+ptyprocess==0.7.0
+    # via pexpect
 pyasn1==0.6.2
     # via django-simplesshkey
 pycparser==3.0 ; implementation_name != 'PyPy' and platform_python_implementation != 'PyPy'
@@ -364,7 +367,9 @@ python-dateutil==2.9.0.post0
 python-redis-cache==4.0.2
     # via django-moo
 pyyaml==6.0.3
-    # via myst-parser
+    # via
+    #   django-moo
+    #   myst-parser
 rcssmin==1.2.2
     # via django-compressor
 redis==6.4.0
@@ -434,6 +439,8 @@ tornado==6.5.4
     # via webssh
 tqdm==4.67.3
     # via openai
+types-pexpect==4.9.0.20260127
+types-pyyaml==6.0.12.20250915
 typing-extensions==4.15.0
     # via
     #   anthropic
