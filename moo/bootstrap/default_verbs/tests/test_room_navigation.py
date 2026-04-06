@@ -240,7 +240,7 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
         parse.interpret(ctx, "@dig north to Another Room")
         another_room = lookup("Another Room")
         assert printed == [
-            '[yellow]Dug an exit north to "Another Room".[/yellow]',
+            f'[yellow]Dug an exit north to "Another Room" (#{another_room.pk}).[/yellow]',
         ]
         printed.clear()
 
@@ -277,7 +277,7 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
         context.player.refresh_from_db()
         parse.interpret(ctx, f"@tunnel south to {home_location.name}")
         assert printed == [
-            f'[yellow]Tunnelled an exit south to "{home_location.name}".[/yellow]',
+            f'[yellow]Tunnelled an exit south to "{home_location.name}" (#{home_location.pk}).[/yellow]',
         ]
         assert t_player.location.get_property("exits")
         printed.clear()
@@ -311,3 +311,40 @@ def test_basic_dig_and_tunnel(t_init: Object, t_wizard: Object):
             f"- [yellow]south from Another Room[/yellow] (Aliases: south) to [green]The Laboratory[/green] (#{home_location.pk})",
         ]
         printed.clear()
+
+
+# --- @burrow ---
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_burrow_creates_both_exits(t_init: Object, t_wizard: Object):
+    """@burrow creates forward + return exits and moves the player into the new room."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        origin = t_wizard.location
+        parse.interpret(ctx, '@burrow west to "The Crypt"')
+        t_wizard.refresh_from_db()
+    new_room = lookup("The Crypt")
+    assert new_room is not None
+    assert t_wizard.location.pk == new_room.pk
+    assert origin.match_exit("west") is not None
+    assert new_room.match_exit("east") is not None
+    assert any("Dug west" in line for line in printed)
+    assert any("Tunnelled east" in line for line in printed)
+    assert any("The Crypt" in line for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_burrow_fails_existing_forward_exit(t_init: Object, t_wizard: Object):
+    """@burrow prints an error when the forward direction already has an exit."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, "@dig north to Existing Room")
+        printed.clear()
+        parse.interpret(ctx, '@burrow north to "New Room"')
+    from moo.core.exceptions import NoSuchObjectError
+    assert any("already an exit" in line.lower() for line in printed)
+    with pytest.raises(NoSuchObjectError):
+        lookup("New Room")

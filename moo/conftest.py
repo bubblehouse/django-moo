@@ -32,6 +32,8 @@ def t_init(request):
     """
     Test fixture that pre-seeds a basic bootstrapped environment.
     """
+    from moo.core.moojson import clear_nothing_cache
+    clear_nothing_cache()
     name = request.param if hasattr(request, "param") else "test"
     log.debug(f"t_init: {name}")
     Repository.objects.create(slug=name, prefix=f"moo/bootstrap/{name}_verbs", url=settings.DEFAULT_GIT_REPO_URL)
@@ -39,6 +41,7 @@ def t_init(request):
     with importlib.resources.as_file(ref) as path:
         load_python(path)
     yield Object.objects.get(id=1)
+    clear_nothing_cache()
 
 
 @pytest.fixture()
