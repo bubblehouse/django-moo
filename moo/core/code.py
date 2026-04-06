@@ -8,6 +8,7 @@ import functools
 import logging
 import time
 import warnings
+from typing import Any
 from collections import namedtuple
 from types import ModuleType
 
@@ -374,7 +375,7 @@ class ContextManager:
         _CONTEXT_VARS["caller_stack"].set(caller_stack)
         _CONTEXT_VARS["caller"].set(frame["previous_caller"])
 
-    def __init__(self, caller, writer, task_id=None, player=None, connection=None):
+    def __init__(self, caller: Any, writer: Any, task_id: Any = None, player: Any = None, connection: Any = None) -> None:
         self._tokens: dict = {}
         self._initial_values: dict = {
             "caller": caller,
