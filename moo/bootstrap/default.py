@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from moo import bootstrap
 from moo.core import code, create, lookup
 from moo.core.models import Player
+from moo.core.models.acl import Access, Permission
 
 log = logging.getLogger(__name__)
 User = get_user_model()
@@ -202,6 +203,15 @@ with code.ContextManager(wizard, log.info):
     harbinger_obj.save()
     harbinger_user = User.objects.create_user(username="harbinger", password="Bt6wF5jRcU3e")
     Player.objects.create(user=harbinger_user, avatar=harbinger_obj)
+
+    # Grant derive to everyone on all standard system classes so any player can
+    # create instances via @create without needing wizard privileges.
+    derive_perm = Permission.objects.get(name="derive")
+    for _cls in [root, thing, rooms, exits, player, programmers, furniture, containers]:
+        Access.objects.get_or_create(
+            object=_cls, permission=derive_perm,
+            type="group", group="everyone", rule="allow",
+        )
 
     root.get_verb("accept").delete()
 
