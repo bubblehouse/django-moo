@@ -4,26 +4,28 @@ Encode/decode MOO JSON
 
 import json
 from datetime import date, datetime, time
+from typing import Any
+
+_UNSET: object = object()
+_nothing_cached: Any = _UNSET
 
 
-def _get_nothing():
+def _get_nothing() -> Any:
     """
     Return the $nothing sentinel object, or None if the bootstrap hasn't run yet.
     Uses a module-level cache; call clear_nothing_cache() in test teardown if needed.
     """
-    if _get_nothing._cached is _get_nothing._UNSET:
+    global _nothing_cached
+    if _nothing_cached is _UNSET:
         from .models.object import Object
-        _get_nothing._cached = Object.objects.filter(name="nothing").first()
-    return _get_nothing._cached
+        _nothing_cached = Object.objects.filter(name="nothing").first()
+    return _nothing_cached
 
 
-_get_nothing._UNSET = object()
-_get_nothing._cached = _get_nothing._UNSET
-
-
-def clear_nothing_cache():
+def clear_nothing_cache() -> None:
     """Reset the $nothing object cache (call between tests that reset the DB)."""
-    _get_nothing._cached = _get_nothing._UNSET
+    global _nothing_cached
+    _nothing_cached = _UNSET
 
 
 def loads(j):
