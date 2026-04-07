@@ -1,4 +1,4 @@
-#!moo verb @edit edit_callback --on $note --dspec any --ispec with:any
+#!moo verb @edit edit_callback --on $note --dspec this --ispec with:any
 
 # pylint: disable=return-outside-function,undefined-variable
 
