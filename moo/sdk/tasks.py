@@ -44,7 +44,7 @@ def invoke(*args, verb=None, callback=None, delay: int = 0, periodic: bool = Fal
 
     kwargs.update(
         dict(
-            caller_id=context.caller.pk,
+            caller_id=context.caller.pk if context.caller else None,
             player_id=context.player.pk if context.player else None,
             this_id=verb._invoked_object.pk,  # pylint: disable=protected-access
             verb_name=verb._invoked_name,  # pylint: disable=protected-access
