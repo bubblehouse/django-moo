@@ -856,46 +856,47 @@ class Object(models.Model, AccessibleMixin):
         # a new object (unsaved) cannot yet contain anything, so skip it there.
         if not unsaved and self.location and self.contains(self.location):
             raise exceptions.RecursiveError(f"{self} already contains {self.location}")
-        super().save(*args, **kwargs)
-        # after saving, new objects need default permissions
-        if unsaved:
-            utils.apply_default_permissions(self)
-        # ACL Check: to change owner, caller must be allowed to `entrust` on this object
-        original_owner_id = self._original_owner
-        if original_owner_id != self.owner_id and self.owner_id:
-            # Ownership affects the "owners" group match in is_allowed(), so evict any
-            # cached permission results for this object before checking entrust.
-            perm_cache = ContextManager.get_perm_cache()
-            if perm_cache is not None:
-                evict = [k for k in perm_cache if k[0] == "perm" and k[3] == self.kind and k[4] == self.pk]
-                for k in evict:
-                    del perm_cache[k]
-            self.can_caller("entrust", self)
-        # ACL Check: to change anything else about the object you at least need `write`
-        self.can_caller("write", self)
-        # ACL Check: to change the location, caller must be allowed to `move` on this object
-        original_location_id = self._original_location
-        if original_location_id != self.location_id and self.location_id:
-            self.can_caller("move", self)
-            # the new location must define an `accept` verb that returns True for this obejct
-            if self.location.has_verb("accept"):
-                if not self.location.invoke_verb("accept", self):
+        with transaction.atomic():
+            super().save(*args, **kwargs)
+            # after saving, new objects need default permissions
+            if unsaved:
+                utils.apply_default_permissions(self)
+            # ACL Check: to change owner, caller must be allowed to `entrust` on this object
+            original_owner_id = self._original_owner
+            if original_owner_id != self.owner_id and self.owner_id:
+                # Ownership affects the "owners" group match in is_allowed(), so evict any
+                # cached permission results for this object before checking entrust.
+                perm_cache = ContextManager.get_perm_cache()
+                if perm_cache is not None:
+                    evict = [k for k in perm_cache if k[0] == "perm" and k[3] == self.kind and k[4] == self.pk]
+                    for k in evict:
+                        del perm_cache[k]
+                self.can_caller("entrust", self)
+            # ACL Check: to change anything else about the object you at least need `write`
+            self.can_caller("write", self)
+            # ACL Check: to change the location, caller must be allowed to `move` on this object
+            original_location_id = self._original_location
+            if original_location_id != self.location_id and self.location_id:
+                self.can_caller("move", self)
+                # the new location must define an `accept` verb that returns True for this obejct
+                if self.location.has_verb("accept"):
+                    if not self.location.invoke_verb("accept", self):
+                        raise PermissionError(f"{self.location} did not accept {self}")
+                else:
                     raise PermissionError(f"{self.location} did not accept {self}")
-            else:
-                raise PermissionError(f"{self.location} did not accept {self}")
-            # the optional `exitfunc` Verb will be called asyncronously
-            if original_location_id:
-                _prev_location = Object.objects.get(pk=original_location_id)
-                if _prev_location.has_verb("exitfunc"):
-                    _exitfunc = _prev_location.get_verb("exitfunc")
+                # the optional `exitfunc` Verb will be called asyncronously
+                if original_location_id:
+                    _prev_location = Object.objects.get(pk=original_location_id)
+                    if _prev_location.has_verb("exitfunc"):
+                        _exitfunc = _prev_location.get_verb("exitfunc")
+                        _self = self
+                        transaction.on_commit(lambda: invoke(_self, verb=_exitfunc))
+                # the optional `enterfunc` Verb will be called asyncronously
+                if self.location and self.location.has_verb("enterfunc"):
+                    _enterfunc = self.location.get_verb("enterfunc")
                     _self = self
-                    transaction.on_commit(lambda: invoke(_self, verb=_exitfunc))
-            # the optional `enterfunc` Verb will be called asyncronously
-            if self.location and self.location.has_verb("enterfunc"):
-                _enterfunc = self.location.get_verb("enterfunc")
-                _self = self
-                transaction.on_commit(lambda: invoke(_self, verb=_enterfunc))
-            self._original_location = self.location_id
+                    transaction.on_commit(lambda: invoke(_self, verb=_enterfunc))
+                self._original_location = self.location_id
 
     # Django gets upset if this meddles with anything in RESERVED_NAMES
     # but otherwise this seems to work, including in the admin interface
