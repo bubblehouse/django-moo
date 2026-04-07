@@ -46,12 +46,13 @@ Example:
 
 ```
 @create "<name>" from "<parent>"
+@create "<name>" from "<parent>" in "<room>"
 @create "<name>" from "<parent>" in the void
 ```
 
-Creates a new object instance with the given parent. By default places it in your inventory.
+Creates a new object instance with the given parent. By default places it in the **player's inventory**. Placement is done via ORM directly (bypassing `moveto` permission checks) so parents like `$note` and `$furniture` — which have restrictive `moveto` verbs — can be created without a `PermissionError`.
 
-Use `in the void` to create an object with `location=None` (exists but isn't in any room). Useful for avoiding race conditions with `enterfunc` and for staging objects before placement.
+Use `in "<room>"` to create the object in a specific room. Use `in the void` to create an object with `location=None` (exists but isn't in any room). Useful for avoiding race conditions with `enterfunc` and for staging objects before placement.
 
 Examples:
 
@@ -61,6 +62,7 @@ Examples:
 @create "Moe" from "Generic Tavern NPC"
 @create "a pint of Duff" from "Generic Beer Glass"
 @create "Moe's Tavern - Main Bar" from "$room" in the void
+@create "welcome sign" from "$note"
 ```
 
 **Parser Ambiguity Issue**: When creating the 3rd+ object with the same name, the parser raises `AmbiguousObjectError` because it tries to resolve the name string *before* running the verb. Use `@eval` with SDK `create()` to bypass parser resolution (see Advanced Techniques below).
@@ -357,12 +359,73 @@ QUIT
 
 Legacy disconnect command. If the current room defines a `QUIT` verb (e.g., inside an editor), it is called instead. Otherwise prints a message redirecting to `@quit`. Use `@quit` in automation scripts.
 
+## Agent-Optimized Navigation Verbs
+
+These verbs replace multi-step navigation patterns with single atomic operations. They are primarily designed for autonomous agents but work for any `$player`.
+
+### `@burrow`
+
+```
+@burrow <direction> to "<room name>"
+```
+
+Atomic bidirectional dig. In one command: creates the forward exit, creates the new room, moves the caller into it, and wires the return exit automatically (using the opposite direction). Replaces the three-step `@dig` + `go` + `@tunnel` sequence and eliminates the most common source of one-way exits.
+
+The return direction is inferred automatically (`north` ↔ `south`, `east` ↔ `west`, `up` ↔ `down`, diagonal pairs). For non-standard directions with no obvious opposite, the return exit is skipped with a warning.
+
+**Check before digging:** `@burrow` returns an error if an exit already exists in the given direction. Use `@survey` or `@exits` first to see which directions are taken.
+
+Examples:
+
+```
+@burrow north to "The Watchtower"
+@burrow east to "The Cloister"
+```
+
+### `teleport`
+
+```
+teleport #N
+teleport "<room name>"
+```
+
+Teleport directly to any room by object ID or name without following exit chains. Replaces `go north | go east | go south` navigation chains with a single command.
+
+Examples:
+
+```
+teleport #32
+teleport "The Grand Gallery"
+```
+
+### `@survey`
+
+```
+@survey
+@survey here
+@survey #N
+```
+
+Lightweight room inspector. Returns only the room name, exits with `#N` destination IDs, and a flat contents list (~5 lines). Use instead of `@show here` to avoid context overload in long sessions or automation scripts.
+
+Examples:
+
+```
+@survey           ← current room
+@survey here      ← same as above
+@survey #35       ← survey a specific room by ID
+```
+
+### `@rooms`
+
+```
+@rooms
+```
+
+Lists every room instance in the world as a flat `#N / name` list. Useful for building a traversal plan at the start of a session. Filters out abstract class objects and returns only actual room instances.
+
 ## Navigation Tip
 
-After `@dig`, you remain in the original room. To reach the new room:
+After `@dig`, you remain in the original room. Use `go <direction>` to enter the new room, then `@tunnel` to add the return exit.
 
-```
-go north    # or whatever direction you dug
-```
-
-Then use `@tunnel` to add the return exit, and `@describe here` for the new room.
+For agent sessions, prefer `@burrow` — it combines all three steps into one command and moves you into the new room automatically. Call `@describe here` immediately after `@burrow` without any additional navigation step.
