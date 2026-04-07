@@ -73,6 +73,7 @@ ALLOWED_BUILTINS = (
     "getattr",
     "hasattr",
     "list",
+    "PermissionError",
     "set",
     "sorted",
 )
