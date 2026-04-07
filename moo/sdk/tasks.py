@@ -92,8 +92,10 @@ def set_task_perms(who):
     :param who: the Object whose permissions to assume
     :type who: Object
     """
-    if context.caller and not context.caller.is_wizard():
-        raise UserError("Only verbs owned by wizards can modify the task permissions..")
+    caller_is_wizard = context.caller and context.caller.is_wizard()
+    player_is_wizard = context.player and context.player.is_wizard()
+    if context.caller and not caller_is_wizard and not player_is_wizard:
+        raise UserError("Only verbs owned by wizards (or wizard sessions) can modify the task permissions.")
 
     if not _ContextManager.is_active() or who is None:
         yield
