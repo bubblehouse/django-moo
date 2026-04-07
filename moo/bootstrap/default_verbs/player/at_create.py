@@ -31,19 +31,20 @@ if context.parser.has_pobj_str("in"):
     else:
         location = context.parser.get_pobj("in", lookup=True)
 
+if not place_in_void and location is None:
+    # No "in" specified — pass player's inventory as location directly to create(),
+    # so the accept/PermissionError check and the initial INSERT happen in a single
+    # atomic save. This prevents orphan objects if the location rejects the new item.
+    location = context.player
+
 with set_task_perms(context.player):
     new_obj = create(name, owner=context.player, location=location)
-print("[yellow]Created %s[/yellow]" % new_obj)
+    print("[yellow]Created %s[/yellow]" % new_obj)
 
-if context.parser.has_pobj_str("from"):
-    parent = context.parser.get_pobj("from", lookup=True)
-    new_obj.add_parent(parent)
-    print("[yellow]Transmuted %s to %s[/yellow]" % (new_obj, parent))
+    if context.parser.has_pobj_str("from"):
+        parent = context.parser.get_pobj("from", lookup=True)
+        new_obj.add_parent(parent)
+        print("[yellow]Transmuted %s to %s[/yellow]" % (new_obj, parent))
 
 if place_in_void:
     print("[yellow]%s exists in the void[/yellow]" % new_obj)
-elif location is None:
-    # No "in" specified — place in player's inventory via ORM to bypass
-    # moveto permission checks (some parents, e.g. $note, restrict inventory entry).
-    new_obj.location = context.player
-    new_obj.save()
