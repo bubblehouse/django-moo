@@ -46,6 +46,20 @@ def test_validate_password_incorrect():
     assert result is False
 
 
+@pytest.mark.django_db(transaction=True)
+def test_validate_password_nonexistent_user():
+    """validate_password returns False (not an exception) for an unknown username.
+
+    Previously User.objects.get() raised User.DoesNotExist which bubbled up
+    through the asyncssh auth handler and could leave the server in a bad state.
+    """
+    server = SSHServer.__new__(SSHServer)
+
+    result = asyncio.run(server.validate_password("no-such-user", "any-pass"))
+
+    assert result is False
+
+
 # ---------------------------------------------------------------------------
 # SSHServer.session_requested() — session factory
 # ---------------------------------------------------------------------------

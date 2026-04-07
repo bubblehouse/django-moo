@@ -106,7 +106,10 @@ class SSHServer(PromptToolkitSSHServer):
         :param username: username of the Django User to login as
         :param password: the password string
         """
-        user = User.objects.get(username=username)
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return False
         if user.check_password(password):
             self.user = user  # pylint: disable=attribute-defined-outside-init
             return True
@@ -126,7 +129,7 @@ class SSHServer(PromptToolkitSSHServer):
         :param username: username of the Django User to login as
         :param key: the SSH key
         """
-        for user_key in UserKey.objects.filter(user__username=username):
+        for user_key in UserKey.objects.filter(user__username=username).select_related("user"):
             user_pem = " ".join(user_key.key.split()[:2]) + "\n"
             server_pem = key.export_public_key().decode("utf8")
             if user_pem == server_pem:

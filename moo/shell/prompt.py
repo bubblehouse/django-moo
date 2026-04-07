@@ -222,6 +222,12 @@ class MooPrompt:
         except:  # pylint: disable=bare-except
             log.exception("Error in command processing")
         finally:
+            # Signal process_messages to stop regardless of how we exited.
+            # Without this, if process_commands exits via exception, is_exiting
+            # is never set and process_messages loops forever — keeping the
+            # asyncssh channel open as a zombie.
+            self.is_exiting = True
+            self.disconnect_event.set()
             await self._fire_disfunc()
             # Clean up session settings on disconnect
             user_pk = self.user.pk
@@ -499,6 +505,17 @@ class MooPrompt:
         Runs in a loop alongside process_commands. Messages that carry an
         ``editor`` or ``paginator`` event are forwarded to the appropriate
         asyncio queue; all other messages are printed via writer().
+
+        A single ``SimpleBuffer`` (and its underlying AMQP consumer) is held
+        open for the duration of the session.  Previously the buffer was
+        created and torn down on every iteration (20×/second per agent), which
+        caused excessive consumer churn on the broker and could trigger channel
+        errors that silently killed this coroutine while ``process_commands``
+        kept the SSH connection open indefinitely as a zombie.
+
+        The ``finally`` block signals ``process_commands`` to exit whenever
+        this coroutine ends — whether by normal exit, exception, or
+        ``disconnect`` event — so the two tasks always terminate together.
         """
         await asyncio.sleep(1)
         try:
@@ -510,63 +527,72 @@ class MooPrompt:
                     f"user-{self.user.pk}",
                     channel=channel,
                 )
-                while not self.is_exiting:
-                    sb = simple.SimpleBuffer(channel, queue, no_ack=True)
-                    try:
-                        msg = sb.get_nowait()
-                    except sb.Empty:
-                        msg = None
-                    finally:
-                        sb.close()
+                sb = simple.SimpleBuffer(channel, queue, no_ack=True)
+                try:
+                    while not self.is_exiting:
+                        try:
+                            msg = sb.get_nowait()
+                        except sb.Empty:
+                            msg = None
 
-                    if msg is None:
-                        await asyncio.sleep(0.05)
-                        continue
+                        if msg is None:
+                            await asyncio.sleep(0.05)
+                            continue
 
-                    content = moojson.loads(msg.body)
-                    message = content["message"]
-                    if isinstance(message, dict) and message.get("event") == "editor":
-                        await self.editor_queue.put(message)
-                    elif isinstance(message, dict) and message.get("event") == "paginator":
-                        settings = _session_settings.get(self.user.pk, {})
-                        if settings.get("automation"):
-                            content = message.get("content", "")
+                        content = moojson.loads(msg.body)
+                        message = content["message"]
+                        if isinstance(message, dict) and message.get("event") == "editor":
+                            await self.editor_queue.put(message)
+                        elif isinstance(message, dict) and message.get("event") == "paginator":
+                            settings = _session_settings.get(self.user.pk, {})
+                            if settings.get("automation"):
+                                content = message.get("content", "")
 
-                            def _write_paginator(
-                                msg=content,
-                                gp=settings.get("output_global_prefix"),
-                                gs=settings.get("output_global_suffix"),
-                            ):
+                                def _write_paginator(
+                                    msg=content,
+                                    gp=settings.get("output_global_prefix"),
+                                    gs=settings.get("output_global_suffix"),
+                                ):
+                                    if gp:
+                                        self.writer(gp)
+                                    self.writer(msg)
+                                    if gs:
+                                        self.writer(gs)
+
+                                await run_in_terminal(_write_paginator)
+                            else:
+                                await self.paginator_queue.put(message)
+                        elif isinstance(message, dict) and message.get("event") == "session_setting":
+                            user_pk = self.user.pk
+                            if user_pk not in _session_settings:
+                                _session_settings[user_pk] = {}
+                            _session_settings[user_pk][message["key"]] = message["value"]
+                        elif isinstance(message, dict) and message.get("event") == "disconnect":
+                            self.is_exiting = True
+                            self.disconnect_event.set()
+                        else:
+                            settings = _session_settings.get(self.user.pk, {})
+                            gprefix = settings.get("output_global_prefix")
+                            gsuffix = settings.get("output_global_suffix")
+
+                            def _write_message(msg=message, gp=gprefix, gs=gsuffix):
                                 if gp:
                                     self.writer(gp)
                                 self.writer(msg)
                                 if gs:
                                     self.writer(gs)
 
-                            await run_in_terminal(_write_paginator)
-                        else:
-                            await self.paginator_queue.put(message)
-                    elif isinstance(message, dict) and message.get("event") == "session_setting":
-                        user_pk = self.user.pk
-                        if user_pk not in _session_settings:
-                            _session_settings[user_pk] = {}
-                        _session_settings[user_pk][message["key"]] = message["value"]
-                    elif isinstance(message, dict) and message.get("event") == "disconnect":
-                        self.is_exiting = True
-                        self.disconnect_event.set()
-                    else:
-                        settings = _session_settings.get(self.user.pk, {})
-                        gprefix = settings.get("output_global_prefix")
-                        gsuffix = settings.get("output_global_suffix")
-
-                        def _write_message(msg=message, gp=gprefix, gs=gsuffix):
-                            if gp:
-                                self.writer(gp)
-                            self.writer(msg)
-                            if gs:
-                                self.writer(gs)
-
-                        await run_in_terminal(_write_message)
+                            await run_in_terminal(_write_message)
+                finally:
+                    sb.close()
         except:  # pylint: disable=bare-except
             log.exception("Stopping message processing")
+        finally:
+            # Signal process_commands to exit. If this coroutine crashes
+            # (e.g. broker disconnect), process_commands would otherwise spin
+            # forever waiting for input, keeping the SSH channel open as a
+            # zombie. Setting is_exiting + disconnect_event ensures it wakes
+            # up and exits cleanly regardless of how we got here.
+            self.is_exiting = True
+            self.disconnect_event.set()
         log.debug("REPL is exiting, stopping messages thread...")
