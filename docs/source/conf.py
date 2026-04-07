@@ -44,7 +44,13 @@ exclude_patterns: list[str] = []
 autosummary_generate = True
 autodoc_mock_imports = ["moo.bootstrap.default", "moo.bootstrap.test"]
 autodoc_default_options = {
-    "exclude-members": "connection_requested,tap_requested,tun_requested,unix_connection_requested",
+    # asyncssh internal connection hooks — not public API
+    "exclude-members": (
+        "connection_requested,tap_requested,tun_requested,unix_connection_requested,"
+        # Celery signal objects imported into moo.celery — Celery's own docstrings
+        # fail RST validation and are not part of the DjangoMOO public API.
+        "worker_ready,worker_shutdown,beat_init,setup_logging,worker_process_init"
+    ),
 }
 
 intersphinx_mapping = {
