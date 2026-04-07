@@ -209,13 +209,24 @@ with code.ContextManager(wizard, log.info):
     harbinger_user = User.objects.create_user(username="harbinger", password="Bt6wF5jRcU3e")
     Player.objects.create(user=harbinger_user, avatar=harbinger_obj)
 
+    # Foreman ($player): orchestrates token chain, detects stalls, loops automatically
+    foreman_obj = create(name="Foreman", unique_name=True, location=None)
+    foreman_obj.parents.add(player)
+    foreman_obj.owner = foreman_obj
+    foreman_obj.save()
+    foreman_user = User.objects.create_user(username="foreman", password="Jk2mR7nXpW5q")
+    Player.objects.create(user=foreman_user, avatar=foreman_obj)
+
     # Grant derive to everyone on all standard system classes so any player can
     # create instances via @create without needing wizard privileges.
     derive_perm = Permission.objects.get(name="derive")
     for _cls in [root, thing, rooms, exits, player, programmers, furniture, containers]:
         Access.objects.get_or_create(
-            object=_cls, permission=derive_perm,
-            type="group", group="everyone", rule="allow",
+            object=_cls,
+            permission=derive_perm,
+            type="group",
+            group="everyone",
+            rule="allow",
         )
 
     root.get_verb("accept").delete()
