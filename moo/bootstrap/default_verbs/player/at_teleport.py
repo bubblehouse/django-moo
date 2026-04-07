@@ -20,5 +20,14 @@ if not dest.is_a(_.room):
     print(f"[red]{dest.name} (#{dest.id}) is not a room.[/red]")
     return
 
-context.player.moveto(dest)
+try:
+    context.player.moveto(dest)
+except PermissionError:
+    context.player.location.announce_all_but(
+        context.player,
+        f"{context.player.name} flickers violently, crackles with static, and remains exactly where they are.",
+    )
+    print(f"[red]Teleport failed: {dest.name} did not accept you.[/red]")
+    return
+
 print(f"You move to [bright_yellow]{dest.name}[/bright_yellow] (#{dest.id}).")
