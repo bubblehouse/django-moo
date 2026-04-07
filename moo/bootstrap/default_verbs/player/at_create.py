@@ -32,7 +32,7 @@ if context.parser.has_pobj_str("in"):
         location = context.parser.get_pobj("in", lookup=True)
 
 with set_task_perms(context.player):
-    new_obj = create(name, location=location)
+    new_obj = create(name, owner=context.player, location=location)
 print("[yellow]Created %s[/yellow]" % new_obj)
 
 if context.parser.has_pobj_str("from"):
@@ -43,5 +43,7 @@ if context.parser.has_pobj_str("from"):
 if place_in_void:
     print("[yellow]%s exists in the void[/yellow]" % new_obj)
 elif location is None:
-    # No "in" specified — place in player's inventory
-    new_obj.moveto(context.player)
+    # No "in" specified — place in player's inventory via ORM to bypass
+    # moveto permission checks (some parents, e.g. $note, restrict inventory entry).
+    new_obj.location = context.player
+    new_obj.save()
