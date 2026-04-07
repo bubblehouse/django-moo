@@ -43,6 +43,7 @@ from ..core.exceptions import (
     NoSuchObjectError,
     NoSuchVerbError,
     NoSuchPropertyError,
+    AccessError,
 )
 
 __all__ = [
@@ -73,4 +74,5 @@ __all__ = [
     "AmbiguousObjectError",
     "UserError",
     "UsageError",
+    "AccessError",
 ]
