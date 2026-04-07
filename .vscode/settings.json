@@ -5,5 +5,6 @@
         "moo"
     ],
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true
+    "python.testing.pytestEnabled": true,
+    "chat.fontSize": 18
 }
