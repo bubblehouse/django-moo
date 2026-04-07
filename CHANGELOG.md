@@ -1,3 +1,9 @@
+## [0.94.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.94.0...v0.94.1) (2026-04-07)
+
+### Bug Fixes
+
+* several issues contributing to SSH server hang ([7c48a77](https://gitlab.com/bubblehouse/django-moo/commit/7c48a77fccc0207c3c86a8f0e310dfa5a22320e7))
+
 ## [0.94.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.93.2...v0.94.0) (2026-04-07)
 
 ### Features
