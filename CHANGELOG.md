@@ -1,3 +1,14 @@
+## [0.94.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.93.2...v0.94.0) (2026-04-07)
+
+### Features
+
+* add a foreman agent to coordinate the rest ([26b9331](https://gitlab.com/bubblehouse/django-moo/commit/26b9331af08b3eddd9f125b450e4ce554ba79078))
+
+### Bug Fixes
+
+* handle failed teleportation ([17c6c0e](https://gitlab.com/bubblehouse/django-moo/commit/17c6c0e93cea46e7b870863d25be81ba1cafa387))
+* post-run agent updates ([dba7bdf](https://gitlab.com/bubblehouse/django-moo/commit/dba7bdf6994e1351aaf03816ea9986d548e607f9))
+
 ## [0.93.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.93.1...v0.93.2) (2026-04-07)
 
 ### Bug Fixes
