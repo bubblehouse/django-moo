@@ -1,3 +1,10 @@
+## [0.93.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.93.1...v0.93.2) (2026-04-07)
+
+### Bug Fixes
+
+* dont use moveto with [@create](https://gitlab.com/create) ([7642f95](https://gitlab.com/bubblehouse/django-moo/commit/7642f9590fe1293911177f6361df1b326c7fc53c))
+* use correct dpec for [@edit](https://gitlab.com/edit) on $note ([84c3b73](https://gitlab.com/bubblehouse/django-moo/commit/84c3b73302c98f30d301746f26296d2f3d3d5f98))
+
 ## [0.93.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.93.0...v0.93.1) (2026-04-06)
 
 ### Bug Fixes
