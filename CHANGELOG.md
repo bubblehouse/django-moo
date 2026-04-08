@@ -1,3 +1,14 @@
+## [0.94.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.94.1...v0.94.2) (2026-04-08)
+
+### Bug Fixes
+
+* cover more bizarre [@create](https://gitlab.com/create) scenarios ([d21096a](https://gitlab.com/bubblehouse/django-moo/commit/d21096adbd99ba01dc5d023161abdc6358660041))
+* dont send messages to queues of disconnected players ([16f3e96](https://gitlab.com/bubblehouse/django-moo/commit/16f3e964ae2290c80d143697c8c6d2a830ae037e))
+* improve security around task permission escalation ([f458570](https://gitlab.com/bubblehouse/django-moo/commit/f458570efc41073ca2f45e775027e85615d2ddc2))
+* improved agent token handling, test updates ([ae0d2e8](https://gitlab.com/bubblehouse/django-moo/commit/ae0d2e8c4d6dff6fdb48506ca4b0d2085495e04d))
+* refactored agent baseline knowledge, created new unused stocker agent ([150416f](https://gitlab.com/bubblehouse/django-moo/commit/150416fc3a780742bb714b4aee66456bc07d5fdb))
+* transaction handling in object.save() ([8e00686](https://gitlab.com/bubblehouse/django-moo/commit/8e006866b1311aecdd91d30b9fb1c2f7e9c6fc48))
+
 ## [0.94.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.94.0...v0.94.1) (2026-04-07)
 
 ### Bug Fixes
