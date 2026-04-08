@@ -186,8 +186,7 @@ with code.ContextManager(wizard, log.info):
     Player.objects.create(user=mason_user, avatar=mason_obj)
 
     # Tinker ($programmer): writes verbs for interactive objects and secret exits
-    tinker_obj = create(name="Tinker", unique_name=True, location=None)
-    tinker_obj.parents.add(programmers)
+    tinker_obj = create(name="Tinker", unique_name=True, location=None, parents=[programmers])
     tinker_obj.owner = tinker_obj
     tinker_obj.save()
     tinker_user = User.objects.create_user(username="tinker", password="Pw9cX3mZrT6y")
@@ -202,16 +201,14 @@ with code.ContextManager(wizard, log.info):
     Player.objects.create(user=joiner_user, avatar=joiner_obj)
 
     # Harbinger ($programmer): creates NPCs, uses @eval for random roll and tell verb
-    harbinger_obj = create(name="Harbinger", unique_name=True, location=None)
-    harbinger_obj.parents.add(programmers)
+    harbinger_obj = create(name="Harbinger", unique_name=True, location=None, parents=[programmers])
     harbinger_obj.owner = harbinger_obj
     harbinger_obj.save()
     harbinger_user = User.objects.create_user(username="harbinger", password="Bt6wF5jRcU3e")
     Player.objects.create(user=harbinger_user, avatar=harbinger_obj)
 
     # Stocker ($programmer): consumable items, dispensing objects, and multi-use props
-    stocker_obj = create(name="Stocker", unique_name=True, location=None)
-    stocker_obj.parents.add(programmers)
+    stocker_obj = create(name="Stocker", unique_name=True, location=None, parents=[programmers])
     stocker_obj.owner = stocker_obj
     stocker_obj.save()
     stocker_user = User.objects.create_user(username="stocker", password="Vn5sL9eJwA7k")
