@@ -143,6 +143,8 @@ Three mechanisms exist for sending messages; they behave differently:
 
 In tests (where `CELERY_BROKER_URL = "memory://"`), the second two paths ultimately call `write()`, which emits `RuntimeWarning(f"ConnectionError({obj}): {msg}")` instead of sending to a real connection. Wrap test commands that trigger `write()` with `pytest.warns(RuntimeWarning)`.
 
+**`is_connected()` gate:** `$root_class.tell` only calls `write()` when `this.is_connected()` returns `True`. In production, `is_connected()` checks a Redis cache key set by the SSH shell at login. That key is never set during tests, so player avatars appear disconnected and `tell()` silently does nothing. The root `moo/conftest.py` includes an `autouse` fixture (`mock_player_connected`) that monkeypatches `Object.is_connected` to always return `True`. All test files under `moo/` inherit this fixture automatically — no explicit declaration needed.
+
 ### Database Query Best Practices
 
 Use Django's ORM features to avoid N+1 queries:
