@@ -1,3 +1,9 @@
+## [0.94.6](https://gitlab.com/bubblehouse/django-moo/compare/v0.94.5...v0.94.6) (2026-04-08)
+
+### Bug Fixes
+
+* more agent tuning ([51eb085](https://gitlab.com/bubblehouse/django-moo/commit/51eb0859e0be0f04f858e3f419f5d0d08a25f0e0))
+
 ## [0.94.5](https://gitlab.com/bubblehouse/django-moo/compare/v0.94.4...v0.94.5) (2026-04-08)
 
 ### Bug Fixes
