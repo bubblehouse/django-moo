@@ -135,6 +135,7 @@ class MooPrompt:
         _session_settings.pop(self.user.pk, None)
         if self.automation:
             _session_settings.setdefault(self.user.pk, {})["automation"] = True
+        await self._mark_connected()
         confunc_tasks = await self._fire_confunc()
         await self._await_tasks(confunc_tasks)
         startup_pieces = await self._drain_messages()
@@ -229,6 +230,7 @@ class MooPrompt:
             self.is_exiting = True
             self.disconnect_event.set()
             await self._fire_disfunc()
+            await self._mark_disconnected()
             # Clean up session settings on disconnect
             user_pk = self.user.pk
             if user_pk in _session_settings:
@@ -273,6 +275,30 @@ class MooPrompt:
         from .paginator import run_paginator
 
         await run_paginator(req.get("content", ""), req.get("content_type", "text"))
+
+    @sync_to_async
+    def _mark_connected(self):
+        """
+        Set the Redis cache key that signals this player is connected.
+
+        Called at session start, before confunc fires, so that ``is_connected()``
+        returns ``True`` by the time the room's confunc announces the arrival.
+        """
+        from django.core.cache import cache
+
+        cache.set(f"moo:connected:{self.user.pk}", True)
+
+    @sync_to_async
+    def _mark_disconnected(self):
+        """
+        Remove the Redis cache key that signals this player is connected.
+
+        Called in the finally block after disfunc fires so that ``is_connected()``
+        returns ``False`` for any subsequent room broadcasts.
+        """
+        from django.core.cache import cache
+
+        cache.delete(f"moo:connected:{self.user.pk}")
 
     @sync_to_async
     def _fire_confunc(self):

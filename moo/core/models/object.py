@@ -213,8 +213,21 @@ class Object(models.Model, AccessibleMixin):
     def is_connected(self) -> bool:
         """
         Check if this object is a player avatar that is currently connected.
+
+        Non-player objects always return ``True`` so that custom ``tell`` verbs
+        on room fixtures and other objects continue to receive messages normally.
+
+        For player avatars, connection state is tracked via a Redis cache key
+        (``moo:connected:{user_pk}``) that is set by the SSH shell at login and
+        deleted at logout.  This is cross-process and has no timing window.
         """
-        return True
+        try:
+            player = Player.objects.get(avatar=self)
+        except Player.DoesNotExist:
+            return True
+        if player.user is None:
+            return False
+        return bool(cache.get(f"moo:connected:{player.user.pk}"))
 
     def is_named(self, name: str) -> bool:
         """
@@ -781,7 +794,8 @@ class Object(models.Model, AccessibleMixin):
 
             return moojson.loads(prop.value)
         from .. import moojson as _moojson
-        _nothing = _moojson._get_nothing()
+
+        _nothing = _moojson._get_nothing()  # pylint: disable=protected-access
         _nothing_pk = _nothing.pk if _nothing is not None else None
         ids = [
             int(k[2:])
@@ -819,10 +833,9 @@ class Object(models.Model, AccessibleMixin):
         the $nothing sentinel so callers get a safe value instead of a crash.
         """
         from .. import moojson
-        from .property import Property
 
         ref_key = f'"o#{self.pk}"'
-        nothing = moojson._get_nothing()
+        nothing = moojson._get_nothing()  # pylint: disable=protected-access
         if nothing is None:
             return  # Bootstrap hasn't defined $nothing yet; skip silently
         for prop in Property.objects.filter(value__contains=ref_key).iterator():

@@ -19,6 +19,4 @@ else:
     message = " ".join(args)
 
 context.player.tell("You: " + message)
-for obj in this.contents.all():
-    if obj != context.player:
-        obj.tell(context.player.name + ": " + message)
+this.announce_all_but(context.player, context.player.name + ": " + message)
