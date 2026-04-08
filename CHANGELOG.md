@@ -1,3 +1,9 @@
+## [0.94.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.94.2...v0.94.3) (2026-04-08)
+
+### Bug Fixes
+
+* more agent training ([61b6dce](https://gitlab.com/bubblehouse/django-moo/commit/61b6dce76672e7a82b1b462076dd0ed0a03d4a89))
+
 ## [0.94.2](https://gitlab.com/bubblehouse/django-moo/compare/v0.94.1...v0.94.2) (2026-04-08)
 
 ### Bug Fixes
