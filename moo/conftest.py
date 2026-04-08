@@ -27,12 +27,24 @@ def configure_celery_for_tests():
     )
 
 
+@pytest.fixture(autouse=True)
+def mock_player_connected(monkeypatch):
+    """Patch is_connected to return True for all objects during tests.
+
+    In production, is_connected() checks a Redis cache key set by the SSH shell.
+    That key is never set during tests, so without this patch every player avatar
+    appears disconnected and tell() / write() never fires.
+    """
+    monkeypatch.setattr(Object, "is_connected", lambda self: True)
+
+
 @pytest.fixture()
 def t_init(request):
     """
     Test fixture that pre-seeds a basic bootstrapped environment.
     """
     from moo.core.moojson import clear_nothing_cache
+
     clear_nothing_cache()
     name = request.param if hasattr(request, "param") else "test"
     log.debug(f"t_init: {name}")
