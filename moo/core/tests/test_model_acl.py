@@ -334,6 +334,7 @@ def test_cant_change_location_unless_allowed_to_move(t_init: Object, t_wizard: O
         obj = lookup("thing")
         obj.allow(user, "move")
         obj.allow(user, "write")
+        user.add_verb("accept", code="return True")
     with code.ContextManager(user, _writer):
         obj = lookup("thing")
         obj.location = user
@@ -395,9 +396,10 @@ def test_change_location_calls_accept(t_init: Object, t_wizard: Object):
     with code.ContextManager(user, _writer):
         box = create("box")
         box.add_verb("accept", code="return False")
+        thing = create("thing")
         with pytest.raises(PermissionError) as excinfo:
-            thing = create("thing", location=box)
-        thing = lookup("thing")
+            thing.location = box
+            thing.save()
         assert str(excinfo.value) == f"#{box.pk} (box) did not accept #{thing.pk} (thing)"
 
 
