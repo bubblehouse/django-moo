@@ -209,6 +209,14 @@ with code.ContextManager(wizard, log.info):
     harbinger_user = User.objects.create_user(username="harbinger", password="Bt6wF5jRcU3e")
     Player.objects.create(user=harbinger_user, avatar=harbinger_obj)
 
+    # Stocker ($programmer): consumable items, dispensing objects, and multi-use props
+    stocker_obj = create(name="Stocker", unique_name=True, location=None)
+    stocker_obj.parents.add(programmers)
+    stocker_obj.owner = stocker_obj
+    stocker_obj.save()
+    stocker_user = User.objects.create_user(username="stocker", password="Vn5sL9eJwA7k")
+    Player.objects.create(user=stocker_user, avatar=stocker_obj)
+
     # Foreman ($player): orchestrates token chain, detects stalls, loops automatically
     foreman_obj = create(name="Foreman", unique_name=True, location=None)
     foreman_obj.parents.add(player)
