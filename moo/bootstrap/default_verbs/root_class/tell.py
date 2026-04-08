@@ -30,5 +30,5 @@ class to send the message after it has been modified.
 
 from moo.sdk import write
 
-if this.is_player():
+if this.is_player() and this.is_connected():
     write(this, "".join(args))
