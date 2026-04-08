@@ -1,3 +1,9 @@
+## [0.94.4](https://gitlab.com/bubblehouse/django-moo/compare/v0.94.3...v0.94.4) (2026-04-08)
+
+### Bug Fixes
+
+* added stocker agent for consumables, other agent updates ([d15f74b](https://gitlab.com/bubblehouse/django-moo/commit/d15f74b6e998e24416a41267cabbb4bc9968af2b))
+
 ## [0.94.3](https://gitlab.com/bubblehouse/django-moo/compare/v0.94.2...v0.94.3) (2026-04-08)
 
 ### Bug Fixes
