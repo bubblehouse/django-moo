@@ -1,3 +1,12 @@
+## [0.94.7](https://gitlab.com/bubblehouse/django-moo/compare/v0.94.6...v0.94.7) (2026-04-09)
+
+### Bug Fixes
+
+* dont send messages to queues of disconnected players ([df9f798](https://gitlab.com/bubblehouse/django-moo/commit/df9f798e490a91bef808aea9838661fed601242a))
+* dont send messages to queues of disconnected players ([aa11140](https://gitlab.com/bubblehouse/django-moo/commit/aa1114086e005326baa1e9dab86689ba5c068a9a))
+* handle ssh reconnection and other agent issues ([d65efe6](https://gitlab.com/bubblehouse/django-moo/commit/d65efe63b823a05173f015723b6751178fe4f627))
+* verbs and properties should be owned by the player creating them ([7a702e4](https://gitlab.com/bubblehouse/django-moo/commit/7a702e46033665b32ef702375b8f7b1ddf41cbf8))
+
 ## [0.94.6](https://gitlab.com/bubblehouse/django-moo/compare/v0.94.5...v0.94.6) (2026-04-08)
 
 ### Bug Fixes
