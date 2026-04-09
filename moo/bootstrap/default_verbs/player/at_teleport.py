@@ -1,4 +1,4 @@
-#!moo verb teleport --on $player --dspec any
+#!moo verb teleport --on $player --dspec any --ispec to:any
 
 # pylint: disable=return-outside-function,undefined-variable
 
@@ -14,7 +14,10 @@ Usage:
 
 from moo.sdk import context
 
-dest = context.parser.get_dobj(lookup=True)
+if context.parser.has_pobj_str("to"):
+    dest = context.parser.get_pobj("to", lookup=True)
+else:
+    dest = context.parser.get_dobj(lookup=True)
 
 if not dest.is_a(_.room):
     print(f"[red]{dest.name} (#{dest.id}) is not a room.[/red]")
