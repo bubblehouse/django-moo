@@ -236,6 +236,11 @@ class MooPrompt:
             if user_pk in _session_settings:
                 del _session_settings[user_pk]
                 log.debug(f"Cleared session settings for user {user_pk}")
+            # Clear cache-backed session settings so Celery workers see a clean slate
+            from django.core.cache import cache
+
+            for key in ("quiet_mode", "output_prefix", "output_suffix", "color_system"):
+                cache.delete(f"moo:session:{user_pk}:{key}")
         log.debug("REPL is exiting, stopping main thread...")
 
     async def run_editor_session(self, req: dict):
