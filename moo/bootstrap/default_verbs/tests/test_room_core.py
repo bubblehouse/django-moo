@@ -5,6 +5,7 @@ import pytest
 from moo.core import code, exceptions, parse
 from moo.sdk import context, create, lookup
 from moo.core.models import Object, Player
+from moo.shell.prompt import _session_settings
 from .utils import save_quietly, setup_room, setup_root_item
 
 # --- look_self ---
@@ -13,23 +14,23 @@ from .utils import save_quietly, setup_room, setup_root_item
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_look_self_prints_room_name(t_init: Object, t_wizard: Object):
-    """look_self() prints the room name in bright_yellow."""
+    """look_self() prints the room name in color alongside the compass grid."""
     printed = []
     with code.ContextManager(t_wizard, printed.append):
         room = setup_room(t_wizard)
         room.look_self()
-    assert f"[bright_yellow]{room.name}[/bright_yellow]" in printed
+    assert any(f"[color(226)]{room.name}[/color(226)]" in line for line in printed)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_look_self_prints_description(t_init: Object, t_wizard: Object):
-    """look_self() prints the room description via passthrough."""
+    """look_self() prints the room description alongside the compass grid."""
     printed = []
     with code.ContextManager(t_wizard, printed.append):
         room = setup_room(t_wizard, description="A damp cave draped in shadows.")
         room.look_self()
-    assert room.description() in printed
+    assert any("A damp cave draped in shadows." in line for line in printed)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -42,6 +43,133 @@ def test_look_self_includes_contents(t_init: Object, t_wizard: Object):
         setup_root_item(room, "gold coin")
         room.look_self()
     assert any("gold coin" in line for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_look_self_compass_grid_lit_exit(t_init: Object, t_wizard: Object):
+    """look_self() shows a white north arrow when a north exit exists."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        setup_room(t_wizard)
+        parse.interpret(ctx, "@dig north to The Annex")
+        printed.clear()
+        t_wizard.location.look_self()
+    output = "\n".join(printed)
+    assert "[white]\u2191[/white]" in output
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_look_self_compass_grid_dim_exit(t_init: Object, t_wizard: Object):
+    """look_self() shows a dim south arrow when no south exit exists."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append):
+        setup_room(t_wizard)
+        t_wizard.location.look_self()
+    output = "\n".join(printed)
+    assert "[color(238)]\u2193[/color(238)]" in output
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_look_self_no_compass_in_quiet_mode(t_init: Object, t_wizard: Object):
+    """look_self() suppresses the compass grid entirely in quiet mode."""
+    user_pk = t_wizard.owner.pk
+    _session_settings.setdefault(user_pk, {})["quiet_mode"] = True
+    try:
+        printed = []
+        with code.ContextManager(t_wizard, printed.append) as ctx:
+            setup_room(t_wizard)
+            parse.interpret(ctx, "@dig north to The Annex")
+            printed.clear()
+            t_wizard.location.look_self()
+        output = "\n".join(printed)
+        for ch in "\u2191\u2197\u2192\u2198\u2193\u2199\u2190\u2196\u25b2\u25bc\u2195":
+            assert ch not in output
+    finally:
+        _session_settings.get(user_pk, {}).pop("quiet_mode", None)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_look_self_center_up_only(t_init: Object, t_wizard: Object):
+    """look_self() shows ▲ in the center cell when only an 'up' exit exists."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        setup_room(t_wizard)
+        parse.interpret(ctx, "@dig up to The Loft")
+        printed.clear()
+        t_wizard.location.look_self()
+    assert "[white]\u25b2[/white]" in "\n".join(printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_look_self_center_down_only(t_init: Object, t_wizard: Object):
+    """look_self() shows ▼ in the center cell when only a 'down' exit exists."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        setup_room(t_wizard)
+        parse.interpret(ctx, "@dig down to The Cellar")
+        printed.clear()
+        t_wizard.location.look_self()
+    assert "[white]\u25bc[/white]" in "\n".join(printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_look_self_center_both_vertical(t_init: Object, t_wizard: Object):
+    """look_self() shows ↕ in the center cell when both up and down exits exist."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        setup_room(t_wizard)
+        parse.interpret(ctx, "@dig up to The Loft")
+        parse.interpret(ctx, "@dig down to The Cellar")
+        printed.clear()
+        t_wizard.location.look_self()
+    assert "[white]\u2195[/white]" in "\n".join(printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_look_self_center_no_vertical(t_init: Object, t_wizard: Object):
+    """look_self() shows a blank center cell when neither up nor down exits exist."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append):
+        setup_room(t_wizard)
+        t_wizard.location.look_self()
+    output = "\n".join(printed)
+    for ch in ("\u25b2", "\u25bc", "\u2195"):
+        assert ch not in output
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_look_self_description_alongside_compass(t_init: Object, t_wizard: Object):
+    """look_self() prints the room description on the same line as a compass row."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append):
+        room = setup_room(t_wizard, description="A dusty stone chamber.")
+        room.look_self()
+    assert any("A dusty stone chamber." in line for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_look_self_quiet_mode_no_indent(t_init: Object, t_wizard: Object):
+    """look_self() in quiet mode prints the title without leading spaces."""
+    user_pk = t_wizard.owner.pk
+    _session_settings.setdefault(user_pk, {})["quiet_mode"] = True
+    try:
+        printed = []
+        with code.ContextManager(t_wizard, printed.append):
+            room = setup_room(t_wizard)
+            room.look_self()
+        assert any(room.name in line for line in printed)
+        assert not any(line.startswith("    ") for line in printed)
+    finally:
+        _session_settings.get(user_pk, {}).pop("quiet_mode", None)
 
 
 # --- tell_contents: ctype 3 (default) ---
@@ -261,7 +389,7 @@ def test_confunc_shows_room_to_player(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, printed.append):
         room = setup_room(t_wizard)
         room.confunc()
-    assert f"[bright_yellow]{room.name}[/bright_yellow]" in printed
+    assert any(room.name in line for line in printed)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)

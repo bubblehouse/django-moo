@@ -19,24 +19,9 @@ Output:
     You are now in The Watchtower (#81).
 """
 
-from moo.sdk import context, create
+from moo.sdk import context, create, OPPOSITE_DIRECTIONS
 
-OPPOSITES = {
-    "north": "south",
-    "south": "north",
-    "east": "west",
-    "west": "east",
-    "up": "down",
-    "down": "up",
-    "northeast": "southwest",
-    "southwest": "northeast",
-    "northwest": "southeast",
-    "southeast": "northwest",
-    "ne": "sw",
-    "sw": "ne",
-    "nw": "se",
-    "se": "nw",
-}
+OPPOSITES = OPPOSITE_DIRECTIONS
 
 parser = context.parser
 direction = parser.get_dobj_str()
