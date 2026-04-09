@@ -164,6 +164,14 @@ with code.ContextManager(wizard, log.info):
     )
     sys.set_property("player_start", lab)
 
+    agency = create("The Agency", parents=[rooms], location=None)
+    agency.set_property(
+        "description",
+        """A quiet back room where the Tradesmen gather between assignments.
+    Clipboards, blueprints, and half-finished notes cover every surface.""",
+    )
+    sys.set_property("agency", agency)
+
     wizard.location = lab
     wizard.save()
 
@@ -181,6 +189,7 @@ with code.ContextManager(wizard, log.info):
     mason_obj = create(name="Mason", unique_name=True, location=None)
     mason_obj.parents.add(player)
     mason_obj.owner = mason_obj
+    mason_obj.set_property("home", agency)
     mason_obj.save()
     mason_user = User.objects.create_user(username="mason", password="Mxq7vB2nKpL4")
     Player.objects.create(user=mason_user, avatar=mason_obj)
@@ -188,6 +197,7 @@ with code.ContextManager(wizard, log.info):
     # Tinker ($programmer): writes verbs for interactive objects and secret exits
     tinker_obj = create(name="Tinker", unique_name=True, location=None, parents=[programmers])
     tinker_obj.owner = tinker_obj
+    tinker_obj.set_property("home", agency)
     tinker_obj.save()
     tinker_user = User.objects.create_user(username="tinker", password="Pw9cX3mZrT6y")
     Player.objects.create(user=tinker_user, avatar=tinker_obj)
@@ -196,6 +206,7 @@ with code.ContextManager(wizard, log.info):
     joiner_obj = create(name="Joiner", unique_name=True, location=None)
     joiner_obj.parents.add(player)
     joiner_obj.owner = joiner_obj
+    joiner_obj.set_property("home", agency)
     joiner_obj.save()
     joiner_user = User.objects.create_user(username="joiner", password="Hn4kD8sQvY2f")
     Player.objects.create(user=joiner_user, avatar=joiner_obj)
@@ -203,6 +214,7 @@ with code.ContextManager(wizard, log.info):
     # Harbinger ($programmer): creates NPCs, uses @eval for random roll and tell verb
     harbinger_obj = create(name="Harbinger", unique_name=True, location=None, parents=[programmers])
     harbinger_obj.owner = harbinger_obj
+    harbinger_obj.set_property("home", agency)
     harbinger_obj.save()
     harbinger_user = User.objects.create_user(username="harbinger", password="Bt6wF5jRcU3e")
     Player.objects.create(user=harbinger_user, avatar=harbinger_obj)
@@ -210,6 +222,7 @@ with code.ContextManager(wizard, log.info):
     # Stocker ($programmer): consumable items, dispensing objects, and multi-use props
     stocker_obj = create(name="Stocker", unique_name=True, location=None, parents=[programmers])
     stocker_obj.owner = stocker_obj
+    stocker_obj.set_property("home", agency)
     stocker_obj.save()
     stocker_user = User.objects.create_user(username="stocker", password="Vn5sL9eJwA7k")
     Player.objects.create(user=stocker_user, avatar=stocker_obj)
@@ -218,6 +231,7 @@ with code.ContextManager(wizard, log.info):
     foreman_obj = create(name="Foreman", unique_name=True, location=None)
     foreman_obj.parents.add(player)
     foreman_obj.owner = foreman_obj
+    foreman_obj.set_property("home", agency)
     foreman_obj.save()
     foreman_user = User.objects.create_user(username="foreman", password="Jk2mR7nXpW5q")
     Player.objects.create(user=foreman_user, avatar=foreman_obj)
