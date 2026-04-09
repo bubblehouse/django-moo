@@ -480,6 +480,7 @@ class MooPrompt:
                 Exchange("moo", type="direct", channel=channel),
                 f"user-{self.user.pk}",
                 channel=channel,
+                auto_delete=True,
             )
             sb = simple.SimpleBuffer(channel, queue, no_ack=True)
             try:
@@ -552,6 +553,7 @@ class MooPrompt:
                     Exchange("moo", type="direct", channel=channel),
                     f"user-{self.user.pk}",
                     channel=channel,
+                    auto_delete=True,
                 )
                 sb = simple.SimpleBuffer(channel, queue, no_ack=True)
                 try:
