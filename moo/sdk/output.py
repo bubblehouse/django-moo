@@ -94,10 +94,15 @@ def get_session_setting(key, default=None):
     Session settings are stored per-user and cleared on disconnect.
     Used by PREFIX, SUFFIX, and QUIET commands for machine-readable output.
 
+    Checks the in-process ``_session_settings`` dict first (authoritative in the
+    SSH server process and in tests), then falls back to the Django cache so
+    Celery workers — which run in a separate process — can also read the value.
+
     :param key: setting name ('output_prefix', 'output_suffix', 'quiet_mode', 'color_system')
     :param default: value to return if setting is not found
     :return: setting value or default
     """
+    from django.core.cache import cache
     from ..shell import prompt as prompt_module
 
     player = context.player
@@ -109,7 +114,11 @@ def get_session_setting(key, default=None):
         return default
 
     settings = prompt_module._session_settings.get(user_pk, {})  # pylint: disable=protected-access
-    return settings.get(key, default)
+    if key in settings:
+        return settings[key]
+
+    value = cache.get(f"moo:session:{user_pk}:{key}")
+    return value if value is not None else default
 
 
 def set_session_setting(key, value):
@@ -119,19 +128,24 @@ def set_session_setting(key, value):
     Session settings are stored per-user and cleared on disconnect.
     Used by PREFIX, SUFFIX, and QUIET commands for machine-readable output.
 
-    Publishes a ``session_setting`` event to the player's Kombu message queue,
-    which the SSH server's ``process_messages()`` loop picks up and applies to
-    its own in-process registry. This bridges the Celery worker / SSH server
-    process boundary.
+    Writes to the Django cache (accessible cross-process from Celery workers)
+    and also publishes a ``session_setting`` event to the player's Kombu queue
+    so the SSH server's ``process_messages()`` loop can update its own registry.
 
     :param key: setting name ('output_prefix', 'output_suffix', 'quiet_mode', 'color_system')
     :param value: setting value
     """
+    from django.core.cache import cache
     from moo.core import _publish_to_player
 
     player = context.player
     if not player:
         return
+
+    user_pk = player.owner.pk if player.owner else None
+    if user_pk is not None:
+        cache.set(f"moo:session:{user_pk}:{key}", value, timeout=86400)
+
     _publish_to_player(player, {"event": "session_setting", "key": key, "value": value})
 
 
