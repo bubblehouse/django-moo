@@ -375,7 +375,7 @@ class Object(models.Model, AccessibleMixin):
         :param indirect_objects: a list of indirect object specifiers for the verb
         """
         self.can_caller("write", self)
-        owner = ContextManager.get("caller") or owner or self
+        owner = ContextManager.get("player") or ContextManager.get("caller") or owner or self
         if filename and not code:
             code = bootstrap.get_source(filename, dataset=repo.slug)
         verb = None
@@ -649,7 +649,7 @@ class Object(models.Model, AccessibleMixin):
         from .. import moojson
 
         self.can_caller("write", self)
-        owner = ContextManager.get("caller") or owner or self
+        owner = ContextManager.get("player") or ContextManager.get("caller") or owner or self
         Property.objects.update_or_create(
             name=name,
             origin=self,
