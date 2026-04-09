@@ -1,3 +1,10 @@
+## [0.94.8](https://gitlab.com/bubblehouse/django-moo/compare/v0.94.7...v0.94.8) (2026-04-09)
+
+### Bug Fixes
+
+* created agentmux script for agent-trainer ([281327e](https://gitlab.com/bubblehouse/django-moo/commit/281327ec6ae5e55bf8910ee26cee3bcc82482672))
+* ssh keepalive fixes ([448904f](https://gitlab.com/bubblehouse/django-moo/commit/448904f158d66aace8fcd379849b99d30e546fb1))
+
 ## [0.94.7](https://gitlab.com/bubblehouse/django-moo/compare/v0.94.6...v0.94.7) (2026-04-09)
 
 ### Bug Fixes
