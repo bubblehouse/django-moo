@@ -53,15 +53,7 @@ elif context.parser.has_dobj_str():
         return
     obj = qs[0]
 elif context.parser.has_pobj_str("at"):
-    pobj_str = context.parser.get_pobj_str("at")
-    if container:
-        qs = container.find(pobj_str)
-    else:
-        qs = context.player.find(pobj_str) or context.player.location.find(pobj_str)
-    if not qs:
-        print(f"There is no '{pobj_str}' here.")
-        return
-    obj = qs[0]
+    obj = context.parser.get_pobj("at", lookup=True)
 else:
     obj = context.player.location
 
