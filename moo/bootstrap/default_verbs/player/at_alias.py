@@ -22,10 +22,15 @@ Permissions are enforced by the object model - you can only add aliases to
 objects you own or have appropriate permissions for.
 """
 
-from moo.sdk import context
+from moo.sdk import context, NoSuchObjectError
 
-# Get the target object (supports both names and #N IDs)
-obj = context.parser.get_dobj(lookup=True)
+# Prefer objects visible in the current room or inventory over a global lookup.
+# Fall back to global only for #N references or names not in local scope.
+dobj_str = context.parser.get_dobj_str()
+try:
+    obj = context.player.location.match_object(dobj_str)
+except NoSuchObjectError:
+    obj = context.parser.get_dobj(lookup=True)
 
 # Get the alias string
 alias = context.parser.get_pobj_str("as")

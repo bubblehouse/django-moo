@@ -20,6 +20,7 @@ Usage (as a method verb):
 import re
 
 text = args[0]
+width = args[1] if len(args) > 1 else 80
 
 # Normalise line endings first
 text = re.sub(r"\r\n|\r", "\n", text)
@@ -50,7 +51,7 @@ for para in paragraphs:
             continue
         if not current:
             current = word
-        elif len(current) + 1 + len(word) <= 80:
+        elif len(current) + 1 + len(word) <= width:
             current = current + " " + word
         else:
             lines.append(current)

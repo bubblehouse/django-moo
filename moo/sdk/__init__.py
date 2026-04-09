@@ -35,6 +35,22 @@ from .admin import server_info
 # Re-export moojson for verb use
 from ..core import moojson
 
+DIRECTIONS = [
+    "north", "northeast", "east", "southeast",
+    "south", "southwest", "west", "northwest",
+    "up", "down",
+]
+
+OPPOSITE_DIRECTIONS = {
+    "north": "south",     "south": "north",
+    "east":  "west",      "west":  "east",
+    "up":    "down",      "down":  "up",
+    "northeast": "southwest", "southwest": "northeast",
+    "northwest": "southeast", "southeast": "northwest",
+    "ne": "sw", "sw": "ne",
+    "nw": "se", "se": "nw",
+}
+
 from ..core.exceptions import (
     QuotaError,
     AmbiguousObjectError,
@@ -68,6 +84,8 @@ __all__ = [
     "task_time_low",
     "schedule_continuation",
     "server_info",
+    "DIRECTIONS",
+    "OPPOSITE_DIRECTIONS",
     "NoSuchObjectError",
     "NoSuchVerbError",
     "NoSuchPropertyError",
