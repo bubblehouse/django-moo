@@ -77,6 +77,8 @@ async def server(port=8022):
             "diffie-hellman-group14-sha256",
         ],
         line_editor=False,
+        keepalive_interval=15,
+        keepalive_count_max=3,
     )
     await asyncio.Future()
 
