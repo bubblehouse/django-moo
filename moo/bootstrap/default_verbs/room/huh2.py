@@ -40,6 +40,19 @@ parser = context.parser
 
 verb = args[0]
 
+# Expand cardinal direction abbreviations before exit matching
+_CARDINAL_ALIASES = {
+    "n": "north",
+    "s": "south",
+    "e": "east",
+    "w": "west",
+    "nw": "northwest",
+    "ne": "northeast",
+    "sw": "southwest",
+    "se": "southeast",
+}
+verb = _CARDINAL_ALIASES.get(verb, verb)
+
 # Step 1: Check if the verb matches an exit
 exit_obj = this.match_exit(verb)
 if exit_obj is not None:
