@@ -78,6 +78,7 @@ def _publish_to_player(obj, message):
             Exchange("moo", type="direct", channel=channel),
             f"user-{player.user.pk}",
             channel=channel,
+            auto_delete=True,
         )
         with app.producer_or_acquire() as producer:
             caller = ContextManager.get("caller")
