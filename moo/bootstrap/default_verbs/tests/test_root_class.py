@@ -284,6 +284,21 @@ def test_examine_shows_description(t_init: Object, t_wizard: Object):
         assert any("golden goblet" in line for line in printed)
 
 
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_examine_shows_aliases(t_init: Object, t_wizard: Object):
+    """examine lists aliases when the object has them."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        obj = setup_obj(t_wizard)
+        obj.add_alias("goblet")
+        obj.add_alias("cup")
+        parse.interpret(ctx, "examine test object")
+        alias_lines = " ".join(printed)
+        assert "goblet" in alias_lines
+        assert "cup" in alias_lines
+
+
 # --- recycle ---
 
 

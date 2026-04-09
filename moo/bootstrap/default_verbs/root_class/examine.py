@@ -30,7 +30,7 @@ if parents:
         print(f"  {parent.name} (#{parent.id})")
 if obj.aliases.exists():
     print("Aliases: ")
-    print(", ".join(obj.aliases.values("alias")))
+    print(", ".join(a.alias for a in obj.aliases.all()))
 print(obj.description())
 
 # display lock info if the player controls the object
