@@ -28,7 +28,7 @@ if verb_name == "@send":
 
     player_class = lookup("Generic Player")
     if not recipient.is_a(player_class):
-        print(f"[red]{recipient} is not a player.[/red]")
+        print(f"[red]{recipient.title()} is not a player.[/red]")
         return
 
     if context.parser.has_pobj_str("with"):
@@ -49,7 +49,7 @@ if verb_name == "@send":
             print("[red]Message body is empty — nothing sent.[/red]")
             return
         send_message(context.player, [recipient], subject, body)
-        print(f"[green]Message sent to {recipient}.[/green]")
+        print(f"[green]Message sent to {recipient.title()}.[/green]")
         return
 
     callback = context.player.get_verb("at_send_callback")
@@ -60,7 +60,7 @@ if verb_name == "@send":
         callback,
         recipient.pk,
         content_type="text",
-        title=f"Message to {recipient}",
+        title=f"Message to {recipient.title()}",
     )
 
 elif verb_name == "at_send_callback":
@@ -85,4 +85,4 @@ elif verb_name == "at_send_callback":
         return
 
     send_message(context.player, [recipient], subject, body)
-    print(f"[green]Message sent to {recipient}.[/green]")
+    print(f"[green]Message sent to {recipient.title()}.[/green]")

@@ -44,7 +44,7 @@ if verb_name == "@forward":
 
     player_class = lookup("Generic Player")
     if not recipient.is_a(player_class):
-        print(f"[red]{recipient} is not a player.[/red]")
+        print(f"[red]{recipient.title()} is not a player.[/red]")
         return
 
     original_subject = mr.message.subject or ""
@@ -53,7 +53,7 @@ if verb_name == "@forward":
     else:
         new_subject = f"Fwd: {original_subject}"
 
-    sender_name = str(mr.message.sender) if mr.message.sender else "(deleted)"
+    sender_name = mr.message.sender.title() if mr.message.sender else "(deleted)"
     date_str = mr.sent_at.strftime("%b %d %H:%M") if mr.sent_at else "?"
     fwd_header = f"---------- Forwarded message ----------\nFrom: {sender_name}\nDate: {date_str}\nSubject: {original_subject}\n\n"
 
@@ -63,7 +63,7 @@ if verb_name == "@forward":
         note = re.sub(r"\\([a-zA-Z_])", lambda m: "\n" + m.group(1), note).strip()
         body = f"{note}\n\n{fwd_header}{mr.message.body}"
         send_message(context.player, [recipient], new_subject, body)
-        print(f"[green]Message forwarded to {recipient}.[/green]")
+        print(f"[green]Message forwarded to {recipient.title()}.[/green]")
         return
 
     initial = f"Subject: {new_subject}\n\n{fwd_header}{mr.message.body}\n"
@@ -76,7 +76,7 @@ if verb_name == "@forward":
         recipient.pk,
         new_subject,
         content_type="text",
-        title=f"Forward to {recipient}",
+        title=f"Forward to {recipient.title()}",
     )
 
 elif verb_name == "at_forward_callback":
@@ -100,4 +100,4 @@ elif verb_name == "at_forward_callback":
         return
 
     send_message(context.player, [recipient], subject, body)
-    print(f"[green]Message forwarded to {recipient}.[/green]")
+    print(f"[green]Message forwarded to {recipient.title()}.[/green]")
