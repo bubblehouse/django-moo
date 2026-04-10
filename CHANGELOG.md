@@ -1,3 +1,12 @@
+## [0.96.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.95.0...v0.96.0) (2026-04-10)
+
+### Features
+
+* **mail:** add [@mail](https://gitlab.com/mail), [@send](https://gitlab.com/send), [@reply](https://gitlab.com/reply), and [@forward](https://gitlab.com/forward) verbs ([34278c4](https://gitlab.com/bubblehouse/django-moo/commit/34278c43afc495a9939c80de7059f093105eaa7d))
+* **mail:** add mail SDK module and re-export functions ([1bad71d](https://gitlab.com/bubblehouse/django-moo/commit/1bad71daa28b80ba22d7d54d8210dc885fd65659))
+* **mail:** add Message and MessageRecipient models with migration ([b6ddced](https://gitlab.com/bubblehouse/django-moo/commit/b6ddcedf4f76043507a962a9092ab65a2a42f17d))
+* **mail:** wire up confunc notification, [@gripe](https://gitlab.com/gripe), and bootstrap ([e928a4e](https://gitlab.com/bubblehouse/django-moo/commit/e928a4efc5245752233dd0303ce6177f27a8c12a))
+
 ## [0.95.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.94.8...v0.95.0) (2026-04-10)
 
 ### Features
