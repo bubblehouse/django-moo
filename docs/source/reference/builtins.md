@@ -1,24 +1,46 @@
 # Built-in Functions
 
 ```{eval-rst}
-.. py:currentmodule:: moo.core
-.. autofunction:: moo.core.connected_players()
+.. py:currentmodule:: moo.sdk
+.. autofunction:: moo.sdk.connected_players
    :no-index:
-.. autofunction:: moo.core.create()
+.. autofunction:: moo.sdk.create
    :no-index:
-.. autofunction:: moo.core.invoke()
+.. autofunction:: moo.sdk.invoke
    :no-index:
-.. autofunction:: moo.core.lookup()
+.. autofunction:: moo.sdk.lookup
    :no-index:
-.. autofunction:: moo.core.open_editor()
+.. autofunction:: moo.sdk.open_editor
    :no-index:
-.. autofunction:: moo.core.open_paginator()
+.. autofunction:: moo.sdk.open_paginator
    :no-index:
-.. autofunction:: moo.core.players()
+.. autofunction:: moo.sdk.players
    :no-index:
-.. autofunction:: moo.core.set_task_perms()
+.. autofunction:: moo.sdk.set_task_perms
    :no-index:
-.. autofunction:: moo.core.write()
+.. autofunction:: moo.sdk.write
+   :no-index:
+```
+
+## Mail Functions
+
+```{eval-rst}
+.. py:currentmodule:: moo.sdk
+.. autofunction:: moo.sdk.send_message
+   :no-index:
+.. autofunction:: moo.sdk.get_mailbox
+   :no-index:
+.. autofunction:: moo.sdk.get_message
+   :no-index:
+.. autofunction:: moo.sdk.mark_read
+   :no-index:
+.. autofunction:: moo.sdk.delete_message
+   :no-index:
+.. autofunction:: moo.sdk.undelete_message
+   :no-index:
+.. autofunction:: moo.sdk.count_unread
+   :no-index:
+.. autofunction:: moo.sdk.get_mail_stats
    :no-index:
 ```
 
