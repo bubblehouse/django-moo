@@ -99,12 +99,13 @@ def test_disfunc_runs_without_error(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_gripe_not_implemented(t_init: Object, t_wizard: Object):
-    """@gripe prints a not-yet-implemented message."""
-    printed = []
-    with code.ContextManager(t_wizard, printed.append) as ctx:
-        parse.interpret(ctx, "@gripe something")
-    assert "@gripe is not yet implemented." in printed
+def test_gripe_opens_editor(t_init: Object, t_wizard: Object):
+    """@gripe opens an editor to compose a message to gripe recipients."""
+    with pytest.warns(RuntimeWarning, match=r"ConnectionError") as caught:
+        with code.ContextManager(t_wizard, lambda _: None) as ctx:
+            parse.interpret(ctx, "@gripe")
+    messages = [str(w.message) for w in caught.list]
+    assert any("editor" in m for m in messages)
 
 
 # --- news ---
