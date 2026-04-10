@@ -349,7 +349,8 @@ def test_change_location_calls_enterfunc(t_init: Object, t_wizard: Object):
         printed.append(msg)
 
     with code.ContextManager(t_wizard, _writer):
-        containers = lookup("container class")
+        containers = create("container class")
+        containers.add_verb("accept", code="return True")
         box = create("box", parents=[containers])
         box.add_verb("enterfunc", code="print(args[0])")
         thing = create("thing")
@@ -371,7 +372,8 @@ def test_change_location_calls_exitfunc(t_init: Object, t_wizard: Object):
     t_wizard.location = room
     t_wizard.save()
     with code.ContextManager(t_wizard, _writer):
-        containers = lookup("container class")
+        containers = create("container class")
+        containers.add_verb("accept", code="return True")
         box = create("box", parents=[containers])
         box.add_verb("exitfunc", code="print(args[0])")
         thing = create("thing", location=box)
@@ -436,7 +438,8 @@ def test_change_location_checks_recursion(t_init: Object, t_wizard: Object):
         printed.append(msg)
 
     with code.ContextManager(t_wizard, _writer):
-        containers = lookup("container class")
+        containers = create("container class")
+        containers.add_verb("accept", code="return True")
         box = create("box", parents=[containers])
         envelope = create("envelope", parents=[containers], location=box)
         with pytest.raises(exceptions.RecursiveError) as excinfo:
