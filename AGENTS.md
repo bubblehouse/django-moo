@@ -356,7 +356,7 @@ usable.
 
 * **Performance Considerations:**
   * **Database Queries**: Use Django QuerySet `.select_related()` and `.prefetch_related()` to minimize N+1 queries
-  * **Attribute Caching**: Verb and property lookups are automatically cached at three levels — do not implement separate caching for these. See `docs/source/guide/03b_caching.md` for the full architecture.
+  * **Attribute Caching**: Verb and property lookups are automatically cached at three levels — do not implement separate caching for these. See `docs/source/reference/caching.md` for the full architecture.
   * **Caching**: Redis is available for caching other frequently accessed data (room contents, player locations, etc.)
   * **Celery Tasks**: All code and command-parser invocations are executed as tasks inside Celery workers. Creating new Celery Tasks is uncommon.
   * **Verb Time Limits**: Verbs called with `__getattr__` syntax (`obj.someverb()`) add to the total execution time for a verb, which is limited to 3 seconds. For verbs with effective runtimes that are longer than this, the `moo.sdk.invoke()` command can be used to asynchronously execute another verb with its own 3-second time limit.
@@ -408,8 +408,11 @@ docker compose run webapp manage.py moo_init
 # Create Django superuser
 docker compose run webapp manage.py createsuperuser --username wizard
 
-# Connect Django user to MOO player
-docker compose run webapp manage.py moo_enableuser wizard Wizard
+# Connect Django user to MOO wizard player (--wizard grants in-game wizard privileges)
+docker compose run webapp manage.py moo_enableuser --wizard wizard Wizard
+
+# Create a non-wizard user and avatar in one step (agents, test accounts, regular players)
+docker compose run webapp manage.py moo_createuser username AvatarName --password secret
 ```
 
 ### Standard Development Workflow
