@@ -16,7 +16,12 @@
    :maxdepth: 2
    :caption: Tutorials
 
+   tutorials/player-basics
+   tutorials/building-rooms
    tutorials/first-verb
+   tutorials/testing-verbs
+   tutorials/custom-world
+   tutorials/first-agent
 
 .. toctree::
    :maxdepth: 2
