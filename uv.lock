@@ -801,7 +801,7 @@ wheels = [
 
 [[package]]
 name = "django-moo"
-version = "0.94.8"
+version = "0.95.0"
 source = { editable = "." }
 dependencies = [
     { name = "anthropic" },
