@@ -67,9 +67,17 @@ python manage.py shell
 
 ### Creating Player Accounts
 
-There are two ways to create a player account:
+There are three ways to create a player account:
 
-**Management command** — use this for the initial wizard account, or any account that needs wizard privileges:
+**`moo_createuser`** — creates a Django user and a linked MOO avatar in one command. Use this for agents, test accounts, or any regular player created from the CLI:
+
+```bash
+python manage.py moo_createuser yourname YourAvatar --password secret
+```
+
+Omit `--password` to be prompted. Add `--wizard` to grant in-game wizard privileges.
+
+**Wizard account** — the initial wizard account requires a Django superuser so the admin interface is accessible:
 
 ```bash
 python manage.py createsuperuser --username yourname
