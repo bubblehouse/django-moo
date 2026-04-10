@@ -31,6 +31,16 @@ from .tasks import (
 )
 from .ssh_keys import list_ssh_keys, add_ssh_key, remove_ssh_key
 from .admin import server_info
+from .mail import (
+    send_message,
+    get_mailbox,
+    get_message,
+    mark_read,
+    delete_message,
+    undelete_message,
+    count_unread,
+    get_mail_stats,
+)
 
 # Re-export moojson for verb use
 from ..core import moojson
@@ -84,6 +94,14 @@ __all__ = [
     "task_time_low",
     "schedule_continuation",
     "server_info",
+    "send_message",
+    "get_mailbox",
+    "get_message",
+    "mark_read",
+    "delete_message",
+    "undelete_message",
+    "count_unread",
+    "get_mail_stats",
     "DIRECTIONS",
     "OPPOSITE_DIRECTIONS",
     "NoSuchObjectError",
