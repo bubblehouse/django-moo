@@ -227,6 +227,25 @@ No new holes. The single-file `moo/sdk.py` was split into a package with submodu
 
 ---
 
+## Pass 21 — 0 holes + ALLOWED_BUILTINS expansion
+
+**Date:** 2026-04-10
+**Focus:** Added `all`, `any`, `max`, `min`, `sum`, `PermissionError` to `ALLOWED_BUILTINS`
+
+**Security analysis:**
+
+- `all(iterable)` / `any(iterable)` — consume an iterable and return bool. Return type is a Python primitive; no attribute chain leads to ORM instances.
+- `max(iterable)` / `min(iterable)` / `sum(iterable)` — return a value from the iterable (max/min) or a numeric sum. The return type depends on the iterable's element type. Verb code can only produce iterables of sandbox-accessible objects, so the return value is already guarded.
+- `PermissionError` — a built-in exception class. Required so verb code can raise or catch the same exception type that the sandbox raises on permission failures. Adding it does not open new attack paths because exception objects expose only standard dunder attributes (all blocked by the underscore guard).
+
+No new attack surface. These functions are pure builtins with no attribute access on sensitive types.
+
+**No new tests added** — no new attack surface.
+
+**Total:** 21 passes, 55 holes sealed, 1114 tests (3 skipped).
+
+---
+
 ## Known Gaps (Summary)
 
 See [known-gaps.md](known-gaps.md) for full details.
