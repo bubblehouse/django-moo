@@ -71,47 +71,87 @@ def load_python(python_path):
         exec(compile(src, python_path, "exec"), globals(), dict())  # pylint: disable=exec-used
 
 
+def get_or_create_object(name, unique_name=False, parents=None, owner=None, location=None):
+    """
+    Get or create a named object. Safe to call on an already-bootstrapped database.
+
+    :param name: The name of the object to get or create.
+    :type name: str
+    :param unique_name: Whether the object has a unique name constraint.
+    :type unique_name: bool
+    :param parents: A list of parent objects to add if the object is newly created.
+    :type parents: list[Object] | None
+    :param owner: The owner of the object.
+    :type owner: Object | None
+    :param location: The location of the object.
+    :type location: Object | None
+    :return: A ``(object, created)`` tuple.
+    :rtype: tuple[Object, bool]
+    """
+    from moo.core.models import Object
+
+    obj, created = Object.objects.get_or_create(
+        name=name,
+        unique_name=unique_name,
+        defaults=dict(owner=owner, location=location),
+    )
+    if created and parents:
+        for parent in parents:
+            obj.parents.add(parent)
+    return obj, created
+
+
 def initialize_dataset(dataset="default"):
     """
-    Initialize a new dataset.
+    Initialize a new dataset, or sync an existing one.
 
     This will create the default objects and permissions for the dataset. Notably, it will
     create a `System Object` that is used to store global properties and verbs.
 
     It will also create a `Wizard` user that is used to manage the system.
 
+    All operations are idempotent — safe to call on a DB that has already been initialized.
+
     :param dataset: The name of the dataset to initialize.
     :type dataset: str
     :return: The repository object for the dataset.
     :rtype: Repository
     """
-    from moo.core import create, models
+    from moo.core import models
     from moo.core.parse import Pattern
 
     for name in settings.DEFAULT_PERMISSIONS:
-        _ = models.Permission.objects.create(name=name)
+        models.Permission.objects.get_or_create(name=name)
     Pattern.initializePrepositions()
 
     from django.contrib.auth.models import User  # pylint: disable=imported-auth-user
     from moo.core.models.auth import Player
 
-    repo = models.Repository.objects.get(slug=dataset)
-    system = models.Object.objects.create(name="System Object", unique_name=True)
+    repo, _ = models.Repository.objects.get_or_create(
+        slug=dataset,
+        defaults=dict(
+            prefix=f"moo/bootstrap/{dataset}_verbs",
+            url=settings.DEFAULT_GIT_REPO_URL,
+        ),
+    )
+    system, _ = models.Object.objects.get_or_create(name="System Object", unique_name=True)
     # LambdaMOO-style sentinel objects — created immediately after the system object
     # so they receive the lowest possible PKs (2, 3, 4).
-    nothing = models.Object.objects.create(name="nothing", unique_name=True)
-    ambiguous_match = models.Object.objects.create(name="ambiguous_match", unique_name=True)
-    failed_match = models.Object.objects.create(name="failed_match", unique_name=True)
-    containers = models.Object.objects.create(name="container class")
-    containers.add_verb("accept", code="return True")
+    nothing, _ = models.Object.objects.get_or_create(name="nothing", unique_name=True)
+    ambiguous_match, _ = models.Object.objects.get_or_create(name="ambiguous_match", unique_name=True)
+    failed_match, _ = models.Object.objects.get_or_create(name="failed_match", unique_name=True)
+    containers, containers_created = models.Object.objects.get_or_create(name="Generic Container", unique_name=True)
+    if containers_created:
+        containers.add_verb("accept", code="return True")
     # Create the first real user
-    wizard = create(name="Wizard", unique_name=True)
-    wizard.add_verb("accept", code="return True")
+    wizard, wizard_created = models.Object.objects.get_or_create(name="Wizard", unique_name=True)
+    if wizard_created:
+        wizard.add_verb("accept", code="return True")
     wizard.owner = wizard
     wizard.save()
     # Wizard gets a User and Player record so is_wizard() works
-    user = User.objects.create_user(username="wizard")
-    Player.objects.create(user=user, avatar=wizard, wizard=True)
+    user, _ = User.objects.get_or_create(username="wizard")
+    Player.objects.get_or_create(user=user, defaults=dict(avatar=wizard, wizard=True))
     # Wizard owns the sentinel objects
     nothing.owner = wizard
     nothing.save()
