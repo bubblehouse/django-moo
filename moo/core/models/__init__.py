@@ -8,3 +8,4 @@ from .auth import *
 from .object import *
 from .property import *
 from .verb import *
+from .mail import Message, MessageRecipient
