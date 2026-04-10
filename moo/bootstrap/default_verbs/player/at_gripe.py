@@ -1,18 +1,54 @@
-#!moo verb @gripe --on $player --dspec any
+#!moo verb @gripe at_gripe_callback --on $player
 
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-A gripe is a player complaint or observation that is sent, using MOO mail, to all the administrators in the game. It is
-intended to provide a way to report problems with the MOO in a high-priority way that will attract the attention of the
-people who can do something about it. A good example of the use of a gripe is to complain about a bug in one of the
-core classes, or maybe even a request for something to be added.
+Send a complaint or observation to the MOO administrators.
 
-The implementation of the gripe concept involves a property on the System Object called `$gripe_recipients`. This is a
-list of all the players who will be mailed the `@gripe` message. When a player types in `@gripe` they are taken to the
-mail room to enter their message. Any text entered on the line with the `@gripe` command is taken to be the subject of
-the gripe message. When the message is finished and sent, it is received by all the people on the `$gripe_recipients`
-list.
+Syntax:
+    @gripe   — open editor to write your gripe
+
+The gripe is sent as a mail message to all players listed in the
+``gripe_recipients`` system property.  The subject is auto-filled as
+"@gripe from <player>".  Body text is entered via the editor.
 """
 
-print("@gripe is not yet implemented.")
+from moo.sdk import context, open_editor, send_message, NoSuchPropertyError
+
+if verb_name == "@gripe":
+    player = context.player
+    try:
+        recipients = _.gripe_recipients  # noqa: F821 — _ is the system object in verb scope
+    except NoSuchPropertyError:
+        print("[red]gripe_recipients is not configured. Contact an administrator.[/red]")
+        return
+
+    if not recipients:
+        print("[red]No gripe recipients are configured. Contact an administrator.[/red]")
+        return
+
+    subject = f"@gripe from {player}"
+    callback = player.get_verb("at_gripe_callback")
+    open_editor(
+        player,
+        "",
+        callback,
+        [r.pk for r in recipients],
+        subject,
+        content_type="text",
+        title="Send a gripe to the administrators",
+    )
+
+elif verb_name == "at_gripe_callback":
+    text = args[0]
+    recip_pks = args[1]
+    subject = args[2]
+
+    if not text.strip():
+        print("[red]Gripe body is empty — nothing sent.[/red]")
+        return
+
+    from moo.sdk import lookup
+    recipients = [lookup(pk) for pk in recip_pks]
+    send_message(context.player, recipients, subject, text.strip())
+    print("[green]Your gripe has been sent to the administrators.[/green]")

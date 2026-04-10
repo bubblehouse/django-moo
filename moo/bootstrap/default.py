@@ -253,3 +253,4 @@ with code.ContextManager(wizard, log.info):
     containers.get_verb("accept").delete()
     bootstrap.load_verbs(repo, "moo.bootstrap.default_verbs")
     sys.gender_utils.set(player, "plural")
+    sys.set_property("gripe_recipients", [wizard])
