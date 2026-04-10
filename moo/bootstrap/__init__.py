@@ -88,8 +88,11 @@ def get_or_create_object(name, unique_name=False, parents=None, owner=None, loca
     :return: A ``(object, created)`` tuple.
     :rtype: tuple[Object, bool]
     """
+    from moo.core.code import ContextManager
     from moo.core.models import Object
 
+    if owner is None:
+        owner = ContextManager.get("caller") or ContextManager.get("player")
     obj, created = Object.objects.get_or_create(
         name=name,
         unique_name=unique_name,
@@ -140,9 +143,6 @@ def initialize_dataset(dataset="default"):
     nothing, _ = models.Object.objects.get_or_create(name="nothing", unique_name=True)
     ambiguous_match, _ = models.Object.objects.get_or_create(name="ambiguous_match", unique_name=True)
     failed_match, _ = models.Object.objects.get_or_create(name="failed_match", unique_name=True)
-    containers, containers_created = models.Object.objects.get_or_create(name="Generic Container", unique_name=True)
-    if containers_created:
-        containers.add_verb("accept", code="return True")
     # Create the first real user
     wizard, wizard_created = models.Object.objects.get_or_create(name="Wizard", unique_name=True)
     if wizard_created:
@@ -159,9 +159,6 @@ def initialize_dataset(dataset="default"):
     ambiguous_match.save()
     failed_match.owner = wizard
     failed_match.save()
-    # Wizard owns containers
-    containers.owner = wizard
-    containers.save()
     # Wizard owns the system
     system.owner = wizard
     system.save()
@@ -216,7 +213,7 @@ def load_verb_source(path, system, repo, replace=False):
     )
 
 
-def load_verbs(repo, verb_package):
+def load_verbs(repo, verb_package, replace=False):
     """
     Load the verbs from a Python package into the database and associate them with the given repository.
 
@@ -242,6 +239,8 @@ def load_verbs(repo, verb_package):
     :type repo: Repository
     :param verb_package: The Python package to load the verbs from.
     :type verb_package: str
+    :param replace: If ``True``, update existing verbs in place rather than skipping them.
+    :type replace: bool
     """
     from moo.core.models.object import Object
 
@@ -254,7 +253,7 @@ def load_verbs(repo, verb_package):
         elif ref.is_file():
             with importlib.resources.as_file(ref) as path:
                 if str(path).endswith(".py"):
-                    load_verb_source(path, system, repo)
+                    load_verb_source(path, system, repo, replace=replace)
 
     for ref in importlib.resources.files(verb_package).iterdir():
         _iterate_file_paths(ref)
