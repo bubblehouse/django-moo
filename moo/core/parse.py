@@ -97,12 +97,17 @@ class Pattern:
 
     @classmethod
     def initializePrepositions(cls):
-        from .models import Preposition
+        from .models import Preposition, PrepositionName
 
         for preps in settings.PREPOSITIONS:
-            preposition = Preposition.objects.create()
+            canonical = preps[0]
+            existing = PrepositionName.objects.filter(name=canonical).first()
+            if existing is not None:
+                preposition = existing.preposition
+            else:
+                preposition = Preposition.objects.create()
             for name in preps:
-                preposition.names.create(name=name)
+                PrepositionName.objects.get_or_create(name=name, defaults=dict(preposition=preposition))
 
     def tokenize(self, s):
         """

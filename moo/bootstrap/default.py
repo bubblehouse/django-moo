@@ -1,11 +1,10 @@
 import logging
-from datetime import datetime, timezone
 from time import time
 
 from django.contrib.auth import get_user_model
 
 from moo import bootstrap
-from moo.core import code, create, lookup
+from moo.core import code, lookup
 from moo.core.models import Player
 from moo.core.models.acl import Access, Permission
 
@@ -15,10 +14,6 @@ User = get_user_model()
 repo = bootstrap.initialize_dataset("default")
 wizard = lookup("Wizard")
 
-containers = lookup("container class")
-containers.name = "Generic Container"
-containers.save()
-
 with code.ContextManager(wizard, log.info):
     sys = lookup(1)
 
@@ -27,18 +22,24 @@ with code.ContextManager(wizard, log.info):
     sys.set_property("ambiguous_match", lookup("ambiguous_match"))
     sys.set_property("failed_match", lookup("failed_match"))
 
+    containers, containers_created = bootstrap.get_or_create_object("Generic Container", unique_name=True)
+    if containers_created:
+        containers.add_verb("accept", code="return True")
+    containers.owner = wizard
+    containers.save()
     sys.set_property("container", containers)
     containers.set_property("open_key", None)
     containers.set_property("open", False, inherit_owner=True)
     containers.set_property("opaque", False, inherit_owner=True)
 
-    root = create("Root Class", location=None)
+    root, root_created = bootstrap.get_or_create_object("Root Class", unique_name=True)
+    if root_created:
+        root.add_verb("accept", code="return True")
     sys.set_property("root_class", root)
-    root.add_verb("accept", code="return True")
     root.set_property("description", "")
     root.set_property("key", None)
 
-    rooms = create("Generic Room", parents=[root], location=None)
+    rooms, _ = bootstrap.get_or_create_object("Generic Room", unique_name=True, parents=[root])
     sys.set_property("room", rooms)
     rooms.set_property("blessed_object", None)
     rooms.set_property("blessed_task_id", None)
@@ -53,9 +54,9 @@ with code.ContextManager(wizard, log.info):
     rooms.set_property("dark", False)
     rooms.set_property("content_list_type", 3)
 
-    mail_room = create("Mail Distribution Center", parents=[rooms], location=None)
+    mail_room, _ = bootstrap.get_or_create_object("Mail Distribution Center", unique_name=True, parents=[rooms])
 
-    player = create("Generic Player", parents=[root], location=None)
+    player, _ = bootstrap.get_or_create_object("Generic Player", unique_name=True, parents=[root])
     sys.set_property("player", player)
     player.set_property("last_connect_time", time())
     player.set_property("last_connected_time", None)
@@ -83,13 +84,14 @@ with code.ContextManager(wizard, log.info):
     player.set_property("who_location_msg", "%x(location)")
     player.set_property("victim_ejection_msg", "You have been ejected from %s by %s.")
 
-    programmers = create("Generic Programmer", parents=[player], location=None)
+    programmers, _ = bootstrap.get_or_create_object("Generic Programmer", unique_name=True, parents=[player])
     sys.set_property("programmer", programmers)
-    wizards = create("Generic Wizard", parents=[programmers], location=None)
+    wizards, _ = bootstrap.get_or_create_object("Generic Wizard", unique_name=True, parents=[programmers])
     sys.set_property("wizard", wizards)
-    wizard.parents.add(wizards)
+    if not wizard.parents.filter(pk=wizards.pk).exists():
+        wizard.parents.add(wizards)
 
-    thing = create("Generic Thing", parents=[root], location=None)
+    thing, _ = bootstrap.get_or_create_object("Generic Thing", unique_name=True, parents=[root])
     sys.set_property("thing", thing)
     thing.set_property("otake_succeeded_msg", "%N picks up %t.")
     thing.set_property("otake_failed_msg", "")
@@ -99,9 +101,10 @@ with code.ContextManager(wizard, log.info):
     thing.set_property("odrop_failed_msg", "%N tries to drop %t but fails!")
     thing.set_property("drop_succeeded_msg", "You drop %t.")
     thing.set_property("drop_failed_msg", "You can't seem to drop %t here.")
-    containers.parents.add(thing)
+    if not containers.parents.filter(pk=thing.pk).exists():
+        containers.parents.add(thing)
 
-    furniture = create("Generic Furniture", parents=[thing], location=None)
+    furniture, _ = bootstrap.get_or_create_object("Generic Furniture", unique_name=True, parents=[thing])
     sys.set_property("furniture", furniture)
     furniture.set_property("take_failed_msg", "It's not possible to move something like this.")
     furniture.set_property("otake_failed_msg", "%N tries to pick up %t, but it won't budge.")
@@ -112,7 +115,7 @@ with code.ContextManager(wizard, log.info):
     furniture.set_property("ostand_succeeded_msg", "%N stands up from %t.")
     furniture.set_property("stand_failed_msg", "You aren't sitting on %t.")
 
-    exits = create("Generic Exit", parents=[root], location=None)
+    exits, _ = bootstrap.get_or_create_object("Generic Exit", unique_name=True, parents=[root])
     sys.set_property("exit", exits)
     exits.set_property("source", None)
     exits.set_property("dest", None)
@@ -123,24 +126,24 @@ with code.ContextManager(wizard, log.info):
     exits.set_property("oleave_msg", "{actor} leaves {subject}.")
     exits.set_property("leave_msg", "You leave {subject}.")
 
-    notes = create("Generic Note", parents=[thing], location=None)
+    notes, _ = bootstrap.get_or_create_object("Generic Note", unique_name=True, parents=[thing])
     sys.set_property("note", notes)
     notes.set_property("text", "")
     notes.set_property("read_key", None)
 
-    letters = create("Generic Letter", parents=[notes], location=None)
+    letters, _ = bootstrap.get_or_create_object("Generic Letter", unique_name=True, parents=[notes])
     sys.set_property("letter", letters)
 
-    lock_utils = create("Lock Utilities", location=None)
+    lock_utils, _ = bootstrap.get_or_create_object("Lock Utilities", unique_name=True)
     sys.set_property("lock_utils", lock_utils)
 
-    string_utils = create("String Utilities", location=None)
+    string_utils, _ = bootstrap.get_or_create_object("String Utilities", unique_name=True)
     sys.set_property("string_utils", string_utils)
 
-    match_utils = create("Match Utilities", location=None)
+    match_utils, _ = bootstrap.get_or_create_object("Match Utilities", unique_name=True)
     sys.set_property("match_utils", match_utils)
 
-    gender_utils = create("Gender Utilities", location=None)
+    gender_utils, _ = bootstrap.get_or_create_object("Gender Utilities", unique_name=True)
     sys.set_property("gender_utils", gender_utils)
     gender_utils.set_property("pronouns", ["ps", "po", "pp", "pr", "pq", "psc", "poc", "ppc", "prc", "pqc"])
     gender_utils.set_property("genders", ["neuter", "male", "female", "plural"])
@@ -155,7 +158,7 @@ with code.ContextManager(wizard, log.info):
     gender_utils.set_property("prc", ["Itself", "Himself", "Herself", "Themselves"])
     gender_utils.set_property("pqc", ["Its", "His", "Hers", "Theirs"])
 
-    lab = create("The Laboratory", parents=[rooms], location=None)
+    lab, _ = bootstrap.get_or_create_object("The Laboratory", unique_name=True, parents=[rooms])
     lab.set_property(
         "description",
         """A cavernous laboratory filled with gadgetry of every kind,
@@ -164,7 +167,7 @@ with code.ContextManager(wizard, log.info):
     )
     sys.set_property("player_start", lab)
 
-    agency = create("The Agency", parents=[rooms], location=None)
+    agency, _ = bootstrap.get_or_create_object("The Agency", unique_name=True, parents=[rooms])
     agency.set_property(
         "description",
         """A quiet back room where the Tradesmen gather between assignments.
@@ -172,69 +175,65 @@ with code.ContextManager(wizard, log.info):
     )
     sys.set_property("agency", agency)
 
-    wizard.location = lab
-    wizard.save()
+    if wizard.location != lab:
+        wizard.location = lab
+        wizard.save()
 
-    new_player = create(name="Player", unique_name=True, location=lab)
-    p = Player.objects.create()
-    p.avatar = new_player
-    p.save()
-
-    new_player.parents.add(player)
-    new_player.owner = new_player
-    new_player.save()
+    new_player, new_player_created = bootstrap.get_or_create_object("Player", unique_name=True, location=lab)
+    player_rec, _ = Player.objects.get_or_create(avatar=new_player)
+    if new_player_created:
+        new_player.parents.add(player)
+        new_player.owner = new_player
+        new_player.save()
 
     # The Tradesmen — autonomous builder agents
     # Mason ($player): digs rooms and wires exits
-    mason_obj = create(name="Mason", unique_name=True, location=None)
-    mason_obj.parents.add(player)
+    mason_obj, _ = bootstrap.get_or_create_object("Mason", unique_name=True, parents=[player])
     mason_obj.owner = mason_obj
     mason_obj.set_property("home", agency)
     mason_obj.save()
-    mason_user = User.objects.create_user(username="mason", password="Mxq7vB2nKpL4")
-    Player.objects.create(user=mason_user, avatar=mason_obj)
+    mason_user, _ = User.objects.get_or_create(username="mason", defaults=dict(password="Mxq7vB2nKpL4"))
+    Player.objects.get_or_create(user=mason_user, defaults=dict(avatar=mason_obj))
 
     # Tinker ($programmer): writes verbs for interactive objects and secret exits
-    tinker_obj = create(name="Tinker", unique_name=True, location=None, parents=[programmers])
+    tinker_obj, _ = bootstrap.get_or_create_object("Tinker", unique_name=True, parents=[programmers])
     tinker_obj.owner = tinker_obj
     tinker_obj.set_property("home", agency)
     tinker_obj.save()
-    tinker_user = User.objects.create_user(username="tinker", password="Pw9cX3mZrT6y")
-    Player.objects.create(user=tinker_user, avatar=tinker_obj)
+    tinker_user, _ = User.objects.get_or_create(username="tinker", defaults=dict(password="Pw9cX3mZrT6y"))
+    Player.objects.get_or_create(user=tinker_user, defaults=dict(avatar=tinker_obj))
 
     # Joiner ($player): creates furniture and containers
-    joiner_obj = create(name="Joiner", unique_name=True, location=None)
-    joiner_obj.parents.add(player)
+    joiner_obj, _ = bootstrap.get_or_create_object("Joiner", unique_name=True, parents=[player])
     joiner_obj.owner = joiner_obj
     joiner_obj.set_property("home", agency)
     joiner_obj.save()
-    joiner_user = User.objects.create_user(username="joiner", password="Hn4kD8sQvY2f")
-    Player.objects.create(user=joiner_user, avatar=joiner_obj)
+    joiner_user, _ = User.objects.get_or_create(username="joiner", defaults=dict(password="Hn4kD8sQvY2f"))
+    Player.objects.get_or_create(user=joiner_user, defaults=dict(avatar=joiner_obj))
 
     # Harbinger ($programmer): creates NPCs, uses @eval for random roll and tell verb
-    harbinger_obj = create(name="Harbinger", unique_name=True, location=None, parents=[programmers])
+    harbinger_obj, _ = bootstrap.get_or_create_object("Harbinger", unique_name=True, parents=[programmers])
     harbinger_obj.owner = harbinger_obj
     harbinger_obj.set_property("home", agency)
     harbinger_obj.save()
-    harbinger_user = User.objects.create_user(username="harbinger", password="Bt6wF5jRcU3e")
-    Player.objects.create(user=harbinger_user, avatar=harbinger_obj)
+    harbinger_user, _ = User.objects.get_or_create(username="harbinger", defaults=dict(password="Bt6wF5jRcU3e"))
+    Player.objects.get_or_create(user=harbinger_user, defaults=dict(avatar=harbinger_obj))
 
     # Stocker ($programmer): consumable items, dispensing objects, and multi-use props
-    stocker_obj = create(name="Stocker", unique_name=True, location=None, parents=[programmers])
+    stocker_obj, _ = bootstrap.get_or_create_object("Stocker", unique_name=True, parents=[programmers])
     stocker_obj.owner = stocker_obj
     stocker_obj.set_property("home", agency)
     stocker_obj.save()
-    stocker_user = User.objects.create_user(username="stocker", password="Vn5sL9eJwA7k")
-    Player.objects.create(user=stocker_user, avatar=stocker_obj)
+    stocker_user, _ = User.objects.get_or_create(username="stocker", defaults=dict(password="Vn5sL9eJwA7k"))
+    Player.objects.get_or_create(user=stocker_user, defaults=dict(avatar=stocker_obj))
 
     # Foreman ($player): orchestrates token chain, detects stalls, loops automatically
-    foreman_obj = create(name="Foreman", unique_name=True, location=None)
-    foreman_obj.parents.add(player)
+    foreman_obj, _ = bootstrap.get_or_create_object("Foreman", unique_name=True, parents=[player])
     foreman_obj.owner = foreman_obj
     foreman_obj.set_property("home", agency)
     foreman_obj.save()
-    foreman_user = User.objects.create_user(username="foreman", password="Jk2mR7nXpW5q")
-    Player.objects.create(user=foreman_user, avatar=foreman_obj)
+    foreman_user, _ = User.objects.get_or_create(username="foreman", defaults=dict(password="Jk2mR7nXpW5q"))
+    Player.objects.get_or_create(user=foreman_user, defaults=dict(avatar=foreman_obj))
 
     # Grant derive to everyone on all standard system classes so any player can
     # create instances via @create without needing wizard privileges.
@@ -248,9 +247,11 @@ with code.ContextManager(wizard, log.info):
             rule="allow",
         )
 
-    root.get_verb("accept").delete()
-
-    containers.get_verb("accept").delete()
-    bootstrap.load_verbs(repo, "moo.bootstrap.default_verbs")
+    # Remove the temporary bootstrap accept verbs — verb files provide the real ones.
+    if root.has_verb("accept"):
+        root.get_verb("accept").delete()
+    if containers.has_verb("accept"):
+        containers.get_verb("accept").delete()
+    bootstrap.load_verbs(repo, "moo.bootstrap.default_verbs", replace=True)
     sys.gender_utils.set(player, "plural")
     sys.set_property("gripe_recipients", [wizard])
