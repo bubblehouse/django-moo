@@ -22,8 +22,13 @@ sending a suitable message to them if they are connected. Similarly, you may wis
 room you are in when you connect.
 """
 
-from moo.sdk import context
+from moo.sdk import context, count_unread
 
 if not context.player.location:
-    home = context.player.get_property("home") or _.player_start
+    home = context.player.get_property("home") or _.player_start  # noqa: F821
     context.player.moveto(home)
+
+unread = count_unread(context.player)
+if unread:
+    suffix = "s" if unread != 1 else ""
+    context.player.tell(f"You have {unread} unread message{suffix}. Type '@mail' to read.")
