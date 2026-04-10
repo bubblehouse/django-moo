@@ -34,7 +34,12 @@ Three layers carry the project's knowledge. Each has a different audience, style
 | `how-to/permissions.md` | Permissions how-to |
 | `how-to/connection-control.md` | SSH connection handling, session settings |
 | `how-to/ssh-key-management.md` | SSH key management |
-| `tutorials/first-verb.md` | First-verb tutorial |
+| `tutorials/player-basics.md` | Player onboarding — connect, navigate, inventory, talk, mail, profile |
+| `tutorials/building-rooms.md` | Builder onboarding — `@dig`, `@describe`, `@create`, `@alias`, `@obvious` |
+| `tutorials/first-verb.md` | First-verb tutorial — Python verb code, shebang syntax, output mechanisms |
+| `tutorials/testing-verbs.md` | Testing tutorial — `ContextManager`, `parse.interpret`, `pytest.warns`, locks |
+| `tutorials/custom-world.md` | Bootstrap tutorial — `get_or_create_object`, `load_verbs`, `moo_init --sync` |
+| `tutorials/first-agent.md` | Agent tutorial — greeter walkthrough + Tradesmen/Mailmen tour |
 
 **Format split:**
 
@@ -142,11 +147,15 @@ Python docstrings must use RST format: `:param x:`, `:type x:`, `:return:`, `:rt
 
 | File | Scope |
 |------|-------|
-| `extras/agents/README.md` | Index of all agents, how agent directories are structured |
+| `extras/agents/README.md` | Index of all agents, agent groups, how directories are structured |
+| `extras/agents/foreman/README.md` | Foreman: token orchestrator, $player, stall detection, chain loop |
 | `extras/agents/mason/README.md` | Mason: room architect, $player, digs/describes/wires exits |
 | `extras/agents/tinker/README.md` | Tinker: object-maker, $programmer, $thing objects and verbs |
 | `extras/agents/joiner/README.md` | Joiner: furniture-maker, $player, $furniture and $container |
 | `extras/agents/harbinger/README.md` | Harbinger: NPC-summoner, $programmer, ~10% room population |
+| `extras/agents/stocker/README.md` | Stocker: consumable/dispenser creator, $programmer |
+| `extras/agents/cliff/README.md` | Cliff: pompous postal worker, mail-only entertainment agent |
+| `extras/agents/newman/README.md` | Newman: wronged visionary, mail-only entertainment agent |
 
 **What agent READMEs cover:**
 
