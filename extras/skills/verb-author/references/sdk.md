@@ -353,3 +353,81 @@ Override these verbs on `$room` or `$player` subclasses for custom behavior.
 
 `context.player` is the connecting/disconnecting player in all four cases.
 `$player:confunc` and `$player:disfunc` are no-op stubs — safe to override.
+
+## Mail Functions
+
+Available via `from moo.sdk import ...`. Use these for all mailbox operations
+in player verbs. The underlying `Message` / `MessageRecipient` model objects are
+not exposed to verb code.
+
+```python
+from moo.sdk import send_message, get_mailbox, get_message
+from moo.sdk import mark_read, delete_message, undelete_message
+from moo.sdk import count_unread, get_mail_stats
+```
+
+### `send_message(sender, recipients, subject, body)`
+
+Create and deliver a message. Returns the `Message` instance (usually ignored).
+
+- `sender` — sending Object (a player)
+- `recipients` — list of recipient Objects (players)
+- `subject` — subject line string
+- `body` — message body string
+
+### `get_mailbox(player, include_deleted=False)`
+
+Return the player's received messages as a list of `MessageRecipient` objects,
+newest first. `mr.message.sender` is pre-fetched — no extra query.
+
+### `get_message(player, n)`
+
+Return the nth message (1-based) from the player's non-deleted mailbox,
+or `None` if `n` is out of range. Safe to call without bounds-checking.
+
+### `mark_read(player, n)` / `delete_message(player, n)` / `undelete_message(player, n)`
+
+Each returns `True` on success, `False` if `n` is out of range.
+
+`delete_message` is a soft-delete (sets `deleted=True`). `undelete_message`
+counts only among the deleted-only list (1-based within that list).
+
+### `count_unread(player)`
+
+Return the number of unread, non-deleted messages. Used in `confunc` to show
+a login notification.
+
+### `get_mail_stats(player)`
+
+Return `{"total": int, "unread": int, "deleted": int}` in two queries.
+
+### Patterns
+
+**Login notification in `confunc`:**
+
+```python
+from moo.sdk import context, count_unread
+unread = count_unread(context.player)
+if unread:
+    context.player.tell(f"You have {unread} unread message{'s' if unread != 1 else ''}. Type '@mail'.")
+```
+
+**Editor callback pattern (used by `@send`, `@reply`, `@forward`):**
+
+```python
+# Dispatcher verb: @send <player>
+recipient = parse.get_dobj(lookup=True)
+callback = context.player.get_verb("at_send_callback")
+open_editor(context.player, "Subject: \n\n", callback, recipient.pk, content_type="text")
+
+# Callback verb: at_send_callback (dispatched by verb_name)
+text, recipient_pk = args[0], args[1]
+lines = text.splitlines()
+if lines and lines[0].lower().startswith("subject:"):
+    subject = lines[0][8:].strip() or "(no subject)"
+    body = "\n".join(lines[2:]).strip()
+else:
+    subject = "(no subject)"
+    body = text.strip()
+send_message(context.player, [lookup(recipient_pk)], subject, body)
+```
