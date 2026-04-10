@@ -50,7 +50,7 @@ if verb_name == "@reply":
             print("[red]Message body is empty — nothing sent.[/red]")
             return
         send_message(context.player, [mr.message.sender], new_subject, body)
-        print(f"[green]Reply sent to {mr.message.sender}.[/green]")
+        print(f"[green]Reply sent to {mr.message.sender.title()}.[/green]")
         return
 
     quoted = "\n".join(f"> {line}" for line in mr.message.body.splitlines())
@@ -64,7 +64,7 @@ if verb_name == "@reply":
         mr.message.sender.pk,
         new_subject,
         content_type="text",
-        title=f"Reply to {mr.message.sender}",
+        title=f"Reply to {mr.message.sender.title()}",
     )
 
 elif verb_name == "at_reply_callback":
@@ -88,4 +88,4 @@ elif verb_name == "at_reply_callback":
         return
 
     send_message(context.player, [recipient], subject, body)
-    print(f"[green]Reply sent to {recipient}.[/green]")
+    print(f"[green]Reply sent to {recipient.title()}.[/green]")
