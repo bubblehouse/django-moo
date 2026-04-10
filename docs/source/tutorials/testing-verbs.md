@@ -15,14 +15,14 @@ Before you start:
 We'll test a `greet` verb on `$thing`. Save this as `moo/bootstrap/default_verbs/thing/greet.py`:
 
 ```python
-#!moo verb greet --on $thing --dspec none
+#!moo verb greet --on $thing --dspec this
 print(f"You greet {this.name}. It doesn't respond.")
 this.location.announce_all_but(context.player, f"{context.player.name} greets {this.name}.")
 ```
 
 This verb:
 
-- Matches `greet widget` when `widget` is a `$thing` (dspec `none` means no direct object — the verb target is resolved by the command parser matching `widget` to `this`)
+- Matches `greet widget` when `widget` is a `$thing` (`--dspec this` means the direct object must resolve to the object the verb is defined on — the parser matches `widget` to `this`)
 - Prints a message to the caller via `print()`
 - Announces to everyone else in the room via `announce_all_but()`
 
@@ -146,7 +146,7 @@ def test_message_verbs(t_init: Object, t_wizard: Object):
         assert widget.odrop_succeeded_msg() == f"{t_wizard.name} drops {widget.title()}."
 ```
 
-This is equivalent to the MOO expression `widget:take_succeeded_msg()`. It runs the verb in the context of `t_wizard` as the current player.
+This calls the verb as a Python method — `widget.take_succeeded_msg()` — directly on the object, without going through the command parser. It runs in the context of `t_wizard` as the current player.
 
 ## Step 7: Test a lock guard
 
