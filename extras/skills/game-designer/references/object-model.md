@@ -9,7 +9,7 @@
 | `$furniture` | Fixed objects players can sit on (chairs, couches, benches, boulders, crates) | immovable (take fails), `sit`/`stand` verbs, customizable `*_msg` properties |
 | `$note` | Anything with readable text: signs, menus, letters, plaques, books, bulletin boards | `read`/`edit`/`erase` verbs, optional read-lock; portable by default (add `moveto` returning `False` to fix in place) |
 | `$player` | NPCs with dialogue | tell/announce infrastructure, full player API |
-| `$room` | Rooms (created by `@dig`, not `@create`) | contents, exits, announce |
+| `$room` | Rooms | contents, exits, announce |
 | `$exit` | Exits (created by `@dig`/`@tunnel`) | go verb, dest property |
 
 ## Designing Parent Classes
@@ -46,7 +46,11 @@ NPCs use `$player` as parent to get the full messaging infrastructure (tell, ann
 
 **Note on gender**: `@gender` only sets the caller's own pronouns — it cannot be used to set an NPC's gender. To set NPC gender, set the `gender` property directly and the individual pronoun properties (`her`, `him`, `his`, etc.) on the NPC object. Skip gender setup entirely if the NPCs don't need pronoun-aware messages.
 
-## Exits
+## Rooms and Exits
+
+`@dig <dir> to "<room>"` creates a new room and a one-way exit from the current location.
+
+`@create "<room name>" from "$room" in void` creates a room with no location and no exits. Use this when you need to own and place a room independently, or when building rooms from scratch without a connected starting point. Follow with `@move me to "<room name>"` to enter, then `@tunnel` to wire exits.
 
 `@dig <dir> to "<room>"` creates:
 
