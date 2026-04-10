@@ -42,6 +42,17 @@ if verb_name == "@reply":
     else:
         new_subject = f"Re: {original_subject}"
 
+    if context.parser.has_pobj_str("with"):
+        import re
+        body = context.parser.get_pobj_str("with").replace("\\n", "\n")
+        body = re.sub(r"\\([a-zA-Z_])", lambda m: "\n" + m.group(1), body).strip()
+        if not body:
+            print("[red]Message body is empty — nothing sent.[/red]")
+            return
+        send_message(context.player, [mr.message.sender], new_subject, body)
+        print(f"[green]Reply sent to {mr.message.sender}.[/green]")
+        return
+
     quoted = "\n".join(f"> {line}" for line in mr.message.body.splitlines())
     initial = f"Subject: {new_subject}\n\n{quoted}\n\n"
 

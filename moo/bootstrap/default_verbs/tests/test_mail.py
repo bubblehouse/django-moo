@@ -150,6 +150,21 @@ def test_at_send_callback_empty_body_prints_error(t_init: Object, t_wizard: Obje
     assert get_mailbox(player) == []
 
 
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_at_send_with_syntax(t_init: Object, t_wizard: Object):
+    """@send <player> with '...' delivers a message without opening the editor."""
+    player = lookup("Player")
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, '@send Player with "Subject: Hello\\n\\nHello there"')
+    mailbox = get_mailbox(player)
+    assert len(mailbox) == 1
+    assert mailbox[0].message.subject == "Hello"
+    assert "Hello there" in mailbox[0].message.body
+    assert any("sent" in line.lower() for line in printed)
+
+
 # --- @reply ---
 
 
@@ -174,6 +189,38 @@ def test_at_reply_callback_delivers_reply(t_init: Object, t_wizard: Object):
         verb("Subject: Re: Question\n\nI think yes.", t_wizard.pk, "Re: Question")
     mailbox = get_mailbox(t_wizard)
     assert any(mr.message.subject == "Re: Question" for mr in mailbox)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_at_reply_with_syntax(t_init: Object, t_wizard: Object):
+    """@reply <n> with '...' sends a reply without opening the editor."""
+    player = lookup("Player")
+    send_message(player, [t_wizard], "Question", "What do you think?")
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, '@reply 1 with "I think yes."')
+    mailbox = get_mailbox(player)
+    assert any(mr.message.subject == "Re: Question" for mr in mailbox)
+    assert any("I think yes." in mr.message.body for mr in mailbox)
+    assert any("sent" in line.lower() for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_at_forward_with_syntax(t_init: Object, t_wizard: Object):
+    """@forward <n> to <player> with '...' forwards a message without opening the editor."""
+    player = lookup("Player")
+    send_message(player, [t_wizard], "Original Subject", "Original body.")
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, '@forward 1 to Player with "See below."')
+    mailbox = get_mailbox(player)
+    fwd = next((mr for mr in mailbox if mr.message.subject.startswith("Fwd:")), None)
+    assert fwd is not None
+    assert "See below." in fwd.message.body
+    assert "Original body." in fwd.message.body
+    assert any("forwarded" in line.lower() for line in printed)
 
 
 # --- confunc unread notification ---
