@@ -185,11 +185,14 @@ def test_quiet_show_when_on(t_init: Object, t_wizard: Object):
 def test_quiet_show_when_off(t_init: Object, t_wizard: Object):
     """QUIET with no args shows quiet mode is off when not set."""
     user_pk = t_wizard.owner.pk
-    _clear_registry(user_pk, "quiet_mode")
-    printed = []
-    with code.ContextManager(t_wizard, printed.append) as ctx:
-        parse.interpret(ctx, "QUIET")
-    assert any("disabled" in line.lower() or "off" in line.lower() for line in printed)
+    _set_registry(user_pk, "quiet_mode", False)
+    try:
+        printed = []
+        with code.ContextManager(t_wizard, printed.append) as ctx:
+            parse.interpret(ctx, "QUIET")
+        assert any("disabled" in line.lower() or "off" in line.lower() for line in printed)
+    finally:
+        _clear_registry(user_pk, "quiet_mode")
 
 
 # ---------------------------------------------------------------------------
