@@ -1,3 +1,9 @@
+## [0.98.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.97.0...v0.98.0) (2026-04-10)
+
+### Features
+
+* added cliff and newman agents for mail system testing ([312eb71](https://gitlab.com/bubblehouse/django-moo/commit/312eb719457f205c61a883d03e4c0e2fd9ba4c2f))
+
 ## [0.97.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.96.0...v0.97.0) (2026-04-10)
 
 ### Features
