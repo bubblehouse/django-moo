@@ -7,13 +7,19 @@ For background on why the sandbox exists and how the execution environment works
 `ALLOWED_BUILTINS` in `moo/settings/base.py` lists the only names from Python's standard builtins that verb code can call:
 
     ALLOWED_BUILTINS = (
+        "all",
+        "any",
         "dict",
         "enumerate",
         "getattr",
         "hasattr",
         "list",
+        "max",
+        "min",
+        "PermissionError",
         "set",
         "sorted",
+        "sum",
     )
 
 Everything else — including `type`, `dir`, `eval`, `exec`, `compile`, `open`, `vars`, `globals`, `locals`, `__import__` — is absent.
