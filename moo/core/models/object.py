@@ -221,13 +221,14 @@ class Object(models.Model, AccessibleMixin):
         (``moo:connected:{user_pk}``) that is set by the SSH shell at login and
         deleted at logout.  This is cross-process and has no timing window.
         """
-        try:
-            player = Player.objects.get(avatar=self)
-        except Player.DoesNotExist:
+        players = Player.objects.filter(avatar=self)
+        if not players.exists():
             return True
-        if player.user is None:
-            return False
-        return bool(cache.get(f"moo:connected:{player.user.pk}"))
+        return any(
+            bool(cache.get(f"moo:connected:{p.user.pk}"))
+            for p in players
+            if p.user is not None
+        )
 
     def is_named(self, name: str) -> bool:
         """

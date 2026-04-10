@@ -1,4 +1,5 @@
 import logging
+import secrets
 from time import time
 
 from django.contrib.auth import get_user_model
@@ -192,7 +193,10 @@ with code.ContextManager(wizard, log.info):
     mason_obj.owner = mason_obj
     mason_obj.set_property("home", agency)
     mason_obj.save()
-    mason_user, _ = User.objects.get_or_create(username="mason", defaults=dict(password="Mxq7vB2nKpL4"))
+    mason_user, mason_created = User.objects.get_or_create(username="mason")
+    if mason_created:
+        mason_user.set_password("Mxq7vB2nKpL4")
+        mason_user.save()
     Player.objects.get_or_create(user=mason_user, defaults=dict(avatar=mason_obj))
 
     # Tinker ($programmer): writes verbs for interactive objects and secret exits
@@ -200,7 +204,10 @@ with code.ContextManager(wizard, log.info):
     tinker_obj.owner = tinker_obj
     tinker_obj.set_property("home", agency)
     tinker_obj.save()
-    tinker_user, _ = User.objects.get_or_create(username="tinker", defaults=dict(password="Pw9cX3mZrT6y"))
+    tinker_user, tinker_created = User.objects.get_or_create(username="tinker")
+    if tinker_created:
+        tinker_user.set_password("Pw9cX3mZrT6y")
+        tinker_user.save()
     Player.objects.get_or_create(user=tinker_user, defaults=dict(avatar=tinker_obj))
 
     # Joiner ($player): creates furniture and containers
@@ -208,7 +215,10 @@ with code.ContextManager(wizard, log.info):
     joiner_obj.owner = joiner_obj
     joiner_obj.set_property("home", agency)
     joiner_obj.save()
-    joiner_user, _ = User.objects.get_or_create(username="joiner", defaults=dict(password="Hn4kD8sQvY2f"))
+    joiner_user, joiner_created = User.objects.get_or_create(username="joiner")
+    if joiner_created:
+        joiner_user.set_password("Hn4kD8sQvY2f")
+        joiner_user.save()
     Player.objects.get_or_create(user=joiner_user, defaults=dict(avatar=joiner_obj))
 
     # Harbinger ($programmer): creates NPCs, uses @eval for random roll and tell verb
@@ -216,7 +226,10 @@ with code.ContextManager(wizard, log.info):
     harbinger_obj.owner = harbinger_obj
     harbinger_obj.set_property("home", agency)
     harbinger_obj.save()
-    harbinger_user, _ = User.objects.get_or_create(username="harbinger", defaults=dict(password="Bt6wF5jRcU3e"))
+    harbinger_user, harbinger_created = User.objects.get_or_create(username="harbinger")
+    if harbinger_created:
+        harbinger_user.set_password("Bt6wF5jRcU3e")
+        harbinger_user.save()
     Player.objects.get_or_create(user=harbinger_user, defaults=dict(avatar=harbinger_obj))
 
     # Stocker ($programmer): consumable items, dispensing objects, and multi-use props
@@ -224,7 +237,10 @@ with code.ContextManager(wizard, log.info):
     stocker_obj.owner = stocker_obj
     stocker_obj.set_property("home", agency)
     stocker_obj.save()
-    stocker_user, _ = User.objects.get_or_create(username="stocker", defaults=dict(password="Vn5sL9eJwA7k"))
+    stocker_user, stocker_created = User.objects.get_or_create(username="stocker")
+    if stocker_created:
+        stocker_user.set_password("Vn5sL9eJwA7k")
+        stocker_user.save()
     Player.objects.get_or_create(user=stocker_user, defaults=dict(avatar=stocker_obj))
 
     # Foreman ($player): orchestrates token chain, detects stalls, loops automatically
@@ -232,8 +248,39 @@ with code.ContextManager(wizard, log.info):
     foreman_obj.owner = foreman_obj
     foreman_obj.set_property("home", agency)
     foreman_obj.save()
-    foreman_user, _ = User.objects.get_or_create(username="foreman", defaults=dict(password="Jk2mR7nXpW5q"))
+    foreman_user, foreman_created = User.objects.get_or_create(username="foreman")
+    if foreman_created:
+        foreman_user.set_password("Jk2mR7nXpW5q")
+        foreman_user.save()
     Player.objects.get_or_create(user=foreman_user, defaults=dict(avatar=foreman_obj))
+
+    # The Mailmen — autonomous mail-writing agents
+    # Cliff ($player): pompous know-it-all postal worker (Cliff Clavin from Cheers)
+    cliff_obj, _ = bootstrap.get_or_create_object("Cliff", unique_name=True, parents=[player])
+    cliff_obj.owner = cliff_obj
+    cliff_obj.set_property("home", lab)
+    cliff_obj.save()
+    cliff_user, cliff_created = User.objects.get_or_create(username="cliff")
+    if cliff_created:
+        cliff_user.set_password("CQ7I0aiJ8U7KGV9t")
+        cliff_user.save()
+    cliff_player, _ = Player.objects.get_or_create(user=cliff_user, defaults=dict(avatar=cliff_obj))
+
+    # Newman ($player): bitter, conspiratorial postal worker (Newman from Seinfeld)
+    newman_obj, _ = bootstrap.get_or_create_object("Newman", unique_name=True, parents=[player])
+    newman_obj.owner = newman_obj
+    newman_obj.set_property("home", lab)
+    newman_obj.save()
+    newman_user, newman_created = User.objects.get_or_create(username="newman")
+    if newman_created:
+        newman_user.set_password("bORbxkxKws5IFhj2")
+        newman_user.save()
+    newman_player, _ = Player.objects.get_or_create(user=newman_user, defaults=dict(avatar=newman_obj))
+
+    # Seed mail: Cliff opens with a dismissive two-word note so Newman has something to react to
+    from moo.sdk.mail import send_message as _send_message
+    if not cliff_obj.sent_messages.exists():
+        _send_message(cliff_obj, [newman_obj], "Hello, Newman.", "Hello, Newman.")
 
     # Grant derive to everyone on all standard system classes so any player can
     # create instances via @create without needing wizard privileges.

@@ -31,6 +31,27 @@ if verb_name == "@send":
         print(f"[red]{recipient} is not a player.[/red]")
         return
 
+    if context.parser.has_pobj_str("with"):
+        import re
+        content = context.parser.get_pobj_str("with").replace("\\n", "\n")
+        content = re.sub(r"\\([a-zA-Z_])", lambda m: "\n" + m.group(1), content)
+        lines = content.split("\n")
+        if lines and lines[0].lower().startswith("subject:"):
+            subject = lines[0][8:].strip() or "(no subject)"
+            body_lines = lines[1:]
+            if body_lines and not body_lines[0].strip():
+                body_lines = body_lines[1:]
+            body = "\n".join(body_lines).strip()
+        else:
+            subject = "(no subject)"
+            body = content.strip()
+        if not body:
+            print("[red]Message body is empty — nothing sent.[/red]")
+            return
+        send_message(context.player, [recipient], subject, body)
+        print(f"[green]Message sent to {recipient}.[/green]")
+        return
+
     callback = context.player.get_verb("at_send_callback")
     initial = "Subject: \n\n"
     open_editor(

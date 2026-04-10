@@ -56,6 +56,16 @@ if verb_name == "@forward":
     sender_name = str(mr.message.sender) if mr.message.sender else "(deleted)"
     date_str = mr.sent_at.strftime("%b %d %H:%M") if mr.sent_at else "?"
     fwd_header = f"---------- Forwarded message ----------\nFrom: {sender_name}\nDate: {date_str}\nSubject: {original_subject}\n\n"
+
+    if context.parser.has_pobj_str("with"):
+        import re
+        note = context.parser.get_pobj_str("with").replace("\\n", "\n")
+        note = re.sub(r"\\([a-zA-Z_])", lambda m: "\n" + m.group(1), note).strip()
+        body = f"{note}\n\n{fwd_header}{mr.message.body}"
+        send_message(context.player, [recipient], new_subject, body)
+        print(f"[green]Message forwarded to {recipient}.[/green]")
+        return
+
     initial = f"Subject: {new_subject}\n\n{fwd_header}{mr.message.body}\n"
 
     callback = player.get_verb("at_forward_callback")
