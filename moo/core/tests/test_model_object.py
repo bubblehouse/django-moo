@@ -3,7 +3,7 @@
 Tests for moo/core/models/object.py — Object, Relationship, Alias, AncestorCache.
 
 Only objects from bootstrap.initialize_dataset() are treated as pre-existing:
-System Object (pk=1), container class, Wizard, Permissions, Prepositions.
+System Object (pk=1), Wizard, Permissions, Prepositions.
 All other objects, verbs, and properties are created within each test.
 """
 
@@ -106,7 +106,8 @@ def test_object_is_named_by_alias(t_init, t_wizard):
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_object_find_by_name(t_init, t_wizard):
     with _ctx(t_wizard):
-        containers = lookup("container class")
+        containers = create("container class")
+        containers.add_verb("accept", code="return True")
         room = create("test room", parents=[containers])
         item = create("lamp", location=room)
     with _ctx(t_wizard):
@@ -117,7 +118,8 @@ def test_object_find_by_name(t_init, t_wizard):
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_object_find_by_alias(t_init, t_wizard):
     with _ctx(t_wizard):
-        containers = lookup("container class")
+        containers = create("container class")
+        containers.add_verb("accept", code="return True")
         room = create("test room", parents=[containers])
         item = create("lamp", location=room)
     Alias.objects.create(object=item, alias="light")
@@ -129,7 +131,8 @@ def test_object_find_by_alias(t_init, t_wizard):
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_object_contains(t_init, t_wizard):
     with _ctx(t_wizard):
-        containers = lookup("container class")
+        containers = create("container class")
+        containers.add_verb("accept", code="return True")
         box = create("box", parents=[containers])
         ball = create("ball", location=box)
         other = create("other")
@@ -215,7 +218,8 @@ def test_object_get_descendents(t_init, t_wizard):
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_object_get_contents(t_init, t_wizard):
     with _ctx(t_wizard):
-        containers = lookup("container class")
+        containers = create("container class")
+        containers.add_verb("accept", code="return True")
         room = create("content room", parents=[containers])
         item = create("content item", location=room)
     with _ctx(t_wizard):
@@ -226,7 +230,8 @@ def test_object_get_contents(t_init, t_wizard):
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_object_get_contents_nested(t_init, t_wizard):
     with _ctx(t_wizard):
-        containers = lookup("container class")
+        containers = create("container class")
+        containers.add_verb("accept", code="return True")
         room = create("nested room", parents=[containers])
         box = create("nested box", parents=[containers], location=room)
         gem = create("nested gem", location=box)
@@ -464,7 +469,8 @@ def test_object_delete_invokes_recycle_verb(t_init, t_wizard):
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_object_save_recursion_raises(t_init, t_wizard):
     with _ctx(t_wizard):
-        containers = lookup("container class")
+        containers = create("container class")
+        containers.add_verb("accept", code="return True")
         outer = create("outer box", parents=[containers])
         inner = create("inner box", parents=[containers], location=outer)
     with _ctx(t_wizard):
