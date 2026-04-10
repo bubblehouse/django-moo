@@ -40,3 +40,19 @@ return "You browse the shelves..."
 4. Document the object hierarchy: include comments about which objects should be parents of others.
 5. Test bootstrap data: create tests that verify the bootstrap dataset loads correctly.
 6. Keep bootstrap files focused: separate default game data from test data.
+
+## Syncing Verbs After Changes
+
+After modifying verb source files in a built-in dataset, use `moo_init --sync`
+to push updates to an existing database without resetting it:
+
+    docker compose run webapp manage.py moo_init --sync
+
+Bootstrap helpers (`get_or_create_object`, `load_verbs`) are idempotent — they
+skip objects and verbs that already exist unless `replace=True` is passed.
+`load_verbs` called during sync always passes `replace=True`.
+
+Custom bootstrap files must use `get_or_create_object` instead of `create()` for
+all top-level objects to benefit from idempotency. Using raw `create()` will raise
+`IntegrityError` when sync is run against a database that already contains those
+objects.

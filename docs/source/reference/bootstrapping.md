@@ -36,6 +36,26 @@ Once all the objects are created and necessary properties created, the `moo.boot
    :no-index:
 ```
 
+## Idempotent Bootstrap Helpers
+
+These helpers make bootstrap files safe to re-run against an already-initialized
+database (as used by `moo_init --sync`).
+
+```{eval-rst}
+.. autofunction:: get_or_create_object
+   :no-index:
+.. autofunction:: load_verb_source
+   :no-index:
+```
+
+`get_or_create_object` returns a `(object, created)` tuple. It only attaches
+`parents` on first creation to avoid duplicate relationship errors. Calling it
+on an existing database is a no-op for the object itself.
+
+`load_verb_source` parses a `#!moo verb` shebang from a single file and calls
+`obj.add_verb()`. Pass `replace=True` to overwrite the verb source in place;
+the default skips files whose verbs already exist.
+
 ## Bootstrap File Organization
 
 The bootstrap system is organized into several files:
@@ -92,5 +112,16 @@ python manage.py shell
 >>> root.name
 'Root Class'
 ```
+
+### Syncing an Existing Database
+
+When new objects or verbs are added to a built-in dataset, run `moo_init --sync`
+to apply them without resetting the database:
+
+    docker compose run webapp manage.py moo_init --sync
+
+`--sync` checks the dataset exists first (raises `RuntimeError` otherwise), then
+re-runs the bootstrap file with `load_verbs(..., replace=True)` so updated verb
+source overwrites existing Verb records.
 
 For the step-by-step guide to creating your own bootstrap dataset, see {doc}`../how-to/bootstrapping`.

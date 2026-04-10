@@ -191,6 +191,42 @@ No new holes. The single-file `moo/sdk.py` was split into a package with submodu
 
 ---
 
+## Pass 20 — 4 holes sealed
+
+**Date:** 2026-04-10
+**Focus:** New model additions — `Message` and `MessageRecipient` (mail system, pass 19 SDK refactor introduced the module; models added in subsequent mail feature commits)
+
+### Holes sealed
+
+1. **`Message.save()` on existing rows blocked for non-wizards** — `send_message()` returns a `Message` instance with `pk` set. Verb code could set `msg.sender = wizard_obj; msg.save()`, forging the sender or corrupting subject/body for all recipients. Guard: `save()` raises `AccessError` when `self.pk is not None` and `caller` is a non-wizard. INSERTs (`pk is None`) remain unrestricted so `send_message()` can create new rows.
+
+2. **`Message.delete()` blocked for non-wizards** — `mr.message.delete()` cascades to all `MessageRecipient` rows, hard-deleting the message for every recipient and bypassing the soft-delete mechanism. Guard: `delete()` raises `AccessError` for non-wizard callers.
+
+3. **`MessageRecipient.save()` blocked for non-recipient non-wizards** — verb code calling `get_message(player, n)` could set `mr.recipient = other_player; mr.save()`, redirecting message ownership to another player. Guard: `save()` on existing rows allows the call only when `caller.pk == self.recipient_id` (covers SDK `mark_read`/`delete_message`/`undelete_message` calls) or `caller.is_wizard()`.
+
+4. **`MessageRecipient.delete()` blocked for non-wizards** — `mr.delete()` permanently removes the recipient row, bypassing soft-delete and making the message un-restorable. Guard: `delete()` raises `AccessError` for non-wizard callers. Non-wizards should use `delete_message()` which sets `mr.deleted = True`.
+
+### Tests added
+
+10 new tests in `moo/core/tests/test_security_models.py`:
+
+- `test_message_save_blocked_for_non_wizard` — non-wizard cannot modify existing Message
+- `test_message_save_allowed_for_wizard` — wizard can update existing Message
+- `test_send_message_still_works_for_non_wizard` — INSERT path (pk=None) not blocked
+- `test_message_delete_blocked_for_non_wizard` — non-wizard cannot cascade-delete via mr.message.delete()
+- `test_message_delete_allowed_for_wizard` — wizard can hard-delete
+- `test_message_recipient_save_blocks_redirection` — non-wizard cannot redirect mr.recipient
+- `test_message_recipient_save_allowed_for_recipient` — mark_read() still works for recipient
+- `test_message_recipient_save_blocked_for_non_recipient` — non-recipient non-wizard cannot save any field
+- `test_message_recipient_hard_delete_blocked_for_non_wizard` — mr.delete() blocked for recipient
+- `test_message_recipient_hard_delete_allowed_for_wizard` — wizard can hard-delete recipient row
+
+**Note on `AccessError` constructor:** `AccessError(caller, access_str, subject)` — the `access_str` must be a value from `DEFAULT_PERMISSIONS` (e.g., `"write"`). "modify" and "delete" are not valid permission names and will cause a `TypeError`.
+
+**Total:** 20 passes, 55 holes sealed, 1114 tests (3 skipped).
+
+---
+
 ## Known Gaps (Summary)
 
 See [known-gaps.md](known-gaps.md) for full details.
