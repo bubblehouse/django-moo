@@ -1,3 +1,18 @@
+## [0.95.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.94.8...v0.95.0) (2026-04-10)
+
+### Features
+
+* add agentmux restart <name> for single-agent restart by name ([0bb76f0](https://gitlab.com/bubblehouse/django-moo/commit/0bb76f081f2f4eb31ef097b9bba0fa8bf30f48cc))
+* add compass to look output, agent fixes, tests ([3d507e5](https://gitlab.com/bubblehouse/django-moo/commit/3d507e5f1350fcf1eaae6cc4db3307a071db5e47))
+* add The Agency room as agent home base in default bootstrap ([48a650c](https://gitlab.com/bubblehouse/django-moo/commit/48a650cc4bd59c1a03ff22cc07e774243d47e1c7))
+
+### Bug Fixes
+
+* add teleport-to syntax, look-at global lookup, huh2 cardinal aliases, coerce tool args to str ([1ebc238](https://gitlab.com/bubblehouse/django-moo/commit/1ebc2382c9383e6dea5a90878c02e4229610dd92))
+* bridge session settings across SSH/Celery process boundary via Django cache ([8fcae9c](https://gitlab.com/bubblehouse/django-moo/commit/8fcae9c2be21c755df21f3e1384066072f3a4a05))
+* examine verb crash on aliased objects, add test coverage ([36a1b1b](https://gitlab.com/bubblehouse/django-moo/commit/36a1b1bd854a92f47895bd474c6e838ddc1b9b97))
+* rename _CARDINAL_ALIASES (sandbox-blocked), update look tests for compass output format ([0f7a679](https://gitlab.com/bubblehouse/django-moo/commit/0f7a67922e4f423586bcded9cb0f1523c37e2fcb))
+
 ## [0.94.8](https://gitlab.com/bubblehouse/django-moo/compare/v0.94.7...v0.94.8) (2026-04-09)
 
 ### Bug Fixes
