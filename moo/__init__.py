@@ -9,7 +9,7 @@ from .celery import app as celery_app
 
 __all__ = ("celery_app", "get_version")
 
-__version__ = "0.97.0"
+__version__ = "0.98.0"
 
 
 def get_version():
