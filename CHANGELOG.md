@@ -1,3 +1,14 @@
+## [0.97.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.96.0...v0.97.0) (2026-04-10)
+
+### Features
+
+* **bootstrap:** add get_or_create_object, load_verb_source, and moo_init --sync support ([f064864](https://gitlab.com/bubblehouse/django-moo/commit/f0648644bc4c87de3d2157914aedc4f9838aaad2))
+* **mail:** add Message and MessageRecipient models with permission guards ([28ebff9](https://gitlab.com/bubblehouse/django-moo/commit/28ebff9f1defa4b759a993ee0327dda77f91f114))
+
+### Bug Fixes
+
+* **agent:** strip endoftext token leakage from LM Studio responses ([9e933a2](https://gitlab.com/bubblehouse/django-moo/commit/9e933a2831a4bdc172759adab0f51b8f6f5e535c))
+
 ## [0.96.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.95.0...v0.96.0) (2026-04-10)
 
 ### Features
