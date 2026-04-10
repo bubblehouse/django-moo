@@ -68,14 +68,19 @@ WIZARD_ALLOWED_MODULES = (
 )
 
 ALLOWED_BUILTINS = (
+    "all",
+    "any",
     "dict",
     "enumerate",
     "getattr",
     "hasattr",
     "list",
+    "max",
+    "min",
     "PermissionError",
     "set",
     "sorted",
+    "sum",
 )
 
 # Here are all our supported prepositions
