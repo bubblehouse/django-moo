@@ -1,3 +1,15 @@
+## [0.99.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.98.0...v0.99.0) (2026-04-10)
+
+### Features
+
+* **mail:** paginate [@mail](https://gitlab.com/mail) listing at 10 per page with 80-char fixed-width table ([c378bb9](https://gitlab.com/bubblehouse/django-moo/commit/c378bb972a51a143586f3faa7e067a7bb1e1bcd3))
+* **management:** add moo_createuser command to create user and avatar in one step ([f75d047](https://gitlab.com/bubblehouse/django-moo/commit/f75d047dccac0c2c9fa0f0fc8cf93a90e0961300))
+* **sandbox:** add max, min, sum, any, all to ALLOWED_BUILTINS ([74daec7](https://gitlab.com/bubblehouse/django-moo/commit/74daec7bd3a43ad3ccb51be39cfc86f4227c650e))
+
+### Bug Fixes
+
+* **mail:** use obj.title() instead of str() in status messages and editor titles ([263b0bb](https://gitlab.com/bubblehouse/django-moo/commit/263b0bb716e15c0fa1b6223fb81f936ebb8027f0))
+
 ## [0.98.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.97.0...v0.98.0) (2026-04-10)
 
 ### Features
