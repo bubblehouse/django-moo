@@ -1,3 +1,24 @@
+## [0.100.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.99.0...v0.100.0) (2026-04-11)
+
+### Features
+
+* add configurable wrap_column player property with auto terminal-width detection ([5a6cfa8](https://gitlab.com/bubblehouse/django-moo/commit/5a6cfa8dfe11f80968f88161e04ce4304383813d))
+* **agent:** add MOO_TOKEN_CHAIN env override, dynamic agentmux layout, token chain auto-relay ([9ca847e](https://gitlab.com/bubblehouse/django-moo/commit/9ca847e0ad7b47728d0c7f547f882a1264a7843e))
+* **agent:** add token chain auto-relay, dynamic agentmux layout, MOO_TOKEN_CHAIN env override ([0b0685b](https://gitlab.com/bubblehouse/django-moo/commit/0b0685bc56bded18d5f9eefe8ea62312657962e3))
+* **agent:** parse [Mail] inbox lines on token receipt, add send_report tool ([85b598c](https://gitlab.com/bubblehouse/django-moo/commit/85b598ca710d37fbf8eb4ad86c65970390bd36b0))
+* **agents:** add inspectors, neighbours, wanderer agent groups ([15c8fc4](https://gitlab.com/bubblehouse/django-moo/commit/15c8fc49cfef8ba179c66b709cad3b2f15128a4b))
+* **bootstrap:** add $bulletin_board and $book classes, Dispatch Board and Survey Book in The Agency ([f4cc0fa](https://gitlab.com/bubblehouse/django-moo/commit/f4cc0fab4695e80a4e3e6d4a87d0f265a2d855d7))
+* **bootstrap:** add inspector/neighbour/wanderer agent accounts and The Neighborhood room ([dc725a2](https://gitlab.com/bubblehouse/django-moo/commit/dc725a23389b9e44aa0385bb4d204e6e6d422c28))
+* **verbs:** add $bulletin_board and $book verb classes, check_inbox verb ([5dc0587](https://gitlab.com/bubblehouse/django-moo/commit/5dc05874558cf8d4432d5c1d2dd6c9561f7d6d82))
+
+### Bug Fixes
+
+* **agents:** restore LM Studio settings, fix Harbinger SOUL, improve alias guidance ([f8aaf1e](https://gitlab.com/bubblehouse/django-moo/commit/f8aaf1e6e338653d37b927fcf5d86170d2473298))
+* **agents:** switch to claude-sonnet-4-6, cap harbinger NPC spawn rate to 10% ([3119f52](https://gitlab.com/bubblehouse/django-moo/commit/3119f5211bc3196be3bc4e38417dacc3f634285f))
+* **tests:** update locked container assertion and add missing _FakeSSHConfig to brain tests ([0c60961](https://gitlab.com/bubblehouse/django-moo/commit/0c6096105b9225279e7a1863feea9b046c2f6751))
+* **verbs:** fix container/note lock verbs, opacity, take handler ([0e7c8fe](https://gitlab.com/bubblehouse/django-moo/commit/0e7c8fefc060cd07343c98f14ff3feea18d6d642))
+* **verbs:** fix set_opaque property name, opacity import, open locked message, listgag tell output ([9f41cc6](https://gitlab.com/bubblehouse/django-moo/commit/9f41cc62a5f9707952d018d34d77bbe163e7cb38))
+
 ## [0.99.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.98.0...v0.99.0) (2026-04-10)
 
 ### Features
