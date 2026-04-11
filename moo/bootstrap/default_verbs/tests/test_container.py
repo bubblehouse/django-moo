@@ -283,7 +283,7 @@ def test_unlock_for_open(t_init: Object, t_wizard: Object):
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_open_locked_container_without_key(t_init: Object, t_wizard: Object):
-    """Opening a locked container when the player does not hold the key is silently blocked."""
+    """Opening a locked container when the player does not hold the key is blocked with a message."""
     printed = []
 
     def _writer(msg):
@@ -297,7 +297,7 @@ def test_open_locked_container_without_key(t_init: Object, t_wizard: Object):
         parse.interpret(ctx, "open wooden box")
         box.refresh_from_db()
     assert not box.is_open()
-    assert not printed
+    assert printed == ["wooden box is locked."]
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
