@@ -2,7 +2,20 @@
 # Grant derive to everyone on all standard system classes so any player can
 # create instances via @create without needing wizard privileges.
 derive_perm = Permission.objects.get(name="derive")
-for _cls in [root, thing, rooms, exits, player, programmers, furniture, containers, notes, letters]:
+for _cls in [
+    root,
+    thing,
+    rooms,
+    exits,
+    player,
+    programmers,
+    furniture,
+    containers,
+    notes,
+    letters,
+    bulletin_board,
+    book,
+]:
     Access.objects.get_or_create(
         object=_cls,
         permission=derive_perm,
