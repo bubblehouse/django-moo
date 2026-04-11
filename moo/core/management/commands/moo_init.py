@@ -35,13 +35,13 @@ class Command(BaseCommand):
             if sync:
                 try:
                     Repository.objects.get(slug=bootstrap)
-                except Repository.DoesNotExist:
+                except Repository.DoesNotExist as exc:
                     raise RuntimeError(
                         f"Dataset '{bootstrap}' has not been initialized. Run without --sync first."
-                    )
+                    ) from exc
                 if bootstrap not in builtin_templates:
                     raise NotImplementedError(bootstrap)
-                ref = importlib.resources.files("moo.bootstrap") / f"{bootstrap}.py"
+                ref = importlib.resources.files("moo.bootstrap") / bootstrap / "__init__.py"
                 with importlib.resources.as_file(ref) as path:
                     bootstrap_path = path
                 log.info("Syncing bootstrap '%s' against existing database...", bootstrap)
@@ -57,7 +57,7 @@ class Command(BaseCommand):
                         url=settings.DEFAULT_GIT_REPO_URL,
                     )
                 if bootstrap in builtin_templates:
-                    ref = importlib.resources.files("moo.bootstrap") / f"{bootstrap}.py"
+                    ref = importlib.resources.files("moo.bootstrap") / bootstrap / "__init__.py"
                     with importlib.resources.as_file(ref) as path:
                         bootstrap_path = path
                 else:
