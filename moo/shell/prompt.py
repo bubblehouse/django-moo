@@ -60,6 +60,7 @@ def _make_key_bindings(automation: bool = False) -> KeyBindings:
 
 async def embed(
     user: models.User,
+    site=None,
     automation: bool = False,
 ) -> None:
     """
@@ -69,9 +70,13 @@ async def embed(
     coroutines concurrently until either exits.
 
     :param user: the authenticated Django user whose avatar will be the active player
+    :param site: the Django Site for this connection (used to scope universe context)
     :param automation: if True, disables interactive shortcuts (e.g. ``"`` → say)
     """
-    repl = MooPrompt(user, automation=automation)
+    from moo.core.code import ContextManager
+    if site is not None:
+        ContextManager.set_site(site)
+    repl = MooPrompt(user, site=site, automation=automation)
     await asyncio.wait([asyncio.ensure_future(f()) for f in (repl.process_commands, repl.process_messages)])
 
 
@@ -98,14 +103,16 @@ class MooPrompt:
         }
     )
 
-    def __init__(self, user, automation: bool = False):
+    def __init__(self, user, site=None, automation: bool = False):
         """
         Initialize the prompt session for the given Django user.
 
         :param user: the authenticated Django user whose avatar will be the active player
+        :param site: the Django Site for this connection
         :param automation: if True, disables interactive shortcuts
         """
         self.user = user
+        self.site = site
         self.automation = automation
         self.is_exiting = False
         if automation:
