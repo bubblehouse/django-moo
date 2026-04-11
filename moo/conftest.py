@@ -49,7 +49,10 @@ def t_init(request):
     name = request.param if hasattr(request, "param") else "test"
     log.debug(f"t_init: {name}")
     Repository.objects.create(slug=name, prefix=f"moo/bootstrap/{name}_verbs", url=settings.DEFAULT_GIT_REPO_URL)
-    ref = importlib.resources.files("moo.bootstrap") / f"{name}.py"
+    pkg = importlib.resources.files("moo.bootstrap")
+    pkg_init = pkg / name / "__init__.py"
+    pkg_flat = pkg / f"{name}.py"
+    ref = pkg_init if (pkg / name).is_dir() else pkg_flat
     with importlib.resources.as_file(ref) as path:
         load_python(path)
     yield Object.objects.get(id=1)
