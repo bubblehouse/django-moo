@@ -177,6 +177,15 @@ with code.ContextManager(wizard, log.info):
     )
     sys.set_property("agency", agency)
 
+    neighborhood, _ = bootstrap.get_or_create_object("The Neighborhood", unique_name=True, parents=[rooms])
+    neighborhood.set_property(
+        "description",
+        """A quiet residential street corner, pleasant enough in a vague way.
+    A couple of wrought-iron garden chairs sit near a low stone wall.
+    The kind of place where nothing happens, loudly.""",
+    )
+    sys.set_property("neighborhood", neighborhood)
+
     if wizard.location != lab:
         wizard.location = lab
         wizard.save()
@@ -280,8 +289,89 @@ with code.ContextManager(wizard, log.info):
 
     # Seed mail: Cliff opens with a dismissive two-word note so Newman has something to react to
     from moo.sdk.mail import send_message as _send_message
+
     if not cliff_obj.sent_messages.exists():
         _send_message(cliff_obj, [newman_obj], "Hello, Newman.", "Hello, Newman.")
+
+    # The Inspectors — autonomous verb-testing agents (token chain via Foreman)
+    # Quartermaster ($player): exercises container open/close/take/put/lock mechanics
+    quartermaster_obj, _ = bootstrap.get_or_create_object("Quartermaster", unique_name=True, parents=[player])
+    quartermaster_obj.owner = quartermaster_obj
+    quartermaster_obj.set_property("home", agency)
+    quartermaster_obj.save()
+    quartermaster_user, quartermaster_created = User.objects.get_or_create(username="quartermaster")
+    if quartermaster_created:
+        quartermaster_user.set_password("Xp3nQ8vLmT2k")
+        quartermaster_user.save()
+    Player.objects.get_or_create(user=quartermaster_user, defaults=dict(avatar=quartermaster_obj))
+
+    # Warden ($player): exercises exit locking, @lock/@unlock, key-based traversal
+    warden_obj, _ = bootstrap.get_or_create_object("Warden", unique_name=True, parents=[player])
+    warden_obj.owner = warden_obj
+    warden_obj.set_property("home", agency)
+    warden_obj.save()
+    warden_user, warden_created = User.objects.get_or_create(username="warden")
+    if warden_created:
+        warden_user.set_password("Bz6wR4hNsY9j")
+        warden_user.save()
+    Player.objects.get_or_create(user=warden_user, defaults=dict(avatar=warden_obj))
+
+    # Archivist ($player): exercises note/letter create, read, lock, erase, burn
+    archivist_obj, _ = bootstrap.get_or_create_object("Archivist", unique_name=True, parents=[player])
+    archivist_obj.owner = archivist_obj
+    archivist_obj.set_property("home", agency)
+    archivist_obj.save()
+    archivist_user, archivist_created = User.objects.get_or_create(username="archivist")
+    if archivist_created:
+        archivist_user.set_password("Wr7mK5pDcF3n")
+        archivist_user.save()
+    Player.objects.get_or_create(user=archivist_user, defaults=dict(avatar=archivist_obj))
+
+    # Tailor ($player): exercises @gender, pronoun substitution, @messages, @check
+    tailor_obj, _ = bootstrap.get_or_create_object("Tailor", unique_name=True, parents=[player])
+    tailor_obj.owner = tailor_obj
+    tailor_obj.set_property("home", agency)
+    tailor_obj.save()
+    tailor_user, tailor_created = User.objects.get_or_create(username="tailor")
+    if tailor_created:
+        tailor_user.set_password("Gv2sM9xJnH6q")
+        tailor_user.save()
+    Player.objects.get_or_create(user=tailor_user, defaults=dict(avatar=tailor_obj))
+
+    # The Neighbours — autonomous social-testing agents (timer-based, run simultaneously)
+    # Gossip ($player): Mrs. Helen Lovejoy; emotes, whispers, exercises social output
+    gossip_obj, _ = bootstrap.get_or_create_object("Gossip", unique_name=True, parents=[player])
+    gossip_obj.owner = gossip_obj
+    gossip_obj.set_property("home", neighborhood)
+    gossip_obj.save()
+    gossip_user, gossip_created = User.objects.get_or_create(username="gossip")
+    if gossip_created:
+        gossip_user.set_password("Lk4tN7wCqX1e")
+        gossip_user.save()
+    Player.objects.get_or_create(user=gossip_user, defaults=dict(avatar=gossip_obj))
+
+    # Prude ($player): Mrs. Agnes Skinner; gag/ungag/paranoid cycles, social filtering
+    prude_obj, _ = bootstrap.get_or_create_object("Prude", unique_name=True, parents=[player])
+    prude_obj.owner = prude_obj
+    prude_obj.set_property("home", neighborhood)
+    prude_obj.save()
+    prude_user, prude_created = User.objects.get_or_create(username="prude")
+    if prude_created:
+        prude_user.set_password("Fy8eP5rTbW3m")
+        prude_user.save()
+    Player.objects.get_or_create(user=prude_user, defaults=dict(avatar=prude_obj))
+
+    # The Wanderer — autonomous world explorer (timer-based, runs indefinitely)
+    # Cartographer ($programmers): surveys rooms, exercises @who/@whereis/@rooms/@audit
+    cartographer_obj, _ = bootstrap.get_or_create_object("Cartographer", unique_name=True, parents=[programmers])
+    cartographer_obj.owner = cartographer_obj
+    cartographer_obj.set_property("home", lab)
+    cartographer_obj.save()
+    cartographer_user, cartographer_created = User.objects.get_or_create(username="cartographer")
+    if cartographer_created:
+        cartographer_user.set_password("Hc9vD2kRsM7p")
+        cartographer_user.save()
+    Player.objects.get_or_create(user=cartographer_user, defaults=dict(avatar=cartographer_obj))
 
     # Grant derive to everyone on all standard system classes so any player can
     # create instances via @create without needing wizard privileges.
