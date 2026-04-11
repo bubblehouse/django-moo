@@ -71,7 +71,7 @@ def load_python(python_path):
         exec(compile(src, python_path, "exec"), globals(), dict())  # pylint: disable=exec-used
 
 
-def get_or_create_object(name, unique_name=False, parents=None, owner=None, location=None):
+def get_or_create_object(name, unique_name=False, parents=None, owner=None, location=None, site=None):
     """
     Get or create a named object. Safe to call on an already-bootstrapped database.
 
@@ -85,17 +85,26 @@ def get_or_create_object(name, unique_name=False, parents=None, owner=None, loca
     :type owner: Object | None
     :param location: The location of the object.
     :type location: Object | None
+    :param site: The site to associate the object with.
+    :type site: Site | None
     :return: A ``(object, created)`` tuple.
     :rtype: tuple[Object, bool]
     """
     from moo.core.code import ContextManager
     from moo.core.models import Object
+    from django.contrib.sites.models import Site
+    from django.conf import settings
 
+    if site is None:
+        site = ContextManager.get_site()
+    if site is None:
+        site = Site.objects.get(pk=getattr(settings, "SITE_ID", 1))
     if owner is None:
         owner = ContextManager.get("caller") or ContextManager.get("player")
-    obj, created = Object.objects.get_or_create(
+    obj, created = Object.global_objects.get_or_create(
         name=name,
         unique_name=unique_name,
+        site=site,
         defaults=dict(owner=owner, location=location),
     )
     if created and parents:
@@ -104,7 +113,7 @@ def get_or_create_object(name, unique_name=False, parents=None, owner=None, loca
     return obj, created
 
 
-def initialize_dataset(dataset="default"):
+def initialize_dataset(dataset="default", site=None):
     """
     Initialize a new dataset, or sync an existing one.
 
@@ -117,11 +126,20 @@ def initialize_dataset(dataset="default"):
 
     :param dataset: The name of the dataset to initialize.
     :type dataset: str
+    :param site: The site to associate the dataset with.
+    :type site: Site | None
     :return: The repository object for the dataset.
     :rtype: Repository
     """
+    from django.contrib.sites.models import Site
+    from django.conf import settings as django_settings
+    from moo.core.code import ContextManager
     from moo.core import models
     from moo.core.parse import Pattern
+
+    if site is None:
+        site = Site.objects.get(pk=getattr(django_settings, "SITE_ID", 1))
+    ContextManager.set_site(site)
 
     for name in settings.DEFAULT_PERMISSIONS:
         models.Permission.objects.get_or_create(name=name)
@@ -137,21 +155,21 @@ def initialize_dataset(dataset="default"):
             url=settings.DEFAULT_GIT_REPO_URL,
         ),
     )
-    system, _ = models.Object.objects.get_or_create(name="System Object", unique_name=True)
+    system, _ = models.Object.global_objects.get_or_create(name="System Object", unique_name=True, site=site)
     # LambdaMOO-style sentinel objects — created immediately after the system object
     # so they receive the lowest possible PKs (2, 3, 4).
-    nothing, _ = models.Object.objects.get_or_create(name="nothing", unique_name=True)
-    ambiguous_match, _ = models.Object.objects.get_or_create(name="ambiguous_match", unique_name=True)
-    failed_match, _ = models.Object.objects.get_or_create(name="failed_match", unique_name=True)
+    nothing, _ = models.Object.global_objects.get_or_create(name="nothing", unique_name=True, site=site)
+    ambiguous_match, _ = models.Object.global_objects.get_or_create(name="ambiguous_match", unique_name=True, site=site)
+    failed_match, _ = models.Object.global_objects.get_or_create(name="failed_match", unique_name=True, site=site)
     # Create the first real user
-    wizard, wizard_created = models.Object.objects.get_or_create(name="Wizard", unique_name=True)
+    wizard, wizard_created = models.Object.global_objects.get_or_create(name="Wizard", unique_name=True, site=site)
     if wizard_created:
         wizard.add_verb("accept", code="return True")
     wizard.owner = wizard
     wizard.save()
     # Wizard gets a User and Player record so is_wizard() works
     user, _ = User.objects.get_or_create(username="wizard")
-    Player.objects.get_or_create(user=user, defaults=dict(avatar=wizard, wizard=True))
+    Player.objects.get_or_create(user=user, site=site, defaults=dict(avatar=wizard, wizard=True))
     # Wizard owns the sentinel objects
     nothing.owner = wizard
     nothing.save()
@@ -244,7 +262,7 @@ def load_verbs(repo, verb_package, replace=False):
     """
     from moo.core.models.object import Object
 
-    system = Object.objects.get(pk=1)
+    system = Object.objects.get(unique_name=True, name="System Object")
 
     def _iterate_file_paths(ref):
         if ref.is_dir():
