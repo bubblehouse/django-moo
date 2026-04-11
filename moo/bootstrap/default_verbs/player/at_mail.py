@@ -14,7 +14,7 @@ Syntax:
     @mail undelete <n>  -- restore a deleted message (n is 1-based among deleted)
 """
 
-from moo.sdk import context, get_mailbox, get_message, mark_read, delete_message, undelete_message, count_unread, get_mail_stats, open_paginator
+from moo.sdk import context, get_mailbox, get_message, mark_read, delete_message, undelete_message, count_unread, get_mail_stats, open_paginator, get_wrap_column
 
 player = context.player
 parser = context.parser
@@ -38,7 +38,7 @@ def show_mailbox(page=1):
     start = (page - 1) * PAGE_SIZE
     end = start + PAGE_SIZE
     page_slice = mailbox[start:end]
-    TABLE_WIDTH = 80
+    TABLE_WIDTH = get_wrap_column()
     col_n = 4
     col_from = 18
     col_date = 12  # "Apr 10 20:06"
@@ -61,7 +61,7 @@ def show_mailbox(page=1):
     rows.append("")
     footer = "* = unread   Type '@mail <n>' to read a message."
     if total_pages > 1:
-        footer += f"   '@mail page <n>' for other pages."
+        footer += "   '@mail page <n>' for other pages."
     rows.append(footer)
     open_paginator(player, "\n".join(rows))
 

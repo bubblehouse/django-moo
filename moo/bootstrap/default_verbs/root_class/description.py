@@ -10,7 +10,7 @@ The default implementation of the `look` command (defined on the $room class), p
 verb on the object. `look_self` uses `description` to obtain the text to display.
 """
 
-from moo.sdk import context, NoSuchPropertyError
+from moo.sdk import context, NoSuchPropertyError, get_wrap_column
 
 description = ""
 try:
@@ -19,7 +19,7 @@ except NoSuchPropertyError:
     pass
 
 if description:
-    description = _.string_utils.rewrap(description)
+    description = _.string_utils.rewrap(description, get_wrap_column())
     return f"[deep_sky_blue1]{description}[/deep_sky_blue1]"
 else:
     return "[deep_pink4 bold]Not much to see here.[/deep_pink4 bold]"

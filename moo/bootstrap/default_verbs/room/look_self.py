@@ -10,7 +10,7 @@ to the left of the room name and description, then the list of contents of the r
 The compass grid is suppressed entirely when the session is in quiet mode.
 """
 
-from moo.sdk import get_session_setting
+from moo.sdk import get_session_setting, get_wrap_column
 
 # Direction -> (row, col) in 3x3 grid (0-indexed)
 GRID_POS = {
@@ -65,7 +65,7 @@ if not quiet:
     # Compass is 5 visible chars wide ("↖ ↑ ↗"), plus 2-space separator = 7 prefix chars.
     SEP = "  "
     COMPASS_VISIBLE = 5
-    TEXT_WIDTH = 79 - COMPASS_VISIBLE - len(SEP)  # = 72
+    TEXT_WIDTH = get_wrap_column() - 1 - COMPASS_VISIBLE - len(SEP)
 
     # Build the text block: title on line 1, wrapped description after.
     title_line = f"[color(226)]{this.title()}[/color(226)]"
