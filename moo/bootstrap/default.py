@@ -77,6 +77,7 @@ with code.ContextManager(wizard, log.info):
     player.set_property("paranoid", False)
     player.set_property("responsible", [])
     player.set_property("lines", 10)
+    player.set_property("wrap_column", "auto")
     player.set_property("object_gaglist", [])
     player.set_property("page_absent_msg", "%n is not currently logged in.")
     player.set_property("page_origin_msg", "You sense that %n is looking for you in %x(location).")

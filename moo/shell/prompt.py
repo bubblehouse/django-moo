@@ -148,6 +148,14 @@ class MooPrompt:
             await run_in_terminal(_write_startup)
         try:
             while not self.is_exiting:
+                try:
+                    from django.core.cache import cache as _cache
+                    cols = get_app().output.get_size().columns
+                    if _session_settings.get(self.user.pk, {}).get("terminal_width") != cols:
+                        _session_settings.setdefault(self.user.pk, {})["terminal_width"] = cols
+                        _cache.set(f"moo:session:{self.user.pk}:terminal_width", cols, timeout=86400)
+                except Exception:  # pylint: disable=broad-except
+                    pass
                 message = await self.generate_prompt()
                 prompt_task = asyncio.ensure_future(prompt_session.prompt_async(message, style=self.style))
                 editor_task = asyncio.ensure_future(self.editor_queue.get())
