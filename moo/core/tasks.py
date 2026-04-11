@@ -32,8 +32,9 @@ def parse_command(self, caller_id: int, line: str) -> list[Any]:
     """
     output: list[Any] = []
     task_id = self.request.id
-    caller = Object.objects.get(pk=caller_id)
-    with code.ContextManager(caller, output.append, task_id=task_id) as ctx:
+    caller = Object.global_objects.get(pk=caller_id)
+    site = caller.site if caller.site_id else None
+    with code.ContextManager(caller, output.append, task_id=task_id, site=site) as ctx:
         with transaction.atomic():
             try:
                 log.info(f"{caller}: {line}")
@@ -65,8 +66,9 @@ def parse_code(self, caller_id: int, source: str, runtype: str = "exec") -> tupl
     """
     output: list[Any] = []
     task_id = self.request.id
-    caller = Object.objects.get(pk=caller_id)
-    with code.ContextManager(caller, output.append, task_id=task_id):
+    caller = Object.global_objects.get(pk=caller_id)
+    site = caller.site if caller.site_id else None
+    with code.ContextManager(caller, output.append, task_id=task_id, site=site):
         with transaction.atomic():
             result = code.interpret(source, "__main__", runtype=runtype)
     return output, result
@@ -98,9 +100,9 @@ def invoke_verb(
 
     task_id = self.request.id
     with transaction.atomic():
-        caller = Object.objects.get(pk=caller_id)
-        player = Object.objects.get(pk=player_id) if player_id else None
-        this = Object.objects.get(pk=this_id)
+        caller = Object.global_objects.get(pk=caller_id)
+        player = Object.global_objects.get(pk=player_id) if player_id else None
+        this = Object.global_objects.get(pk=this_id)
         verb_obj = this.get_verb(verb_name)
         if player:
 
@@ -113,7 +115,8 @@ def invoke_verb(
             writer = _player_writer
         else:
             writer = background_log.info
-        with code.ContextManager(caller, writer, task_id=task_id, player=player):
+        site = caller.site if caller.site_id else None
+        with code.ContextManager(caller, writer, task_id=task_id, player=player, site=site):
             result = verb_obj(*args, _bypass_execute_check=True, **kwargs)
             if callback_verb_name and callback_this_id:
                 invoke_verb.delay(result, caller_id=caller_id, this_id=callback_this_id, verb_name=callback_verb_name)
