@@ -111,3 +111,11 @@ notes.set_property("read_key", None)
 
 letters, _ = bootstrap.get_or_create_object("Generic Letter", unique_name=True, parents=[notes])
 sys.set_property("letter", letters)
+
+bulletin_board, _ = bootstrap.get_or_create_object("Generic Bulletin Board", unique_name=True, parents=[thing])
+sys.set_property("bulletin_board", bulletin_board)
+bulletin_board.set_property("entries", [])
+
+book, _ = bootstrap.get_or_create_object("Generic Book", unique_name=True, parents=[thing])
+sys.set_property("book", book)
+book.set_property("notes", {})

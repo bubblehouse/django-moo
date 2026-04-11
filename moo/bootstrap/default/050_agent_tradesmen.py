@@ -65,3 +65,29 @@ if foreman_created:
     foreman_user.set_password("Jk2mR7nXpW5q")
     foreman_user.save()
 Player.objects.get_or_create(user=foreman_user, defaults=dict(avatar=foreman_obj))
+
+# Coordination objects for The Agency — owned by Foreman so it can erase entries
+dispatch_board, _ = bootstrap.get_or_create_object(
+    "The Dispatch Board", unique_name=True, parents=[bulletin_board], location=agency
+)
+dispatch_board.owner = foreman_obj
+dispatch_board.save()
+dispatch_board.set_property(
+    "description",
+    "A large corkboard covered in pushpinned cards. The Tradesmen update it between passes "
+    "to show which rooms still need work and who has claimed what.",
+)
+sys.set_property("dispatch_board", dispatch_board)
+
+survey_book, _ = bootstrap.get_or_create_object("The Survey Book", unique_name=True, parents=[book], location=agency)
+survey_book.owner = foreman_obj
+survey_book.save()
+survey_book.set_property(
+    "description",
+    "A thick cloth-bound notebook resting open on a side table. Each page is headed by a "
+    "room number and filled with notes from each of the Tradesmen who visited that room.",
+)
+sys.set_property("survey_book", survey_book)
+
+# Make the coordination objects obvious in The Agency so players see them on look
+agency.set_property("obvious", [dispatch_board.pk, survey_book.pk])
