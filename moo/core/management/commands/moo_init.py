@@ -29,8 +29,23 @@ class Command(BaseCommand):
             default=False,
             help="Re-run the bootstrap script against an existing database to pick up new objects and verbs.",
         )
+        parser.add_argument(
+            "--hostname",
+            default=None,
+            help="Hostname of the Site to initialize (defaults to Site 1).",
+        )
 
-    def handle(self, *args, bootstrap="default", sync=False, **config):
+    def handle(self, *args, bootstrap="default", sync=False, hostname=None, **config):
+        from django.contrib.sites.models import Site
+        from django.conf import settings as django_settings
+        from moo.core.code import ContextManager
+
+        if hostname:
+            site, _ = Site.objects.get_or_create(domain=hostname, defaults={"name": hostname})
+        else:
+            site = Site.objects.get(pk=getattr(django_settings, "SITE_ID", 1))
+        ContextManager.set_site(site)
+
         with transaction.atomic():
             if sync:
                 try:
