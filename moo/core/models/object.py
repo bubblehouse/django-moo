@@ -5,6 +5,7 @@ The primary Object class
 
 import logging
 
+from django.contrib.sites.models import Site
 from django.db import models, transaction
 from django.db.models import IntegerField, Value
 from django.db.models.expressions import F
@@ -17,6 +18,7 @@ from django_cte import CTE, with_cte
 
 from moo import bootstrap
 from .. import exceptions, invoke, utils
+from ..managers import SiteManager
 from ..exceptions import NoSuchVerbError, NoSuchPropertyError
 from ..code import ContextManager
 from .acl import Access, AccessibleMixin, Permission, _get_permission_id
@@ -128,6 +130,9 @@ def relationship_changed(sender, instance, action, model, signal, reverse, pk_se
 
 
 class Object(models.Model, AccessibleMixin):
+    objects = SiteManager()
+    global_objects = models.Manager()  # Cross-site lookups; use sparingly
+
     #: The canonical name of the object
     name = models.CharField(max_length=255, db_index=True)
     #: If True, this object is the only object with this name
@@ -181,6 +186,17 @@ class Object(models.Model, AccessibleMixin):
     result is ignored; again, it is not an error if `where` does not define a verb named `enterfunc`.
     """
 
+    site = models.ForeignKey(Site, null=True, blank=True, on_delete=models.SET_NULL, db_index=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["name", "site"],
+                condition=Q(unique_name=True),
+                name="unique_name_per_site",
+            )
+        ]
+
     _original_owner = None
     _original_location = None
 
@@ -208,7 +224,10 @@ class Object(models.Model, AccessibleMixin):
         """
         Check if this object is a wizard player avatar.
         """
-        return Player.objects.filter(avatar=self, wizard=True).exists()
+        p = Player.objects.filter(avatar=self).select_related("user").first()
+        if p is None:
+            return False
+        return p.wizard or bool(p.user and p.user.is_superuser)
 
     def is_connected(self) -> bool:
         """
@@ -224,11 +243,7 @@ class Object(models.Model, AccessibleMixin):
         players = Player.objects.filter(avatar=self)
         if not players.exists():
             return True
-        return any(
-            bool(cache.get(f"moo:connected:{p.user.pk}"))
-            for p in players
-            if p.user is not None
-        )
+        return any(bool(cache.get(f"moo:connected:{p.user.pk}")) for p in players if p.user is not None)
 
     def is_named(self, name: str) -> bool:
         """
