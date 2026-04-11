@@ -47,7 +47,7 @@ class SignupForm(forms.Form):
 
     def signup(self, request, user):
         wizard = lookup("Wizard")
-        sys = lookup(1)
+        sys = lookup("System Object")
 
         character_name = self.cleaned_data["character_name"]
         gender = self.cleaned_data["gender"]

@@ -17,7 +17,12 @@ from .context import context
 
 def lookup(x: Union[int, str], return_first: bool = True):
     """
-    Lookup an object globally by PK, name, or alias.
+    Lookup an object within the current site by PK, name, or alias.
+
+    PK lookups are site-scoped: an integer PK that belongs to a different universe
+    raises :class:`.NoSuchObjectError` the same as a missing object would.  Internal
+    system code that genuinely needs cross-site access should use
+    ``Object.global_objects`` directly rather than going through this function.
 
     :param x: lookup value
     :param return_first: when True (default), return the first match or raise
@@ -30,10 +35,14 @@ def lookup(x: Union[int, str], return_first: bool = True):
     from ..core.models import Object
 
     if isinstance(x, int):
-        return Object.objects.get(pk=x)
+        try:
+            return Object.objects.get(pk=x)
+        except Object.DoesNotExist:
+            raise NoSuchObjectError(x)
     elif isinstance(x, str):
         if x.startswith("$"):
-            system = lookup(1)
+            # Get this site's System Object, not always PK=1
+            system = Object.objects.get(unique_name=True, name="System Object")
             return system.get_property(name=x[1:])
         qs = Object.objects.filter(Q(name__iexact=x) | Q(aliases__alias__iexact=x)).distinct()
         if not return_first:
@@ -137,7 +146,7 @@ def create(name, *a, **kw):
     if cache is not None and _SYSTEM_KEY in cache:
         system = cache[_SYSTEM_KEY]
     else:
-        system = Object.objects.get(pk=1)
+        system = Object.objects.get(unique_name=True, name="System Object")
         if cache is not None:
             cache[_SYSTEM_KEY] = system
     default_parents = [system.root_class] if system.has_property("root_class") else []

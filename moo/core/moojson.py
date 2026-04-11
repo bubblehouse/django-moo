@@ -6,26 +6,29 @@ import json
 from datetime import date, datetime, time
 from typing import Any
 
-_UNSET: object = object()
-_nothing_cached: Any = _UNSET
+_nothing_cache: dict = {}  # site_id -> Object
 
 
 def _get_nothing() -> Any:
     """
-    Return the $nothing sentinel object, or None if the bootstrap hasn't run yet.
-    Uses a module-level cache; call clear_nothing_cache() in test teardown if needed.
+    Return the $nothing sentinel object for the current site.
+    Uses a per-site cache; call clear_nothing_cache() in test teardown.
     """
-    global _nothing_cached
-    if _nothing_cached is _UNSET:
+    from .code import ContextManager
+    from django.conf import settings
+
+    site = ContextManager.get_site()
+    site_id = site.pk if site is not None else getattr(settings, "SITE_ID", 1)
+
+    if site_id not in _nothing_cache:
         from .models.object import Object
-        _nothing_cached = Object.objects.filter(name="nothing").first()
-    return _nothing_cached
+        _nothing_cache[site_id] = Object.global_objects.filter(name="nothing", site_id=site_id).first()
+    return _nothing_cache[site_id]
 
 
 def clear_nothing_cache() -> None:
     """Reset the $nothing object cache (call between tests that reset the DB)."""
-    global _nothing_cached
-    _nothing_cached = _UNSET
+    _nothing_cache.clear()
 
 
 def loads(j):
@@ -46,7 +49,12 @@ def loads(j):
         if len(key) >= 2 and key[1] == "#":
             if key[0] == "o":
                 try:
-                    return Object.objects.get(pk=int(key[2:]))
+                    obj = Object.global_objects.get(pk=int(key[2:]))
+                    # If the object belongs to a different universe, treat as nothing
+                    nothing = _get_nothing()
+                    if nothing is not None and obj.site_id != nothing.site_id:
+                        return nothing
+                    return obj
                 except Object.DoesNotExist:
                     return _get_nothing()
             elif key[0] == "v":

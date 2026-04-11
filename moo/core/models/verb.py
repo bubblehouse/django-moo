@@ -112,7 +112,7 @@ class Verb(models.Model, AccessibleMixin):
             raise RuntimeError("Cannot reload a verb without an associated repo and filename.")
         import pathlib
 
-        bootstrap.load_verb_source(pathlib.Path(self.filename), lookup(1), self.repo, replace=True)
+        bootstrap.load_verb_source(pathlib.Path(self.filename), lookup("System Object"), self.repo, replace=True)
 
     def is_bound(self):
         return self._invoked_object is not None and self._invoked_name is not None
@@ -182,7 +182,7 @@ class Verb(models.Model, AccessibleMixin):
         if _cache is not None and _system_key in _cache:
             system = _cache[_system_key]
         else:
-            system = lookup(1)
+            system = lookup("System Object")
             if _cache is not None:
                 _cache[_system_key] = system
         active = ContextManager.is_active()
