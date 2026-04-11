@@ -20,7 +20,13 @@ if args:
     name = obj.title()
 else:
     name = context.parser.get_dobj_str()
-    obj = this.find(name).first()
+    # Try resolving by object ID first (handles `take #N from container`),
+    # then fall back to name-based search within the container.
+    try:
+        obj = context.parser.get_dobj()
+        name = obj.title()
+    except Exception:  # pylint: disable=broad-exception-caught
+        obj = this.find(name).first()
 
 if not this.is_open():
     print(f"{this.title()} is closed.")

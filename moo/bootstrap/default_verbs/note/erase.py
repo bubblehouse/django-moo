@@ -10,3 +10,4 @@ from moo.sdk import context
 
 if context.player.owns(this):
     this.set_property("text", "")
+    print(f"{this.name} has been erased.")

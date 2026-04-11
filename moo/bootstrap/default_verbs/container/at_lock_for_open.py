@@ -10,4 +10,5 @@ the `object` is the player trying to open the container. The container will rema
 from moo.sdk import context
 
 keyexp = args[0] if args else context.parser.get_pobj_str("with")
-this.set_property("open_key", _.lock_utils.parse_keyexp(keyexp.strip("\"'")))
+this.set_property("open_key", _.lock_utils.parse_keyexp(keyexp.strip("'").strip('"')))
+print(f"{this.name} is now locked for opening.")
