@@ -20,6 +20,8 @@ The syntax for ``@opacity`` is:
 where '#' is either 0, 1 or 2.
 """
 
+from moo.sdk import context
+
 opacity = args[0] if args else context.parser.get_pobj_str("is")
 if opacity not in ("0", "1", "2"):
     raise ValueError("Opacity must be 0, 1 or 2.")
