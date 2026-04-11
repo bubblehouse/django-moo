@@ -15,3 +15,5 @@ if this.is_open():
 elif this.is_openable_by(context.player):
     this.set_opened(True)
     print("You open the container.")
+else:
+    print(f"{this.name} is locked.")

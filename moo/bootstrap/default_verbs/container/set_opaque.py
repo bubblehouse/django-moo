@@ -6,8 +6,6 @@
 Called by ``@opacity``. It sets the property opaque to be either 0, 1 or 2.
 """
 
-from moo.sdk import context
-
 opaque = args[0]
 
-this.set_property("opened", opened)
+this.set_property("opaque", opaque)

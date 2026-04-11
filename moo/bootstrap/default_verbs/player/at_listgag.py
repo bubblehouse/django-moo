@@ -16,23 +16,41 @@ TODO: invoked the command is listed in anyone else's gag list. If this is the ca
 TODO: gagging is printed.
 """
 
-from moo.sdk import context
+from moo.sdk import context, NoSuchPropertyError
 
 player = context.player
 
-if not context.parser:
-    print("Gagged players:")
-    if player.gaglist:
-        for p in player.gaglist:
-            print(f"  {p.name}")
-    else:
-        print("  None")
+try:
+    gaglist = player.gaglist
+except NoSuchPropertyError:
+    gaglist = []
 
+try:
+    object_gaglist = player.object_gaglist
+except NoSuchPropertyError:
+    object_gaglist = []
+
+if not context.parser:
+    # Called directly (verb-to-verb or test) — print and return structured data
+    print("Gagged players:")
+    for p in gaglist:
+        print(f"  {p.name}")
+    if not gaglist:
+        print("  None")
     print("Gagged objects:")
-    if player.object_gaglist:
-        for o in player.object_gaglist:
-            print(f"  {o.name}")
-    else:
+    for o in object_gaglist:
+        print(f"  {o.name}")
+    if not object_gaglist:
         print("  None")
 else:
-    return {"gagged_players": player.gaglist, "gagged_objects": player.object_gaglist}
+    # Called as a player shell command — use tell() for output visible in the response window
+    player.tell("Gagged players:")
+    for p in gaglist:
+        player.tell(f"  {p.name}")
+    if not gaglist:
+        player.tell("  None")
+    player.tell("Gagged objects:")
+    for o in object_gaglist:
+        player.tell(f"  {o.name}")
+    if not object_gaglist:
+        player.tell("  None")
