@@ -7,3 +7,4 @@ Remove the lock set by @lock_for_open. It can only be run by the owner of the co
 """
 
 this.set_property("open_key", None)
+print(f"Lock removed from {this.name}.")

@@ -26,3 +26,4 @@ opacity = args[0] if args else context.parser.get_pobj_str("is")
 if opacity not in ("0", "1", "2"):
     raise ValueError("Opacity must be 0, 1 or 2.")
 this.set_opaque(int(opacity))
+print(f"Opacity of {this.name} set to {opacity}.")

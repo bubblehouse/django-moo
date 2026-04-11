@@ -7,3 +7,4 @@ Remove the lock set by @lock_for_read. It can only be run by the owner of the no
 """
 
 this.set_property("read_key", None)
+print(f"Lock removed from {this.name}.")
