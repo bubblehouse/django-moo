@@ -297,6 +297,7 @@ _CONTEXT_VARS: dict[str, contextvars.ContextVar] = {
     "perm_cache": contextvars.ContextVar("perm_cache", default=None),
     "verb_lookup_cache": contextvars.ContextVar("verb_lookup_cache", default=None),
     "prop_lookup_cache": contextvars.ContextVar("prop_lookup_cache", default=None),
+    "site": contextvars.ContextVar("site", default=None),
 }
 
 
@@ -331,6 +332,14 @@ class ContextManager:
         if name in _CONTEXT_VARS:
             return _CONTEXT_VARS[name].get()
         raise NotImplementedError(f"Unknown ContextManager variable: {name}")
+
+    @classmethod
+    def get_site(cls):
+        return _CONTEXT_VARS["site"].get()
+
+    @classmethod
+    def set_site(cls, site):
+        _CONTEXT_VARS["site"].set(site)
 
     @classmethod
     def get_perm_cache(cls) -> dict | None:
@@ -375,7 +384,15 @@ class ContextManager:
         _CONTEXT_VARS["caller_stack"].set(caller_stack)
         _CONTEXT_VARS["caller"].set(frame["previous_caller"])
 
-    def __init__(self, caller: Any, writer: Any, task_id: Any = None, player: Any = None, connection: Any = None) -> None:
+    def __init__(
+        self,
+        caller: Any,
+        writer: Any,
+        task_id: Any = None,
+        player: Any = None,
+        connection: Any = None,
+        site: Any = None,
+    ) -> None:
         self._tokens: dict = {}
         self._initial_values: dict = {
             "caller": caller,
@@ -393,6 +410,7 @@ class ContextManager:
             "perm_cache": {},
             "verb_lookup_cache": {},
             "prop_lookup_cache": {},
+            "site": site,
         }
 
     def set_parser(self, parser):
