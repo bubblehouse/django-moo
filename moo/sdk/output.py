@@ -149,6 +149,31 @@ def set_session_setting(key, value):
     _publish_to_player(player, {"event": "session_setting", "key": key, "value": value})
 
 
+def get_wrap_column():
+    """
+    Return the effective wrap column for the current player.
+
+    Reads the player's ``wrap_column`` property. If it is ``"auto"`` (or the
+    property is not set), returns the ``terminal_width`` session setting,
+    falling back to 80 if the terminal width is not known.
+    """
+    from ..core.exceptions import NoSuchPropertyError
+
+    player = context.player
+    wrap = "auto"
+    if player:
+        try:
+            wrap = player.get_property("wrap_column")
+        except NoSuchPropertyError:
+            pass
+    if wrap == "auto":
+        return get_session_setting("terminal_width", 80)
+    try:
+        return int(wrap)
+    except (ValueError, TypeError):
+        return 80
+
+
 def boot_player(obj):
     """
 

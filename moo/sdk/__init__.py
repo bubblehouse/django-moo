@@ -20,6 +20,7 @@ from .output import (
     open_paginator,
     get_session_setting,
     set_session_setting,
+    get_wrap_column,
     boot_player,
 )
 from .tasks import (
@@ -44,6 +45,16 @@ from .mail import (
 
 # Re-export moojson for verb use
 from ..core import moojson
+from ..core.exceptions import (
+    QuotaError,
+    AmbiguousObjectError,
+    UserError,
+    UsageError,
+    NoSuchObjectError,
+    NoSuchVerbError,
+    NoSuchPropertyError,
+    AccessError,
+)
 
 DIRECTIONS = [
     "north", "northeast", "east", "southeast",
@@ -60,17 +71,6 @@ OPPOSITE_DIRECTIONS = {
     "ne": "sw", "sw": "ne",
     "nw": "se", "se": "nw",
 }
-
-from ..core.exceptions import (
-    QuotaError,
-    AmbiguousObjectError,
-    UserError,
-    UsageError,
-    NoSuchObjectError,
-    NoSuchVerbError,
-    NoSuchPropertyError,
-    AccessError,
-)
 
 __all__ = [
     "lookup",
