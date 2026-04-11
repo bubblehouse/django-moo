@@ -62,7 +62,7 @@ def interpret(ctx, line):
     # Give database code a chance to handle the command first (LambdaMOO $do_command).
     # If the system object defines a do_command verb and it returns a truthy value,
     # the command is considered fully handled and normal dispatch is skipped.
-    system = lookup(1)
+    system = Object.objects.get(unique_name=True, name="System Object")
     if system.has_verb("do_command"):
         do_command = system.get_verb("do_command")
         result = do_command(*parser.words)

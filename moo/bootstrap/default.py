@@ -16,7 +16,7 @@ repo = bootstrap.initialize_dataset("default")
 wizard = lookup("Wizard")
 
 with code.ContextManager(wizard, log.info):
-    sys = lookup(1)
+    sys = lookup("System Object")
 
     # LambdaMOO special sentinel references (mirrors $nothing, $ambiguous_match, $failed_match)
     sys.set_property("nothing", lookup("nothing"))
