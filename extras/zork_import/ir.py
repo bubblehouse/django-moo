@@ -52,7 +52,16 @@ class ZilObject:
 @dataclass
 class ZilRoutine:
     name: str
-    raw_body: str  # raw ZIL source text for stub comments
+    params: list[str]  # positional parameters (before "AUX")
+    aux_vars: list[str]  # local variables (after "AUX")
+    body: list  # full parsed AST: list of body forms (form[2:])
+    raw_zil: str  # repr(form) snapshot for inline comments
+
+
+@dataclass
+class ZilTable:
+    name: str  # global variable atom (e.g. "HERO-MELEE")
+    values: list  # list of scalar entries extracted from TABLE/LTABLE
 
 
 # Directions that are treated as exits in ROOM definitions
@@ -117,4 +126,71 @@ ROOM_FLAG_PROPERTIES: dict[str, tuple[str, object]] = {
     "RLANDBIT": ("outdoor", True),
     "SACREDBIT": ("sacred", True),
     "MAZEBIT": ("maze", True),
+}
+
+# ZIL verb atom → zork1 command verb aliases
+# Used by translator for <VERB?> checks and by command verb shebang generation.
+ZIL_VERBS: dict[str, list[str]] = {
+    "TAKE": ["take", "get", "pick"],
+    "DROP": ["drop"],
+    "THROW": ["throw", "toss"],
+    "PUT": ["put", "place", "insert"],
+    "GIVE": ["give"],
+    "OPEN": ["open"],
+    "CLOSE": ["close", "shut"],
+    "LOCK": ["lock"],
+    "UNLOCK": ["unlock"],
+    "EXAMINE": ["examine", "x", "describe", "what"],
+    "READ": ["read"],
+    "LOOK": ["look", "l"],
+    "ATTACK": ["attack", "kill", "hit", "fight", "stab", "cut", "slice"],
+    "WALK": ["go", "walk", "move"],
+    "ENTER": ["enter"],
+    "EXIT-ROOM": ["exit", "leave"],
+    "INVENTORY": ["inventory", "i"],
+    "SCORE": ["score"],
+    "QUIT": ["quit", "q"],
+    "RESTART": ["restart"],
+    "AGAIN": ["again", "g"],
+    "WAIT": ["wait", "z"],
+    "DIAGNOSE": ["diagnose"],
+    "VERBOSE": ["verbose"],
+    "BRIEF": ["brief"],
+    "SUPER-BRIEF": ["superbrief"],
+    "TURN": ["turn", "rotate"],
+    "PUSH": ["push", "press", "move"],
+    "PULL": ["pull"],
+    "CLIMB": ["climb", "scale"],
+    "SWIM": ["swim"],
+    "PRAY": ["pray"],
+    "EAT": ["eat"],
+    "DRINK": ["drink"],
+    "BURN": ["burn", "light"],
+    "TIE": ["tie", "attach", "fasten"],
+    "WAVE": ["wave"],
+    "RING": ["ring"],
+    "FILL": ["fill"],
+    "POUR": ["pour"],
+    "DIG": ["dig"],
+    "BOARD": ["board"],
+    "DISEMBARK": ["disembark", "unboard"],
+    "MUNG": ["mung", "destroy", "break", "smash", "crack"],
+    "HELLO": ["hello", "hi"],
+    "YELL": ["yell", "shout"],
+    "SLEEP": ["sleep"],
+    "WAKE-UP": ["wake"],
+    "FIND": ["find", "where"],
+    "TAKE-OFF": ["take-off", "remove", "doff"],
+    "WEAR": ["wear", "don", "put-on"],
+    "BRUSH": ["brush", "clean"],
+    "LOWER": ["lower"],
+    "RAISE": ["raise"],
+    "WIND": ["wind"],
+    "COUNT": ["count"],
+    "SQUEEZE": ["squeeze"],
+    "SMELL": ["smell", "sniff"],
+    "LISTEN": ["listen", "hear"],
+    "TOUCH": ["touch", "feel"],
+    "TASTE": ["taste"],
+    "KNOCK": ["knock"],
 }

@@ -52,19 +52,20 @@ def main(argv: list[str] | None = None) -> int:
     for path in args.zil_files:
         log.info("Parsing %s ...", path)
         try:
-            nodes = parse_file(path)
+            nodes, _source = parse_file(path)
             all_nodes.extend(nodes)
             log.info("  → %d top-level forms", len(nodes))
-        except Exception as exc:
+        except (OSError, SyntaxError, ValueError) as exc:
             log.error("Failed to parse %s: %s", path, exc)
             return 1
 
     # Extract IR
     log.info("Extracting world model ...")
-    rooms, objects, routines = extract_all(all_nodes)
+    rooms, objects, routines, tables = extract_all(all_nodes)
     log.info("  Rooms:    %d", len(rooms))
     log.info("  Objects:  %d", len(objects))
     log.info("  Routines: %d", len(routines))
+    log.info("  Tables:   %d", len(tables))
 
     if not rooms and not objects:
         log.error("No rooms or objects found — check your input files.")
@@ -73,7 +74,9 @@ def main(argv: list[str] | None = None) -> int:
     # Generate bootstrap
     output_dir = Path(args.output)
     log.info("Generating bootstrap at %s ...", output_dir)
-    generate_all(rooms, objects, routines, output_dir)
+    generate_all(  # pylint: disable=unexpected-keyword-arg
+        rooms, objects, routines, output_dir, tables={name: t.values for name, t in tables.items()}
+    )
 
     return 0
 

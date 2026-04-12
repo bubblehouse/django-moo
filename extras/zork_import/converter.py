@@ -13,6 +13,7 @@ from .ir import (
     ZilObject,
     ZilRoom,
     ZilRoutine,
+    ZilTable,
 )
 
 log = logging.getLogger(__name__)
@@ -249,15 +250,48 @@ def _extract_object(form: list) -> ZilObject:
 
 
 # ---------------------------------------------------------------------------
-# ROUTINE extraction (stubs only)
+# ROUTINE extraction
 # ---------------------------------------------------------------------------
 
 
-def _extract_routine(form: list, source_lines: str) -> ZilRoutine:
+def _extract_routine(form: list) -> ZilRoutine:
+    """
+    Parse a ROUTINE form into a ZilRoutine.
+
+    ZIL header syntax:
+        (ROUTINE name (arg1 arg2 "AUX" local1 local2) body-form1 body-form2 ...)
+    The arg-list is form[2] if it's a group; body starts at form[2] or form[3].
+    """
     name = form[1] if len(form) > 1 else "UNKNOWN"
-    # Capture raw body as best-effort repr of the form
-    raw = repr(form[:4])  # first few elements for context
-    return ZilRoutine(name=name, raw_body=raw)
+
+    params: list[str] = []
+    aux_vars: list[str] = []
+    body_start = 2
+
+    # form[2] may be a tuple (arg-list group) or immediately a body form
+    if len(form) > 2 and isinstance(form[2], tuple):
+        arg_list = form[2]
+        body_start = 3
+        in_aux = False
+        for item in arg_list:
+            if isinstance(item, str) and item.upper() == "AUX":
+                in_aux = True
+            elif in_aux:
+                # AUX vars may have default values as (VAR default) tuples
+                var_name = item[0] if isinstance(item, tuple) else item
+                if isinstance(var_name, str):
+                    aux_vars.append(var_name.upper())
+            else:
+                if isinstance(item, str):
+                    params.append(item.upper())
+                elif isinstance(item, tuple) and item:
+                    # (VAR default) form
+                    params.append(str(item[0]).upper())
+
+    body = list(form[body_start:])
+    raw_zil = repr(form[:6])  # first few elements for inline comment context
+
+    return ZilRoutine(name=name, params=params, aux_vars=aux_vars, body=body, raw_zil=raw_zil)
 
 
 # ---------------------------------------------------------------------------
@@ -265,15 +299,44 @@ def _extract_routine(form: list, source_lines: str) -> ZilRoutine:
 # ---------------------------------------------------------------------------
 
 
-def extract_all(nodes: list) -> tuple[dict[str, ZilRoom], dict[str, ZilObject], dict[str, ZilRoutine]]:
+def _extract_table_values(form: Any) -> list:
     """
-    Walk parsed ZIL AST and extract rooms, objects, and routines.
+    Extract scalar values from a ZIL TABLE or LTABLE form.
 
-    Returns three dicts keyed by ZIL atom name.
+    TABLE/LTABLE entries can be strings, integers, or atom references (,NAME).
+    We extract only the string and integer values for bootstrap storage.
+    """
+    if not isinstance(form, list) or not form:
+        return []
+    head = form[0]
+    if head not in ("TABLE", "LTABLE"):
+        return []
+    values = []
+    for item in form[1:]:
+        if isinstance(item, str) and not item.isupper():
+            # Quoted string value
+            values.append(item)
+        elif isinstance(item, int):
+            values.append(item)
+        elif isinstance(item, tuple) and len(item) == 1 and isinstance(item[0], str):
+            # Atom reference like ,NAME — store as string atom
+            values.append(item[0])
+        # Skip nested TABLE, flags, etc.
+    return values
+
+
+def extract_all(
+    nodes: list,
+) -> tuple[dict[str, ZilRoom], dict[str, ZilObject], dict[str, ZilRoutine], dict[str, ZilTable]]:
+    """
+    Walk parsed ZIL AST and extract rooms, objects, routines, and tables.
+
+    Returns four dicts keyed by ZIL atom name.
     """
     rooms: dict[str, ZilRoom] = {}
     objects: dict[str, ZilObject] = {}
     routines: dict[str, ZilRoutine] = {}
+    tables: dict[str, ZilTable] = {}
 
     for node in nodes:
         if not isinstance(node, list) or not node:
@@ -286,21 +349,33 @@ def extract_all(nodes: list) -> tuple[dict[str, ZilRoom], dict[str, ZilObject], 
             try:
                 room = _extract_room(node)
                 rooms[room.atom] = room
-            except Exception as exc:
+            except (ValueError, KeyError, IndexError, TypeError) as exc:
                 log.warning("Failed to parse ROOM %r: %s", node[1] if len(node) > 1 else "?", exc)
 
         elif head == "OBJECT" and len(node) >= 2:
             try:
                 obj = _extract_object(node)
                 objects[obj.atom] = obj
-            except Exception as exc:
+            except (ValueError, KeyError, IndexError, TypeError) as exc:
                 log.warning("Failed to parse OBJECT %r: %s", node[1] if len(node) > 1 else "?", exc)
 
         elif head == "ROUTINE" and len(node) >= 2:
             try:
-                routine = _extract_routine(node, "")
+                routine = _extract_routine(node)
                 routines[routine.name] = routine
-            except Exception as exc:
+            except (ValueError, KeyError, IndexError, TypeError) as exc:
                 log.warning("Failed to parse ROUTINE %r: %s", node[1] if len(node) > 1 else "?", exc)
 
-    return rooms, objects, routines
+        elif head == "GLOBAL" and len(node) >= 3:
+            # <GLOBAL NAME <TABLE ...>> or <GLOBAL NAME <LTABLE ...>>
+            name = node[1] if isinstance(node[1], str) else None
+            value_form = node[2] if len(node) > 2 else None
+            if name and isinstance(value_form, list) and value_form and value_form[0] in ("TABLE", "LTABLE"):
+                try:
+                    values = _extract_table_values(value_form)
+                    if values:
+                        tables[name] = ZilTable(name=name, values=values)
+                except (ValueError, KeyError, IndexError, TypeError) as exc:
+                    log.warning("Failed to parse GLOBAL TABLE %r: %s", name, exc)
+
+    return rooms, objects, routines, tables

@@ -61,6 +61,7 @@ class Token:
     kind: str
     value: str
     line: int
+    offset: int = 0  # byte offset into source, for raw_zil capture
 
 
 def tokenize(source: str) -> list[Token]:
@@ -72,7 +73,7 @@ def tokenize(source: str) -> list[Token]:
         if kind == "ws":
             line += value.count("\n")
             continue
-        tokens.append(Token(kind=kind, value=value, line=line))
+        tokens.append(Token(kind=kind, value=value, line=line, offset=m.start()))
         line += value.count("\n")
     return tokens
 
@@ -193,8 +194,9 @@ def parse(tokens: list[Token]) -> list[Node]:
     return results
 
 
-def parse_file(path: str) -> list[Node]:
+def parse_file(path: str) -> tuple[list[Node], str]:
+    """Parse a ZIL source file. Returns (nodes, source_text)."""
     with open(path, encoding="utf-8", errors="replace") as f:
         source = f.read()
     tokens = tokenize(source)
-    return parse(tokens)
+    return parse(tokens), source
