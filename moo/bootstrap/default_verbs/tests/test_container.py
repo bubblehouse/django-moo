@@ -174,7 +174,7 @@ def test_take_from_open_container(t_init: Object, t_wizard: Object):
         tobacco = create("tobacco", parents=[system.thing], location=box)
         parse.interpret(ctx, "open wooden box")
         printed.clear()
-        parse.interpret(ctx, "take tobacco from wooden box")
+        parse.interpret(ctx, "get tobacco from wooden box")
         tobacco.refresh_from_db()
         assert tobacco.location == t_wizard
         assert printed == ["You took tobacco from wooden box"]
@@ -192,7 +192,7 @@ def test_take_from_closed_container(t_init: Object, t_wizard: Object):
         system = lookup(1)
         box = setup_container(t_wizard)
         tobacco = create("tobacco", parents=[system.thing], location=box)
-        parse.interpret(ctx, "take tobacco from wooden box")
+        parse.interpret(ctx, "get tobacco from wooden box")
         tobacco.refresh_from_db()
         assert tobacco.location == box
         assert printed == [f"{box.title()} is closed."]
@@ -212,7 +212,7 @@ def test_take_item_not_in_container(t_init: Object, t_wizard: Object):
         _tobacco = create("tobacco", parents=[system.thing], location=t_wizard.location)
         parse.interpret(ctx, "open wooden box")
         printed.clear()
-        parse.interpret(ctx, "take tobacco from wooden box")
+        parse.interpret(ctx, "get tobacco from wooden box")
         assert printed == ["tobacco is not in wooden box."]
 
 
