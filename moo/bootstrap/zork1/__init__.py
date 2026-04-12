@@ -19,10 +19,12 @@ from time import time
 
 from moo import bootstrap
 from moo.core import code, lookup
+from moo.core.models import Object
 
 log = logging.getLogger(__name__)
 _repo = bootstrap.initialize_dataset("zork1")
 wizard = lookup("Wizard")
+_ = Object.objects.get(pk=1)  # System Object
 
 _namespace = {
     "log": log,
@@ -32,6 +34,7 @@ _namespace = {
     "lookup": lookup,
     "wizard": wizard,
     "repo": _repo,
+    "_": _,
 }
 
 _pkg = importlib.resources.files("moo.bootstrap") / "zork1"
@@ -43,5 +46,4 @@ _scripts = sorted(
 with code.ContextManager(wizard, log.info):
     for _script in _scripts:
         exec(compile(_script.read_text(encoding="utf8"), _script.name, "exec"), _namespace)  # pylint: disable=exec-used
-
-bootstrap.load_verbs(_repo, "moo.bootstrap.zork1_verbs", replace=False)
+    bootstrap.load_verbs(_repo, "moo.bootstrap.zork1_verbs", replace=False)
