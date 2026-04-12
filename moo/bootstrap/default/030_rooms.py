@@ -16,6 +16,25 @@ agency.set_property(
 )
 sys.set_property("agency", agency)
 
+# Silent confunc/disfunc — agents don't need connect/disconnect noise from each other.
+agency.add_verb(
+    "confunc",
+    code="""# pylint: disable=return-outside-function,undefined-variable
+# Silent — look_self() is called by $player.confunc; skip the announce_all_but noise.
+""",
+    replace=True,
+)
+agency.add_verb(
+    "disfunc",
+    code="""# pylint: disable=return-outside-function,undefined-variable
+from moo.sdk import context
+home = context.player.get_property("home") or _.player_start
+if context.player.location != home:
+    context.player.moveto(home)
+""",
+    replace=True,
+)
+
 neighborhood, _ = bootstrap.get_or_create_object("The Neighborhood", unique_name=True, parents=[rooms])
 neighborhood.set_property(
     "description",
