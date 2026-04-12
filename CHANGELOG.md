@@ -1,3 +1,17 @@
+## [0.101.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.100.0...v0.101.0) (2026-04-12)
+
+### Features
+
+* **agent:** rename coordination tools to post_board/read_board/write_book/read_book/clear_topic, drop room-list injection ([db7b275](https://gitlab.com/bubblehouse/django-moo/commit/db7b27554664ce1d397d3c324251c6806f2bd033))
+* **bootstrap:** add silent confunc/disfunc to The Agency, move look_self to $player.confunc ([ef32001](https://gitlab.com/bubblehouse/django-moo/commit/ef32001e3feb19be1bb226d7ba21ce58b872de83))
+* **verbs:** add grant_write verb for Warden and Quartermaster and expose exit IDs in [@survey](https://gitlab.com/survey) ([91ac23c](https://gitlab.com/bubblehouse/django-moo/commit/91ac23c194d0e3fce4e17ff6f0d87052573ede3f))
+
+### Bug Fixes
+
+* **tests:** use 'get' verb for container removal assertions ([d6f7bdb](https://gitlab.com/bubblehouse/django-moo/commit/d6f7bdb811021ff8bddbf5626d3fc3a28cb7d0f5))
+* **verbs:** move look_self dispatch from $player.confunc to $room.confunc ([f23c40e](https://gitlab.com/bubblehouse/django-moo/commit/f23c40eea53e1e5aa9effa296c4da6705c28141d))
+* **verbs:** remove drop/take/get aliases from container/thing dispatch to prevent ambiguity ([11716c3](https://gitlab.com/bubblehouse/django-moo/commit/11716c3c803795696a865d29755884d4491e4b96))
+
 ## [0.100.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.99.0...v0.100.0) (2026-04-11)
 
 ### Features
