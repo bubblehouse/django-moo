@@ -5,7 +5,7 @@
 from moo.core import NoSuchPropertyError
 
 # Exits from WEST-OF-HOUSE
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from West of House",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -28,7 +28,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_north_of_house.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from West of House",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -51,7 +51,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_south_of_house.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "ne from West of House",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -74,7 +74,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_north_of_house.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "se from West of House",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -97,7 +97,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_south_of_house.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from West of House",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -120,7 +120,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_forest_1.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from West of House",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -138,7 +138,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_west_of_house.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "sw from West of House",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -162,7 +162,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_stone_barrow.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "in from West of House",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -187,7 +187,7 @@ ents_list.append(_e)
 _r_stone_barrow.set_property("entrances", ents_list)
 
 # Exits from STONE-BARROW
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "ne from Stone Barrow",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -211,7 +211,7 @@ ents_list.append(_e)
 _r_west_of_house.set_property("entrances", ents_list)
 
 # Exits from NORTH-OF-HOUSE
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "sw from North of House",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -234,7 +234,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_west_of_house.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "se from North of House",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -257,7 +257,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_east_of_house.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from North of House",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -280,7 +280,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_west_of_house.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from North of House",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -303,7 +303,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_east_of_house.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from North of House",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -326,7 +326,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_path.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from North of House",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -345,7 +345,7 @@ exits_list.append(_e)
 _r_north_of_house.set_property("exits", exits_list)
 
 # Exits from SOUTH-OF-HOUSE
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from South of House",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -368,7 +368,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_west_of_house.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from South of House",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -391,7 +391,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_east_of_house.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "ne from South of House",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -414,7 +414,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_east_of_house.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "nw from South of House",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -437,7 +437,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_west_of_house.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from South of House",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -460,7 +460,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_forest_3.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from South of House",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -479,7 +479,7 @@ exits_list.append(_e)
 _r_south_of_house.set_property("exits", exits_list)
 
 # Exits from EAST-OF-HOUSE
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Behind House",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -502,7 +502,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_north_of_house.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Behind House",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -525,7 +525,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_south_of_house.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "sw from Behind House",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -548,7 +548,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_south_of_house.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "nw from Behind House",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -571,7 +571,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_north_of_house.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Behind House",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -594,7 +594,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_clearing.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Behind House",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -618,7 +618,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_kitchen.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "in from Behind House",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -643,7 +643,7 @@ ents_list.append(_e)
 _r_kitchen.set_property("entrances", ents_list)
 
 # Exits from FOREST-1
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Forest",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -661,7 +661,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_forest_1.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Forest",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -684,7 +684,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_grating_clearing.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Forest",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -707,7 +707,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_path.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Forest",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -730,7 +730,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_forest_3.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Forest",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -749,7 +749,7 @@ exits_list.append(_e)
 _r_forest_1.set_property("exits", exits_list)
 
 # Exits from FOREST-2
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Forest",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -767,7 +767,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_forest_2.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Forest",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -785,7 +785,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_forest_2.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Forest",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -808,7 +808,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_mountains.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Forest",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -831,7 +831,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_clearing.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Forest",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -855,7 +855,7 @@ ents_list.append(_e)
 _r_path.set_property("entrances", ents_list)
 
 # Exits from MOUNTAINS
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Forest",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -873,7 +873,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_mountains.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Forest",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -896,7 +896,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_forest_2.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Forest",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -914,7 +914,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_mountains.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Forest",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -937,7 +937,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_forest_2.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Forest",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -961,7 +961,7 @@ ents_list.append(_e)
 _r_forest_2.set_property("entrances", ents_list)
 
 # Exits from FOREST-3
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Forest",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -979,7 +979,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_forest_3.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Forest",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1002,7 +1002,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_clearing.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Forest",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1020,7 +1020,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_forest_3.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Forest",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1038,7 +1038,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_forest_3.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Forest",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1061,7 +1061,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_forest_1.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "nw from Forest",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1085,7 +1085,7 @@ ents_list.append(_e)
 _r_south_of_house.set_property("entrances", ents_list)
 
 # Exits from PATH
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Forest Path",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1108,7 +1108,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_up_a_tree.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Forest Path",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1131,7 +1131,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_grating_clearing.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Forest Path",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1154,7 +1154,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_forest_2.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Forest Path",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1177,7 +1177,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_north_of_house.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Forest Path",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1201,7 +1201,7 @@ ents_list.append(_e)
 _r_forest_1.set_property("entrances", ents_list)
 
 # Exits from UP-A-TREE
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Up a Tree",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1224,7 +1224,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_path.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Up a Tree",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1243,7 +1243,7 @@ exits_list.append(_e)
 _r_up_a_tree.set_property("exits", exits_list)
 
 # Exits from GRATING-CLEARING
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Clearing",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1261,7 +1261,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_grating_clearing.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Clearing",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1284,7 +1284,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_forest_2.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Clearing",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1307,7 +1307,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_forest_1.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Clearing",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1330,7 +1330,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_path.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Clearing",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1350,7 +1350,7 @@ exits_list.append(_e)
 _r_grating_clearing.set_property("exits", exits_list)
 
 # Exits from CLEARING
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Clearing",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1368,7 +1368,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_clearing.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Clearing",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1391,7 +1391,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_canyon_view.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Clearing",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1414,7 +1414,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_forest_2.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Clearing",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1437,7 +1437,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_forest_3.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Clearing",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1461,7 +1461,7 @@ ents_list.append(_e)
 _r_east_of_house.set_property("entrances", ents_list)
 
 # Exits from KITCHEN
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Kitchen",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1485,7 +1485,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_east_of_house.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Kitchen",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1508,7 +1508,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_living_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "out from Kitchen",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1532,7 +1532,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_east_of_house.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Kitchen",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1555,7 +1555,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_attic.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Kitchen",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1581,7 +1581,7 @@ ents_list.append(_e)
 _r_studio.set_property("entrances", ents_list)
 
 # Exits from ATTIC
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Attic",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1605,7 +1605,7 @@ ents_list.append(_e)
 _r_kitchen.set_property("entrances", ents_list)
 
 # Exits from LIVING-ROOM
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Living Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1628,7 +1628,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_kitchen.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Living Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1653,7 +1653,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_strange_passage.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Living Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1673,7 +1673,7 @@ exits_list.append(_e)
 _r_living_room.set_property("exits", exits_list)
 
 # Exits from CELLAR
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Cellar",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1696,7 +1696,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_troll_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Cellar",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1719,7 +1719,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_east_of_chasm.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Cellar",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1743,7 +1743,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_living_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Cellar",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1762,7 +1762,7 @@ exits_list.append(_e)
 _r_cellar.set_property("exits", exits_list)
 
 # Exits from TROLL-ROOM
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from The Troll Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1785,7 +1785,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_cellar.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from The Troll Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1810,7 +1810,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_ew_passage.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from The Troll Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1836,7 +1836,7 @@ ents_list.append(_e)
 _r_maze_1.set_property("entrances", ents_list)
 
 # Exits from EAST-OF-CHASM
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from East of Chasm",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1859,7 +1859,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_cellar.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from East of Chasm",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1882,7 +1882,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_gallery.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from East of Chasm",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1901,7 +1901,7 @@ exits_list.append(_e)
 _r_east_of_chasm.set_property("exits", exits_list)
 
 # Exits from GALLERY
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Gallery",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1924,7 +1924,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_east_of_chasm.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Gallery",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1948,7 +1948,7 @@ ents_list.append(_e)
 _r_studio.set_property("entrances", ents_list)
 
 # Exits from STUDIO
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Studio",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1971,7 +1971,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_gallery.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Studio",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -1991,7 +1991,7 @@ exits_list.append(_e)
 _r_studio.set_property("exits", exits_list)
 
 # Exits from MAZE-1
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2014,7 +2014,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_troll_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2037,7 +2037,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_1.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2060,7 +2060,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_2.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2084,7 +2084,7 @@ ents_list.append(_e)
 _r_maze_4.set_property("entrances", ents_list)
 
 # Exits from MAZE-2
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2107,7 +2107,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_1.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2126,7 +2126,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_maze_2.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2150,7 +2150,7 @@ ents_list.append(_e)
 _r_maze_3.set_property("entrances", ents_list)
 
 # Exits from MAZE-3
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2173,7 +2173,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_2.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2196,7 +2196,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_4.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2220,7 +2220,7 @@ ents_list.append(_e)
 _r_maze_5.set_property("entrances", ents_list)
 
 # Exits from MAZE-4
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2243,7 +2243,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_3.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2266,7 +2266,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_1.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2290,7 +2290,7 @@ ents_list.append(_e)
 _r_dead_end_1.set_property("entrances", ents_list)
 
 # Exits from DEAD-END-1
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Dead End",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2314,7 +2314,7 @@ ents_list.append(_e)
 _r_maze_4.set_property("entrances", ents_list)
 
 # Exits from MAZE-5
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2337,7 +2337,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_dead_end_2.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2360,7 +2360,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_3.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "sw from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2384,7 +2384,7 @@ ents_list.append(_e)
 _r_maze_6.set_property("entrances", ents_list)
 
 # Exits from DEAD-END-2
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Dead End",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2408,7 +2408,7 @@ ents_list.append(_e)
 _r_maze_5.set_property("entrances", ents_list)
 
 # Exits from MAZE-6
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2431,7 +2431,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_5.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2454,7 +2454,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_7.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2477,7 +2477,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_6.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2501,7 +2501,7 @@ ents_list.append(_e)
 _r_maze_9.set_property("entrances", ents_list)
 
 # Exits from MAZE-7
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2524,7 +2524,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_14.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2547,7 +2547,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_6.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2566,7 +2566,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_maze_7.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2589,7 +2589,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_8.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2613,7 +2613,7 @@ ents_list.append(_e)
 _r_maze_15.set_property("entrances", ents_list)
 
 # Exits from MAZE-8
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "ne from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2636,7 +2636,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_7.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2659,7 +2659,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_8.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "se from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2683,7 +2683,7 @@ ents_list.append(_e)
 _r_dead_end_3.set_property("entrances", ents_list)
 
 # Exits from DEAD-END-3
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Dead End",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2707,7 +2707,7 @@ ents_list.append(_e)
 _r_maze_8.set_property("entrances", ents_list)
 
 # Exits from MAZE-9
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2730,7 +2730,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_6.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2749,7 +2749,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_maze_9.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2772,7 +2772,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_10.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2795,7 +2795,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_13.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2818,7 +2818,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_12.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "nw from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2842,7 +2842,7 @@ ents_list.append(_e)
 _r_maze_9.set_property("entrances", ents_list)
 
 # Exits from MAZE-10
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2865,7 +2865,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_9.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2888,7 +2888,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_13.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2912,7 +2912,7 @@ ents_list.append(_e)
 _r_maze_11.set_property("entrances", ents_list)
 
 # Exits from MAZE-11
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "ne from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2935,7 +2935,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_grating_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2958,7 +2958,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_10.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "nw from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -2981,7 +2981,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_13.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "sw from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3005,7 +3005,7 @@ ents_list.append(_e)
 _r_maze_12.set_property("entrances", ents_list)
 
 # Exits from GRATING-ROOM
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "sw from Grating Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3028,7 +3028,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_11.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Grating Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3053,7 +3053,7 @@ ents_list.append(_e)
 _r_grating_clearing.set_property("entrances", ents_list)
 
 # Exits from MAZE-12
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3072,7 +3072,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_maze_12.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "sw from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3095,7 +3095,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_11.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3118,7 +3118,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_13.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3141,7 +3141,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_9.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3165,7 +3165,7 @@ ents_list.append(_e)
 _r_dead_end_4.set_property("entrances", ents_list)
 
 # Exits from DEAD-END-4
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Dead End",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3189,7 +3189,7 @@ ents_list.append(_e)
 _r_maze_12.set_property("entrances", ents_list)
 
 # Exits from MAZE-13
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3212,7 +3212,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_9.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3235,7 +3235,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_12.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3258,7 +3258,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_10.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3282,7 +3282,7 @@ ents_list.append(_e)
 _r_maze_11.set_property("entrances", ents_list)
 
 # Exits from MAZE-14
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3305,7 +3305,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_15.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "nw from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3328,7 +3328,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_14.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "ne from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3351,7 +3351,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_7.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3375,7 +3375,7 @@ ents_list.append(_e)
 _r_maze_7.set_property("entrances", ents_list)
 
 # Exits from MAZE-15
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3398,7 +3398,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_14.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3421,7 +3421,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_7.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "se from Maze",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3445,7 +3445,7 @@ ents_list.append(_e)
 _r_cyclops_room.set_property("entrances", ents_list)
 
 # Exits from CYCLOPS-ROOM
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "nw from Cyclops Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3468,7 +3468,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maze_15.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Cyclops Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3493,7 +3493,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_strange_passage.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Cyclops Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3519,7 +3519,7 @@ ents_list.append(_e)
 _r_treasure_room.set_property("entrances", ents_list)
 
 # Exits from STRANGE-PASSAGE
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Strange Passage",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3542,7 +3542,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_cyclops_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "in from Strange Passage",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3565,7 +3565,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_cyclops_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Strange Passage",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3589,7 +3589,7 @@ ents_list.append(_e)
 _r_living_room.set_property("entrances", ents_list)
 
 # Exits from TREASURE-ROOM
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Treasure Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3613,7 +3613,7 @@ ents_list.append(_e)
 _r_cyclops_room.set_property("entrances", ents_list)
 
 # Exits from RESERVOIR-SOUTH
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "se from Reservoir South",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3636,7 +3636,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_deep_canyon.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "sw from Reservoir South",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3659,7 +3659,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_chasm_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Reservoir South",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3682,7 +3682,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_dam_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Reservoir South",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3705,7 +3705,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_stream_view.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Reservoir South",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3731,7 +3731,7 @@ ents_list.append(_e)
 _r_reservoir.set_property("entrances", ents_list)
 
 # Exits from RESERVOIR
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Reservoir",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3754,7 +3754,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_reservoir_north.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Reservoir",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3777,7 +3777,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_reservoir_south.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Reservoir",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3800,7 +3800,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_in_stream.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Reservoir",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3823,7 +3823,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_in_stream.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Reservoir",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3842,7 +3842,7 @@ exits_list.append(_e)
 _r_reservoir.set_property("exits", exits_list)
 
 # Exits from RESERVOIR-NORTH
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Reservoir North",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3865,7 +3865,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_atlantis_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Reservoir North",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3891,7 +3891,7 @@ ents_list.append(_e)
 _r_reservoir.set_property("entrances", ents_list)
 
 # Exits from STREAM-VIEW
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Stream View",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3914,7 +3914,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_reservoir_south.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Stream View",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3933,7 +3933,7 @@ exits_list.append(_e)
 _r_stream_view.set_property("exits", exits_list)
 
 # Exits from IN-STREAM
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Stream",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3951,7 +3951,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_in_stream.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Stream",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3969,7 +3969,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_in_stream.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "land from Stream",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -3991,7 +3991,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_stream_view.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Stream",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4014,7 +4014,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_reservoir.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Stream",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4038,7 +4038,7 @@ ents_list.append(_e)
 _r_reservoir.set_property("entrances", ents_list)
 
 # Exits from MIRROR-ROOM-1
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Mirror Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4061,7 +4061,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_cold_passage.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Mirror Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4084,7 +4084,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_twisting_passage.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Mirror Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4108,7 +4108,7 @@ ents_list.append(_e)
 _r_small_cave.set_property("entrances", ents_list)
 
 # Exits from MIRROR-ROOM-2
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Mirror Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4131,7 +4131,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_winding_passage.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Mirror Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4154,7 +4154,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_narrow_passage.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Mirror Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4178,7 +4178,7 @@ ents_list.append(_e)
 _r_tiny_cave.set_property("entrances", ents_list)
 
 # Exits from SMALL-CAVE
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Cave",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4201,7 +4201,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_mirror_room_1.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Cave",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4224,7 +4224,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_atlantis_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Cave",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4247,7 +4247,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_atlantis_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Cave",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4271,7 +4271,7 @@ ents_list.append(_e)
 _r_twisting_passage.set_property("entrances", ents_list)
 
 # Exits from TINY-CAVE
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Cave",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4294,7 +4294,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_mirror_room_2.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Cave",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4317,7 +4317,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_winding_passage.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Cave",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4341,7 +4341,7 @@ ents_list.append(_e)
 _r_entrance_to_hades.set_property("entrances", ents_list)
 
 # Exits from COLD-PASSAGE
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Cold Passage",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4364,7 +4364,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_mirror_room_1.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Cold Passage",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4388,7 +4388,7 @@ ents_list.append(_e)
 _r_slide_room.set_property("entrances", ents_list)
 
 # Exits from NARROW-PASSAGE
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Narrow Passage",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4411,7 +4411,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_round_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Narrow Passage",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4435,7 +4435,7 @@ ents_list.append(_e)
 _r_mirror_room_2.set_property("entrances", ents_list)
 
 # Exits from WINDING-PASSAGE
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Winding Passage",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4458,7 +4458,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_mirror_room_2.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Winding Passage",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4482,7 +4482,7 @@ ents_list.append(_e)
 _r_tiny_cave.set_property("entrances", ents_list)
 
 # Exits from TWISTING-PASSAGE
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Twisting Passage",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4505,7 +4505,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_mirror_room_1.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Twisting Passage",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4529,7 +4529,7 @@ ents_list.append(_e)
 _r_small_cave.set_property("entrances", ents_list)
 
 # Exits from ATLANTIS-ROOM
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Atlantis Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4552,7 +4552,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_small_cave.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Atlantis Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4576,7 +4576,7 @@ ents_list.append(_e)
 _r_reservoir_north.set_property("entrances", ents_list)
 
 # Exits from EW-PASSAGE
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from East-West Passage",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4599,7 +4599,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_round_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from East-West Passage",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4622,7 +4622,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_troll_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from East-West Passage",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4645,7 +4645,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_chasm_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from East-West Passage",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4669,7 +4669,7 @@ ents_list.append(_e)
 _r_chasm_room.set_property("entrances", ents_list)
 
 # Exits from ROUND-ROOM
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Round Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4692,7 +4692,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_loud_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Round Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4715,7 +4715,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_ew_passage.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Round Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4738,7 +4738,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_ns_passage.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Round Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4761,7 +4761,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_narrow_passage.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "se from Round Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4785,7 +4785,7 @@ ents_list.append(_e)
 _r_engravings_cave.set_property("entrances", ents_list)
 
 # Exits from DEEP-CANYON
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "nw from Deep Canyon",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4808,7 +4808,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_reservoir_south.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Deep Canyon",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4831,7 +4831,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_dam_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "sw from Deep Canyon",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4854,7 +4854,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_ns_passage.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Deep Canyon",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4878,7 +4878,7 @@ ents_list.append(_e)
 _r_loud_room.set_property("entrances", ents_list)
 
 # Exits from DAMP-CAVE
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Damp Cave",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4901,7 +4901,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_loud_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Damp Cave",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4924,7 +4924,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_white_cliffs_north.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Damp Cave",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4943,7 +4943,7 @@ exits_list.append(_e)
 _r_damp_cave.set_property("exits", exits_list)
 
 # Exits from LOUD-ROOM
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Loud Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4966,7 +4966,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_damp_cave.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Loud Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -4989,7 +4989,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_round_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Loud Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5013,7 +5013,7 @@ ents_list.append(_e)
 _r_deep_canyon.set_property("entrances", ents_list)
 
 # Exits from NS-PASSAGE
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from North-South Passage",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5036,7 +5036,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_chasm_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "ne from North-South Passage",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5059,7 +5059,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_deep_canyon.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from North-South Passage",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5083,7 +5083,7 @@ ents_list.append(_e)
 _r_round_room.set_property("entrances", ents_list)
 
 # Exits from CHASM-ROOM
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "ne from Chasm",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5106,7 +5106,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_reservoir_south.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "sw from Chasm",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5129,7 +5129,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_ew_passage.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Chasm",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5152,7 +5152,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_ew_passage.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Chasm",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5175,7 +5175,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_ns_passage.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Chasm",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5194,7 +5194,7 @@ exits_list.append(_e)
 _r_chasm_room.set_property("exits", exits_list)
 
 # Exits from ENTRANCE-TO-HADES
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Entrance to Hades",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5217,7 +5217,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_tiny_cave.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "in from Entrance to Hades",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5242,7 +5242,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_land_of_living_dead.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Entrance to Hades",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5268,7 +5268,7 @@ ents_list.append(_e)
 _r_land_of_living_dead.set_property("entrances", ents_list)
 
 # Exits from LAND-OF-LIVING-DEAD
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "out from Land of the Dead",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5291,7 +5291,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_entrance_to_hades.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Land of the Dead",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5315,7 +5315,7 @@ ents_list.append(_e)
 _r_entrance_to_hades.set_property("entrances", ents_list)
 
 # Exits from ENGRAVINGS-CAVE
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "nw from Engravings Cave",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5338,7 +5338,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_round_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Engravings Cave",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5362,7 +5362,7 @@ ents_list.append(_e)
 _r_dome_room.set_property("entrances", ents_list)
 
 # Exits from EGYPT-ROOM
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Egyptian Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5385,7 +5385,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_north_temple.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Egyptian Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5409,7 +5409,7 @@ ents_list.append(_e)
 _r_north_temple.set_property("entrances", ents_list)
 
 # Exits from DOME-ROOM
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Dome Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5432,7 +5432,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_engravings_cave.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Dome Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5458,7 +5458,7 @@ ents_list.append(_e)
 _r_torch_room.set_property("entrances", ents_list)
 
 # Exits from TORCH-ROOM
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Torch Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5476,7 +5476,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_torch_room.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Torch Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5499,7 +5499,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_north_temple.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Torch Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5523,7 +5523,7 @@ ents_list.append(_e)
 _r_north_temple.set_property("entrances", ents_list)
 
 # Exits from NORTH-TEMPLE
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Temple",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5546,7 +5546,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_egypt_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Temple",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5569,7 +5569,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_egypt_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Temple",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5592,7 +5592,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_torch_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "out from Temple",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5615,7 +5615,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_torch_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Temple",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5638,7 +5638,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_torch_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Temple",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5662,7 +5662,7 @@ ents_list.append(_e)
 _r_south_temple.set_property("entrances", ents_list)
 
 # Exits from SOUTH-TEMPLE
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Altar",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5685,7 +5685,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_north_temple.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Altar",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5711,7 +5711,7 @@ ents_list.append(_e)
 _r_tiny_cave.set_property("entrances", ents_list)
 
 # Exits from DAM-ROOM
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Dam",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5734,7 +5734,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_deep_canyon.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Dam",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5757,7 +5757,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_dam_base.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Dam",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5780,7 +5780,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_dam_base.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Dam",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5803,7 +5803,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_dam_lobby.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Dam",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5827,7 +5827,7 @@ ents_list.append(_e)
 _r_reservoir_south.set_property("entrances", ents_list)
 
 # Exits from DAM-LOBBY
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Dam Lobby",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5850,7 +5850,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_dam_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Dam Lobby",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5873,7 +5873,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_maintenance_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Dam Lobby",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5897,7 +5897,7 @@ ents_list.append(_e)
 _r_maintenance_room.set_property("entrances", ents_list)
 
 # Exits from MAINTENANCE-ROOM
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Maintenance Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5920,7 +5920,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_dam_lobby.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Maintenance Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5944,7 +5944,7 @@ ents_list.append(_e)
 _r_dam_lobby.set_property("entrances", ents_list)
 
 # Exits from DAM-BASE
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Dam Base",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5967,7 +5967,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_dam_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Dam Base",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -5991,7 +5991,7 @@ ents_list.append(_e)
 _r_dam_room.set_property("entrances", ents_list)
 
 # Exits from RIVER-1
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Frigid River",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6009,7 +6009,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_river_1.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Frigid River",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6032,7 +6032,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_dam_base.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "land from Frigid River",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6054,7 +6054,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_dam_base.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Frigid River",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6077,7 +6077,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_river_2.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Frigid River",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6096,7 +6096,7 @@ exits_list.append(_e)
 _r_river_1.set_property("exits", exits_list)
 
 # Exits from RIVER-2
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Frigid River",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6114,7 +6114,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_river_2.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Frigid River",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6137,7 +6137,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_river_3.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "land from Frigid River",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6154,7 +6154,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_river_2.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Frigid River",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6172,7 +6172,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_river_2.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Frigid River",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6191,7 +6191,7 @@ exits_list.append(_e)
 _r_river_2.set_property("exits", exits_list)
 
 # Exits from RIVER-3
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Frigid River",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6209,7 +6209,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_river_3.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Frigid River",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6232,7 +6232,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_river_4.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "land from Frigid River",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6254,7 +6254,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_white_cliffs_north.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Frigid River",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6278,7 +6278,7 @@ ents_list.append(_e)
 _r_white_cliffs_north.set_property("entrances", ents_list)
 
 # Exits from WHITE-CLIFFS-NORTH
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from White Cliffs Beach",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6303,7 +6303,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_white_cliffs_south.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from White Cliffs Beach",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6329,7 +6329,7 @@ ents_list.append(_e)
 _r_damp_cave.set_property("entrances", ents_list)
 
 # Exits from WHITE-CLIFFS-SOUTH
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from White Cliffs Beach",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6355,7 +6355,7 @@ ents_list.append(_e)
 _r_white_cliffs_north.set_property("entrances", ents_list)
 
 # Exits from RIVER-4
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Frigid River",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6373,7 +6373,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_river_4.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Frigid River",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6396,7 +6396,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_river_5.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "land from Frigid River",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6413,7 +6413,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_river_4.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Frigid River",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6436,7 +6436,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_white_cliffs_south.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Frigid River",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6460,7 +6460,7 @@ ents_list.append(_e)
 _r_sandy_beach.set_property("entrances", ents_list)
 
 # Exits from RIVER-5
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Frigid River",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6478,7 +6478,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_river_5.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Frigid River",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6501,7 +6501,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_shore.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "land from Frigid River",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6524,7 +6524,7 @@ ents_list.append(_e)
 _r_shore.set_property("entrances", ents_list)
 
 # Exits from SHORE
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Shore",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6547,7 +6547,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_sandy_beach.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Shore",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6571,7 +6571,7 @@ ents_list.append(_e)
 _r_aragain_falls.set_property("entrances", ents_list)
 
 # Exits from SANDY-BEACH
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "ne from Sandy Beach",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6594,7 +6594,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_sandy_cave.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Sandy Beach",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6618,7 +6618,7 @@ ents_list.append(_e)
 _r_shore.set_property("entrances", ents_list)
 
 # Exits from SANDY-CAVE
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "sw from Sandy Cave",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6642,7 +6642,7 @@ ents_list.append(_e)
 _r_sandy_beach.set_property("entrances", ents_list)
 
 # Exits from ARAGAIN-FALLS
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Aragain Falls",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6666,7 +6666,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_on_rainbow.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Aragain Falls",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6684,7 +6684,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_aragain_falls.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Aragain Falls",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6707,7 +6707,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_shore.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Aragain Falls",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6732,7 +6732,7 @@ ents_list.append(_e)
 _r_on_rainbow.set_property("entrances", ents_list)
 
 # Exits from ON-RAINBOW
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from On the Rainbow",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6755,7 +6755,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_end_of_rainbow.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from On the Rainbow",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6779,7 +6779,7 @@ ents_list.append(_e)
 _r_aragain_falls.set_property("entrances", ents_list)
 
 # Exits from END-OF-RAINBOW
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from End of Rainbow",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6803,7 +6803,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_on_rainbow.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "ne from End of Rainbow",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6827,7 +6827,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_on_rainbow.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from End of Rainbow",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6851,7 +6851,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_on_rainbow.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "sw from End of Rainbow",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6875,7 +6875,7 @@ ents_list.append(_e)
 _r_canyon_bottom.set_property("entrances", ents_list)
 
 # Exits from CANYON-BOTTOM
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Canyon Bottom",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6898,7 +6898,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_cliff_middle.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Canyon Bottom",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6922,7 +6922,7 @@ ents_list.append(_e)
 _r_end_of_rainbow.set_property("entrances", ents_list)
 
 # Exits from CLIFF-MIDDLE
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Rocky Ledge",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6945,7 +6945,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_canyon_view.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Rocky Ledge",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6969,7 +6969,7 @@ ents_list.append(_e)
 _r_canyon_bottom.set_property("entrances", ents_list)
 
 # Exits from CANYON-VIEW
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Canyon View",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -6992,7 +6992,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_cliff_middle.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Canyon View",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7015,7 +7015,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_cliff_middle.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "nw from Canyon View",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7038,7 +7038,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_clearing.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Canyon View",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7061,7 +7061,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_forest_3.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Canyon View",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7080,7 +7080,7 @@ exits_list.append(_e)
 _r_canyon_view.set_property("exits", exits_list)
 
 # Exits from MINE-ENTRANCE
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Mine Entrance",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7103,7 +7103,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_slide_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "in from Mine Entrance",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7126,7 +7126,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_squeeky_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Mine Entrance",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7150,7 +7150,7 @@ ents_list.append(_e)
 _r_squeeky_room.set_property("entrances", ents_list)
 
 # Exits from SQUEEKY-ROOM
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Squeaky Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7173,7 +7173,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_bat_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Squeaky Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7197,7 +7197,7 @@ ents_list.append(_e)
 _r_mine_entrance.set_property("entrances", ents_list)
 
 # Exits from BAT-ROOM
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Bat Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7220,7 +7220,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_squeeky_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Bat Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7244,7 +7244,7 @@ ents_list.append(_e)
 _r_shaft_room.set_property("entrances", ents_list)
 
 # Exits from SHAFT-ROOM
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Shaft Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7262,7 +7262,7 @@ except NoSuchPropertyError:
 exits_list.append(_e)
 _r_shaft_room.set_property("exits", exits_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Shaft Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7285,7 +7285,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_bat_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Shaft Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7309,7 +7309,7 @@ ents_list.append(_e)
 _r_smelly_room.set_property("entrances", ents_list)
 
 # Exits from SMELLY-ROOM
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Smelly Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7332,7 +7332,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_gas_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Smelly Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7356,7 +7356,7 @@ ents_list.append(_e)
 _r_shaft_room.set_property("entrances", ents_list)
 
 # Exits from GAS-ROOM
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Gas Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7379,7 +7379,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_smelly_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Gas Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7403,7 +7403,7 @@ ents_list.append(_e)
 _r_mine_1.set_property("entrances", ents_list)
 
 # Exits from LADDER-TOP
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Ladder Top",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7426,7 +7426,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_ladder_bottom.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Ladder Top",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7450,7 +7450,7 @@ ents_list.append(_e)
 _r_mine_4.set_property("entrances", ents_list)
 
 # Exits from LADDER-BOTTOM
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Ladder Bottom",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7473,7 +7473,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_dead_end_5.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Ladder Bottom",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7496,7 +7496,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_timber_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "up from Ladder Bottom",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7520,7 +7520,7 @@ ents_list.append(_e)
 _r_ladder_top.set_property("entrances", ents_list)
 
 # Exits from DEAD-END-5
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Dead End",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7544,7 +7544,7 @@ ents_list.append(_e)
 _r_ladder_bottom.set_property("entrances", ents_list)
 
 # Exits from TIMBER-ROOM
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Timber Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7567,7 +7567,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_ladder_bottom.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Timber Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7593,7 +7593,7 @@ ents_list.append(_e)
 _r_lower_shaft.set_property("entrances", ents_list)
 
 # Exits from LOWER-SHAFT
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Drafty Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7616,7 +7616,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_machine_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "out from Drafty Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7641,7 +7641,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_timber_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Drafty Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7667,7 +7667,7 @@ ents_list.append(_e)
 _r_timber_room.set_property("entrances", ents_list)
 
 # Exits from MACHINE-ROOM
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Machine Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7691,7 +7691,7 @@ ents_list.append(_e)
 _r_lower_shaft.set_property("entrances", ents_list)
 
 # Exits from MINE-1
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Coal Mine",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7714,7 +7714,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_gas_room.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Coal Mine",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7737,7 +7737,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_mine_1.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "ne from Coal Mine",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7761,7 +7761,7 @@ ents_list.append(_e)
 _r_mine_2.set_property("entrances", ents_list)
 
 # Exits from MINE-2
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Coal Mine",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7784,7 +7784,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_mine_2.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Coal Mine",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7807,7 +7807,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_mine_1.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "se from Coal Mine",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7831,7 +7831,7 @@ ents_list.append(_e)
 _r_mine_3.set_property("entrances", ents_list)
 
 # Exits from MINE-3
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "south from Coal Mine",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7854,7 +7854,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_mine_3.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "sw from Coal Mine",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7877,7 +7877,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_mine_4.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Coal Mine",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7901,7 +7901,7 @@ ents_list.append(_e)
 _r_mine_2.set_property("entrances", ents_list)
 
 # Exits from MINE-4
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Coal Mine",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7924,7 +7924,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_mine_3.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "west from Coal Mine",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7947,7 +7947,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_mine_4.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Coal Mine",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7971,7 +7971,7 @@ ents_list.append(_e)
 _r_ladder_top.set_property("entrances", ents_list)
 
 # Exits from SLIDE-ROOM
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "east from Slide Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -7994,7 +7994,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_cold_passage.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "north from Slide Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],
@@ -8017,7 +8017,7 @@ except NoSuchPropertyError:
 ents_list.append(_e)
 _r_mine_entrance.set_property("entrances", ents_list)
 
-_e, _ = bootstrap.get_or_create_object(
+_e, _created = bootstrap.get_or_create_object(
     "down from Slide Room",
     unique_name=True,
     parents=[_classes["zork_exit"]],

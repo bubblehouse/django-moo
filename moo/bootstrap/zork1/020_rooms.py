@@ -5,7 +5,7 @@
 _rooms = {}  # keyed by ZIL atom — used by 040_exits.py
 
 # WEST-OF-HOUSE
-_r_west_of_house, _ = bootstrap.get_or_create_object(
+_r_west_of_house, _created = bootstrap.get_or_create_object(
     "West of House",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -15,10 +15,12 @@ _r_west_of_house.set_property("dark", False)
 _r_west_of_house.set_property("sacred", True)
 _r_west_of_house.set_property("global_scenery", ["WHITE-HOUSE", "BOARD", "FOREST"])
 # ACTION: WEST-HOUSE — see zork1_verbs/west_house.py
+_.set_property("west_house", _r_west_of_house)
+_.set_property("west_of_house", _r_west_of_house)
 _rooms["WEST-OF-HOUSE"] = _r_west_of_house
 
 # STONE-BARROW
-_r_stone_barrow, _ = bootstrap.get_or_create_object(
+_r_stone_barrow, _created = bootstrap.get_or_create_object(
     "Stone Barrow",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -31,10 +33,12 @@ _r_stone_barrow.set_property("outdoor", True)
 _r_stone_barrow.set_property("dark", False)
 _r_stone_barrow.set_property("sacred", True)
 # ACTION: STONE-BARROW-FCN — see zork1_verbs/stone_barrow_fcn.py
+_.set_property("stone_barrow_fcn", _r_stone_barrow)
+_.set_property("stone_barrow", _r_stone_barrow)
 _rooms["STONE-BARROW"] = _r_stone_barrow
 
 # NORTH-OF-HOUSE
-_r_north_of_house, _ = bootstrap.get_or_create_object(
+_r_north_of_house, _created = bootstrap.get_or_create_object(
     "North of House",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -47,10 +51,11 @@ _r_north_of_house.set_property("outdoor", True)
 _r_north_of_house.set_property("dark", False)
 _r_north_of_house.set_property("sacred", True)
 _r_north_of_house.set_property("global_scenery", ["BOARDED-WINDOW", "BOARD", "WHITE-HOUSE", "FOREST"])
+_.set_property("north_of_house", _r_north_of_house)
 _rooms["NORTH-OF-HOUSE"] = _r_north_of_house
 
 # SOUTH-OF-HOUSE
-_r_south_of_house, _ = bootstrap.get_or_create_object(
+_r_south_of_house, _created = bootstrap.get_or_create_object(
     "South of House",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -63,10 +68,11 @@ _r_south_of_house.set_property("outdoor", True)
 _r_south_of_house.set_property("dark", False)
 _r_south_of_house.set_property("sacred", True)
 _r_south_of_house.set_property("global_scenery", ["BOARDED-WINDOW", "BOARD", "WHITE-HOUSE", "FOREST"])
+_.set_property("south_of_house", _r_south_of_house)
 _rooms["SOUTH-OF-HOUSE"] = _r_south_of_house
 
 # EAST-OF-HOUSE
-_r_east_of_house, _ = bootstrap.get_or_create_object(
+_r_east_of_house, _created = bootstrap.get_or_create_object(
     "Behind House",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -76,10 +82,12 @@ _r_east_of_house.set_property("dark", False)
 _r_east_of_house.set_property("sacred", True)
 _r_east_of_house.set_property("global_scenery", ["WHITE-HOUSE", "KITCHEN-WINDOW", "FOREST"])
 # ACTION: EAST-HOUSE — see zork1_verbs/east_house.py
+_.set_property("east_house", _r_east_of_house)
+_.set_property("east_of_house", _r_east_of_house)
 _rooms["EAST-OF-HOUSE"] = _r_east_of_house
 
 # FOREST-1
-_r_forest_1, _ = bootstrap.get_or_create_object(
+_r_forest_1, _created = bootstrap.get_or_create_object(
     "Forest",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -92,10 +100,12 @@ _r_forest_1.set_property("dark", False)
 _r_forest_1.set_property("sacred", True)
 _r_forest_1.set_property("global_scenery", ["TREE", "SONGBIRD", "WHITE-HOUSE", "FOREST"])
 # ACTION: FOREST-ROOM — see zork1_verbs/forest_room.py
+_.set_property("forest_room", _r_forest_1)
+_.set_property("forest_1", _r_forest_1)
 _rooms["FOREST-1"] = _r_forest_1
 
 # FOREST-2
-_r_forest_2, _ = bootstrap.get_or_create_object(
+_r_forest_2, _created = bootstrap.get_or_create_object(
     "Forest",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -106,10 +116,12 @@ _r_forest_2.set_property("dark", False)
 _r_forest_2.set_property("sacred", True)
 _r_forest_2.set_property("global_scenery", ["TREE", "SONGBIRD", "WHITE-HOUSE", "FOREST"])
 # ACTION: FOREST-ROOM — see zork1_verbs/forest_room.py
+_.set_property("forest_room", _r_forest_2)
+_.set_property("forest_2", _r_forest_2)
 _rooms["FOREST-2"] = _r_forest_2
 
 # MOUNTAINS
-_r_mountains, _ = bootstrap.get_or_create_object(
+_r_mountains, _created = bootstrap.get_or_create_object(
     "Forest",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -119,10 +131,11 @@ _r_mountains.set_property("outdoor", True)
 _r_mountains.set_property("dark", False)
 _r_mountains.set_property("sacred", True)
 _r_mountains.set_property("global_scenery", ["TREE", "WHITE-HOUSE"])
+_.set_property("mountains", _r_mountains)
 _rooms["MOUNTAINS"] = _r_mountains
 
 # FOREST-3
-_r_forest_3, _ = bootstrap.get_or_create_object(
+_r_forest_3, _created = bootstrap.get_or_create_object(
     "Forest",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -133,10 +146,12 @@ _r_forest_3.set_property("dark", False)
 _r_forest_3.set_property("sacred", True)
 _r_forest_3.set_property("global_scenery", ["TREE", "SONGBIRD", "WHITE-HOUSE", "FOREST"])
 # ACTION: FOREST-ROOM — see zork1_verbs/forest_room.py
+_.set_property("forest_room", _r_forest_3)
+_.set_property("forest_3", _r_forest_3)
 _rooms["FOREST-3"] = _r_forest_3
 
 # PATH
-_r_path, _ = bootstrap.get_or_create_object(
+_r_path, _created = bootstrap.get_or_create_object(
     "Forest Path",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -150,10 +165,12 @@ _r_path.set_property("dark", False)
 _r_path.set_property("sacred", True)
 _r_path.set_property("global_scenery", ["TREE", "SONGBIRD", "WHITE-HOUSE", "FOREST"])
 # ACTION: FOREST-ROOM — see zork1_verbs/forest_room.py
+_.set_property("forest_room", _r_path)
+_.set_property("path", _r_path)
 _rooms["PATH"] = _r_path
 
 # UP-A-TREE
-_r_up_a_tree, _ = bootstrap.get_or_create_object(
+_r_up_a_tree, _created = bootstrap.get_or_create_object(
     "Up a Tree",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -163,10 +180,12 @@ _r_up_a_tree.set_property("dark", False)
 _r_up_a_tree.set_property("sacred", True)
 _r_up_a_tree.set_property("global_scenery", ["TREE", "FOREST", "SONGBIRD", "WHITE-HOUSE"])
 # ACTION: TREE-ROOM — see zork1_verbs/tree_room.py
+_.set_property("tree_room", _r_up_a_tree)
+_.set_property("up_a_tree", _r_up_a_tree)
 _rooms["UP-A-TREE"] = _r_up_a_tree
 
 # GRATING-CLEARING
-_r_grating_clearing, _ = bootstrap.get_or_create_object(
+_r_grating_clearing, _created = bootstrap.get_or_create_object(
     "Clearing",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -176,10 +195,12 @@ _r_grating_clearing.set_property("dark", False)
 _r_grating_clearing.set_property("sacred", True)
 _r_grating_clearing.set_property("global_scenery", ["WHITE-HOUSE", "GRATE"])
 # ACTION: CLEARING-FCN — see zork1_verbs/clearing_fcn.py
+_.set_property("clearing_fcn", _r_grating_clearing)
+_.set_property("grating_clearing", _r_grating_clearing)
 _rooms["GRATING-CLEARING"] = _r_grating_clearing
 
 # CLEARING
-_r_clearing, _ = bootstrap.get_or_create_object(
+_r_clearing, _created = bootstrap.get_or_create_object(
     "Clearing",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -192,10 +213,12 @@ _r_clearing.set_property("dark", False)
 _r_clearing.set_property("sacred", True)
 _r_clearing.set_property("global_scenery", ["TREE", "SONGBIRD", "WHITE-HOUSE", "FOREST"])
 # ACTION: FOREST-ROOM — see zork1_verbs/forest_room.py
+_.set_property("forest_room", _r_clearing)
+_.set_property("clearing", _r_clearing)
 _rooms["CLEARING"] = _r_clearing
 
 # KITCHEN
-_r_kitchen, _ = bootstrap.get_or_create_object(
+_r_kitchen, _created = bootstrap.get_or_create_object(
     "Kitchen",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -206,10 +229,12 @@ _r_kitchen.set_property("sacred", True)
 _r_kitchen.set_property("value", 10)
 _r_kitchen.set_property("global_scenery", ["KITCHEN-WINDOW", "CHIMNEY", "STAIRS"])
 # ACTION: KITCHEN-FCN — see zork1_verbs/kitchen_fcn.py
+_.set_property("kitchen_fcn", _r_kitchen)
+_.set_property("kitchen", _r_kitchen)
 _rooms["KITCHEN"] = _r_kitchen
 
 # ATTIC
-_r_attic, _ = bootstrap.get_or_create_object(
+_r_attic, _created = bootstrap.get_or_create_object(
     "Attic",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -218,10 +243,11 @@ _r_attic.set_property("description", "This is the attic. The only exit is a stai
 _r_attic.set_property("outdoor", True)
 _r_attic.set_property("sacred", True)
 _r_attic.set_property("global_scenery", ["STAIRS"])
+_.set_property("attic", _r_attic)
 _rooms["ATTIC"] = _r_attic
 
 # LIVING-ROOM
-_r_living_room, _ = bootstrap.get_or_create_object(
+_r_living_room, _created = bootstrap.get_or_create_object(
     "Living Room",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -231,10 +257,12 @@ _r_living_room.set_property("dark", False)
 _r_living_room.set_property("sacred", True)
 _r_living_room.set_property("global_scenery", ["WOODEN-DOOR", "TRAP-DOOR", "STAIRS"])
 # ACTION: LIVING-ROOM-FCN — see zork1_verbs/living_room_fcn.py
+_.set_property("living_room_fcn", _r_living_room)
+_.set_property("living_room", _r_living_room)
 _rooms["LIVING-ROOM"] = _r_living_room
 
 # CELLAR
-_r_cellar, _ = bootstrap.get_or_create_object(
+_r_cellar, _created = bootstrap.get_or_create_object(
     "Cellar",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -243,10 +271,12 @@ _r_cellar.set_property("outdoor", True)
 _r_cellar.set_property("value", 25)
 _r_cellar.set_property("global_scenery", ["TRAP-DOOR", "SLIDE", "STAIRS"])
 # ACTION: CELLAR-FCN — see zork1_verbs/cellar_fcn.py
+_.set_property("cellar_fcn", _r_cellar)
+_.set_property("cellar", _r_cellar)
 _rooms["CELLAR"] = _r_cellar
 
 # TROLL-ROOM
-_r_troll_room, _ = bootstrap.get_or_create_object(
+_r_troll_room, _created = bootstrap.get_or_create_object(
     "The Troll Room",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -257,10 +287,12 @@ _r_troll_room.set_property(
 )
 _r_troll_room.set_property("outdoor", True)
 # ACTION: TROLL-ROOM-F — see zork1_verbs/troll_room_f.py
+_.set_property("troll_room_f", _r_troll_room)
+_.set_property("troll_room", _r_troll_room)
 _rooms["TROLL-ROOM"] = _r_troll_room
 
 # EAST-OF-CHASM
-_r_east_of_chasm, _ = bootstrap.get_or_create_object(
+_r_east_of_chasm, _created = bootstrap.get_or_create_object(
     "East of Chasm",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -270,10 +302,11 @@ _r_east_of_chasm.set_property(
     "You are on the east edge of a chasm, the bottom of which cannot be\nseen. A narrow passage goes north, and the path you are on continues\nto the east.",
 )
 _r_east_of_chasm.set_property("outdoor", True)
+_.set_property("east_of_chasm", _r_east_of_chasm)
 _rooms["EAST-OF-CHASM"] = _r_east_of_chasm
 
 # GALLERY
-_r_gallery, _ = bootstrap.get_or_create_object(
+_r_gallery, _created = bootstrap.get_or_create_object(
     "Gallery",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -284,10 +317,11 @@ _r_gallery.set_property(
 )
 _r_gallery.set_property("outdoor", True)
 _r_gallery.set_property("dark", False)
+_.set_property("gallery", _r_gallery)
 _rooms["GALLERY"] = _r_gallery
 
 # STUDIO
-_r_studio, _ = bootstrap.get_or_create_object(
+_r_studio, _created = bootstrap.get_or_create_object(
     "Studio",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -298,10 +332,11 @@ _r_studio.set_property(
 )
 _r_studio.set_property("outdoor", True)
 _r_studio.set_property("global_scenery", ["CHIMNEY"])
+_.set_property("studio", _r_studio)
 _rooms["STUDIO"] = _r_studio
 
 # MAZE-1
-_r_maze_1, _ = bootstrap.get_or_create_object(
+_r_maze_1, _created = bootstrap.get_or_create_object(
     "Maze",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -309,10 +344,11 @@ _r_maze_1, _ = bootstrap.get_or_create_object(
 _r_maze_1.set_property("description", "This is part of a maze of twisty little passages, all alike.")
 _r_maze_1.set_property("outdoor", True)
 _r_maze_1.set_property("maze", True)
+_.set_property("maze_1", _r_maze_1)
 _rooms["MAZE-1"] = _r_maze_1
 
 # MAZE-2
-_r_maze_2, _ = bootstrap.get_or_create_object(
+_r_maze_2, _created = bootstrap.get_or_create_object(
     "Maze",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -320,10 +356,11 @@ _r_maze_2, _ = bootstrap.get_or_create_object(
 _r_maze_2.set_property("description", "This is part of a maze of twisty little passages, all alike.")
 _r_maze_2.set_property("outdoor", True)
 _r_maze_2.set_property("maze", True)
+_.set_property("maze_2", _r_maze_2)
 _rooms["MAZE-2"] = _r_maze_2
 
 # MAZE-3
-_r_maze_3, _ = bootstrap.get_or_create_object(
+_r_maze_3, _created = bootstrap.get_or_create_object(
     "Maze",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -331,10 +368,11 @@ _r_maze_3, _ = bootstrap.get_or_create_object(
 _r_maze_3.set_property("description", "This is part of a maze of twisty little passages, all alike.")
 _r_maze_3.set_property("outdoor", True)
 _r_maze_3.set_property("maze", True)
+_.set_property("maze_3", _r_maze_3)
 _rooms["MAZE-3"] = _r_maze_3
 
 # MAZE-4
-_r_maze_4, _ = bootstrap.get_or_create_object(
+_r_maze_4, _created = bootstrap.get_or_create_object(
     "Maze",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -342,10 +380,11 @@ _r_maze_4, _ = bootstrap.get_or_create_object(
 _r_maze_4.set_property("description", "This is part of a maze of twisty little passages, all alike.")
 _r_maze_4.set_property("outdoor", True)
 _r_maze_4.set_property("maze", True)
+_.set_property("maze_4", _r_maze_4)
 _rooms["MAZE-4"] = _r_maze_4
 
 # DEAD-END-1
-_r_dead_end_1, _ = bootstrap.get_or_create_object(
+_r_dead_end_1, _created = bootstrap.get_or_create_object(
     "Dead End",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -353,10 +392,11 @@ _r_dead_end_1, _ = bootstrap.get_or_create_object(
 _r_dead_end_1.set_property("description", "You have come to a dead end in the maze.")
 _r_dead_end_1.set_property("outdoor", True)
 _r_dead_end_1.set_property("maze", True)
+_.set_property("dead_end_1", _r_dead_end_1)
 _rooms["DEAD-END-1"] = _r_dead_end_1
 
 # MAZE-5
-_r_maze_5, _ = bootstrap.get_or_create_object(
+_r_maze_5, _created = bootstrap.get_or_create_object(
     "Maze",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -367,10 +407,11 @@ _r_maze_5.set_property(
 )
 _r_maze_5.set_property("outdoor", True)
 _r_maze_5.set_property("maze", True)
+_.set_property("maze_5", _r_maze_5)
 _rooms["MAZE-5"] = _r_maze_5
 
 # DEAD-END-2
-_r_dead_end_2, _ = bootstrap.get_or_create_object(
+_r_dead_end_2, _created = bootstrap.get_or_create_object(
     "Dead End",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -378,10 +419,11 @@ _r_dead_end_2, _ = bootstrap.get_or_create_object(
 _r_dead_end_2.set_property("description", "You have come to a dead end in the maze.")
 _r_dead_end_2.set_property("outdoor", True)
 _r_dead_end_2.set_property("maze", True)
+_.set_property("dead_end_2", _r_dead_end_2)
 _rooms["DEAD-END-2"] = _r_dead_end_2
 
 # MAZE-6
-_r_maze_6, _ = bootstrap.get_or_create_object(
+_r_maze_6, _created = bootstrap.get_or_create_object(
     "Maze",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -389,10 +431,11 @@ _r_maze_6, _ = bootstrap.get_or_create_object(
 _r_maze_6.set_property("description", "This is part of a maze of twisty little passages, all alike.")
 _r_maze_6.set_property("outdoor", True)
 _r_maze_6.set_property("maze", True)
+_.set_property("maze_6", _r_maze_6)
 _rooms["MAZE-6"] = _r_maze_6
 
 # MAZE-7
-_r_maze_7, _ = bootstrap.get_or_create_object(
+_r_maze_7, _created = bootstrap.get_or_create_object(
     "Maze",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -400,10 +443,11 @@ _r_maze_7, _ = bootstrap.get_or_create_object(
 _r_maze_7.set_property("description", "This is part of a maze of twisty little passages, all alike.")
 _r_maze_7.set_property("outdoor", True)
 _r_maze_7.set_property("maze", True)
+_.set_property("maze_7", _r_maze_7)
 _rooms["MAZE-7"] = _r_maze_7
 
 # MAZE-8
-_r_maze_8, _ = bootstrap.get_or_create_object(
+_r_maze_8, _created = bootstrap.get_or_create_object(
     "Maze",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -411,10 +455,11 @@ _r_maze_8, _ = bootstrap.get_or_create_object(
 _r_maze_8.set_property("description", "This is part of a maze of twisty little passages, all alike.")
 _r_maze_8.set_property("outdoor", True)
 _r_maze_8.set_property("maze", True)
+_.set_property("maze_8", _r_maze_8)
 _rooms["MAZE-8"] = _r_maze_8
 
 # DEAD-END-3
-_r_dead_end_3, _ = bootstrap.get_or_create_object(
+_r_dead_end_3, _created = bootstrap.get_or_create_object(
     "Dead End",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -422,10 +467,11 @@ _r_dead_end_3, _ = bootstrap.get_or_create_object(
 _r_dead_end_3.set_property("description", "You have come to a dead end in the maze.")
 _r_dead_end_3.set_property("outdoor", True)
 _r_dead_end_3.set_property("maze", True)
+_.set_property("dead_end_3", _r_dead_end_3)
 _rooms["DEAD-END-3"] = _r_dead_end_3
 
 # MAZE-9
-_r_maze_9, _ = bootstrap.get_or_create_object(
+_r_maze_9, _created = bootstrap.get_or_create_object(
     "Maze",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -433,10 +479,11 @@ _r_maze_9, _ = bootstrap.get_or_create_object(
 _r_maze_9.set_property("description", "This is part of a maze of twisty little passages, all alike.")
 _r_maze_9.set_property("outdoor", True)
 _r_maze_9.set_property("maze", True)
+_.set_property("maze_9", _r_maze_9)
 _rooms["MAZE-9"] = _r_maze_9
 
 # MAZE-10
-_r_maze_10, _ = bootstrap.get_or_create_object(
+_r_maze_10, _created = bootstrap.get_or_create_object(
     "Maze",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -444,10 +491,11 @@ _r_maze_10, _ = bootstrap.get_or_create_object(
 _r_maze_10.set_property("description", "This is part of a maze of twisty little passages, all alike.")
 _r_maze_10.set_property("outdoor", True)
 _r_maze_10.set_property("maze", True)
+_.set_property("maze_10", _r_maze_10)
 _rooms["MAZE-10"] = _r_maze_10
 
 # MAZE-11
-_r_maze_11, _ = bootstrap.get_or_create_object(
+_r_maze_11, _created = bootstrap.get_or_create_object(
     "Maze",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -455,10 +503,11 @@ _r_maze_11, _ = bootstrap.get_or_create_object(
 _r_maze_11.set_property("description", "This is part of a maze of twisty little passages, all alike.")
 _r_maze_11.set_property("outdoor", True)
 _r_maze_11.set_property("maze", True)
+_.set_property("maze_11", _r_maze_11)
 _rooms["MAZE-11"] = _r_maze_11
 
 # GRATING-ROOM
-_r_grating_room, _ = bootstrap.get_or_create_object(
+_r_grating_room, _created = bootstrap.get_or_create_object(
     "Grating Room",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -466,10 +515,12 @@ _r_grating_room, _ = bootstrap.get_or_create_object(
 _r_grating_room.set_property("outdoor", True)
 _r_grating_room.set_property("global_scenery", ["GRATE"])
 # ACTION: MAZE-11-FCN — see zork1_verbs/maze_11_fcn.py
+_.set_property("maze_11_fcn", _r_grating_room)
+_.set_property("grating_room", _r_grating_room)
 _rooms["GRATING-ROOM"] = _r_grating_room
 
 # MAZE-12
-_r_maze_12, _ = bootstrap.get_or_create_object(
+_r_maze_12, _created = bootstrap.get_or_create_object(
     "Maze",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -477,10 +528,11 @@ _r_maze_12, _ = bootstrap.get_or_create_object(
 _r_maze_12.set_property("description", "This is part of a maze of twisty little passages, all alike.")
 _r_maze_12.set_property("outdoor", True)
 _r_maze_12.set_property("maze", True)
+_.set_property("maze_12", _r_maze_12)
 _rooms["MAZE-12"] = _r_maze_12
 
 # DEAD-END-4
-_r_dead_end_4, _ = bootstrap.get_or_create_object(
+_r_dead_end_4, _created = bootstrap.get_or_create_object(
     "Dead End",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -488,10 +540,11 @@ _r_dead_end_4, _ = bootstrap.get_or_create_object(
 _r_dead_end_4.set_property("description", "You have come to a dead end in the maze.")
 _r_dead_end_4.set_property("outdoor", True)
 _r_dead_end_4.set_property("maze", True)
+_.set_property("dead_end_4", _r_dead_end_4)
 _rooms["DEAD-END-4"] = _r_dead_end_4
 
 # MAZE-13
-_r_maze_13, _ = bootstrap.get_or_create_object(
+_r_maze_13, _created = bootstrap.get_or_create_object(
     "Maze",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -499,10 +552,11 @@ _r_maze_13, _ = bootstrap.get_or_create_object(
 _r_maze_13.set_property("description", "This is part of a maze of twisty little passages, all alike.")
 _r_maze_13.set_property("outdoor", True)
 _r_maze_13.set_property("maze", True)
+_.set_property("maze_13", _r_maze_13)
 _rooms["MAZE-13"] = _r_maze_13
 
 # MAZE-14
-_r_maze_14, _ = bootstrap.get_or_create_object(
+_r_maze_14, _created = bootstrap.get_or_create_object(
     "Maze",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -510,10 +564,11 @@ _r_maze_14, _ = bootstrap.get_or_create_object(
 _r_maze_14.set_property("description", "This is part of a maze of twisty little passages, all alike.")
 _r_maze_14.set_property("outdoor", True)
 _r_maze_14.set_property("maze", True)
+_.set_property("maze_14", _r_maze_14)
 _rooms["MAZE-14"] = _r_maze_14
 
 # MAZE-15
-_r_maze_15, _ = bootstrap.get_or_create_object(
+_r_maze_15, _created = bootstrap.get_or_create_object(
     "Maze",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -521,10 +576,11 @@ _r_maze_15, _ = bootstrap.get_or_create_object(
 _r_maze_15.set_property("description", "This is part of a maze of twisty little passages, all alike.")
 _r_maze_15.set_property("outdoor", True)
 _r_maze_15.set_property("maze", True)
+_.set_property("maze_15", _r_maze_15)
 _rooms["MAZE-15"] = _r_maze_15
 
 # CYCLOPS-ROOM
-_r_cyclops_room, _ = bootstrap.get_or_create_object(
+_r_cyclops_room, _created = bootstrap.get_or_create_object(
     "Cyclops Room",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -532,10 +588,12 @@ _r_cyclops_room, _ = bootstrap.get_or_create_object(
 _r_cyclops_room.set_property("outdoor", True)
 _r_cyclops_room.set_property("global_scenery", ["STAIRS"])
 # ACTION: CYCLOPS-ROOM-FCN — see zork1_verbs/cyclops_room_fcn.py
+_.set_property("cyclops_room_fcn", _r_cyclops_room)
+_.set_property("cyclops_room", _r_cyclops_room)
 _rooms["CYCLOPS-ROOM"] = _r_cyclops_room
 
 # STRANGE-PASSAGE
-_r_strange_passage, _ = bootstrap.get_or_create_object(
+_r_strange_passage, _created = bootstrap.get_or_create_object(
     "Strange Passage",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -546,10 +604,11 @@ _r_strange_passage.set_property(
 )
 _r_strange_passage.set_property("outdoor", True)
 _r_strange_passage.set_property("global_scenery", ["WOODEN-DOOR"])
+_.set_property("strange_passage", _r_strange_passage)
 _rooms["STRANGE-PASSAGE"] = _r_strange_passage
 
 # TREASURE-ROOM
-_r_treasure_room, _ = bootstrap.get_or_create_object(
+_r_treasure_room, _created = bootstrap.get_or_create_object(
     "Treasure Room",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -562,10 +621,12 @@ _r_treasure_room.set_property("outdoor", True)
 _r_treasure_room.set_property("value", 25)
 _r_treasure_room.set_property("global_scenery", ["STAIRS"])
 # ACTION: TREASURE-ROOM-FCN — see zork1_verbs/treasure_room_fcn.py
+_.set_property("treasure_room_fcn", _r_treasure_room)
+_.set_property("treasure_room", _r_treasure_room)
 _rooms["TREASURE-ROOM"] = _r_treasure_room
 
 # RESERVOIR-SOUTH
-_r_reservoir_south, _ = bootstrap.get_or_create_object(
+_r_reservoir_south, _created = bootstrap.get_or_create_object(
     "Reservoir South",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -573,20 +634,24 @@ _r_reservoir_south, _ = bootstrap.get_or_create_object(
 _r_reservoir_south.set_property("outdoor", True)
 _r_reservoir_south.set_property("global_scenery", ["GLOBAL-WATER"])
 # ACTION: RESERVOIR-SOUTH-FCN — see zork1_verbs/reservoir_south_fcn.py
+_.set_property("reservoir_south_fcn", _r_reservoir_south)
+_.set_property("reservoir_south", _r_reservoir_south)
 _rooms["RESERVOIR-SOUTH"] = _r_reservoir_south
 
 # RESERVOIR
-_r_reservoir, _ = bootstrap.get_or_create_object(
+_r_reservoir, _created = bootstrap.get_or_create_object(
     "Reservoir",
     unique_name=True,
     parents=[_classes["zork_room"]],
 )
 _r_reservoir.set_property("global_scenery", ["GLOBAL-WATER"])
 # ACTION: RESERVOIR-FCN — see zork1_verbs/reservoir_fcn.py
+_.set_property("reservoir_fcn", _r_reservoir)
+_.set_property("reservoir", _r_reservoir)
 _rooms["RESERVOIR"] = _r_reservoir
 
 # RESERVOIR-NORTH
-_r_reservoir_north, _ = bootstrap.get_or_create_object(
+_r_reservoir_north, _created = bootstrap.get_or_create_object(
     "Reservoir North",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -594,10 +659,12 @@ _r_reservoir_north, _ = bootstrap.get_or_create_object(
 _r_reservoir_north.set_property("outdoor", True)
 _r_reservoir_north.set_property("global_scenery", ["GLOBAL-WATER", "STAIRS"])
 # ACTION: RESERVOIR-NORTH-FCN — see zork1_verbs/reservoir_north_fcn.py
+_.set_property("reservoir_north_fcn", _r_reservoir_north)
+_.set_property("reservoir_north", _r_reservoir_north)
 _rooms["RESERVOIR-NORTH"] = _r_reservoir_north
 
 # STREAM-VIEW
-_r_stream_view, _ = bootstrap.get_or_create_object(
+_r_stream_view, _created = bootstrap.get_or_create_object(
     "Stream View",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -608,10 +675,11 @@ _r_stream_view.set_property(
 )
 _r_stream_view.set_property("outdoor", True)
 _r_stream_view.set_property("global_scenery", ["GLOBAL-WATER"])
+_.set_property("stream_view", _r_stream_view)
 _rooms["STREAM-VIEW"] = _r_stream_view
 
 # IN-STREAM
-_r_in_stream, _ = bootstrap.get_or_create_object(
+_r_in_stream, _created = bootstrap.get_or_create_object(
     "Stream",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -621,20 +689,23 @@ _r_in_stream.set_property(
     "You are on the gently flowing stream. The upstream route is too narrow\nto navigate, and the downstream route is invisible due to twisting\nwalls. There is a narrow beach to land on.",
 )
 _r_in_stream.set_property("global_scenery", ["GLOBAL-WATER"])
+_.set_property("in_stream", _r_in_stream)
 _rooms["IN-STREAM"] = _r_in_stream
 
 # MIRROR-ROOM-1
-_r_mirror_room_1, _ = bootstrap.get_or_create_object(
+_r_mirror_room_1, _created = bootstrap.get_or_create_object(
     "Mirror Room",
     unique_name=True,
     parents=[_classes["zork_room"]],
 )
 _r_mirror_room_1.set_property("outdoor", True)
 # ACTION: MIRROR-ROOM — see zork1_verbs/mirror_room.py
+_.set_property("mirror_room", _r_mirror_room_1)
+_.set_property("mirror_room_1", _r_mirror_room_1)
 _rooms["MIRROR-ROOM-1"] = _r_mirror_room_1
 
 # MIRROR-ROOM-2
-_r_mirror_room_2, _ = bootstrap.get_or_create_object(
+_r_mirror_room_2, _created = bootstrap.get_or_create_object(
     "Mirror Room",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -642,10 +713,12 @@ _r_mirror_room_2, _ = bootstrap.get_or_create_object(
 _r_mirror_room_2.set_property("outdoor", True)
 _r_mirror_room_2.set_property("dark", False)
 # ACTION: MIRROR-ROOM — see zork1_verbs/mirror_room.py
+_.set_property("mirror_room", _r_mirror_room_2)
+_.set_property("mirror_room_2", _r_mirror_room_2)
 _rooms["MIRROR-ROOM-2"] = _r_mirror_room_2
 
 # SMALL-CAVE
-_r_small_cave, _ = bootstrap.get_or_create_object(
+_r_small_cave, _created = bootstrap.get_or_create_object(
     "Cave",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -655,10 +728,11 @@ _r_small_cave.set_property(
 )
 _r_small_cave.set_property("outdoor", True)
 _r_small_cave.set_property("global_scenery", ["STAIRS"])
+_.set_property("small_cave", _r_small_cave)
 _rooms["SMALL-CAVE"] = _r_small_cave
 
 # TINY-CAVE
-_r_tiny_cave, _ = bootstrap.get_or_create_object(
+_r_tiny_cave, _created = bootstrap.get_or_create_object(
     "Cave",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -669,10 +743,12 @@ _r_tiny_cave.set_property(
 _r_tiny_cave.set_property("outdoor", True)
 _r_tiny_cave.set_property("global_scenery", ["STAIRS"])
 # ACTION: CAVE2-ROOM — see zork1_verbs/cave2_room.py
+_.set_property("cave2_room", _r_tiny_cave)
+_.set_property("tiny_cave", _r_tiny_cave)
 _rooms["TINY-CAVE"] = _r_tiny_cave
 
 # COLD-PASSAGE
-_r_cold_passage, _ = bootstrap.get_or_create_object(
+_r_cold_passage, _created = bootstrap.get_or_create_object(
     "Cold Passage",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -681,10 +757,11 @@ _r_cold_passage.set_property(
     "description", "This is a cold and damp corridor where a long east-west passageway\nturns into a southward path."
 )
 _r_cold_passage.set_property("outdoor", True)
+_.set_property("cold_passage", _r_cold_passage)
 _rooms["COLD-PASSAGE"] = _r_cold_passage
 
 # NARROW-PASSAGE
-_r_narrow_passage, _ = bootstrap.get_or_create_object(
+_r_narrow_passage, _created = bootstrap.get_or_create_object(
     "Narrow Passage",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -694,10 +771,11 @@ _r_narrow_passage.set_property(
     "This is a long and narrow corridor where a long north-south passageway\nbriefly narrows even further.",
 )
 _r_narrow_passage.set_property("outdoor", True)
+_.set_property("narrow_passage", _r_narrow_passage)
 _rooms["NARROW-PASSAGE"] = _r_narrow_passage
 
 # WINDING-PASSAGE
-_r_winding_passage, _ = bootstrap.get_or_create_object(
+_r_winding_passage, _created = bootstrap.get_or_create_object(
     "Winding Passage",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -706,10 +784,11 @@ _r_winding_passage.set_property(
     "description", "This is a winding passage. It seems that there are only exits\non the east and north."
 )
 _r_winding_passage.set_property("outdoor", True)
+_.set_property("winding_passage", _r_winding_passage)
 _rooms["WINDING-PASSAGE"] = _r_winding_passage
 
 # TWISTING-PASSAGE
-_r_twisting_passage, _ = bootstrap.get_or_create_object(
+_r_twisting_passage, _created = bootstrap.get_or_create_object(
     "Twisting Passage",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -718,10 +797,11 @@ _r_twisting_passage.set_property(
     "description", "This is a winding passage. It seems that there are only exits\non the east and north."
 )
 _r_twisting_passage.set_property("outdoor", True)
+_.set_property("twisting_passage", _r_twisting_passage)
 _rooms["TWISTING-PASSAGE"] = _r_twisting_passage
 
 # ATLANTIS-ROOM
-_r_atlantis_room, _ = bootstrap.get_or_create_object(
+_r_atlantis_room, _created = bootstrap.get_or_create_object(
     "Atlantis Room",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -732,10 +812,11 @@ _r_atlantis_room.set_property(
 )
 _r_atlantis_room.set_property("outdoor", True)
 _r_atlantis_room.set_property("global_scenery", ["STAIRS"])
+_.set_property("atlantis_room", _r_atlantis_room)
 _rooms["ATLANTIS-ROOM"] = _r_atlantis_room
 
 # EW-PASSAGE
-_r_ew_passage, _ = bootstrap.get_or_create_object(
+_r_ew_passage, _created = bootstrap.get_or_create_object(
     "East-West Passage",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -747,10 +828,11 @@ _r_ew_passage.set_property(
 _r_ew_passage.set_property("outdoor", True)
 _r_ew_passage.set_property("value", 5)
 _r_ew_passage.set_property("global_scenery", ["STAIRS"])
+_.set_property("ew_passage", _r_ew_passage)
 _rooms["EW-PASSAGE"] = _r_ew_passage
 
 # ROUND-ROOM
-_r_round_room, _ = bootstrap.get_or_create_object(
+_r_round_room, _created = bootstrap.get_or_create_object(
     "Round Room",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -760,10 +842,11 @@ _r_round_room.set_property(
     "This is a circular stone room with passages in all directions. Several\nof them have unfortunately been blocked by cave-ins.",
 )
 _r_round_room.set_property("outdoor", True)
+_.set_property("round_room", _r_round_room)
 _rooms["ROUND-ROOM"] = _r_round_room
 
 # DEEP-CANYON
-_r_deep_canyon, _ = bootstrap.get_or_create_object(
+_r_deep_canyon, _created = bootstrap.get_or_create_object(
     "Deep Canyon",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -771,10 +854,12 @@ _r_deep_canyon, _ = bootstrap.get_or_create_object(
 _r_deep_canyon.set_property("outdoor", True)
 _r_deep_canyon.set_property("global_scenery", ["STAIRS"])
 # ACTION: DEEP-CANYON-F — see zork1_verbs/deep_canyon_f.py
+_.set_property("deep_canyon_f", _r_deep_canyon)
+_.set_property("deep_canyon", _r_deep_canyon)
 _rooms["DEEP-CANYON"] = _r_deep_canyon
 
 # DAMP-CAVE
-_r_damp_cave, _ = bootstrap.get_or_create_object(
+_r_damp_cave, _created = bootstrap.get_or_create_object(
     "Damp Cave",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -785,10 +870,11 @@ _r_damp_cave.set_property(
 )
 _r_damp_cave.set_property("outdoor", True)
 _r_damp_cave.set_property("global_scenery", ["CRACK"])
+_.set_property("damp_cave", _r_damp_cave)
 _rooms["DAMP-CAVE"] = _r_damp_cave
 
 # LOUD-ROOM
-_r_loud_room, _ = bootstrap.get_or_create_object(
+_r_loud_room, _created = bootstrap.get_or_create_object(
     "Loud Room",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -796,20 +882,23 @@ _r_loud_room, _ = bootstrap.get_or_create_object(
 _r_loud_room.set_property("outdoor", True)
 _r_loud_room.set_property("global_scenery", ["STAIRS"])
 # ACTION: LOUD-ROOM-FCN — see zork1_verbs/loud_room_fcn.py
+_.set_property("loud_room_fcn", _r_loud_room)
+_.set_property("loud_room", _r_loud_room)
 _rooms["LOUD-ROOM"] = _r_loud_room
 
 # NS-PASSAGE
-_r_ns_passage, _ = bootstrap.get_or_create_object(
+_r_ns_passage, _created = bootstrap.get_or_create_object(
     "North-South Passage",
     unique_name=True,
     parents=[_classes["zork_room"]],
 )
 _r_ns_passage.set_property("description", "This is a high north-south passage, which forks to the northeast.")
 _r_ns_passage.set_property("outdoor", True)
+_.set_property("ns_passage", _r_ns_passage)
 _rooms["NS-PASSAGE"] = _r_ns_passage
 
 # CHASM-ROOM
-_r_chasm_room, _ = bootstrap.get_or_create_object(
+_r_chasm_room, _created = bootstrap.get_or_create_object(
     "Chasm",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -820,10 +909,11 @@ _r_chasm_room.set_property(
 )
 _r_chasm_room.set_property("outdoor", True)
 _r_chasm_room.set_property("global_scenery", ["CRACK", "STAIRS"])
+_.set_property("chasm_room", _r_chasm_room)
 _rooms["CHASM-ROOM"] = _r_chasm_room
 
 # ENTRANCE-TO-HADES
-_r_entrance_to_hades, _ = bootstrap.get_or_create_object(
+_r_entrance_to_hades, _created = bootstrap.get_or_create_object(
     "Entrance to Hades",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -832,10 +922,12 @@ _r_entrance_to_hades.set_property("outdoor", True)
 _r_entrance_to_hades.set_property("dark", False)
 _r_entrance_to_hades.set_property("global_scenery", ["BODIES"])
 # ACTION: LLD-ROOM — see zork1_verbs/lld_room.py
+_.set_property("lld_room", _r_entrance_to_hades)
+_.set_property("entrance_to_hades", _r_entrance_to_hades)
 _rooms["ENTRANCE-TO-HADES"] = _r_entrance_to_hades
 
 # LAND-OF-LIVING-DEAD
-_r_land_of_living_dead, _ = bootstrap.get_or_create_object(
+_r_land_of_living_dead, _created = bootstrap.get_or_create_object(
     "Land of the Dead",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -847,20 +939,22 @@ _r_land_of_living_dead.set_property(
 _r_land_of_living_dead.set_property("outdoor", True)
 _r_land_of_living_dead.set_property("dark", False)
 _r_land_of_living_dead.set_property("global_scenery", ["BODIES"])
+_.set_property("land_of_living_dead", _r_land_of_living_dead)
 _rooms["LAND-OF-LIVING-DEAD"] = _r_land_of_living_dead
 
 # ENGRAVINGS-CAVE
-_r_engravings_cave, _ = bootstrap.get_or_create_object(
+_r_engravings_cave, _created = bootstrap.get_or_create_object(
     "Engravings Cave",
     unique_name=True,
     parents=[_classes["zork_room"]],
 )
 _r_engravings_cave.set_property("description", "You have entered a low cave with passages leading northwest and east.")
 _r_engravings_cave.set_property("outdoor", True)
+_.set_property("engravings_cave", _r_engravings_cave)
 _rooms["ENGRAVINGS-CAVE"] = _r_engravings_cave
 
 # EGYPT-ROOM
-_r_egypt_room, _ = bootstrap.get_or_create_object(
+_r_egypt_room, _created = bootstrap.get_or_create_object(
     "Egyptian Room",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -870,20 +964,23 @@ _r_egypt_room.set_property(
 )
 _r_egypt_room.set_property("outdoor", True)
 _r_egypt_room.set_property("global_scenery", ["STAIRS"])
+_.set_property("egypt_room", _r_egypt_room)
 _rooms["EGYPT-ROOM"] = _r_egypt_room
 
 # DOME-ROOM
-_r_dome_room, _ = bootstrap.get_or_create_object(
+_r_dome_room, _created = bootstrap.get_or_create_object(
     "Dome Room",
     unique_name=True,
     parents=[_classes["zork_room"]],
 )
 _r_dome_room.set_property("outdoor", True)
 # ACTION: DOME-ROOM-FCN — see zork1_verbs/dome_room_fcn.py
+_.set_property("dome_room_fcn", _r_dome_room)
+_.set_property("dome_room", _r_dome_room)
 _rooms["DOME-ROOM"] = _r_dome_room
 
 # TORCH-ROOM
-_r_torch_room, _ = bootstrap.get_or_create_object(
+_r_torch_room, _created = bootstrap.get_or_create_object(
     "Torch Room",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -891,10 +988,12 @@ _r_torch_room, _ = bootstrap.get_or_create_object(
 _r_torch_room.set_property("outdoor", True)
 _r_torch_room.set_property("global_scenery", ["STAIRS"])
 # ACTION: TORCH-ROOM-FCN — see zork1_verbs/torch_room_fcn.py
+_.set_property("torch_room_fcn", _r_torch_room)
+_.set_property("torch_room", _r_torch_room)
 _rooms["TORCH-ROOM"] = _r_torch_room
 
 # NORTH-TEMPLE
-_r_north_temple, _ = bootstrap.get_or_create_object(
+_r_north_temple, _created = bootstrap.get_or_create_object(
     "Temple",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -907,10 +1006,11 @@ _r_north_temple.set_property("outdoor", True)
 _r_north_temple.set_property("dark", False)
 _r_north_temple.set_property("sacred", True)
 _r_north_temple.set_property("global_scenery", ["STAIRS"])
+_.set_property("north_temple", _r_north_temple)
 _rooms["NORTH-TEMPLE"] = _r_north_temple
 
 # SOUTH-TEMPLE
-_r_south_temple, _ = bootstrap.get_or_create_object(
+_r_south_temple, _created = bootstrap.get_or_create_object(
     "Altar",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -923,10 +1023,12 @@ _r_south_temple.set_property("outdoor", True)
 _r_south_temple.set_property("dark", False)
 _r_south_temple.set_property("sacred", True)
 # ACTION: SOUTH-TEMPLE-FCN — see zork1_verbs/south_temple_fcn.py
+_.set_property("south_temple_fcn", _r_south_temple)
+_.set_property("south_temple", _r_south_temple)
 _rooms["SOUTH-TEMPLE"] = _r_south_temple
 
 # DAM-ROOM
-_r_dam_room, _ = bootstrap.get_or_create_object(
+_r_dam_room, _created = bootstrap.get_or_create_object(
     "Dam",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -935,10 +1037,12 @@ _r_dam_room.set_property("outdoor", True)
 _r_dam_room.set_property("dark", False)
 _r_dam_room.set_property("global_scenery", ["GLOBAL-WATER"])
 # ACTION: DAM-ROOM-FCN — see zork1_verbs/dam_room_fcn.py
+_.set_property("dam_room_fcn", _r_dam_room)
+_.set_property("dam_room", _r_dam_room)
 _rooms["DAM-ROOM"] = _r_dam_room
 
 # DAM-LOBBY
-_r_dam_lobby, _ = bootstrap.get_or_create_object(
+_r_dam_lobby, _created = bootstrap.get_or_create_object(
     "Dam Lobby",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -949,10 +1053,11 @@ _r_dam_lobby.set_property(
 )
 _r_dam_lobby.set_property("outdoor", True)
 _r_dam_lobby.set_property("dark", False)
+_.set_property("dam_lobby", _r_dam_lobby)
 _rooms["DAM-LOBBY"] = _r_dam_lobby
 
 # MAINTENANCE-ROOM
-_r_maintenance_room, _ = bootstrap.get_or_create_object(
+_r_maintenance_room, _created = bootstrap.get_or_create_object(
     "Maintenance Room",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -962,10 +1067,11 @@ _r_maintenance_room.set_property(
     "This is what appears to have been the maintenance room for Flood\nControl Dam #3. Apparently, this room has been ransacked recently, for\nmost of the valuable equipment is gone. On the wall in front of you is a\ngroup of buttons colored blue, yellow, brown, and red. There are doorways to\nthe west and south.",
 )
 _r_maintenance_room.set_property("outdoor", True)
+_.set_property("maintenance_room", _r_maintenance_room)
 _rooms["MAINTENANCE-ROOM"] = _r_maintenance_room
 
 # DAM-BASE
-_r_dam_base, _ = bootstrap.get_or_create_object(
+_r_dam_base, _created = bootstrap.get_or_create_object(
     "Dam Base",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -978,10 +1084,11 @@ _r_dam_base.set_property("outdoor", True)
 _r_dam_base.set_property("dark", False)
 _r_dam_base.set_property("sacred", True)
 _r_dam_base.set_property("global_scenery", ["GLOBAL-WATER", "RIVER"])
+_.set_property("dam_base", _r_dam_base)
 _rooms["DAM-BASE"] = _r_dam_base
 
 # RIVER-1
-_r_river_1, _ = bootstrap.get_or_create_object(
+_r_river_1, _created = bootstrap.get_or_create_object(
     "Frigid River",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -993,10 +1100,11 @@ _r_river_1.set_property(
 _r_river_1.set_property("sacred", True)
 _r_river_1.set_property("dark", False)
 _r_river_1.set_property("global_scenery", ["GLOBAL-WATER", "RIVER"])
+_.set_property("river_1", _r_river_1)
 _rooms["RIVER-1"] = _r_river_1
 
 # RIVER-2
-_r_river_2, _ = bootstrap.get_or_create_object(
+_r_river_2, _created = bootstrap.get_or_create_object(
     "Frigid River",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -1007,10 +1115,11 @@ _r_river_2.set_property(
 )
 _r_river_2.set_property("sacred", True)
 _r_river_2.set_property("global_scenery", ["GLOBAL-WATER", "RIVER"])
+_.set_property("river_2", _r_river_2)
 _rooms["RIVER-2"] = _r_river_2
 
 # RIVER-3
-_r_river_3, _ = bootstrap.get_or_create_object(
+_r_river_3, _created = bootstrap.get_or_create_object(
     "Frigid River",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -1021,10 +1130,11 @@ _r_river_3.set_property(
 )
 _r_river_3.set_property("sacred", True)
 _r_river_3.set_property("global_scenery", ["GLOBAL-WATER", "RIVER"])
+_.set_property("river_3", _r_river_3)
 _rooms["RIVER-3"] = _r_river_3
 
 # WHITE-CLIFFS-NORTH
-_r_white_cliffs_north, _ = bootstrap.get_or_create_object(
+_r_white_cliffs_north, _created = bootstrap.get_or_create_object(
     "White Cliffs Beach",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -1037,10 +1147,12 @@ _r_white_cliffs_north.set_property("outdoor", True)
 _r_white_cliffs_north.set_property("sacred", True)
 _r_white_cliffs_north.set_property("global_scenery", ["GLOBAL-WATER", "WHITE-CLIFF", "RIVER"])
 # ACTION: WHITE-CLIFFS-FUNCTION — see zork1_verbs/white_cliffs_function.py
+_.set_property("white_cliffs_function", _r_white_cliffs_north)
+_.set_property("white_cliffs_north", _r_white_cliffs_north)
 _rooms["WHITE-CLIFFS-NORTH"] = _r_white_cliffs_north
 
 # WHITE-CLIFFS-SOUTH
-_r_white_cliffs_south, _ = bootstrap.get_or_create_object(
+_r_white_cliffs_south, _created = bootstrap.get_or_create_object(
     "White Cliffs Beach",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -1053,10 +1165,12 @@ _r_white_cliffs_south.set_property("outdoor", True)
 _r_white_cliffs_south.set_property("sacred", True)
 _r_white_cliffs_south.set_property("global_scenery", ["GLOBAL-WATER", "WHITE-CLIFF", "RIVER"])
 # ACTION: WHITE-CLIFFS-FUNCTION — see zork1_verbs/white_cliffs_function.py
+_.set_property("white_cliffs_function", _r_white_cliffs_south)
+_.set_property("white_cliffs_south", _r_white_cliffs_south)
 _rooms["WHITE-CLIFFS-SOUTH"] = _r_white_cliffs_south
 
 # RIVER-4
-_r_river_4, _ = bootstrap.get_or_create_object(
+_r_river_4, _created = bootstrap.get_or_create_object(
     "Frigid River",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -1068,10 +1182,12 @@ _r_river_4.set_property(
 _r_river_4.set_property("sacred", True)
 _r_river_4.set_property("global_scenery", ["GLOBAL-WATER", "RIVER"])
 # ACTION: RIVR4-ROOM — see zork1_verbs/rivr4_room.py
+_.set_property("rivr4_room", _r_river_4)
+_.set_property("river_4", _r_river_4)
 _rooms["RIVER-4"] = _r_river_4
 
 # RIVER-5
-_r_river_5, _ = bootstrap.get_or_create_object(
+_r_river_5, _created = bootstrap.get_or_create_object(
     "Frigid River",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -1082,10 +1198,11 @@ _r_river_5.set_property(
 _r_river_5.set_property("sacred", True)
 _r_river_5.set_property("dark", False)
 _r_river_5.set_property("global_scenery", ["GLOBAL-WATER", "RIVER"])
+_.set_property("river_5", _r_river_5)
 _rooms["RIVER-5"] = _r_river_5
 
 # SHORE
-_r_shore, _ = bootstrap.get_or_create_object(
+_r_shore, _created = bootstrap.get_or_create_object(
     "Shore",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -1098,10 +1215,11 @@ _r_shore.set_property("outdoor", True)
 _r_shore.set_property("sacred", True)
 _r_shore.set_property("dark", False)
 _r_shore.set_property("global_scenery", ["GLOBAL-WATER", "RIVER"])
+_.set_property("shore", _r_shore)
 _rooms["SHORE"] = _r_shore
 
 # SANDY-BEACH
-_r_sandy_beach, _ = bootstrap.get_or_create_object(
+_r_sandy_beach, _created = bootstrap.get_or_create_object(
     "Sandy Beach",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -1113,20 +1231,22 @@ _r_sandy_beach.set_property(
 _r_sandy_beach.set_property("outdoor", True)
 _r_sandy_beach.set_property("sacred", True)
 _r_sandy_beach.set_property("global_scenery", ["GLOBAL-WATER", "RIVER"])
+_.set_property("sandy_beach", _r_sandy_beach)
 _rooms["SANDY-BEACH"] = _r_sandy_beach
 
 # SANDY-CAVE
-_r_sandy_cave, _ = bootstrap.get_or_create_object(
+_r_sandy_cave, _created = bootstrap.get_or_create_object(
     "Sandy Cave",
     unique_name=True,
     parents=[_classes["zork_room"]],
 )
 _r_sandy_cave.set_property("description", "This is a sand-filled cave whose exit is to the southwest.")
 _r_sandy_cave.set_property("outdoor", True)
+_.set_property("sandy_cave", _r_sandy_cave)
 _rooms["SANDY-CAVE"] = _r_sandy_cave
 
 # ARAGAIN-FALLS
-_r_aragain_falls, _ = bootstrap.get_or_create_object(
+_r_aragain_falls, _created = bootstrap.get_or_create_object(
     "Aragain Falls",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -1136,10 +1256,12 @@ _r_aragain_falls.set_property("sacred", True)
 _r_aragain_falls.set_property("dark", False)
 _r_aragain_falls.set_property("global_scenery", ["GLOBAL-WATER", "RIVER", "RAINBOW"])
 # ACTION: FALLS-ROOM — see zork1_verbs/falls_room.py
+_.set_property("falls_room", _r_aragain_falls)
+_.set_property("aragain_falls", _r_aragain_falls)
 _rooms["ARAGAIN-FALLS"] = _r_aragain_falls
 
 # ON-RAINBOW
-_r_on_rainbow, _ = bootstrap.get_or_create_object(
+_r_on_rainbow, _created = bootstrap.get_or_create_object(
     "On the Rainbow",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -1152,10 +1274,11 @@ _r_on_rainbow.set_property("outdoor", True)
 _r_on_rainbow.set_property("dark", False)
 _r_on_rainbow.set_property("sacred", True)
 _r_on_rainbow.set_property("global_scenery", ["RAINBOW"])
+_.set_property("on_rainbow", _r_on_rainbow)
 _rooms["ON-RAINBOW"] = _r_on_rainbow
 
 # END-OF-RAINBOW
-_r_end_of_rainbow, _ = bootstrap.get_or_create_object(
+_r_end_of_rainbow, _created = bootstrap.get_or_create_object(
     "End of Rainbow",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -1167,10 +1290,11 @@ _r_end_of_rainbow.set_property(
 _r_end_of_rainbow.set_property("outdoor", True)
 _r_end_of_rainbow.set_property("dark", False)
 _r_end_of_rainbow.set_property("global_scenery", ["GLOBAL-WATER", "RAINBOW", "RIVER"])
+_.set_property("end_of_rainbow", _r_end_of_rainbow)
 _rooms["END-OF-RAINBOW"] = _r_end_of_rainbow
 
 # CANYON-BOTTOM
-_r_canyon_bottom, _ = bootstrap.get_or_create_object(
+_r_canyon_bottom, _created = bootstrap.get_or_create_object(
     "Canyon Bottom",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -1183,10 +1307,11 @@ _r_canyon_bottom.set_property("outdoor", True)
 _r_canyon_bottom.set_property("dark", False)
 _r_canyon_bottom.set_property("sacred", True)
 _r_canyon_bottom.set_property("global_scenery", ["GLOBAL-WATER", "CLIMBABLE-CLIFF", "RIVER"])
+_.set_property("canyon_bottom", _r_canyon_bottom)
 _rooms["CANYON-BOTTOM"] = _r_canyon_bottom
 
 # CLIFF-MIDDLE
-_r_cliff_middle, _ = bootstrap.get_or_create_object(
+_r_cliff_middle, _created = bootstrap.get_or_create_object(
     "Rocky Ledge",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -1199,10 +1324,11 @@ _r_cliff_middle.set_property("outdoor", True)
 _r_cliff_middle.set_property("dark", False)
 _r_cliff_middle.set_property("sacred", True)
 _r_cliff_middle.set_property("global_scenery", ["CLIMBABLE-CLIFF", "RIVER"])
+_.set_property("cliff_middle", _r_cliff_middle)
 _rooms["CLIFF-MIDDLE"] = _r_cliff_middle
 
 # CANYON-VIEW
-_r_canyon_view, _ = bootstrap.get_or_create_object(
+_r_canyon_view, _created = bootstrap.get_or_create_object(
     "Canyon View",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -1216,10 +1342,12 @@ _r_canyon_view.set_property("dark", False)
 _r_canyon_view.set_property("sacred", True)
 _r_canyon_view.set_property("global_scenery", ["CLIMBABLE-CLIFF", "RIVER", "RAINBOW"])
 # ACTION: CANYON-VIEW-F — see zork1_verbs/canyon_view_f.py
+_.set_property("canyon_view_f", _r_canyon_view)
+_.set_property("canyon_view", _r_canyon_view)
 _rooms["CANYON-VIEW"] = _r_canyon_view
 
 # MINE-ENTRANCE
-_r_mine_entrance, _ = bootstrap.get_or_create_object(
+_r_mine_entrance, _created = bootstrap.get_or_create_object(
     "Mine Entrance",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -1229,10 +1357,11 @@ _r_mine_entrance.set_property(
     "You are standing at the entrance of what might have been a coal mine.\nThe shaft enters the west wall, and there is another exit on the south\nend of the room.",
 )
 _r_mine_entrance.set_property("outdoor", True)
+_.set_property("mine_entrance", _r_mine_entrance)
 _rooms["MINE-ENTRANCE"] = _r_mine_entrance
 
 # SQUEEKY-ROOM
-_r_squeeky_room, _ = bootstrap.get_or_create_object(
+_r_squeeky_room, _created = bootstrap.get_or_create_object(
     "Squeaky Room",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -1242,10 +1371,11 @@ _r_squeeky_room.set_property(
     "You are in a small room. Strange squeaky sounds may be heard coming\nfrom the passage at the north end. You may also escape to the east.",
 )
 _r_squeeky_room.set_property("outdoor", True)
+_.set_property("squeeky_room", _r_squeeky_room)
 _rooms["SQUEEKY-ROOM"] = _r_squeeky_room
 
 # BAT-ROOM
-_r_bat_room, _ = bootstrap.get_or_create_object(
+_r_bat_room, _created = bootstrap.get_or_create_object(
     "Bat Room",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -1253,10 +1383,12 @@ _r_bat_room, _ = bootstrap.get_or_create_object(
 _r_bat_room.set_property("outdoor", True)
 _r_bat_room.set_property("sacred", True)
 # ACTION: BATS-ROOM — see zork1_verbs/bats_room.py
+_.set_property("bats_room", _r_bat_room)
+_.set_property("bat_room", _r_bat_room)
 _rooms["BAT-ROOM"] = _r_bat_room
 
 # SHAFT-ROOM
-_r_shaft_room, _ = bootstrap.get_or_create_object(
+_r_shaft_room, _created = bootstrap.get_or_create_object(
     "Shaft Room",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -1266,10 +1398,11 @@ _r_shaft_room.set_property(
     "This is a large room, in the middle of which is a small shaft\ndescending through the floor into darkness below. To the west and\nthe north are exits from this room. Constructed over the top of the\nshaft is a metal framework to which a heavy iron chain is attached.",
 )
 _r_shaft_room.set_property("outdoor", True)
+_.set_property("shaft_room", _r_shaft_room)
 _rooms["SHAFT-ROOM"] = _r_shaft_room
 
 # SMELLY-ROOM
-_r_smelly_room, _ = bootstrap.get_or_create_object(
+_r_smelly_room, _created = bootstrap.get_or_create_object(
     "Smelly Room",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -1280,10 +1413,11 @@ _r_smelly_room.set_property(
 )
 _r_smelly_room.set_property("outdoor", True)
 _r_smelly_room.set_property("global_scenery", ["STAIRS"])
+_.set_property("smelly_room", _r_smelly_room)
 _rooms["SMELLY-ROOM"] = _r_smelly_room
 
 # GAS-ROOM
-_r_gas_room, _ = bootstrap.get_or_create_object(
+_r_gas_room, _created = bootstrap.get_or_create_object(
     "Gas Room",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -1296,10 +1430,12 @@ _r_gas_room.set_property("outdoor", True)
 _r_gas_room.set_property("sacred", True)
 _r_gas_room.set_property("global_scenery", ["STAIRS"])
 # ACTION: BOOM-ROOM — see zork1_verbs/boom_room.py
+_.set_property("boom_room", _r_gas_room)
+_.set_property("gas_room", _r_gas_room)
 _rooms["GAS-ROOM"] = _r_gas_room
 
 # LADDER-TOP
-_r_ladder_top, _ = bootstrap.get_or_create_object(
+_r_ladder_top, _created = bootstrap.get_or_create_object(
     "Ladder Top",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -1310,10 +1446,11 @@ _r_ladder_top.set_property(
 )
 _r_ladder_top.set_property("outdoor", True)
 _r_ladder_top.set_property("global_scenery", ["LADDER", "STAIRS"])
+_.set_property("ladder_top", _r_ladder_top)
 _rooms["LADDER-TOP"] = _r_ladder_top
 
 # LADDER-BOTTOM
-_r_ladder_bottom, _ = bootstrap.get_or_create_object(
+_r_ladder_bottom, _created = bootstrap.get_or_create_object(
     "Ladder Bottom",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -1324,20 +1461,22 @@ _r_ladder_bottom.set_property(
 )
 _r_ladder_bottom.set_property("outdoor", True)
 _r_ladder_bottom.set_property("global_scenery", ["LADDER"])
+_.set_property("ladder_bottom", _r_ladder_bottom)
 _rooms["LADDER-BOTTOM"] = _r_ladder_bottom
 
 # DEAD-END-5
-_r_dead_end_5, _ = bootstrap.get_or_create_object(
+_r_dead_end_5, _created = bootstrap.get_or_create_object(
     "Dead End",
     unique_name=True,
     parents=[_classes["zork_room"]],
 )
 _r_dead_end_5.set_property("description", "You have come to a dead end in the mine.")
 _r_dead_end_5.set_property("outdoor", True)
+_.set_property("dead_end_5", _r_dead_end_5)
 _rooms["DEAD-END-5"] = _r_dead_end_5
 
 # TIMBER-ROOM
-_r_timber_room, _ = bootstrap.get_or_create_object(
+_r_timber_room, _created = bootstrap.get_or_create_object(
     "Timber Room",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -1349,10 +1488,12 @@ _r_timber_room.set_property(
 _r_timber_room.set_property("outdoor", True)
 _r_timber_room.set_property("sacred", True)
 # ACTION: NO-OBJS — see zork1_verbs/no_objs.py
+_.set_property("no_objs", _r_timber_room)
+_.set_property("timber_room", _r_timber_room)
 _rooms["TIMBER-ROOM"] = _r_timber_room
 
 # LOWER-SHAFT
-_r_lower_shaft, _ = bootstrap.get_or_create_object(
+_r_lower_shaft, _created = bootstrap.get_or_create_object(
     "Drafty Room",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -1364,60 +1505,68 @@ _r_lower_shaft.set_property(
 _r_lower_shaft.set_property("outdoor", True)
 _r_lower_shaft.set_property("sacred", True)
 # ACTION: NO-OBJS — see zork1_verbs/no_objs.py
+_.set_property("no_objs", _r_lower_shaft)
+_.set_property("lower_shaft", _r_lower_shaft)
 _rooms["LOWER-SHAFT"] = _r_lower_shaft
 
 # MACHINE-ROOM
-_r_machine_room, _ = bootstrap.get_or_create_object(
+_r_machine_room, _created = bootstrap.get_or_create_object(
     "Machine Room",
     unique_name=True,
     parents=[_classes["zork_room"]],
 )
 _r_machine_room.set_property("outdoor", True)
 # ACTION: MACHINE-ROOM-FCN — see zork1_verbs/machine_room_fcn.py
+_.set_property("machine_room_fcn", _r_machine_room)
+_.set_property("machine_room", _r_machine_room)
 _rooms["MACHINE-ROOM"] = _r_machine_room
 
 # MINE-1
-_r_mine_1, _ = bootstrap.get_or_create_object(
+_r_mine_1, _created = bootstrap.get_or_create_object(
     "Coal Mine",
     unique_name=True,
     parents=[_classes["zork_room"]],
 )
 _r_mine_1.set_property("description", "This is a nondescript part of a coal mine.")
 _r_mine_1.set_property("outdoor", True)
+_.set_property("mine_1", _r_mine_1)
 _rooms["MINE-1"] = _r_mine_1
 
 # MINE-2
-_r_mine_2, _ = bootstrap.get_or_create_object(
+_r_mine_2, _created = bootstrap.get_or_create_object(
     "Coal Mine",
     unique_name=True,
     parents=[_classes["zork_room"]],
 )
 _r_mine_2.set_property("description", "This is a nondescript part of a coal mine.")
 _r_mine_2.set_property("outdoor", True)
+_.set_property("mine_2", _r_mine_2)
 _rooms["MINE-2"] = _r_mine_2
 
 # MINE-3
-_r_mine_3, _ = bootstrap.get_or_create_object(
+_r_mine_3, _created = bootstrap.get_or_create_object(
     "Coal Mine",
     unique_name=True,
     parents=[_classes["zork_room"]],
 )
 _r_mine_3.set_property("description", "This is a nondescript part of a coal mine.")
 _r_mine_3.set_property("outdoor", True)
+_.set_property("mine_3", _r_mine_3)
 _rooms["MINE-3"] = _r_mine_3
 
 # MINE-4
-_r_mine_4, _ = bootstrap.get_or_create_object(
+_r_mine_4, _created = bootstrap.get_or_create_object(
     "Coal Mine",
     unique_name=True,
     parents=[_classes["zork_room"]],
 )
 _r_mine_4.set_property("description", "This is a nondescript part of a coal mine.")
 _r_mine_4.set_property("outdoor", True)
+_.set_property("mine_4", _r_mine_4)
 _rooms["MINE-4"] = _r_mine_4
 
 # SLIDE-ROOM
-_r_slide_room, _ = bootstrap.get_or_create_object(
+_r_slide_room, _created = bootstrap.get_or_create_object(
     "Slide Room",
     unique_name=True,
     parents=[_classes["zork_room"]],
@@ -1428,6 +1577,7 @@ _r_slide_room.set_property(
 )
 _r_slide_room.set_property("outdoor", True)
 _r_slide_room.set_property("global_scenery", ["SLIDE"])
+_.set_property("slide_room", _r_slide_room)
 _rooms["SLIDE-ROOM"] = _r_slide_room
 
 log.info("Zork rooms: %d", len(_rooms))

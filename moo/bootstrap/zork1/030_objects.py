@@ -5,7 +5,7 @@
 _objects = {}  # keyed by ZIL atom
 
 # BOARD
-_o_board, _ = bootstrap.get_or_create_object(
+_o_board, _created = bootstrap.get_or_create_object(
     "board",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -18,10 +18,12 @@ _o_board.add_alias("boards")
 _o_board.add_alias("board")
 _o_board.set_property("obvious", False)
 # ACTION: BOARD-F — see zork1_verbs/board_f.py
+_.set_property("board_f", _o_board)
+_.set_property("board", _o_board)
 _objects["BOARD"] = _o_board
 
 # TEETH
-_o_teeth, _ = bootstrap.get_or_create_object(
+_o_teeth, _created = bootstrap.get_or_create_object(
     "set of teeth",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -34,10 +36,12 @@ _o_teeth.add_alias("overboard")
 _o_teeth.add_alias("teeth")
 _o_teeth.set_property("obvious", False)
 # ACTION: TEETH-F — see zork1_verbs/teeth_f.py
+_.set_property("teeth_f", _o_teeth)
+_.set_property("teeth", _o_teeth)
 _objects["TEETH"] = _o_teeth
 
 # WALL
-_o_wall, _ = bootstrap.get_or_create_object(
+_o_wall, _created = bootstrap.get_or_create_object(
     "surrounding wall",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -49,10 +53,11 @@ _o_wall.set_property("description", "surrounding wall")
 _o_wall.add_alias("wall")
 _o_wall.add_alias("walls")
 _o_wall.set_property("adjectives", ["surrounding"])
+_.set_property("wall", _o_wall)
 _objects["WALL"] = _o_wall
 
 # GRANITE-WALL
-_o_granite_wall, _ = bootstrap.get_or_create_object(
+_o_granite_wall, _created = bootstrap.get_or_create_object(
     "granite wall",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -64,10 +69,12 @@ _o_granite_wall.set_property("description", "granite wall")
 _o_granite_wall.add_alias("wall")
 _o_granite_wall.set_property("adjectives", ["granite"])
 # ACTION: GRANITE-WALL-F — see zork1_verbs/granite_wall_f.py
+_.set_property("granite_wall_f", _o_granite_wall)
+_.set_property("granite_wall", _o_granite_wall)
 _objects["GRANITE-WALL"] = _o_granite_wall
 
 # SONGBIRD
-_o_songbird, _ = bootstrap.get_or_create_object(
+_o_songbird, _created = bootstrap.get_or_create_object(
     "songbird",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -81,10 +88,12 @@ _o_songbird.add_alias("songbird")
 _o_songbird.set_property("adjectives", ["song"])
 _o_songbird.set_property("obvious", False)
 # ACTION: SONGBIRD-F — see zork1_verbs/songbird_f.py
+_.set_property("songbird_f", _o_songbird)
+_.set_property("songbird", _o_songbird)
 _objects["SONGBIRD"] = _o_songbird
 
 # WHITE-HOUSE
-_o_white_house, _ = bootstrap.get_or_create_object(
+_o_white_house, _created = bootstrap.get_or_create_object(
     "white house",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -97,10 +106,12 @@ _o_white_house.add_alias("house")
 _o_white_house.set_property("adjectives", ["white", "beauti", "coloni"])
 _o_white_house.set_property("obvious", False)
 # ACTION: WHITE-HOUSE-F — see zork1_verbs/white_house_f.py
+_.set_property("white_house_f", _o_white_house)
+_.set_property("white_house", _o_white_house)
 _objects["WHITE-HOUSE"] = _o_white_house
 
 # FOREST
-_o_forest, _ = bootstrap.get_or_create_object(
+_o_forest, _created = bootstrap.get_or_create_object(
     "forest",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -115,10 +126,12 @@ _o_forest.add_alias("pines")
 _o_forest.add_alias("hemlocks")
 _o_forest.set_property("obvious", False)
 # ACTION: FOREST-F — see zork1_verbs/forest_f.py
+_.set_property("forest_f", _o_forest)
+_.set_property("forest", _o_forest)
 _objects["FOREST"] = _o_forest
 
 # TREE
-_o_tree, _ = bootstrap.get_or_create_object(
+_o_tree, _created = bootstrap.get_or_create_object(
     "tree",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -132,10 +145,11 @@ _o_tree.add_alias("branch")
 _o_tree.set_property("adjectives", ["large", "storm"])
 _o_tree.set_property("obvious", False)
 _o_tree.set_property("climbable", True)
+_.set_property("tree", _o_tree)
 _objects["TREE"] = _o_tree
 
 # MOUNTAIN-RANGE
-_o_mountain_range, _ = bootstrap.get_or_create_object(
+_o_mountain_range, _created = bootstrap.get_or_create_object(
     "mountain range",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -150,10 +164,12 @@ _o_mountain_range.set_property("adjectives", ["impassable", "flathead"])
 _o_mountain_range.set_property("obvious", False)
 _o_mountain_range.set_property("climbable", True)
 # ACTION: MOUNTAIN-RANGE-F — see zork1_verbs/mountain_range_f.py
+_.set_property("mountain_range_f", _o_mountain_range)
+_.set_property("mountain_range", _o_mountain_range)
 _objects["MOUNTAIN-RANGE"] = _o_mountain_range
 
 # GLOBAL-WATER
-_o_global_water, _ = bootstrap.get_or_create_object(
+_o_global_water, _created = bootstrap.get_or_create_object(
     "water",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -166,10 +182,12 @@ _o_global_water.add_alias("water")
 _o_global_water.add_alias("quantity")
 _o_global_water.set_property("drinkable", True)
 # ACTION: WATER-F — see zork1_verbs/water_f.py
+_.set_property("water_f", _o_global_water)
+_.set_property("global_water", _o_global_water)
 _objects["GLOBAL-WATER"] = _o_global_water
 
 # WATER
-_o_water, _ = bootstrap.get_or_create_object(
+_o_water, _created = bootstrap.get_or_create_object(
     "quantity of water",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -186,10 +204,12 @@ _o_water.set_property("takeable", True)
 _o_water.set_property("drinkable", True)
 _o_water.set_property("size", 4)
 # ACTION: WATER-F — see zork1_verbs/water_f.py
+_.set_property("water_f", _o_water)
+_.set_property("water", _o_water)
 _objects["WATER"] = _o_water
 
 # KITCHEN-WINDOW
-_o_kitchen_window, _ = bootstrap.get_or_create_object(
+_o_kitchen_window, _created = bootstrap.get_or_create_object(
     "kitchen window",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -203,10 +223,12 @@ _o_kitchen_window.set_property("adjectives", ["kitchen", "small"])
 _o_kitchen_window.set_property("is_door", True)
 _o_kitchen_window.set_property("obvious", False)
 # ACTION: KITCHEN-WINDOW-F — see zork1_verbs/kitchen_window_f.py
+_.set_property("kitchen_window_f", _o_kitchen_window)
+_.set_property("kitchen_window", _o_kitchen_window)
 _objects["KITCHEN-WINDOW"] = _o_kitchen_window
 
 # CHIMNEY
-_o_chimney, _ = bootstrap.get_or_create_object(
+_o_chimney, _created = bootstrap.get_or_create_object(
     "chimney",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -220,10 +242,12 @@ _o_chimney.set_property("adjectives", ["dark", "narrow"])
 _o_chimney.set_property("climbable", True)
 _o_chimney.set_property("obvious", False)
 # ACTION: CHIMNEY-F — see zork1_verbs/chimney_f.py
+_.set_property("chimney_f", _o_chimney)
+_.set_property("chimney", _o_chimney)
 _objects["CHIMNEY"] = _o_chimney
 
 # GHOSTS
-_o_ghosts, _ = bootstrap.get_or_create_object(
+_o_ghosts, _created = bootstrap.get_or_create_object(
     "number of ghosts",
     unique_name=False,
     parents=[_classes["zork_actor"]],
@@ -239,10 +263,12 @@ _o_ghosts.add_alias("force")
 _o_ghosts.set_property("adjectives", ["invisible", "evil"])
 _o_ghosts.set_property("obvious", False)
 # ACTION: GHOSTS-F — see zork1_verbs/ghosts_f.py
+_.set_property("ghosts_f", _o_ghosts)
+_.set_property("ghosts", _o_ghosts)
 _objects["GHOSTS"] = _o_ghosts
 
 # SKULL
-_o_skull, _ = bootstrap.get_or_create_object(
+_o_skull, _created = bootstrap.get_or_create_object(
     "crystal skull",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -261,10 +287,11 @@ _o_skull.set_property("adjectives", ["crystal"])
 _o_skull.set_property("takeable", True)
 _o_skull.set_property("value", 10)
 _o_skull.set_property("tvalue", 10)
+_.set_property("skull", _o_skull)
 _objects["SKULL"] = _o_skull
 
 # LOWERED-BASKET
-_o_lowered_basket, _ = bootstrap.get_or_create_object(
+_o_lowered_basket, _created = bootstrap.get_or_create_object(
     "basket",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -278,10 +305,12 @@ _o_lowered_basket.add_alias("dumbwaiter")
 _o_lowered_basket.add_alias("basket")
 _o_lowered_basket.set_property("adjectives", ["lowered"])
 # ACTION: BASKET-F — see zork1_verbs/basket_f.py
+_.set_property("basket_f", _o_lowered_basket)
+_.set_property("lowered_basket", _o_lowered_basket)
 _objects["LOWERED-BASKET"] = _o_lowered_basket
 
 # RAISED-BASKET
-_o_raised_basket, _ = bootstrap.get_or_create_object(
+_o_raised_basket, _created = bootstrap.get_or_create_object(
     "basket",
     unique_name=False,
     parents=[_classes["zork_container"]],
@@ -297,10 +326,12 @@ _o_raised_basket.set_property("transparent", True)
 _o_raised_basket.set_property("open", True)
 _o_raised_basket.set_property("capacity", 50)
 # ACTION: BASKET-F — see zork1_verbs/basket_f.py
+_.set_property("basket_f", _o_raised_basket)
+_.set_property("raised_basket", _o_raised_basket)
 _objects["RAISED-BASKET"] = _o_raised_basket
 
 # LUNCH
-_o_lunch, _ = bootstrap.get_or_create_object(
+_o_lunch, _created = bootstrap.get_or_create_object(
     "lunch",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -316,10 +347,11 @@ _o_lunch.add_alias("dinner")
 _o_lunch.set_property("adjectives", ["hot", "pepper"])
 _o_lunch.set_property("takeable", True)
 _o_lunch.set_property("edible", True)
+_.set_property("lunch", _o_lunch)
 _objects["LUNCH"] = _o_lunch
 
 # BAT
-_o_bat, _ = bootstrap.get_or_create_object(
+_o_bat, _created = bootstrap.get_or_create_object(
     "bat",
     unique_name=False,
     parents=[_classes["zork_actor"]],
@@ -332,10 +364,12 @@ _o_bat.add_alias("bat")
 _o_bat.add_alias("vampire")
 _o_bat.set_property("adjectives", ["vampire", "deranged"])
 # ACTION: BAT-F — see zork1_verbs/bat_f.py
+_.set_property("bat_f", _o_bat)
+_.set_property("bat", _o_bat)
 _objects["BAT"] = _o_bat
 
 # BELL
-_o_bell, _ = bootstrap.get_or_create_object(
+_o_bell, _created = bootstrap.get_or_create_object(
     "brass bell",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -348,10 +382,12 @@ _o_bell.add_alias("bell")
 _o_bell.set_property("adjectives", ["small", "brass"])
 _o_bell.set_property("takeable", True)
 # ACTION: BELL-F — see zork1_verbs/bell_f.py
+_.set_property("bell_f", _o_bell)
+_.set_property("bell", _o_bell)
 _objects["BELL"] = _o_bell
 
 # HOT-BELL
-_o_hot_bell, _ = bootstrap.get_or_create_object(
+_o_hot_bell, _created = bootstrap.get_or_create_object(
     "red hot brass bell",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -363,10 +399,12 @@ _o_hot_bell.set_property("description", "On the ground is a red hot bell.")
 _o_hot_bell.add_alias("bell")
 _o_hot_bell.set_property("adjectives", ["brass", "hot", "red", "small"])
 # ACTION: HOT-BELL-F — see zork1_verbs/hot_bell_f.py
+_.set_property("hot_bell_f", _o_hot_bell)
+_.set_property("hot_bell", _o_hot_bell)
 _objects["HOT-BELL"] = _o_hot_bell
 
 # AXE
-_o_axe, _ = bootstrap.get_or_create_object(
+_o_axe, _created = bootstrap.get_or_create_object(
     "bloody axe",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -383,10 +421,12 @@ _o_axe.set_property("takeable", True)
 _o_axe.set_property("obvious", False)
 _o_axe.set_property("size", 25)
 # ACTION: AXE-F — see zork1_verbs/axe_f.py
+_.set_property("axe_f", _o_axe)
+_.set_property("axe", _o_axe)
 _objects["AXE"] = _o_axe
 
 # BOLT
-_o_bolt, _ = bootstrap.get_or_create_object(
+_o_bolt, _created = bootstrap.get_or_create_object(
     "bolt",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -401,10 +441,12 @@ _o_bolt.set_property("adjectives", ["metal", "large"])
 _o_bolt.set_property("obvious", False)
 _o_bolt.set_property("turnable", True)
 # ACTION: BOLT-F — see zork1_verbs/bolt_f.py
+_.set_property("bolt_f", _o_bolt)
+_.set_property("bolt", _o_bolt)
 _objects["BOLT"] = _o_bolt
 
 # BUBBLE
-_o_bubble, _ = bootstrap.get_or_create_object(
+_o_bubble, _created = bootstrap.get_or_create_object(
     "green bubble",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -417,10 +459,12 @@ _o_bubble.add_alias("bubble")
 _o_bubble.set_property("adjectives", ["small", "green", "plastic"])
 _o_bubble.set_property("obvious", False)
 # ACTION: BUBBLE-F — see zork1_verbs/bubble_f.py
+_.set_property("bubble_f", _o_bubble)
+_.set_property("bubble", _o_bubble)
 _objects["BUBBLE"] = _o_bubble
 
 # ALTAR
-_o_altar, _ = bootstrap.get_or_create_object(
+_o_altar, _created = bootstrap.get_or_create_object(
     "altar",
     unique_name=False,
     parents=[_classes["zork_container"]],
@@ -433,10 +477,11 @@ _o_altar.add_alias("altar")
 _o_altar.set_property("obvious", False)
 _o_altar.set_property("open", True)
 _o_altar.set_property("capacity", 50)
+_.set_property("altar", _o_altar)
 _objects["ALTAR"] = _o_altar
 
 # BOOK
-_o_book, _ = bootstrap.get_or_create_object(
+_o_book, _created = bootstrap.get_or_create_object(
     "black book",
     unique_name=False,
     parents=[_classes["zork_container"]],
@@ -460,10 +505,12 @@ _o_book.set_property("flammable", True)
 _o_book.set_property("turnable", True)
 _o_book.set_property("size", 10)
 # ACTION: BLACK-BOOK — see zork1_verbs/black_book.py
+_.set_property("black_book", _o_book)
+_.set_property("book", _o_book)
 _objects["BOOK"] = _o_book
 
 # BROKEN-LAMP
-_o_broken_lamp, _ = bootstrap.get_or_create_object(
+_o_broken_lamp, _created = bootstrap.get_or_create_object(
     "broken lantern",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -476,10 +523,11 @@ _o_broken_lamp.add_alias("lamp")
 _o_broken_lamp.add_alias("lantern")
 _o_broken_lamp.set_property("adjectives", ["broken"])
 _o_broken_lamp.set_property("takeable", True)
+_.set_property("broken_lamp", _o_broken_lamp)
 _objects["BROKEN-LAMP"] = _o_broken_lamp
 
 # SCEPTRE
-_o_sceptre, _ = bootstrap.get_or_create_object(
+_o_sceptre, _created = bootstrap.get_or_create_object(
     "sceptre",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -502,10 +550,12 @@ _o_sceptre.set_property("size", 3)
 _o_sceptre.set_property("value", 4)
 _o_sceptre.set_property("tvalue", 6)
 # ACTION: SCEPTRE-FUNCTION — see zork1_verbs/sceptre_function.py
+_.set_property("sceptre_function", _o_sceptre)
+_.set_property("sceptre", _o_sceptre)
 _objects["SCEPTRE"] = _o_sceptre
 
 # TIMBERS
-_o_timbers, _ = bootstrap.get_or_create_object(
+_o_timbers, _created = bootstrap.get_or_create_object(
     "broken timber",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -519,10 +569,11 @@ _o_timbers.add_alias("pile")
 _o_timbers.set_property("adjectives", ["wooden", "broken"])
 _o_timbers.set_property("takeable", True)
 _o_timbers.set_property("size", 50)
+_.set_property("timbers", _o_timbers)
 _objects["TIMBERS"] = _o_timbers
 
 # SLIDE
-_o_slide, _ = bootstrap.get_or_create_object(
+_o_slide, _created = bootstrap.get_or_create_object(
     "chute",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -537,10 +588,12 @@ _o_slide.add_alias("slide")
 _o_slide.set_property("adjectives", ["steep", "metal", "twisting"])
 _o_slide.set_property("climbable", True)
 # ACTION: SLIDE-FUNCTION — see zork1_verbs/slide_function.py
+_.set_property("slide_function", _o_slide)
+_.set_property("slide", _o_slide)
 _objects["SLIDE"] = _o_slide
 
 # KITCHEN-TABLE
-_o_kitchen_table, _ = bootstrap.get_or_create_object(
+_o_kitchen_table, _created = bootstrap.get_or_create_object(
     "kitchen table",
     unique_name=False,
     parents=[_classes["zork_container"]],
@@ -554,10 +607,11 @@ _o_kitchen_table.set_property("adjectives", ["kitchen"])
 _o_kitchen_table.set_property("obvious", False)
 _o_kitchen_table.set_property("open", True)
 _o_kitchen_table.set_property("capacity", 50)
+_.set_property("kitchen_table", _o_kitchen_table)
 _objects["KITCHEN-TABLE"] = _o_kitchen_table
 
 # ATTIC-TABLE
-_o_attic_table, _ = bootstrap.get_or_create_object(
+_o_attic_table, _created = bootstrap.get_or_create_object(
     "table",
     unique_name=False,
     parents=[_classes["zork_container"]],
@@ -570,10 +624,11 @@ _o_attic_table.add_alias("table")
 _o_attic_table.set_property("obvious", False)
 _o_attic_table.set_property("open", True)
 _o_attic_table.set_property("capacity", 40)
+_.set_property("attic_table", _o_attic_table)
 _objects["ATTIC-TABLE"] = _o_attic_table
 
 # SANDWICH-BAG
-_o_sandwich_bag, _ = bootstrap.get_or_create_object(
+_o_sandwich_bag, _created = bootstrap.get_or_create_object(
     "brown sack",
     unique_name=False,
     parents=[_classes["zork_container"]],
@@ -590,10 +645,12 @@ _o_sandwich_bag.set_property("flammable", True)
 _o_sandwich_bag.set_property("capacity", 9)
 _o_sandwich_bag.set_property("size", 9)
 # ACTION: SANDWICH-BAG-FCN — see zork1_verbs/sandwich_bag_fcn.py
+_.set_property("sandwich_bag_fcn", _o_sandwich_bag)
+_.set_property("sandwich_bag", _o_sandwich_bag)
 _objects["SANDWICH-BAG"] = _o_sandwich_bag
 
 # TOOL-CHEST
-_o_tool_chest, _ = bootstrap.get_or_create_object(
+_o_tool_chest, _created = bootstrap.get_or_create_object(
     "group of tool chests",
     unique_name=False,
     parents=[_classes["zork_container"]],
@@ -609,10 +666,12 @@ _o_tool_chest.add_alias("toolchests")
 _o_tool_chest.set_property("adjectives", ["tool"])
 _o_tool_chest.set_property("open", True)
 # ACTION: TOOL-CHEST-FCN — see zork1_verbs/tool_chest_fcn.py
+_.set_property("tool_chest_fcn", _o_tool_chest)
+_.set_property("tool_chest", _o_tool_chest)
 _objects["TOOL-CHEST"] = _o_tool_chest
 
 # YELLOW-BUTTON
-_o_yellow_button, _ = bootstrap.get_or_create_object(
+_o_yellow_button, _created = bootstrap.get_or_create_object(
     "yellow button",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -626,10 +685,12 @@ _o_yellow_button.add_alias("switch")
 _o_yellow_button.set_property("adjectives", ["yellow"])
 _o_yellow_button.set_property("obvious", False)
 # ACTION: BUTTON-F — see zork1_verbs/button_f.py
+_.set_property("button_f", _o_yellow_button)
+_.set_property("yellow_button", _o_yellow_button)
 _objects["YELLOW-BUTTON"] = _o_yellow_button
 
 # BROWN-BUTTON
-_o_brown_button, _ = bootstrap.get_or_create_object(
+_o_brown_button, _created = bootstrap.get_or_create_object(
     "brown button",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -643,10 +704,12 @@ _o_brown_button.add_alias("switch")
 _o_brown_button.set_property("adjectives", ["brown"])
 _o_brown_button.set_property("obvious", False)
 # ACTION: BUTTON-F — see zork1_verbs/button_f.py
+_.set_property("button_f", _o_brown_button)
+_.set_property("brown_button", _o_brown_button)
 _objects["BROWN-BUTTON"] = _o_brown_button
 
 # RED-BUTTON
-_o_red_button, _ = bootstrap.get_or_create_object(
+_o_red_button, _created = bootstrap.get_or_create_object(
     "red button",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -660,10 +723,12 @@ _o_red_button.add_alias("switch")
 _o_red_button.set_property("adjectives", ["red"])
 _o_red_button.set_property("obvious", False)
 # ACTION: BUTTON-F — see zork1_verbs/button_f.py
+_.set_property("button_f", _o_red_button)
+_.set_property("red_button", _o_red_button)
 _objects["RED-BUTTON"] = _o_red_button
 
 # BLUE-BUTTON
-_o_blue_button, _ = bootstrap.get_or_create_object(
+_o_blue_button, _created = bootstrap.get_or_create_object(
     "blue button",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -677,10 +742,12 @@ _o_blue_button.add_alias("switch")
 _o_blue_button.set_property("adjectives", ["blue"])
 _o_blue_button.set_property("obvious", False)
 # ACTION: BUTTON-F — see zork1_verbs/button_f.py
+_.set_property("button_f", _o_blue_button)
+_.set_property("blue_button", _o_blue_button)
 _objects["BLUE-BUTTON"] = _o_blue_button
 
 # TROPHY-CASE
-_o_trophy_case, _ = bootstrap.get_or_create_object(
+_o_trophy_case, _created = bootstrap.get_or_create_object(
     "trophy case",
     unique_name=False,
     parents=[_classes["zork_container"]],
@@ -696,10 +763,12 @@ _o_trophy_case.set_property("obvious", False)
 _o_trophy_case.set_property("searchable", True)
 _o_trophy_case.set_property("capacity", 10000)
 # ACTION: TROPHY-CASE-FCN — see zork1_verbs/trophy_case_fcn.py
+_.set_property("trophy_case_fcn", _o_trophy_case)
+_.set_property("trophy_case", _o_trophy_case)
 _objects["TROPHY-CASE"] = _o_trophy_case
 
 # RUG
-_o_rug, _ = bootstrap.get_or_create_object(
+_o_rug, _created = bootstrap.get_or_create_object(
     "carpet",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -713,10 +782,12 @@ _o_rug.add_alias("carpet")
 _o_rug.set_property("adjectives", ["large", "oriental"])
 _o_rug.set_property("obvious", False)
 # ACTION: RUG-FCN — see zork1_verbs/rug_fcn.py
+_.set_property("rug_fcn", _o_rug)
+_.set_property("rug", _o_rug)
 _objects["RUG"] = _o_rug
 
 # CHALICE
-_o_chalice, _ = bootstrap.get_or_create_object(
+_o_chalice, _created = bootstrap.get_or_create_object(
     "chalice",
     unique_name=False,
     parents=[_classes["zork_container"]],
@@ -736,10 +807,12 @@ _o_chalice.set_property("size", 10)
 _o_chalice.set_property("value", 10)
 _o_chalice.set_property("tvalue", 5)
 # ACTION: CHALICE-FCN — see zork1_verbs/chalice_fcn.py
+_.set_property("chalice_fcn", _o_chalice)
+_.set_property("chalice", _o_chalice)
 _objects["CHALICE"] = _o_chalice
 
 # GARLIC
-_o_garlic, _ = bootstrap.get_or_create_object(
+_o_garlic, _created = bootstrap.get_or_create_object(
     "clove of garlic",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -754,10 +827,12 @@ _o_garlic.set_property("takeable", True)
 _o_garlic.set_property("edible", True)
 _o_garlic.set_property("size", 4)
 # ACTION: GARLIC-F — see zork1_verbs/garlic_f.py
+_.set_property("garlic_f", _o_garlic)
+_.set_property("garlic", _o_garlic)
 _objects["GARLIC"] = _o_garlic
 
 # TRIDENT
-_o_trident, _ = bootstrap.get_or_create_object(
+_o_trident, _created = bootstrap.get_or_create_object(
     "crystal trident",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -774,10 +849,11 @@ _o_trident.set_property("takeable", True)
 _o_trident.set_property("size", 20)
 _o_trident.set_property("value", 4)
 _o_trident.set_property("tvalue", 11)
+_.set_property("trident", _o_trident)
 _objects["TRIDENT"] = _o_trident
 
 # CYCLOPS
-_o_cyclops, _ = bootstrap.get_or_create_object(
+_o_cyclops, _created = bootstrap.get_or_create_object(
     "cyclops",
     unique_name=False,
     parents=[_classes["zork_actor"]],
@@ -792,10 +868,12 @@ _o_cyclops.add_alias("eye")
 _o_cyclops.set_property("adjectives", ["hungry", "giant"])
 _o_cyclops.set_property("obvious", False)
 # ACTION: CYCLOPS-FCN — see zork1_verbs/cyclops_fcn.py
+_.set_property("cyclops_fcn", _o_cyclops)
+_.set_property("cyclops", _o_cyclops)
 _objects["CYCLOPS"] = _o_cyclops
 
 # DAM
-_o_dam, _ = bootstrap.get_or_create_object(
+_o_dam, _created = bootstrap.get_or_create_object(
     "dam",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -811,10 +889,12 @@ _o_dam.add_alias("fcd")
 _o_dam.add_alias("#3")
 _o_dam.set_property("obvious", False)
 # ACTION: DAM-FUNCTION — see zork1_verbs/dam_function.py
+_.set_property("dam_function", _o_dam)
+_.set_property("dam", _o_dam)
 _objects["DAM"] = _o_dam
 
 # TRAP-DOOR
-_o_trap_door, _ = bootstrap.get_or_create_object(
+_o_trap_door, _created = bootstrap.get_or_create_object(
     "trap door",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -831,10 +911,12 @@ _o_trap_door.set_property("adjectives", ["trap", "dusty"])
 _o_trap_door.set_property("is_door", True)
 _o_trap_door.set_property("obvious", False)
 # ACTION: TRAP-DOOR-FCN — see zork1_verbs/trap_door_fcn.py
+_.set_property("trap_door_fcn", _o_trap_door)
+_.set_property("trap_door", _o_trap_door)
 _objects["TRAP-DOOR"] = _o_trap_door
 
 # BOARDED-WINDOW
-_o_boarded_window, _ = bootstrap.get_or_create_object(
+_o_boarded_window, _created = bootstrap.get_or_create_object(
     "boarded window",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -847,10 +929,12 @@ _o_boarded_window.add_alias("window")
 _o_boarded_window.set_property("adjectives", ["boarded"])
 _o_boarded_window.set_property("obvious", False)
 # ACTION: BOARDED-WINDOW-FCN — see zork1_verbs/boarded_window_fcn.py
+_.set_property("boarded_window_fcn", _o_boarded_window)
+_.set_property("boarded_window", _o_boarded_window)
 _objects["BOARDED-WINDOW"] = _o_boarded_window
 
 # FRONT-DOOR
-_o_front_door, _ = bootstrap.get_or_create_object(
+_o_front_door, _created = bootstrap.get_or_create_object(
     "door",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -864,10 +948,12 @@ _o_front_door.set_property("adjectives", ["front", "boarded"])
 _o_front_door.set_property("is_door", True)
 _o_front_door.set_property("obvious", False)
 # ACTION: FRONT-DOOR-FCN — see zork1_verbs/front_door_fcn.py
+_.set_property("front_door_fcn", _o_front_door)
+_.set_property("front_door", _o_front_door)
 _objects["FRONT-DOOR"] = _o_front_door
 
 # BARROW-DOOR
-_o_barrow_door, _ = bootstrap.get_or_create_object(
+_o_barrow_door, _created = bootstrap.get_or_create_object(
     "stone door",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -882,10 +968,12 @@ _o_barrow_door.set_property("is_door", True)
 _o_barrow_door.set_property("obvious", False)
 _o_barrow_door.set_property("open", True)
 # ACTION: BARROW-DOOR-FCN — see zork1_verbs/barrow_door_fcn.py
+_.set_property("barrow_door_fcn", _o_barrow_door)
+_.set_property("barrow_door", _o_barrow_door)
 _objects["BARROW-DOOR"] = _o_barrow_door
 
 # BARROW
-_o_barrow, _ = bootstrap.get_or_create_object(
+_o_barrow, _created = bootstrap.get_or_create_object(
     "stone barrow",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -899,10 +987,12 @@ _o_barrow.add_alias("tomb")
 _o_barrow.set_property("adjectives", ["massive", "stone"])
 _o_barrow.set_property("obvious", False)
 # ACTION: BARROW-FCN — see zork1_verbs/barrow_fcn.py
+_.set_property("barrow_fcn", _o_barrow)
+_.set_property("barrow", _o_barrow)
 _objects["BARROW"] = _o_barrow
 
 # BOTTLE
-_o_bottle, _ = bootstrap.get_or_create_object(
+_o_bottle, _created = bootstrap.get_or_create_object(
     "glass bottle",
     unique_name=False,
     parents=[_classes["zork_container"]],
@@ -918,10 +1008,12 @@ _o_bottle.set_property("takeable", True)
 _o_bottle.set_property("transparent", True)
 _o_bottle.set_property("capacity", 4)
 # ACTION: BOTTLE-FUNCTION — see zork1_verbs/bottle_function.py
+_.set_property("bottle_function", _o_bottle)
+_.set_property("bottle", _o_bottle)
 _objects["BOTTLE"] = _o_bottle
 
 # CRACK
-_o_crack, _ = bootstrap.get_or_create_object(
+_o_crack, _created = bootstrap.get_or_create_object(
     "crack",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -934,10 +1026,12 @@ _o_crack.add_alias("crack")
 _o_crack.set_property("adjectives", ["narrow"])
 _o_crack.set_property("obvious", False)
 # ACTION: CRACK-FCN — see zork1_verbs/crack_fcn.py
+_.set_property("crack_fcn", _o_crack)
+_.set_property("crack", _o_crack)
 _objects["CRACK"] = _o_crack
 
 # COFFIN
-_o_coffin, _ = bootstrap.get_or_create_object(
+_o_coffin, _created = bootstrap.get_or_create_object(
     "gold coffin",
     unique_name=False,
     parents=[_classes["zork_container"]],
@@ -956,10 +1050,11 @@ _o_coffin.set_property("capacity", 35)
 _o_coffin.set_property("size", 55)
 _o_coffin.set_property("value", 10)
 _o_coffin.set_property("tvalue", 15)
+_.set_property("coffin", _o_coffin)
 _objects["COFFIN"] = _o_coffin
 
 # GRATE
-_o_grate, _ = bootstrap.get_or_create_object(
+_o_grate, _created = bootstrap.get_or_create_object(
     "grating",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -973,10 +1068,12 @@ _o_grate.add_alias("grating")
 _o_grate.set_property("is_door", True)
 _o_grate.set_property("obvious", False)
 # ACTION: GRATE-FUNCTION — see zork1_verbs/grate_function.py
+_.set_property("grate_function", _o_grate)
+_.set_property("grate", _o_grate)
 _objects["GRATE"] = _o_grate
 
 # PUMP
-_o_pump, _ = bootstrap.get_or_create_object(
+_o_pump, _created = bootstrap.get_or_create_object(
     "hand-held air pump",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -991,10 +1088,11 @@ _o_pump.add_alias("tool")
 _o_pump.add_alias("tools")
 _o_pump.set_property("adjectives", ["small", "hand-held"])
 _o_pump.set_property("takeable", True)
+_.set_property("pump", _o_pump)
 _objects["PUMP"] = _o_pump
 
 # DIAMOND
-_o_diamond, _ = bootstrap.get_or_create_object(
+_o_diamond, _created = bootstrap.get_or_create_object(
     "huge diamond",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1009,10 +1107,11 @@ _o_diamond.set_property("adjectives", ["huge", "enormous"])
 _o_diamond.set_property("takeable", True)
 _o_diamond.set_property("value", 10)
 _o_diamond.set_property("tvalue", 10)
+_.set_property("diamond", _o_diamond)
 _objects["DIAMOND"] = _o_diamond
 
 # JADE
-_o_jade, _ = bootstrap.get_or_create_object(
+_o_jade, _created = bootstrap.get_or_create_object(
     "jade figurine",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1028,10 +1127,11 @@ _o_jade.set_property("takeable", True)
 _o_jade.set_property("size", 10)
 _o_jade.set_property("value", 5)
 _o_jade.set_property("tvalue", 5)
+_.set_property("jade", _o_jade)
 _objects["JADE"] = _o_jade
 
 # KNIFE
-_o_knife, _ = bootstrap.get_or_create_object(
+_o_knife, _created = bootstrap.get_or_create_object(
     "nasty knife",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1047,10 +1147,12 @@ _o_knife.set_property("adjectives", ["nasty", "unrusty"])
 _o_knife.set_property("takeable", True)
 _o_knife.set_property("weapon", True)
 # ACTION: KNIFE-F — see zork1_verbs/knife_f.py
+_.set_property("knife_f", _o_knife)
+_.set_property("knife", _o_knife)
 _objects["KNIFE"] = _o_knife
 
 # BONES
-_o_bones, _ = bootstrap.get_or_create_object(
+_o_bones, _created = bootstrap.get_or_create_object(
     "skeleton",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1064,10 +1166,12 @@ _o_bones.add_alias("skeleton")
 _o_bones.add_alias("body")
 _o_bones.set_property("obvious", False)
 # ACTION: SKELETON — see zork1_verbs/skeleton.py
+_.set_property("skeleton", _o_bones)
+_.set_property("bones", _o_bones)
 _objects["BONES"] = _o_bones
 
 # BURNED-OUT-LANTERN
-_o_burned_out_lantern, _ = bootstrap.get_or_create_object(
+_o_burned_out_lantern, _created = bootstrap.get_or_create_object(
     "burned-out lantern",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1081,10 +1185,11 @@ _o_burned_out_lantern.add_alias("lamp")
 _o_burned_out_lantern.set_property("adjectives", ["rusty", "burned", "dead", "useless"])
 _o_burned_out_lantern.set_property("takeable", True)
 _o_burned_out_lantern.set_property("size", 20)
+_.set_property("burned_out_lantern", _o_burned_out_lantern)
 _objects["BURNED-OUT-LANTERN"] = _o_burned_out_lantern
 
 # BAG-OF-COINS
-_o_bag_of_coins, _ = bootstrap.get_or_create_object(
+_o_bag_of_coins, _created = bootstrap.get_or_create_object(
     "leather bag of coins",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1102,10 +1207,12 @@ _o_bag_of_coins.set_property("size", 15)
 _o_bag_of_coins.set_property("value", 10)
 _o_bag_of_coins.set_property("tvalue", 5)
 # ACTION: BAG-OF-COINS-F — see zork1_verbs/bag_of_coins_f.py
+_.set_property("bag_of_coins_f", _o_bag_of_coins)
+_.set_property("bag_of_coins", _o_bag_of_coins)
 _objects["BAG-OF-COINS"] = _o_bag_of_coins
 
 # LAMP
-_o_lamp, _ = bootstrap.get_or_create_object(
+_o_lamp, _created = bootstrap.get_or_create_object(
     "brass lantern",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1123,10 +1230,12 @@ _o_lamp.set_property("takeable", True)
 _o_lamp.set_property("lit", True)
 _o_lamp.set_property("size", 15)
 # ACTION: LANTERN — see zork1_verbs/lantern.py
+_.set_property("lantern", _o_lamp)
+_.set_property("lamp", _o_lamp)
 _objects["LAMP"] = _o_lamp
 
 # EMERALD
-_o_emerald, _ = bootstrap.get_or_create_object(
+_o_emerald, _created = bootstrap.get_or_create_object(
     "large emerald",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1141,10 +1250,11 @@ _o_emerald.set_property("adjectives", ["large"])
 _o_emerald.set_property("takeable", True)
 _o_emerald.set_property("value", 5)
 _o_emerald.set_property("tvalue", 10)
+_.set_property("emerald", _o_emerald)
 _objects["EMERALD"] = _o_emerald
 
 # ADVERTISEMENT
-_o_advertisement, _ = bootstrap.get_or_create_object(
+_o_advertisement, _created = bootstrap.get_or_create_object(
     "leaflet",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1166,10 +1276,11 @@ _o_advertisement.set_property("readable", True)
 _o_advertisement.set_property("takeable", True)
 _o_advertisement.set_property("flammable", True)
 _o_advertisement.set_property("size", 2)
+_.set_property("advertisement", _o_advertisement)
 _objects["ADVERTISEMENT"] = _o_advertisement
 
 # LEAK
-_o_leak, _ = bootstrap.get_or_create_object(
+_o_leak, _created = bootstrap.get_or_create_object(
     "leak",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1183,10 +1294,12 @@ _o_leak.add_alias("drip")
 _o_leak.add_alias("pipe")
 _o_leak.set_property("obvious", False)
 # ACTION: LEAK-FUNCTION — see zork1_verbs/leak_function.py
+_.set_property("leak_function", _o_leak)
+_.set_property("leak", _o_leak)
 _objects["LEAK"] = _o_leak
 
 # MACHINE
-_o_machine, _ = bootstrap.get_or_create_object(
+_o_machine, _created = bootstrap.get_or_create_object(
     "machine",
     unique_name=False,
     parents=[_classes["zork_container"]],
@@ -1202,10 +1315,12 @@ _o_machine.add_alias("lid")
 _o_machine.set_property("obvious", False)
 _o_machine.set_property("capacity", 50)
 # ACTION: MACHINE-F — see zork1_verbs/machine_f.py
+_.set_property("machine_f", _o_machine)
+_.set_property("machine", _o_machine)
 _objects["MACHINE"] = _o_machine
 
 # INFLATED-BOAT
-_o_inflated_boat, _ = bootstrap.get_or_create_object(
+_o_inflated_boat, _created = bootstrap.get_or_create_object(
     "magic boat",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1225,10 +1340,12 @@ _o_inflated_boat.set_property("searchable", True)
 _o_inflated_boat.set_property("capacity", 100)
 _o_inflated_boat.set_property("size", 20)
 # ACTION: RBOAT-FUNCTION — see zork1_verbs/rboat_function.py
+_.set_property("rboat_function", _o_inflated_boat)
+_.set_property("inflated_boat", _o_inflated_boat)
 _objects["INFLATED-BOAT"] = _o_inflated_boat
 
 # MAILBOX
-_o_mailbox, _ = bootstrap.get_or_create_object(
+_o_mailbox, _created = bootstrap.get_or_create_object(
     "small mailbox",
     unique_name=False,
     parents=[_classes["zork_container"]],
@@ -1242,10 +1359,12 @@ _o_mailbox.add_alias("box")
 _o_mailbox.set_property("adjectives", ["small"])
 _o_mailbox.set_property("capacity", 10)
 # ACTION: MAILBOX-F — see zork1_verbs/mailbox_f.py
+_.set_property("mailbox_f", _o_mailbox)
+_.set_property("mailbox", _o_mailbox)
 _objects["MAILBOX"] = _o_mailbox
 
 # MATCH
-_o_match, _ = bootstrap.get_or_create_object(
+_o_match, _created = bootstrap.get_or_create_object(
     "matchbook",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1266,10 +1385,12 @@ _o_match.set_property("readable", True)
 _o_match.set_property("takeable", True)
 _o_match.set_property("size", 2)
 # ACTION: MATCH-FUNCTION — see zork1_verbs/match_function.py
+_.set_property("match_function", _o_match)
+_.set_property("match", _o_match)
 _objects["MATCH"] = _o_match
 
 # MIRROR-2
-_o_mirror_2, _ = bootstrap.get_or_create_object(
+_o_mirror_2, _created = bootstrap.get_or_create_object(
     "mirror",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1283,10 +1404,12 @@ _o_mirror_2.add_alias("mirror")
 _o_mirror_2.add_alias("enormous")
 _o_mirror_2.set_property("obvious", False)
 # ACTION: MIRROR-MIRROR — see zork1_verbs/mirror_mirror.py
+_.set_property("mirror_mirror", _o_mirror_2)
+_.set_property("mirror_2", _o_mirror_2)
 _objects["MIRROR-2"] = _o_mirror_2
 
 # MIRROR-1
-_o_mirror_1, _ = bootstrap.get_or_create_object(
+_o_mirror_1, _created = bootstrap.get_or_create_object(
     "mirror",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1300,10 +1423,12 @@ _o_mirror_1.add_alias("mirror")
 _o_mirror_1.add_alias("enormous")
 _o_mirror_1.set_property("obvious", False)
 # ACTION: MIRROR-MIRROR — see zork1_verbs/mirror_mirror.py
+_.set_property("mirror_mirror", _o_mirror_1)
+_.set_property("mirror_1", _o_mirror_1)
 _objects["MIRROR-1"] = _o_mirror_1
 
 # PAINTING
-_o_painting, _ = bootstrap.get_or_create_object(
+_o_painting, _created = bootstrap.get_or_create_object(
     "painting",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1327,10 +1452,12 @@ _o_painting.set_property("size", 15)
 _o_painting.set_property("value", 4)
 _o_painting.set_property("tvalue", 6)
 # ACTION: PAINTING-FCN — see zork1_verbs/painting_fcn.py
+_.set_property("painting_fcn", _o_painting)
+_.set_property("painting", _o_painting)
 _objects["PAINTING"] = _o_painting
 
 # CANDLES
-_o_candles, _ = bootstrap.get_or_create_object(
+_o_candles, _created = bootstrap.get_or_create_object(
     "pair of candles",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1346,10 +1473,12 @@ _o_candles.set_property("takeable", True)
 _o_candles.set_property("lit", True)
 _o_candles.set_property("size", 10)
 # ACTION: CANDLES-FCN — see zork1_verbs/candles_fcn.py
+_.set_property("candles_fcn", _o_candles)
+_.set_property("candles", _o_candles)
 _objects["CANDLES"] = _o_candles
 
 # GUNK
-_o_gunk, _ = bootstrap.get_or_create_object(
+_o_gunk, _created = bootstrap.get_or_create_object(
     "small piece of vitreous slag",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1365,10 +1494,12 @@ _o_gunk.set_property("adjectives", ["small", "vitreous"])
 _o_gunk.set_property("takeable", True)
 _o_gunk.set_property("size", 10)
 # ACTION: GUNK-FUNCTION — see zork1_verbs/gunk_function.py
+_.set_property("gunk_function", _o_gunk)
+_.set_property("gunk", _o_gunk)
 _objects["GUNK"] = _o_gunk
 
 # BODIES
-_o_bodies, _ = bootstrap.get_or_create_object(
+_o_bodies, _created = bootstrap.get_or_create_object(
     "pile of bodies",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1384,10 +1515,12 @@ _o_bodies.add_alias("pile")
 _o_bodies.set_property("adjectives", ["mangled"])
 _o_bodies.set_property("obvious", False)
 # ACTION: BODY-FUNCTION — see zork1_verbs/body_function.py
+_.set_property("body_function", _o_bodies)
+_.set_property("bodies", _o_bodies)
 _objects["BODIES"] = _o_bodies
 
 # LEAVES
-_o_leaves, _ = bootstrap.get_or_create_object(
+_o_leaves, _created = bootstrap.get_or_create_object(
     "pile of leaves",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1403,10 +1536,12 @@ _o_leaves.set_property("takeable", True)
 _o_leaves.set_property("flammable", True)
 _o_leaves.set_property("size", 25)
 # ACTION: LEAF-PILE — see zork1_verbs/leaf_pile.py
+_.set_property("leaf_pile", _o_leaves)
+_.set_property("leaves", _o_leaves)
 _objects["LEAVES"] = _o_leaves
 
 # PUNCTURED-BOAT
-_o_punctured_boat, _ = bootstrap.get_or_create_object(
+_o_punctured_boat, _created = bootstrap.get_or_create_object(
     "punctured boat",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1423,10 +1558,12 @@ _o_punctured_boat.set_property("takeable", True)
 _o_punctured_boat.set_property("flammable", True)
 _o_punctured_boat.set_property("size", 20)
 # ACTION: DBOAT-FUNCTION — see zork1_verbs/dboat_function.py
+_.set_property("dboat_function", _o_punctured_boat)
+_.set_property("punctured_boat", _o_punctured_boat)
 _objects["PUNCTURED-BOAT"] = _o_punctured_boat
 
 # INFLATABLE-BOAT
-_o_inflatable_boat, _ = bootstrap.get_or_create_object(
+_o_inflatable_boat, _created = bootstrap.get_or_create_object(
     "pile of plastic",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1446,10 +1583,12 @@ _o_inflatable_boat.set_property("takeable", True)
 _o_inflatable_boat.set_property("flammable", True)
 _o_inflatable_boat.set_property("size", 20)
 # ACTION: IBOAT-FUNCTION — see zork1_verbs/iboat_function.py
+_.set_property("iboat_function", _o_inflatable_boat)
+_.set_property("inflatable_boat", _o_inflatable_boat)
 _objects["INFLATABLE-BOAT"] = _o_inflatable_boat
 
 # BAR
-_o_bar, _ = bootstrap.get_or_create_object(
+_o_bar, _created = bootstrap.get_or_create_object(
     "platinum bar",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1466,10 +1605,11 @@ _o_bar.set_property("takeable", True)
 _o_bar.set_property("size", 20)
 _o_bar.set_property("value", 10)
 _o_bar.set_property("tvalue", 5)
+_.set_property("bar", _o_bar)
 _objects["BAR"] = _o_bar
 
 # POT-OF-GOLD
-_o_pot_of_gold, _ = bootstrap.get_or_create_object(
+_o_pot_of_gold, _created = bootstrap.get_or_create_object(
     "pot of gold",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1486,10 +1626,11 @@ _o_pot_of_gold.set_property("takeable", True)
 _o_pot_of_gold.set_property("size", 15)
 _o_pot_of_gold.set_property("value", 10)
 _o_pot_of_gold.set_property("tvalue", 10)
+_.set_property("pot_of_gold", _o_pot_of_gold)
 _objects["POT-OF-GOLD"] = _o_pot_of_gold
 
 # PRAYER
-_o_prayer, _ = bootstrap.get_or_create_object(
+_o_prayer, _created = bootstrap.get_or_create_object(
     "prayer",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1507,10 +1648,11 @@ _o_prayer.add_alias("inscription")
 _o_prayer.set_property("adjectives", ["ancient", "old"])
 _o_prayer.set_property("readable", True)
 _o_prayer.set_property("obvious", False)
+_.set_property("prayer", _o_prayer)
 _objects["PRAYER"] = _o_prayer
 
 # RAILING
-_o_railing, _ = bootstrap.get_or_create_object(
+_o_railing, _created = bootstrap.get_or_create_object(
     "wooden railing",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1523,10 +1665,11 @@ _o_railing.add_alias("railing")
 _o_railing.add_alias("rail")
 _o_railing.set_property("adjectives", ["wooden"])
 _o_railing.set_property("obvious", False)
+_.set_property("railing", _o_railing)
 _objects["RAILING"] = _o_railing
 
 # RAINBOW
-_o_rainbow, _ = bootstrap.get_or_create_object(
+_o_rainbow, _created = bootstrap.get_or_create_object(
     "rainbow",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1539,10 +1682,12 @@ _o_rainbow.add_alias("rainbow")
 _o_rainbow.set_property("obvious", False)
 _o_rainbow.set_property("climbable", True)
 # ACTION: RAINBOW-FCN — see zork1_verbs/rainbow_fcn.py
+_.set_property("rainbow_fcn", _o_rainbow)
+_.set_property("rainbow", _o_rainbow)
 _objects["RAINBOW"] = _o_rainbow
 
 # RIVER
-_o_river, _ = bootstrap.get_or_create_object(
+_o_river, _created = bootstrap.get_or_create_object(
     "river",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1555,10 +1700,12 @@ _o_river.add_alias("river")
 _o_river.set_property("adjectives", ["frigid"])
 _o_river.set_property("obvious", False)
 # ACTION: RIVER-FUNCTION — see zork1_verbs/river_function.py
+_.set_property("river_function", _o_river)
+_.set_property("river", _o_river)
 _objects["RIVER"] = _o_river
 
 # BUOY
-_o_buoy, _ = bootstrap.get_or_create_object(
+_o_buoy, _created = bootstrap.get_or_create_object(
     "red buoy",
     unique_name=False,
     parents=[_classes["zork_container"]],
@@ -1573,10 +1720,12 @@ _o_buoy.set_property("takeable", True)
 _o_buoy.set_property("capacity", 20)
 _o_buoy.set_property("size", 10)
 # ACTION: TREASURE-INSIDE — see zork1_verbs/treasure_inside.py
+_.set_property("treasure_inside", _o_buoy)
+_.set_property("buoy", _o_buoy)
 _objects["BUOY"] = _o_buoy
 
 # ROPE
-_o_rope, _ = bootstrap.get_or_create_object(
+_o_rope, _created = bootstrap.get_or_create_object(
     "rope",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1592,10 +1741,12 @@ _o_rope.set_property("adjectives", ["large"])
 _o_rope.set_property("takeable", True)
 _o_rope.set_property("size", 10)
 # ACTION: ROPE-FUNCTION — see zork1_verbs/rope_function.py
+_.set_property("rope_function", _o_rope)
+_.set_property("rope", _o_rope)
 _objects["ROPE"] = _o_rope
 
 # RUSTY-KNIFE
-_o_rusty_knife, _ = bootstrap.get_or_create_object(
+_o_rusty_knife, _created = bootstrap.get_or_create_object(
     "rusty knife",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1611,10 +1762,12 @@ _o_rusty_knife.set_property("takeable", True)
 _o_rusty_knife.set_property("weapon", True)
 _o_rusty_knife.set_property("size", 20)
 # ACTION: RUSTY-KNIFE-FCN — see zork1_verbs/rusty_knife_fcn.py
+_.set_property("rusty_knife_fcn", _o_rusty_knife)
+_.set_property("rusty_knife", _o_rusty_knife)
 _objects["RUSTY-KNIFE"] = _o_rusty_knife
 
 # SAND
-_o_sand, _ = bootstrap.get_or_create_object(
+_o_sand, _created = bootstrap.get_or_create_object(
     "sand",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1626,10 +1779,12 @@ _o_sand.set_property("description", "sand")
 _o_sand.add_alias("sand")
 _o_sand.set_property("obvious", False)
 # ACTION: SAND-FUNCTION — see zork1_verbs/sand_function.py
+_.set_property("sand_function", _o_sand)
+_.set_property("sand", _o_sand)
 _objects["SAND"] = _o_sand
 
 # BRACELET
-_o_bracelet, _ = bootstrap.get_or_create_object(
+_o_bracelet, _created = bootstrap.get_or_create_object(
     "sapphire-encrusted bracelet",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1647,10 +1802,11 @@ _o_bracelet.set_property("takeable", True)
 _o_bracelet.set_property("size", 10)
 _o_bracelet.set_property("value", 5)
 _o_bracelet.set_property("tvalue", 5)
+_.set_property("bracelet", _o_bracelet)
 _objects["BRACELET"] = _o_bracelet
 
 # SCREWDRIVER
-_o_screwdriver, _ = bootstrap.get_or_create_object(
+_o_screwdriver, _created = bootstrap.get_or_create_object(
     "screwdriver",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1665,10 +1821,11 @@ _o_screwdriver.add_alias("tools")
 _o_screwdriver.add_alias("driver")
 _o_screwdriver.set_property("adjectives", ["screw"])
 _o_screwdriver.set_property("takeable", True)
+_.set_property("screwdriver", _o_screwdriver)
 _objects["SCREWDRIVER"] = _o_screwdriver
 
 # KEYS
-_o_keys, _ = bootstrap.get_or_create_object(
+_o_keys, _created = bootstrap.get_or_create_object(
     "skeleton key",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1681,10 +1838,11 @@ _o_keys.add_alias("key")
 _o_keys.set_property("adjectives", ["skeleton"])
 _o_keys.set_property("takeable", True)
 _o_keys.set_property("size", 10)
+_.set_property("keys", _o_keys)
 _objects["KEYS"] = _o_keys
 
 # SHOVEL
-_o_shovel, _ = bootstrap.get_or_create_object(
+_o_shovel, _created = bootstrap.get_or_create_object(
     "shovel",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1698,10 +1856,11 @@ _o_shovel.add_alias("tool")
 _o_shovel.add_alias("tools")
 _o_shovel.set_property("takeable", True)
 _o_shovel.set_property("size", 15)
+_.set_property("shovel", _o_shovel)
 _objects["SHOVEL"] = _o_shovel
 
 # COAL
-_o_coal, _ = bootstrap.get_or_create_object(
+_o_coal, _created = bootstrap.get_or_create_object(
     "small pile of coal",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1717,10 +1876,11 @@ _o_coal.set_property("adjectives", ["small"])
 _o_coal.set_property("takeable", True)
 _o_coal.set_property("flammable", True)
 _o_coal.set_property("size", 20)
+_.set_property("coal", _o_coal)
 _objects["COAL"] = _o_coal
 
 # LADDER
-_o_ladder, _ = bootstrap.get_or_create_object(
+_o_ladder, _created = bootstrap.get_or_create_object(
     "wooden ladder",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1733,10 +1893,11 @@ _o_ladder.add_alias("ladder")
 _o_ladder.set_property("adjectives", ["wooden", "rickety", "narrow"])
 _o_ladder.set_property("obvious", False)
 _o_ladder.set_property("climbable", True)
+_.set_property("ladder", _o_ladder)
 _objects["LADDER"] = _o_ladder
 
 # SCARAB
-_o_scarab, _ = bootstrap.get_or_create_object(
+_o_scarab, _created = bootstrap.get_or_create_object(
     "beautiful jeweled scarab",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1754,10 +1915,11 @@ _o_scarab.set_property("takeable", True)
 _o_scarab.set_property("size", 8)
 _o_scarab.set_property("value", 5)
 _o_scarab.set_property("tvalue", 5)
+_.set_property("scarab", _o_scarab)
 _objects["SCARAB"] = _o_scarab
 
 # LARGE-BAG
-_o_large_bag, _ = bootstrap.get_or_create_object(
+_o_large_bag, _created = bootstrap.get_or_create_object(
     "large bag",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1770,10 +1932,12 @@ _o_large_bag.add_alias("bag")
 _o_large_bag.set_property("adjectives", ["large", "thiefs"])
 _o_large_bag.set_property("obvious", False)
 # ACTION: LARGE-BAG-F — see zork1_verbs/large_bag_f.py
+_.set_property("large_bag_f", _o_large_bag)
+_.set_property("large_bag", _o_large_bag)
 _objects["LARGE-BAG"] = _o_large_bag
 
 # STILETTO
-_o_stiletto, _ = bootstrap.get_or_create_object(
+_o_stiletto, _created = bootstrap.get_or_create_object(
     "stiletto",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1789,10 +1953,12 @@ _o_stiletto.set_property("takeable", True)
 _o_stiletto.set_property("obvious", False)
 _o_stiletto.set_property("size", 10)
 # ACTION: STILETTO-FUNCTION — see zork1_verbs/stiletto_function.py
+_.set_property("stiletto_function", _o_stiletto)
+_.set_property("stiletto", _o_stiletto)
 _objects["STILETTO"] = _o_stiletto
 
 # MACHINE-SWITCH
-_o_machine_switch, _ = bootstrap.get_or_create_object(
+_o_machine_switch, _created = bootstrap.get_or_create_object(
     "switch",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1805,10 +1971,12 @@ _o_machine_switch.add_alias("switch")
 _o_machine_switch.set_property("obvious", False)
 _o_machine_switch.set_property("turnable", True)
 # ACTION: MSWITCH-FUNCTION — see zork1_verbs/mswitch_function.py
+_.set_property("mswitch_function", _o_machine_switch)
+_.set_property("machine_switch", _o_machine_switch)
 _objects["MACHINE-SWITCH"] = _o_machine_switch
 
 # WOODEN-DOOR
-_o_wooden_door, _ = bootstrap.get_or_create_object(
+_o_wooden_door, _created = bootstrap.get_or_create_object(
     "wooden door",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1826,10 +1994,12 @@ _o_wooden_door.set_property("is_door", True)
 _o_wooden_door.set_property("obvious", False)
 _o_wooden_door.set_property("transparent", True)
 # ACTION: FRONT-DOOR-FCN — see zork1_verbs/front_door_fcn.py
+_.set_property("front_door_fcn", _o_wooden_door)
+_.set_property("wooden_door", _o_wooden_door)
 _objects["WOODEN-DOOR"] = _o_wooden_door
 
 # SWORD
-_o_sword, _ = bootstrap.get_or_create_object(
+_o_sword, _created = bootstrap.get_or_create_object(
     "sword",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1847,10 +2017,12 @@ _o_sword.set_property("takeable", True)
 _o_sword.set_property("weapon", True)
 _o_sword.set_property("size", 30)
 # ACTION: SWORD-FCN — see zork1_verbs/sword_fcn.py
+_.set_property("sword_fcn", _o_sword)
+_.set_property("sword", _o_sword)
 _objects["SWORD"] = _o_sword
 
 # MAP
-_o_map, _ = bootstrap.get_or_create_object(
+_o_map, _created = bootstrap.get_or_create_object(
     "ancient map",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1869,10 +2041,11 @@ _o_map.set_property("adjectives", ["antique", "old", "ancient"])
 _o_map.set_property("readable", True)
 _o_map.set_property("takeable", True)
 _o_map.set_property("size", 2)
+_.set_property("map", _o_map)
 _objects["MAP"] = _o_map
 
 # BOAT-LABEL
-_o_boat_label, _ = bootstrap.get_or_create_object(
+_o_boat_label, _created = bootstrap.get_or_create_object(
     "tan label",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1893,10 +2066,11 @@ _o_boat_label.set_property("readable", True)
 _o_boat_label.set_property("takeable", True)
 _o_boat_label.set_property("flammable", True)
 _o_boat_label.set_property("size", 2)
+_.set_property("boat_label", _o_boat_label)
 _objects["BOAT-LABEL"] = _o_boat_label
 
 # THIEF
-_o_thief, _ = bootstrap.get_or_create_object(
+_o_thief, _created = bootstrap.get_or_create_object(
     "thief",
     unique_name=False,
     parents=[_classes["zork_actor"]],
@@ -1915,10 +2089,12 @@ _o_thief.add_alias("person")
 _o_thief.set_property("adjectives", ["shady", "suspicious", "seedy"])
 _o_thief.set_property("open", True)
 # ACTION: ROBBER-FUNCTION — see zork1_verbs/robber_function.py
+_.set_property("robber_function", _o_thief)
+_.set_property("thief", _o_thief)
 _objects["THIEF"] = _o_thief
 
 # PEDESTAL
-_o_pedestal, _ = bootstrap.get_or_create_object(
+_o_pedestal, _created = bootstrap.get_or_create_object(
     "pedestal",
     unique_name=False,
     parents=[_classes["zork_container"]],
@@ -1933,10 +2109,12 @@ _o_pedestal.set_property("obvious", False)
 _o_pedestal.set_property("open", True)
 _o_pedestal.set_property("capacity", 30)
 # ACTION: DUMB-CONTAINER — see zork1_verbs/dumb_container.py
+_.set_property("dumb_container", _o_pedestal)
+_.set_property("pedestal", _o_pedestal)
 _objects["PEDESTAL"] = _o_pedestal
 
 # TORCH
-_o_torch, _ = bootstrap.get_or_create_object(
+_o_torch, _created = bootstrap.get_or_create_object(
     "torch",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1955,10 +2133,12 @@ _o_torch.set_property("size", 20)
 _o_torch.set_property("value", 14)
 _o_torch.set_property("tvalue", 6)
 # ACTION: TORCH-OBJECT — see zork1_verbs/torch_object.py
+_.set_property("torch_object", _o_torch)
+_.set_property("torch", _o_torch)
 _objects["TORCH"] = _o_torch
 
 # GUIDE
-_o_guide, _ = bootstrap.get_or_create_object(
+_o_guide, _created = bootstrap.get_or_create_object(
     "tour guidebook",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -1979,10 +2159,11 @@ _o_guide.set_property("adjectives", ["tour", "guide"])
 _o_guide.set_property("readable", True)
 _o_guide.set_property("takeable", True)
 _o_guide.set_property("flammable", True)
+_.set_property("guide", _o_guide)
 _objects["GUIDE"] = _o_guide
 
 # TROLL
-_o_troll, _ = bootstrap.get_or_create_object(
+_o_troll, _created = bootstrap.get_or_create_object(
     "troll",
     unique_name=False,
     parents=[_classes["zork_actor"]],
@@ -1997,10 +2178,12 @@ _o_troll.add_alias("troll")
 _o_troll.set_property("adjectives", ["nasty"])
 _o_troll.set_property("open", True)
 # ACTION: TROLL-FCN — see zork1_verbs/troll_fcn.py
+_.set_property("troll_fcn", _o_troll)
+_.set_property("troll", _o_troll)
 _objects["TROLL"] = _o_troll
 
 # TRUNK
-_o_trunk, _ = bootstrap.get_or_create_object(
+_o_trunk, _created = bootstrap.get_or_create_object(
     "trunk of jewels",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -2020,10 +2203,12 @@ _o_trunk.set_property("size", 35)
 _o_trunk.set_property("value", 15)
 _o_trunk.set_property("tvalue", 5)
 # ACTION: TRUNK-F — see zork1_verbs/trunk_f.py
+_.set_property("trunk_f", _o_trunk)
+_.set_property("trunk", _o_trunk)
 _objects["TRUNK"] = _o_trunk
 
 # TUBE
-_o_tube, _ = bootstrap.get_or_create_object(
+_o_tube, _created = bootstrap.get_or_create_object(
     "tube",
     unique_name=False,
     parents=[_classes["zork_container"]],
@@ -2040,10 +2225,12 @@ _o_tube.set_property("takeable", True)
 _o_tube.set_property("readable", True)
 _o_tube.set_property("capacity", 7)
 # ACTION: TUBE-FUNCTION — see zork1_verbs/tube_function.py
+_.set_property("tube_function", _o_tube)
+_.set_property("tube", _o_tube)
 _objects["TUBE"] = _o_tube
 
 # PUTTY
-_o_putty, _ = bootstrap.get_or_create_object(
+_o_putty, _created = bootstrap.get_or_create_object(
     "viscous material",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -2058,10 +2245,12 @@ _o_putty.set_property("adjectives", ["viscous"])
 _o_putty.set_property("takeable", True)
 _o_putty.set_property("size", 6)
 # ACTION: PUTTY-FCN — see zork1_verbs/putty_fcn.py
+_.set_property("putty_fcn", _o_putty)
+_.set_property("putty", _o_putty)
 _objects["PUTTY"] = _o_putty
 
 # ENGRAVINGS
-_o_engravings, _ = bootstrap.get_or_create_object(
+_o_engravings, _created = bootstrap.get_or_create_object(
     "wall with engravings",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -2079,10 +2268,11 @@ _o_engravings.add_alias("engravings")
 _o_engravings.add_alias("inscription")
 _o_engravings.set_property("adjectives", ["old", "ancient"])
 _o_engravings.set_property("readable", True)
+_.set_property("engravings", _o_engravings)
 _objects["ENGRAVINGS"] = _o_engravings
 
 # OWNERS-MANUAL
-_o_owners_manual, _ = bootstrap.get_or_create_object(
+_o_owners_manual, _created = bootstrap.get_or_create_object(
     "ZORK owner's manual",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -2101,10 +2291,11 @@ _o_owners_manual.add_alias("paper")
 _o_owners_manual.set_property("adjectives", ["zork", "owners", "small"])
 _o_owners_manual.set_property("readable", True)
 _o_owners_manual.set_property("takeable", True)
+_.set_property("owners_manual", _o_owners_manual)
 _objects["OWNERS-MANUAL"] = _o_owners_manual
 
 # CLIMBABLE-CLIFF
-_o_climbable_cliff, _ = bootstrap.get_or_create_object(
+_o_climbable_cliff, _created = bootstrap.get_or_create_object(
     "cliff",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -2121,10 +2312,12 @@ _o_climbable_cliff.set_property("adjectives", ["rocky", "sheer"])
 _o_climbable_cliff.set_property("obvious", False)
 _o_climbable_cliff.set_property("climbable", True)
 # ACTION: CLIFF-OBJECT — see zork1_verbs/cliff_object.py
+_.set_property("cliff_object", _o_climbable_cliff)
+_.set_property("climbable_cliff", _o_climbable_cliff)
 _objects["CLIMBABLE-CLIFF"] = _o_climbable_cliff
 
 # WHITE-CLIFF
-_o_white_cliff, _ = bootstrap.get_or_create_object(
+_o_white_cliff, _created = bootstrap.get_or_create_object(
     "white cliffs",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -2139,10 +2332,12 @@ _o_white_cliff.set_property("adjectives", ["white"])
 _o_white_cliff.set_property("obvious", False)
 _o_white_cliff.set_property("climbable", True)
 # ACTION: WCLIF-OBJECT — see zork1_verbs/wclif_object.py
+_.set_property("wclif_object", _o_white_cliff)
+_.set_property("white_cliff", _o_white_cliff)
 _objects["WHITE-CLIFF"] = _o_white_cliff
 
 # WRENCH
-_o_wrench, _ = bootstrap.get_or_create_object(
+_o_wrench, _created = bootstrap.get_or_create_object(
     "wrench",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -2156,10 +2351,11 @@ _o_wrench.add_alias("tool")
 _o_wrench.add_alias("tools")
 _o_wrench.set_property("takeable", True)
 _o_wrench.set_property("size", 10)
+_.set_property("wrench", _o_wrench)
 _objects["WRENCH"] = _o_wrench
 
 # CONTROL-PANEL
-_o_control_panel, _ = bootstrap.get_or_create_object(
+_o_control_panel, _created = bootstrap.get_or_create_object(
     "control panel",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -2171,10 +2367,11 @@ _o_control_panel.set_property("description", "control panel")
 _o_control_panel.add_alias("panel")
 _o_control_panel.set_property("adjectives", ["control"])
 _o_control_panel.set_property("obvious", False)
+_.set_property("control_panel", _o_control_panel)
 _objects["CONTROL-PANEL"] = _o_control_panel
 
 # NEST
-_o_nest, _ = bootstrap.get_or_create_object(
+_o_nest, _created = bootstrap.get_or_create_object(
     "bird's nest",
     unique_name=False,
     parents=[_classes["zork_container"]],
@@ -2190,10 +2387,11 @@ _o_nest.set_property("flammable", True)
 _o_nest.set_property("open", True)
 _o_nest.set_property("searchable", True)
 _o_nest.set_property("capacity", 20)
+_.set_property("nest", _o_nest)
 _objects["NEST"] = _o_nest
 
 # EGG
-_o_egg, _ = bootstrap.get_or_create_object(
+_o_egg, _created = bootstrap.get_or_create_object(
     "jewel-encrusted egg",
     unique_name=False,
     parents=[_classes["zork_container"]],
@@ -2214,10 +2412,12 @@ _o_egg.set_property("capacity", 6)
 _o_egg.set_property("value", 5)
 _o_egg.set_property("tvalue", 5)
 # ACTION: EGG-OBJECT — see zork1_verbs/egg_object.py
+_.set_property("egg_object", _o_egg)
+_.set_property("egg", _o_egg)
 _objects["EGG"] = _o_egg
 
 # BROKEN-EGG
-_o_broken_egg, _ = bootstrap.get_or_create_object(
+_o_broken_egg, _created = bootstrap.get_or_create_object(
     "broken jewel-encrusted egg",
     unique_name=False,
     parents=[_classes["zork_container"]],
@@ -2233,10 +2433,11 @@ _o_broken_egg.set_property("takeable", True)
 _o_broken_egg.set_property("open", True)
 _o_broken_egg.set_property("capacity", 6)
 _o_broken_egg.set_property("tvalue", 2)
+_.set_property("broken_egg", _o_broken_egg)
 _objects["BROKEN-EGG"] = _o_broken_egg
 
 # BAUBLE
-_o_bauble, _ = bootstrap.get_or_create_object(
+_o_bauble, _created = bootstrap.get_or_create_object(
     "beautiful brass bauble",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -2251,10 +2452,11 @@ _o_bauble.set_property("adjectives", ["brass", "beauti"])
 _o_bauble.set_property("takeable", True)
 _o_bauble.set_property("value", 1)
 _o_bauble.set_property("tvalue", 1)
+_.set_property("bauble", _o_bauble)
 _objects["BAUBLE"] = _o_bauble
 
 # CANARY
-_o_canary, _ = bootstrap.get_or_create_object(
+_o_canary, _created = bootstrap.get_or_create_object(
     "golden clockwork canary",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -2274,10 +2476,12 @@ _o_canary.set_property("searchable", True)
 _o_canary.set_property("value", 6)
 _o_canary.set_property("tvalue", 4)
 # ACTION: CANARY-OBJECT — see zork1_verbs/canary_object.py
+_.set_property("canary_object", _o_canary)
+_.set_property("canary", _o_canary)
 _objects["CANARY"] = _o_canary
 
 # BROKEN-CANARY
-_o_broken_canary, _ = bootstrap.get_or_create_object(
+_o_broken_canary, _created = bootstrap.get_or_create_object(
     "broken clockwork canary",
     unique_name=False,
     parents=[_classes["zork_thing"]],
@@ -2295,6 +2499,8 @@ _o_broken_canary.set_property("adjectives", ["broken", "clockwork", "gold", "gol
 _o_broken_canary.set_property("takeable", True)
 _o_broken_canary.set_property("tvalue", 1)
 # ACTION: CANARY-OBJECT — see zork1_verbs/canary_object.py
+_.set_property("canary_object", _o_broken_canary)
+_.set_property("broken_canary", _o_broken_canary)
 _objects["BROKEN-CANARY"] = _o_broken_canary
 
 log.info("Zork objects: %d", len(_objects))
