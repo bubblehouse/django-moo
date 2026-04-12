@@ -157,6 +157,7 @@ def test_close_door_with_autolock(t_init: Object, t_wizard: Object):
         parse.interpret(ctx, "close wooden door")
         assert printed == ["The door is closed."]
         assert door.is_locked()
+        assert door.get_property("key") == door.id
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -175,6 +176,7 @@ def test_lock_exit(t_init: Object, t_wizard: Object):
         parse.interpret(ctx, "lock wooden door")
         assert printed == ["The door is locked."]
         assert door.is_locked()
+        assert door.get_property("key") == door.id
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -212,6 +214,7 @@ def test_unlock_exit(t_init: Object, t_wizard: Object):
         parse.interpret(ctx, "unlock wooden door")
         assert printed == ["The door is unlocked."]
         assert not door.is_locked()
+        assert door.get_property("key") is None
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -260,7 +263,7 @@ def test_lock_door_not_in_exits(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, _writer) as ctx:
         setup_exit(t_wizard)
         parse.interpret(ctx, "lock wooden door")
-        assert printed == ["There is no door called wooden door here."]
+        assert printed == ["There is no exit called wooden door here."]
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -374,6 +377,25 @@ def test_move_through_locked_exit(t_init: Object, t_wizard: Object):
             parse.interpret(ctx, "go north")
         t_wizard.refresh_from_db()
         assert t_wizard.location == source
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_move_through_keylocked_exit_with_key(t_init: Object, t_wizard: Object):
+    """An exit whose key keyexp names an object the player holds allows traversal."""
+    system = lookup(1)
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        source, _ = setup_exit(t_wizard)
+        parse.interpret(ctx, "@dig north to Destination Room through wooden door")
+        door = source.match_exit("north")
+        key = create("brass key", parents=[system.thing], location=t_wizard)
+        door.set_property("key", key.id)
+        assert door.is_locked()
+        dest = lookup("Destination Room")
+        with pytest.warns(RuntimeWarning, match=r"ConnectionError"):
+            parse.interpret(ctx, "go north")
+        t_wizard.refresh_from_db()
+        assert t_wizard.location == dest
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)

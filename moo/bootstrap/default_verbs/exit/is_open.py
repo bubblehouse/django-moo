@@ -7,14 +7,15 @@ from moo.sdk import NoSuchPropertyError
 door = this
 
 if verb_name == "is_open":
-    prop_name = "open"
+    try:
+        return bool(door.get_property("open"))
+    except NoSuchPropertyError:
+        return False
 elif verb_name == "is_locked":
-    prop_name = "locked"
+    try:
+        return bool(door.get_property("key"))
+    except NoSuchPropertyError:
+        return False
 else:
     print("Unknown verb name for door state check: %s" % verb_name)
-    return False
-
-try:
-    return bool(door.get_property(prop_name))
-except NoSuchPropertyError:
     return False

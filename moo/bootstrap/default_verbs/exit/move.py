@@ -25,7 +25,7 @@ thing = args[0]
 source = this.get_property("source")
 dest = this.get_property("dest")
 
-if this.is_locked():
+if not this.is_unlocked_for(thing):
     thing.tell(this.nogo_msg(source, dest))
     source.announce_all_but(thing, this.onogo_msg(source, dest))
     return
