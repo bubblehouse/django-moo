@@ -1,12 +1,14 @@
-#!moo verb wr*ite --on $book --dspec none --ispec in:this --ispec with:any
+#!moo verb wr*ite --on $book --dspec none --ispec in:this --ispec under:any --ispec with:any
 
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-Add a note to the book keyed by room ID. The entry must start with a room ID
-(e.g. "#9:"), followed by the note text. Multiple writes for the same room
-accumulate rather than overwrite. Any player may write.
-Usage: write in <book> with "#9: text"
+Write an entry to the book keyed by room ID. Entries accumulate rather than overwrite.
+Any player may write.
+
+Usage:
+    write in <book> under <topic> with "#9: text"   — stored as topic:#9
+    write in <book> with "#9: text"               — stored as #9 (no topic)
 """
 
 from moo.sdk import context
@@ -22,11 +24,14 @@ if colon == -1:
     return
 
 room_id = text[:colon].strip()
-body = text[colon + 1 :].strip()
+body = text[colon + 1:].strip()
+
+topic = context.parser.get_pobj_str("under").strip().lower() if context.parser.has_pobj_str("under") else None
+key = f"{topic}:{room_id}" if topic else room_id
 
 notes = this.get_property("notes") or {}
-existing = notes.get(room_id, "")
+existing = notes.get(key, "")
 sep = "\n" if existing else ""
-notes[room_id] = existing + sep + f"[{context.player.name}] {body}"
+notes[key] = existing + sep + f"[{context.player.name}] {body}"
 this.set_property("notes", notes)
-print(f"Entry written for {room_id}.")
+print(f"Entry written for {room_id}{' [' + topic + ']' if topic else ''}.")
