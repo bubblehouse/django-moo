@@ -28,6 +28,8 @@ if not context.player.location:
     home = context.player.get_property("home") or _.player_start  # noqa: F821
     context.player.moveto(home)
 
+this.look_self()
+
 unread = count_unread(context.player)
 if unread:
     suffix = "s" if unread != 1 else ""
