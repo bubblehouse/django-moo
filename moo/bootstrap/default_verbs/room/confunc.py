@@ -11,4 +11,5 @@ the room) and tells everyone else in the room that the player has connected.
 
 from moo.sdk import context
 
+this.look_self()
 this.announce_all_but(context.player, f"{context.player} has connected.")
