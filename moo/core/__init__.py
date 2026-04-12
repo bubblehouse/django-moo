@@ -67,26 +67,27 @@ def _publish_to_player(obj, message):
     if app.conf.broker_url == "memory://":
         warnings.warn(RuntimeWarning(f"ConnectionError({obj}): {message}"))
         return
-    player = Player.objects.get(avatar=obj)
-    # this is an uncommon scenario, but applies to the stock Player object if it hasn't been configured for login
-    if not player.user:
-        return
+    players = Player.objects.filter(avatar=obj)
+    caller = ContextManager.get("caller")
     with app.default_connection() as conn:
         channel = conn.channel()
-        queue = Queue(
-            f"messages.{player.user.pk}",
-            Exchange("moo", type="direct", channel=channel),
-            f"user-{player.user.pk}",
-            channel=channel,
-            auto_delete=True,
-        )
         with app.producer_or_acquire() as producer:
-            caller = ContextManager.get("caller")
-            producer.publish(
-                dict(message=message, caller_id=caller.pk if caller else None),
-                serializer="moojson",
-                exchange=queue.exchange,
-                routing_key=f"user-{player.user.pk}",
-                declare=[queue],
-                retry=True,
-            )
+            for player in players:
+                # this is an uncommon scenario, but applies to the stock Player object if it hasn't been configured for login
+                if not player.user:
+                    continue
+                queue = Queue(
+                    f"messages.{player.user.pk}",
+                    Exchange("moo", type="direct", channel=channel),
+                    f"user-{player.user.pk}",
+                    channel=channel,
+                    auto_delete=True,
+                )
+                producer.publish(
+                    dict(message=message, caller_id=caller.pk if caller else None),
+                    serializer="moojson",
+                    exchange=queue.exchange,
+                    routing_key=f"user-{player.user.pk}",
+                    declare=[queue],
+                    retry=True,
+                )

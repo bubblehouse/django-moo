@@ -1,4 +1,4 @@
-#!moo verb take get --on $thing --dspec this
+#!moo verb take --on $thing --dspec this
 
 # pylint: disable=return-outside-function,undefined-variable
 
