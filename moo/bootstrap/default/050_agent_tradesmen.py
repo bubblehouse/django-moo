@@ -89,5 +89,13 @@ survey_book.set_property(
 )
 sys.set_property("survey_book", survey_book)
 
+agent_of_the_moment, _ = bootstrap.get_or_create_object(
+    "Agent of the Moment", unique_name=True, parents=[thing], location=agency
+)
+agent_of_the_moment.owner = foreman_obj
+agent_of_the_moment.save()
+agent_of_the_moment.set_property("description", "The plaque reads: None")
+sys.set_property("agent_of_the_moment", agent_of_the_moment)
+
 # Make the coordination objects obvious in The Agency so players see them on look
-agency.set_property("obvious", [dispatch_board.pk, survey_book.pk])
+agency.set_property("obvious", [dispatch_board.pk, survey_book.pk, agent_of_the_moment.pk])

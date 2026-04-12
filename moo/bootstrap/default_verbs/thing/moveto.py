@@ -12,3 +12,4 @@ where = args[0]
 
 if where.is_unlocked_for(this):
     return passthrough(where)
+return False

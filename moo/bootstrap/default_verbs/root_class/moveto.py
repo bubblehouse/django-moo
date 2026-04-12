@@ -21,3 +21,4 @@ where = args[0]
 with set_task_perms(this.owner):
     this.location = where
     this.save()
+return True
