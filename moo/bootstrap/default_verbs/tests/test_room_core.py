@@ -384,11 +384,11 @@ def test_tell_contents_ctype_out_of_range(t_init: Object, t_wizard: Object):
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_confunc_shows_room_to_player(t_init: Object, t_wizard: Object):
-    """confunc() displays the room's look_self output to the connecting player."""
+    """$player.confunc() displays the room's look_self output to the connecting player."""
     printed = []
     with code.ContextManager(t_wizard, printed.append):
         room = setup_room(t_wizard)
-        room.confunc()
+        t_wizard.get_verb("confunc")()
     assert any(room.name in line for line in printed)
 
 
