@@ -1,4 +1,4 @@
-#!moo verb bag-of-coins-f --on $bag-of-coins
+#!moo verb bag-of-coins-f --on $bag_of_coins
 # pylint: disable=undefined-variable
 # ZIL ACTION stub generated from dungeon.zil / actions.zil
 # Original routine head: ['ROUTINE', 'BAG-OF-COINS-F', (), ['STUPID-CONTAINER', 'BAG-OF-COINS', 'coins']]

@@ -1,4 +1,4 @@
-#!moo verb mountain-range-f --on $mountain-range
+#!moo verb mountain-range-f --on $mountain_range
 # pylint: disable=undefined-variable
 # ZIL ACTION stub generated from dungeon.zil / actions.zil
 # Original routine head: ['ROUTINE', 'MOUNTAIN-RANGE-F', (), ['COND', (['VERB?', 'CLIMB-UP', 'CLIMB-DOWN', 'CLIMB-FOO'], ['TELL', "Don't you believe me? The mountains are impassable!", 'CR'])]]
