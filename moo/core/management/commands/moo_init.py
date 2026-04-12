@@ -2,15 +2,13 @@ import importlib.resources
 import logging
 
 from django.conf import settings
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from moo.bootstrap import load_python
 from moo.core.models import Repository
 
 log = logging.getLogger(__name__)
-
-builtin_templates = ["minimal", "default"]
 
 
 class Command(BaseCommand):
@@ -30,6 +28,25 @@ class Command(BaseCommand):
             help="Re-run the bootstrap script against an existing database to pick up new objects and verbs.",
         )
 
+    def _find_bootstrap_path(self, bootstrap):
+        """
+        Locate the __init__.py for a named bootstrap package under moo.bootstrap.
+        Raises CommandError if not found.
+        """
+        ref = importlib.resources.files("moo.bootstrap") / bootstrap / "__init__.py"
+        try:
+            with importlib.resources.as_file(ref) as path:
+                if not path.exists():
+                    raise CommandError(
+                        f"Bootstrap '{bootstrap}' not found. "
+                        f"Expected a package at moo/bootstrap/{bootstrap}/__init__.py."
+                    )
+                return path
+        except (FileNotFoundError, TypeError) as exc:
+            raise CommandError(
+                f"Bootstrap '{bootstrap}' not found. Expected a package at moo/bootstrap/{bootstrap}/__init__.py."
+            ) from exc
+
     def handle(self, *args, bootstrap="default", sync=False, **config):
         with transaction.atomic():
             if sync:
@@ -39,11 +56,7 @@ class Command(BaseCommand):
                     raise RuntimeError(
                         f"Dataset '{bootstrap}' has not been initialized. Run without --sync first."
                     ) from exc
-                if bootstrap not in builtin_templates:
-                    raise NotImplementedError(bootstrap)
-                ref = importlib.resources.files("moo.bootstrap") / bootstrap / "__init__.py"
-                with importlib.resources.as_file(ref) as path:
-                    bootstrap_path = path
+                bootstrap_path = self._find_bootstrap_path(bootstrap)
                 log.info("Syncing bootstrap '%s' against existing database...", bootstrap)
                 load_python(bootstrap_path)
             else:
@@ -56,10 +69,5 @@ class Command(BaseCommand):
                         prefix=f"moo/bootstrap/{bootstrap}_verbs",
                         url=settings.DEFAULT_GIT_REPO_URL,
                     )
-                if bootstrap in builtin_templates:
-                    ref = importlib.resources.files("moo.bootstrap") / bootstrap / "__init__.py"
-                    with importlib.resources.as_file(ref) as path:
-                        bootstrap_path = path
-                else:
-                    raise NotImplementedError(bootstrap)
+                bootstrap_path = self._find_bootstrap_path(bootstrap)
                 load_python(bootstrap_path)
