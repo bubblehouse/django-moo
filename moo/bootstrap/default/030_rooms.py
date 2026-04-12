@@ -20,7 +20,8 @@ sys.set_property("agency", agency)
 agency.add_verb(
     "confunc",
     code="""# pylint: disable=return-outside-function,undefined-variable
-# Silent — look_self() is called by $player.confunc; skip the announce_all_but noise.
+# Show the room but skip the announce_all_but noise — agents don't need connect spam.
+this.look_self()
 """,
     replace=True,
 )
