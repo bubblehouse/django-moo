@@ -164,3 +164,77 @@ def test_wizard_can_erase(t_init: Object, t_wizard: Object):
         parse.interpret(ctx, 'erase "test book" from "#9"')
     notes = book.get_property("notes")
     assert notes == {}
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_write_for_topic_stores_prefixed_key(t_init: Object, t_wizard: Object):
+    """write in book for <topic> stores entry as topic:room_id."""
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        book = setup_book(t_wizard)
+        parse.interpret(ctx, 'write in "test book" under tradesmen with "#9: Kitchen done."')
+    notes = book.get_property("notes")
+    assert "tradesmen:#9" in notes
+    assert "Kitchen done." in notes["tradesmen:#9"]
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_write_for_topic_does_not_collide_with_plain(t_init: Object, t_wizard: Object):
+    """Topic-keyed and plain entries for the same room don't overwrite each other."""
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        book = setup_book(t_wizard)
+        parse.interpret(ctx, 'write in "test book" with "#9: Plain entry."')
+        parse.interpret(ctx, 'write in "test book" under tradesmen with "#9: Topic entry."')
+    notes = book.get_property("notes")
+    assert "#9" in notes
+    assert "tradesmen:#9" in notes
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_read_for_topic_shows_only_that_topic(t_init: Object, t_wizard: Object):
+    """read book for <topic> shows only entries under that topic."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        book = setup_book(t_wizard)
+        parse.interpret(ctx, 'write in "test book" under tradesmen with "#9: Kitchen done."')
+        parse.interpret(ctx, 'write in "test book" under inspectors with "#22: Checked."')
+        printed.clear()
+        parse.interpret(ctx, 'read "test book" under tradesmen')
+    text = "\n".join(printed)
+    assert "#9" in text
+    assert "#22" not in text
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_read_for_topic_from_room(t_init: Object, t_wizard: Object):
+    """read book for <topic> from #9 shows the full entry for that room under the topic."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        book = setup_book(t_wizard)
+        parse.interpret(ctx, 'write in "test book" under tradesmen with "#9: Needs coffee maker."')
+        printed.clear()
+        parse.interpret(ctx, 'read "test book" under tradesmen from "#9"')
+    text = "\n".join(printed)
+    assert "Needs coffee maker." in text
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_erase_for_topic_removes_all_topic_entries(t_init: Object, t_wizard: Object):
+    """erase book for <topic> removes all entries prefixed with that topic."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        book = setup_book(t_wizard)
+        parse.interpret(ctx, 'write in "test book" under tradesmen with "#9: Kitchen."')
+        parse.interpret(ctx, 'write in "test book" under tradesmen with "#22: Library."')
+        parse.interpret(ctx, 'write in "test book" under inspectors with "#9: Inspected."')
+        printed.clear()
+        parse.interpret(ctx, 'erase "test book" under tradesmen')
+    notes = book.get_property("notes")
+    assert "tradesmen:#9" not in notes
+    assert "tradesmen:#22" not in notes
+    assert "inspectors:#9" in notes  # other topic untouched
+    assert any("2" in line for line in printed)  # "Erased 2 entries..."
