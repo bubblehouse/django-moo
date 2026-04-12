@@ -44,7 +44,7 @@ if room_class and obj.is_a(room_class):
                 dest_str = f"{dest.name} (#{dest.id})"
             except (NoSuchPropertyError, Exception):  # pylint: disable=broad-except
                 dest_str = "(unknown destination)"
-            print(f"  {direction}  \u2192  {dest_str}")
+            print(f"  {direction}  \u2192  {dest_str} [exit #{exit_obj.id}]")
     contents = [o for o in obj.contents.all() if o.pk != context.player.pk]
     if contents:
         print("[cyan]Contents:[/cyan]")
