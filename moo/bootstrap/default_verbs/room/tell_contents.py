@@ -60,9 +60,9 @@ for item in this.contents.all():
     if item == context.player:
         continue
     if item.is_player():
-        players.append(item.title())
+        players.append(item)
     elif item.obvious:
-        items.append(item.title())
+        items.append(item)
 
 ctype = this.content_list_type
 if ctype == 3:
@@ -71,7 +71,7 @@ if ctype == 3:
         print(f"You see {_.string_utils.english_list(items)} here.")
     if players:
         if len(players) == 1:
-            print(f"{players[0]} is here.")
+            print(f"{players[0].title()} is here.")
         else:
             print(f"{_.string_utils.english_list(players)} {to_be} here.")
 elif ctype == 2:
@@ -80,10 +80,16 @@ elif ctype == 2:
         print(f"You see {_.string_utils.english_list(all_items)} here.")
 elif ctype == 1:
     for item in players:
-        print(f"{item} is here")
+        print(f"{item.title()} is here")
     for item in items:
-        print(f"You see {item} here")
+        name = item.title()
+        article = "an" if name[:1].lower() in "aeiou" else "a"
+        print(f"You see {article} {name} here")
 elif ctype == 0:
     print("Contents:")
-    for item in players + items:
-        print(item)
+    for item in players:
+        print(item.title())
+    for item in items:
+        name = item.title()
+        article = "an" if name[:1].lower() in "aeiou" else "a"
+        print(f"{article} {name}")
