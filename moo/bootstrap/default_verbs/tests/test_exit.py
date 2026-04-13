@@ -236,6 +236,45 @@ def test_unlock_not_locked(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_lock_exit_with_key(t_init: Object, t_wizard: Object):
+    """`lock <dir> with #N` stores the key's object id as the keyexp."""
+    system = lookup(1)
+    printed = []
+
+    def _writer(msg):
+        printed.append(msg)
+
+    with code.ContextManager(t_wizard, _writer) as ctx:
+        _, door = setup_exit(t_wizard)
+        parse.interpret(ctx, "@dig north to Destination Room through wooden door")
+        key = create("brass key", parents=[system.thing], location=t_wizard)
+        printed.clear()
+        parse.interpret(ctx, f"lock wooden door with #{key.id}")
+        assert printed == ["The door is locked."]
+        assert door.is_locked()
+        assert door.get_property("key") == key.id
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_lock_exit_with_invalid_keyexp(t_init: Object, t_wizard: Object):
+    """`lock <dir> with <garbage>` prints an error and leaves the door unlocked."""
+    printed = []
+
+    def _writer(msg):
+        printed.append(msg)
+
+    with code.ContextManager(t_wizard, _writer) as ctx:
+        _, door = setup_exit(t_wizard)
+        parse.interpret(ctx, "@dig north to Destination Room through wooden door")
+        printed.clear()
+        parse.interpret(ctx, "lock wooden door with garbage")
+        assert printed == ["That doesn't look like a valid key expression."]
+        assert not door.is_locked()
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_open_door_not_in_exits(t_init: Object, t_wizard: Object):
     """Opening a door not registered in the room's exits list prints an error."""
     printed = []
