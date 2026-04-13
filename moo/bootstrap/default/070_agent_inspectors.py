@@ -22,6 +22,17 @@ if warden_created:
     warden_user.save()
 Player.objects.get_or_create(user=warden_user, defaults=dict(avatar=warden_obj))
 
+# Warden's master key: a persistent test key for keyed exit locking.
+# Owned by Warden, starts in Warden's inventory. Lets Warden exercise
+# `lock <dir> with #<key>` without having to create a new key each session.
+warden_key, _ = bootstrap.get_or_create_object(
+    "warden's master key", unique_name=True, parents=[thing], location=warden_obj
+)
+warden_key.owner = warden_obj
+warden_key.save()
+warden_key.set_property("description", "A heavy iron skeleton key, worn smooth from constant use.")
+warden_key.add_alias("master key")
+
 # Archivist ($player): exercises note/letter create, read, lock, erase, burn
 archivist_obj, _ = bootstrap.get_or_create_object("Archivist", unique_name=True, parents=[player])
 archivist_obj.owner = archivist_obj
