@@ -224,11 +224,7 @@ class Object(models.Model, AccessibleMixin):
         players = Player.objects.filter(avatar=self)
         if not players.exists():
             return True
-        return any(
-            bool(cache.get(f"moo:connected:{p.user.pk}"))
-            for p in players
-            if p.user is not None
-        )
+        return any(bool(cache.get(f"moo:connected:{p.user.pk}")) for p in players if p.user is not None)
 
     def is_named(self, name: str) -> bool:
         """
@@ -910,7 +906,13 @@ class Object(models.Model, AccessibleMixin):
                     _enterfunc = self.location.get_verb("enterfunc")
                     _self = self
                     transaction.on_commit(lambda: invoke(_self, verb=_enterfunc))
-                self._original_location = self.location_id
+            # Re-baseline change-tracking so subsequent saves on the same Python
+            # instance compare against the just-persisted state. Without this, a
+            # freshly created object (which never passes through from_db) keeps
+            # its None class-default _original_owner and every later save fires
+            # a spurious entrust check.
+            self._original_owner = self.owner_id
+            self._original_location = self.location_id
 
     # Django gets upset if this meddles with anything in RESERVED_NAMES
     # but otherwise this seems to work, including in the admin interface
