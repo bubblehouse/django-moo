@@ -199,7 +199,7 @@ def test_tell_contents_ctype3_single_item(t_init: Object, t_wizard: Object):
         room.set_property("content_list_type", 3)
         setup_root_item(room, "red ball")
         room.tell_contents()
-    assert printed == ["You see red ball here."]
+    assert printed == ["You see a red ball here."]
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -214,7 +214,7 @@ def test_tell_contents_ctype3_multiple_items(t_init: Object, t_wizard: Object):
         setup_root_item(room, "red ball")
         setup_root_item(room, "blue box")
         room.tell_contents()
-    assert printed == ["You see red ball and blue box here."]
+    assert printed == ["You see a red ball and a blue box here."]
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -278,7 +278,7 @@ def test_tell_contents_ctype3_mixed(t_init: Object, t_wizard: Object):
             player.location = room
             player.save()
         room.tell_contents()
-    assert printed == ["You see red ball here.", "Player is here."]
+    assert printed == ["You see a red ball here.", "Player is here."]
 
 
 # --- tell_contents: ctype 2 ---
@@ -295,7 +295,7 @@ def test_tell_contents_ctype2_single_item(t_init: Object, t_wizard: Object):
         room.set_property("content_list_type", 2)
         setup_root_item(room, "red ball")
         room.tell_contents()
-    assert printed == ["You see red ball here."]
+    assert printed == ["You see a red ball here."]
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -315,7 +315,7 @@ def test_tell_contents_ctype2_mixed(t_init: Object, t_wizard: Object):
         save_quietly(player)
         setup_root_item(room, "red ball")
         room.tell_contents()
-    assert printed == ["You see Player and red ball here."]
+    assert printed == ["You see Player and a red ball here."]
 
 
 # --- tell_contents: ctype 1 ---
@@ -338,7 +338,7 @@ def test_tell_contents_ctype1(t_init: Object, t_wizard: Object):
         save_quietly(player)
         setup_root_item(room, "red ball")
         room.tell_contents()
-    assert printed == ["Player is here", "You see red ball here"]
+    assert printed == ["Player is here", "You see a red ball here"]
 
 
 # --- tell_contents: ctype 0 ---
@@ -358,7 +358,7 @@ def test_tell_contents_ctype0(t_init: Object, t_wizard: Object):
         context.caller.refresh_from_db()
         setup_root_item(room, "red ball")
         room.tell_contents()
-    assert printed == ["Contents:", "red ball"]
+    assert printed == ["Contents:", "a red ball"]
 
 
 # --- tell_contents: out-of-range ctype ---
