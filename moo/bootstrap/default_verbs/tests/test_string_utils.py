@@ -458,6 +458,49 @@ def test_english_list_four(t_init: Object, t_wizard: Object):
     assert result == "a, b, c, and d"
 
 
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_english_list_object_consonant(t_init: Object, t_wizard: Object):
+    """Non-player Object items are prefixed with 'a' when the name starts with a consonant."""
+    with code.ContextManager(t_wizard, lambda _: None):
+        system = lookup(1)
+        thing = create("newspaper", parents=[system.thing])
+        result = system.string_utils.english_list([thing])
+    assert result == "a newspaper"
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_english_list_object_vowel(t_init: Object, t_wizard: Object):
+    """Non-player Object items are prefixed with 'an' when the name starts with a vowel."""
+    with code.ContextManager(t_wizard, lambda _: None):
+        system = lookup(1)
+        thing = create("orange", parents=[system.thing])
+        result = system.string_utils.english_list([thing])
+    assert result == "an orange"
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_english_list_object_player(t_init: Object, t_wizard: Object):
+    """Player Object items render as their title with no article."""
+    with code.ContextManager(t_wizard, lambda _: None):
+        system = lookup(1)
+        result = system.string_utils.english_list([t_wizard])
+    assert result == "Wizard"
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_english_list_mixed_objects_and_strings(t_init: Object, t_wizard: Object):
+    """A mixed list of Objects and strings renders each appropriately."""
+    with code.ContextManager(t_wizard, lambda _: None):
+        system = lookup(1)
+        thing = create("newspaper", parents=[system.thing])
+        result = system.string_utils.english_list([thing, "something"])
+    assert result == "a newspaper and something"
+
+
 # --- match_string ---
 
 
