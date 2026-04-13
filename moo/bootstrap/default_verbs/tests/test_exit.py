@@ -439,6 +439,30 @@ def test_move_through_keylocked_exit_with_key(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_warden_lock_with_key_then_take_and_go(t_init: Object, t_wizard: Object):
+    """Reproduces Warden's sequence: drop key, lock <dir> with #key, take key, go."""
+    system = lookup(1)
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        source, _ = setup_exit(t_wizard)
+        parse.interpret(ctx, "@dig north to Destination Room through wooden door")
+        door = source.match_exit("north")
+        key = create("brass key", parents=[system.thing], location=t_wizard)
+        parse.interpret(ctx, f"drop #{key.id}")
+        parse.interpret(ctx, f"lock north with #{key.id}")
+        assert door.is_locked()
+        assert door.get_property("key") == key.id
+        parse.interpret(ctx, f"take #{key.id}")
+        key.refresh_from_db()
+        assert key.location_id == t_wizard.pk
+        dest = lookup("Destination Room")
+        with pytest.warns(RuntimeWarning, match=r"ConnectionError"):
+            parse.interpret(ctx, "go north")
+        t_wizard.refresh_from_db()
+        assert t_wizard.location == dest
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_invoke_moves_player(t_init: Object, t_wizard: Object):
     """Directly invoking an exit moves the player to the destination."""
     printed = []
