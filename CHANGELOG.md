@@ -1,3 +1,13 @@
+## [0.103.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.102.0...v0.103.0) (2026-04-13)
+
+### Features
+
+* **agent:** instrument LLM cycles and add adaptive stall check via agentmux cycle-age ([c82d5d4](https://gitlab.com/bubblehouse/django-moo/commit/c82d5d4fb0c87170516b761d8a45d4718cb67f5c))
+
+### Bug Fixes
+
+* **agents:** harden warden master key handling and reorder inspectors token chain ([b4a5651](https://gitlab.com/bubblehouse/django-moo/commit/b4a5651f1d6bbdd62a50808314078f54079ae68a))
+
 ## [0.102.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.101.0...v0.102.0) (2026-04-13)
 
 ### Features
