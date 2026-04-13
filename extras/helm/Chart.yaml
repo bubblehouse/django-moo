@@ -11,5 +11,5 @@ dependencies:
     repository: oci://registry-1.docker.io/bitnamicharts
     condition: postgresql.enabled
 type: application
-version: 0.102.0
-appVersion: 0.102.0
+version: 0.103.0
+appVersion: 0.103.0
