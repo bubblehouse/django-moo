@@ -1,3 +1,21 @@
+## [0.102.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.101.0...v0.102.0) (2026-04-13)
+
+### Features
+
+* **agent:** plumb 'of' parameter through divine tool wrapper ([1846296](https://gitlab.com/bubblehouse/django-moo/commit/1846296d59b79d522d893761458879834213e6ba))
+* **bootstrap:** pre-create Warden's master key in inventory ([4b30fb5](https://gitlab.com/bubblehouse/django-moo/commit/4b30fb5aa1eb5c617322be965772293cb58beb8d))
+* **verbs:** add [@divine](https://gitlab.com/divine) 'child of' and 'location of' forms ([5c7c47b](https://gitlab.com/bubblehouse/django-moo/commit/5c7c47bf9f597eca849f89030f7a333cf963c3bc))
+* **verbs:** add Tailor grant_write and grant_move verbs ([0aa3e09](https://gitlab.com/bubblehouse/django-moo/commit/0aa3e096d30c5faf29079b268362c1f2371f9fc4))
+* **verbs:** render Object items in english_list with article and title ([685f585](https://gitlab.com/bubblehouse/django-moo/commit/685f585589addd382ef865f346f8a34e7cda14f7))
+* **verbs:** support 'lock <dir> with <keyexp>' for keyed exit locking ([2235f60](https://gitlab.com/bubblehouse/django-moo/commit/2235f6058d21fd7d52d6cc8e4a6f380af276466d))
+
+### Bug Fixes
+
+* **agent:** strip Harmony special tokens from LLM output and resumed logs ([851f8e8](https://gitlab.com/bubblehouse/django-moo/commit/851f8e82324434eba9c99e77b89b1f2a6aef31dd))
+* **bootstrap:** remove silent confunc/disfunc from The Agency so Foreman sees connect broadcasts ([03a1ddd](https://gitlab.com/bubblehouse/django-moo/commit/03a1ddd31385d1ff229fc5a04b3575355a029287))
+* **core:** re-baseline _original_owner and _original_location after Object.save ([60bab68](https://gitlab.com/bubblehouse/django-moo/commit/60bab68c0a50a1e319d3e06dd1f4e2c3451634fd))
+* **verbs:** prefix non-player contents with a/an article in room listings ([f56aa1a](https://gitlab.com/bubblehouse/django-moo/commit/f56aa1a9daeb1eab5ed202c8039cc7f28a5b59a2))
+
 ## [0.101.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.100.0...v0.101.0) (2026-04-12)
 
 ### Features
