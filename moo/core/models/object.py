@@ -134,6 +134,14 @@ class Object(models.Model, AccessibleMixin):
     unique_name = models.BooleanField(default=False, db_index=True)
     #: This object should be obvious among a group. The meaning of this value is database-dependent.
     obvious = models.BooleanField(default=False)
+    #: The preposition describing where this object is placed (e.g. "on", "under"). None if not placed.
+    placement_prep = models.CharField(max_length=20, null=True, blank=True)
+    #: The object this is placed on/under/behind. SET_NULL on target deletion.
+    placement_target = models.ForeignKey(
+        "self", null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name="placed_objects",
+    )
     #: The owner of this object. Changes require `entrust` permission.
     owner = models.ForeignKey("self", related_name="+", blank=True, null=True, on_delete=models.SET_NULL)
     parents = models.ManyToManyField(
@@ -236,18 +244,51 @@ class Object(models.Model, AccessibleMixin):
             return any(a.alias.lower() == name.lower() for a in self.aliases.all())
         return self.aliases.filter(alias__iexact=name).exists()
 
-    def find(self, name: str) -> 'QuerySet["Object"]':
+    def find(self, name: str, exclude_hidden_placement: bool = False) -> 'QuerySet["Object"]':
         """
         Find contents by the given name or alias.
 
         :param name: the name or alias to search for, case-insensitive
+        :param exclude_hidden_placement: if True, exclude objects whose placement_prep
+            is in HIDDEN_PLACEMENT_PREPS (i.e., placed under or behind something).
+            Used by the parser to make hidden objects unfindable by name.
         """
         self.can_caller("read", self)
-        return (
+        qs = (
             Object.objects.filter(location=self)
             .filter(Q(name__iexact=name) | Q(aliases__alias__iexact=name))
             .distinct()
         )
+        if exclude_hidden_placement:
+            qs = qs.exclude(placement_prep__in=settings.HIDDEN_PLACEMENT_PREPS)
+        return qs
+
+    @property
+    def placement(self):
+        """Return ``(prep, target)`` tuple, or ``None`` if not placed (or target deleted)."""
+        if self.placement_prep is not None and self.placement_target_id is not None:
+            return (self.placement_prep, self.placement_target)
+        return None
+
+    def is_placed(self) -> bool:
+        """True if this object has an active placement."""
+        return self.placement is not None
+
+    def is_hidden_placement(self) -> bool:
+        """True for prepositions that hide the item in tell_contents (under, behind)."""
+        return self.placement_prep in settings.HIDDEN_PLACEMENT_PREPS
+
+    def set_placement(self, prep: str, target: "Object") -> None:
+        """Set placement prep and target atomically."""
+        self.placement_prep = prep
+        self.placement_target = target
+        self.save(update_fields=["placement_prep", "placement_target"])
+
+    def clear_placement(self) -> None:
+        """Remove placement without touching the obvious field."""
+        self.placement_prep = None
+        self.placement_target_id = None  # pylint: disable=attribute-defined-outside-init
+        self.save(update_fields=["placement_prep", "placement_target"])
 
     def contains(self, obj: "Object") -> bool:
         """
@@ -850,6 +891,9 @@ class Object(models.Model, AccessibleMixin):
         if self.has_verb("recycle", recurse=False):
             self.invoke_verb("recycle")
         self._replace_stale_refs()
+        # Clear placement_prep for objects placed on this one.
+        # placement_target goes NULL via SET_NULL cascade, but prep would be left dangling.
+        self.placed_objects.update(placement_prep=None)
         try:
             quota = self.owner.get_property("ownership_quota", recurse=False)
             if quota is not None:
