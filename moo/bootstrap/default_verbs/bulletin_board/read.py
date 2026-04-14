@@ -10,10 +10,16 @@ Usage:
     read <board> under <topic>    — show the value stored under that topic
 """
 
-from moo.sdk import context
+from moo.sdk import context, NoSuchPropertyError
 
-topics = this.get_property("topics") or {}
-entries = this.get_property("entries") or []
+try:
+    topics = this.get_property("topics") or {}
+except NoSuchPropertyError:
+    topics = {}
+try:
+    entries = this.get_property("entries") or []
+except NoSuchPropertyError:
+    entries = []
 
 if context.parser.has_pobj_str("under"):
     topic = context.parser.get_pobj_str("under").strip().lower()
