@@ -19,7 +19,13 @@ from django.db.models import F, Value
 from django.db.models.query import QuerySet
 import more_itertools
 
-from .exceptions import *  # pylint: disable=wildcard-import
+from .exceptions import (
+    AmbiguousObjectError,
+    NoSuchObjectError,
+    NoSuchPrepositionError,
+    NoSuchVerbError,
+    UsageError,
+)
 from .models import Object, Verb
 
 log = logging.getLogger(__name__)
@@ -247,16 +253,24 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             for matches in self.prepositions.values():
                 for record in matches:
                     spec, name, _ = record
-                    # look for an object with this name/specifier
-                    obj = self.find_object(spec, name)
-                    # try again (maybe it just looked like a specifier)
-                    if not obj and spec:
-                        name = f"{spec} {name}"
-                        spec = ""
+                    # look for an object with this name/specifier.
+                    # Defer AmbiguousObjectError — the pobj may be a plain string
+                    # (e.g. an alias name in `@alias #N as "foo"`) that the verb
+                    # reads via get_pobj_str().  Raising here would prevent the verb
+                    # from running at all.  Verbs that need the resolved object call
+                    # get_pobj(), which will re-raise then.
+                    try:
                         obj = self.find_object(spec, name)
-                    # one last shot for pronouns
-                    if not (obj):
-                        obj = self.get_pronoun_object(name)
+                        # try again (maybe it just looked like a specifier)
+                        if not obj and spec:
+                            name = f"{spec} {name}"
+                            spec = ""
+                            obj = self.find_object(spec, name)
+                        # one last shot for pronouns
+                        if not obj:
+                            obj = self.get_pronoun_object(name)
+                    except AmbiguousObjectError:
+                        obj = None
                     record[2] = obj
         if self.dobj_str:
             # look for an object with this name/specifier
@@ -499,7 +513,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         are resolved to their canonical form automatically.
         """
         prep = Pattern.PREP_CANONICAL.get(prep, prep)
-        if not (prep in self.prepositions):
+        if prep not in self.prepositions:
             raise NoSuchPrepositionError(prep)
         matches = []
         for item in self.prepositions[prep]:
@@ -532,7 +546,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         resolved to their canonical form automatically.
         """
         prep = Pattern.PREP_CANONICAL.get(prep, prep)
-        if not (prep in self.prepositions):
+        if prep not in self.prepositions:
             raise NoSuchPrepositionError(prep)
         matches = []
         for item in self.prepositions[prep]:
@@ -555,7 +569,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         resolved to their canonical form automatically.
         """
         prep = Pattern.PREP_CANONICAL.get(prep, prep)
-        if not (prep in self.prepositions):
+        if prep not in self.prepositions:
             raise NoSuchPrepositionError(prep)
         matches = []
         for item in self.prepositions[prep]:
