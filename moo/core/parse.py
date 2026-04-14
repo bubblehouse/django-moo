@@ -321,7 +321,10 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         if name and search:
             result = search.find(name)
             if not result and self.caller.location:
-                result = self.caller.location.find(name)
+                # Exclude objects with hidden placement (under/behind) from room lookups
+                # unless an explicit "from" context is present (e.g. "take key from rug").
+                exclude_hidden = "from" not in self.prepositions
+                result = self.caller.location.find(name, exclude_hidden_placement=exclude_hidden)
 
         if len(result) == 1:
             return result[0]
