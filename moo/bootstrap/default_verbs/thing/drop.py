@@ -19,6 +19,7 @@ if this.location != context.player:
     print(f"You check your pockets, but can't find {title}.")
 elif this.location.accept(this):
     this.moveto(context.player.location)
+    this.clear_placement()
     print(this.drop_succeeded_msg(title))
     if msg := this.odrop_succeeded_msg(title):
         this.location.announce(msg)
