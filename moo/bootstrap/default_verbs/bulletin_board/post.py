@@ -10,18 +10,24 @@ Usage:
     post on <board> under <topic> with "text"         — store text under a topic key (overwrites)
 """
 
-from moo.sdk import context
+from moo.sdk import NoSuchPropertyError, context
 
 text = context.parser.get_pobj_str("with")
 
 if context.parser.has_pobj_str("under"):
     topic = context.parser.get_pobj_str("under").strip().lower()
-    topics = this.get_property("topics") or {}
+    try:
+        topics = this.get_property("topics") or {}
+    except NoSuchPropertyError:
+        topics = {}
     topics[topic] = text
     this.set_property("topics", topics)
     print(f"Posted to topic '{topic}'.")
 else:
-    entries = this.get_property("entries") or []
+    try:
+        entries = this.get_property("entries") or []
+    except NoSuchPropertyError:
+        entries = []
     entries.append(f"{context.player.name}: {text}")
     this.set_property("entries", entries)
     print("Posted.")
