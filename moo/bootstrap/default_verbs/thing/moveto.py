@@ -10,6 +10,12 @@ valid object, and that the lock on `where` permits the object to enter. If this 
 
 where = args[0]
 
+# Clear placement for any objects placed on this one in the current room.
+# Runs before the move so this.location is still the source room.
+if this.location:
+    for placed in list(this.placed_objects.filter(location=this.location).all()):
+        placed.clear_placement()
+
 if where.is_unlocked_for(this):
     return passthrough(where)
 return False
