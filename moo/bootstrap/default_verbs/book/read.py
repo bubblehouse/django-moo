@@ -1,9 +1,10 @@
-#!moo verb r*ead --on $book --dspec this --ispec under:any --ispec from:any
+#!moo verb r*ead --on $book --dspec any --ispec under:any --ispec from:any
 
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-Read the survey book.
+Read the survey book. The book is resolved via global lookup so agents can read
+from any location, not just from the room where the book is located.
 
 Usage:
     read <book>                         — index of all entries
@@ -12,9 +13,15 @@ Usage:
     read <book> from #9                 — full entry for room #9 (no topic)
 """
 
-from moo.sdk import context
+from moo.sdk import context, NoSuchObjectError
 
-notes = this.get_property("notes") or {}
+try:
+    book = context.parser.get_dobj(lookup=True)
+except NoSuchObjectError:
+    print("No book found by that name.")
+    return
+
+notes = book.get_property("notes") or {}
 has_topic = context.parser.has_pobj_str("under")
 has_room = context.parser.has_pobj_str("from")
 
@@ -38,7 +45,7 @@ if not matching:
     return
 
 for key, text in matching:
-    display_id = key[len(prefix):] if prefix else key
+    display_id = key[len(prefix) :] if prefix else key
     first_line = text.split("\n")[0]
     truncated = first_line[:70] + ("..." if len(first_line) > 70 else "")
     label = f"{display_id} [{topic}]" if topic else key
