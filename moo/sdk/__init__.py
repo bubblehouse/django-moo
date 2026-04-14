@@ -56,6 +56,8 @@ from ..core.exceptions import (
     AccessError,
 )
 
+PLACEMENT_PREPS = ["on", "under", "behind", "before", "beside", "over"]
+
 DIRECTIONS = [
     "north", "northeast", "east", "southeast",
     "south", "southwest", "west", "northwest",
@@ -102,6 +104,7 @@ __all__ = [
     "undelete_message",
     "count_unread",
     "get_mail_stats",
+    "PLACEMENT_PREPS",
     "DIRECTIONS",
     "OPPOSITE_DIRECTIONS",
     "NoSuchObjectError",
