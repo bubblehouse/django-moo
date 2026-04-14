@@ -435,14 +435,17 @@ class Object(models.Model, AccessibleMixin):
                             cache.delete(f"moo:verb:{self.pk}:{item}:{int(recurse_flag)}:{int(return_first_flag)}")
         return verb
 
-    def add_alias(self, alias: str):
+    def add_alias(self, alias: str) -> bool:
         """
         Add an alias to this object if it does not already exist.
 
         :param alias: the alias string to add
+        :returns: True if the alias was added, False if it already existed
         """
         if not self.aliases.filter(alias=alias).exists():
             Alias(object=self, alias=alias).save()
+            return True
+        return False
 
     def add_parent(self, parent: "Object"):
         """
