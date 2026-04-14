@@ -104,6 +104,12 @@ PREPOSITIONS = [
     ["off", "off of"],
 ]
 
+# Prepositions supported by the placement system (canonical forms only)
+PLACEMENT_PREPS = ["on", "under", "behind", "before", "beside", "over"]
+
+# Subset that hide items in tell_contents regardless of obvious
+HIDDEN_PLACEMENT_PREPS = {"under", "behind"}
+
 OBJECT_SPECIFIER_CHOICES = (("this", "this"), ("any", "any"), ("none", "none"), ("either", "either"))
 
 DIRECTIONS = [
