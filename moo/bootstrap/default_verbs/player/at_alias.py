@@ -36,6 +36,7 @@ except NoSuchObjectError:
 alias = context.parser.get_pobj_str("as")
 
 # Add the alias - permissions are checked by the object model
-obj.add_alias(alias)
-
-print(f"[yellow]Added alias '{alias}' to {obj}[/yellow]")
+if obj.add_alias(alias):
+    print(f"[yellow]Added alias '{alias}' to {obj}[/yellow]")
+else:
+    print(f"[red]That alias '{alias}' is already set on {obj}.[/red]")
