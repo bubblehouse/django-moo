@@ -70,4 +70,4 @@ def test_letter_inherits_read(t_init: Object, t_wizard: Object):
         setup_letter(t_wizard, text="Dear Wizard,\nHow are you?", name="sealed letter")
         parse.interpret(ctx, "read sealed letter")
 
-    assert printed == ["Dear Wizard,\nHow are you?"]
+    assert printed == ['"Dear Wizard,\nHow are you?"']

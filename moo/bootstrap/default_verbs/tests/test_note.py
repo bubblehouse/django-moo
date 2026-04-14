@@ -38,7 +38,7 @@ def test_read_no_lock(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, _writer) as ctx:
         _note = setup_note(t_wizard, text="Hello, world!")
         parse.interpret(ctx, "read scrap of paper")
-        assert printed == ["Hello, world!"]
+        assert printed == ['"Hello, world!"']
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -75,7 +75,7 @@ def test_read_locked_with_key_in_inventory(t_init: Object, t_wizard: Object):
         key = create("brass key", parents=[system.thing], location=t_wizard)
         note.set_property("read_key", key.id)
         parse.interpret(ctx, "read scrap of paper")
-        assert printed == ["Secret text."]
+        assert printed == ['"Secret text."']
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
