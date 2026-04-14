@@ -10,4 +10,5 @@ permission to read it, the note text, which is stored in the property `text`, is
 from moo.sdk import context
 
 if this.is_readable_by(context.player):
-    print(this.get_property("text"))
+    text = this.get_property("text")
+    print(f'"{text}"')

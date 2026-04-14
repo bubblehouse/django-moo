@@ -63,5 +63,9 @@ if not who.is_connected():
 pagemsg = player.page_origin_msg()
 who.tell(pagemsg)
 if message:
-    who.tell(player.psc if player.name in message else player.name, ' pages, "', message, '"')
+    if player.name in message:
+        verb_form = "page" if player.ps == "they" else "pages"
+        who.tell(player.psc, " ", verb_form, ', "', message, '"')
+    else:
+        who.tell(player.name, ' pages, "', message, '"')
 print(player.page_echo_msg())

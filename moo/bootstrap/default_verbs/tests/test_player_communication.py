@@ -61,6 +61,31 @@ def test_page_with_message(t_init: Object, t_wizard: Object):
     assert any('pages, "Hello there"' in m for m in messages)
 
 
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_page_pronoun_conjugation_they(t_init: Object, t_wizard: Object):
+    """When the message contains the sender's name, the echo uses the subjective pronoun and the verb must agree with it (`They page`, not `They pages`)."""
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        with pytest.warns(RuntimeWarning) as w:
+            parse.interpret(ctx, "page Player with Wizard says hi")
+    messages = [str(x.message) for x in w.list]
+    assert any('They page, "Wizard says hi"' in m for m in messages)
+    assert not any("They pages" in m for m in messages)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_page_pronoun_conjugation_he(t_init: Object, t_wizard: Object):
+    """A player whose subjective pronoun is `he` gets `He pages` (singular)."""
+    t_wizard.set_property("ps", "he")
+    t_wizard.set_property("psc", "He")
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        with pytest.warns(RuntimeWarning) as w:
+            parse.interpret(ctx, "page Player with Wizard says hi")
+    messages = [str(x.message) for x in w.list]
+    assert any('He pages, "Wizard says hi"' in m for m in messages)
+
+
 # --- whisper ---
 
 
