@@ -1,4 +1,4 @@
-#!moo verb look inspect --on $room --dspec either --ispec at:any --ispec through:any
+#!moo verb look inspect --on $room --dspec either --ispec at:any --ispec through:any --ispec on:any --ispec under:any --ispec behind:any --ispec before:any --ispec beside:any --ispec over:any
 
 # pylint: disable=return-outside-function,undefined-variable
 
@@ -23,7 +23,25 @@ If the direct object is the empty string, `""``, then the container``s `look_sel
 Any ambiguous or failed matches produce suitable error messages.
 """
 
-from moo.sdk import context
+from moo.sdk import context, PLACEMENT_PREPS
+
+PREP_DISPLAY = {"before": "in front of"}
+
+# Handle spatial placement lookups: "look under rug", "look on desk", etc.
+for prep in PLACEMENT_PREPS:
+    if context.parser.has_pobj_str(prep):
+        target = context.parser.get_pobj(prep)
+        found = [
+            item for item in this.contents.all()
+            if item.placement_prep == prep and item.placement_target_id == target.pk
+        ]
+        disp = PREP_DISPLAY.get(prep, prep)
+        if found:
+            names = _.string_utils.english_list(found)
+            print(f"{disp.capitalize()} the {target.title()} you see {names}.")
+        else:
+            print(f"You find nothing {disp} the {target.title()}.")
+        return
 
 if context.parser.has_pobj_str("through"):
     direction = context.parser.get_pobj_str("through")
