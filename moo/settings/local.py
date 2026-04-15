@@ -32,7 +32,7 @@ CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
         "LOCATION": "redis://redis:6379",
-        "TIMEOUT": 86400,  # 24 hours — prevents is_connected() key expiry for idle agents
+        "TIMEOUT": 86400,  # type: ignore[dict-item]  # 24 hours — prevents is_connected() key expiry for idle agents
     }
 }
 

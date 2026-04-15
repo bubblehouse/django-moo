@@ -6,5 +6,6 @@
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
-    "chat.fontSize": 18
+    "chat.fontSize": 18,
+    "python.analysis.typeCheckingMode": "off"
 }
