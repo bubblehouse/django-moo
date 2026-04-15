@@ -14,7 +14,18 @@ Syntax:
     @mail undelete <n>  -- restore a deleted message (n is 1-based among deleted)
 """
 
-from moo.sdk import context, get_mailbox, get_message, mark_read, delete_message, undelete_message, count_unread, get_mail_stats, open_paginator, get_wrap_column
+from moo.sdk import (
+    context,
+    get_mailbox,
+    get_message,
+    mark_read,
+    delete_message,
+    undelete_message,
+    count_unread,
+    get_mail_stats,
+    open_paginator,
+    get_wrap_column,
+)
 
 player = context.player
 parser = context.parser
@@ -51,18 +62,18 @@ def show_mailbox(page=1):
         marker = "*" if not mr.read else " "
         sender_name = mr.message.sender.title() if mr.message.sender else "(deleted)"
         if len(sender_name) > col_from:
-            sender_name = sender_name[:col_from - 1] + "\u2026"
+            sender_name = sender_name[: col_from - 1] + "\u2026"
         subject = mr.message.subject or "(no subject)"
         if len(subject) > col_subj:
-            subject = subject[:col_subj - 1] + "\u2026"
+            subject = subject[: col_subj - 1] + "\u2026"
         date_str = mr.sent_at.strftime("%b %d %H:%M") if mr.sent_at else "?"
         n_col = f"{i}{marker}"
         rows.append(f"{n_col:>{col_n}}  {sender_name:<{col_from}}  {subject:<{col_subj}}  {date_str}")
     rows.append("")
-    footer = "* = unread   Type '@mail <n>' to read a message."
+    rows.append("* = unread")
+    rows.append("Type '@mail <n>' to read a message.")
     if total_pages > 1:
-        footer += "   '@mail page <n>' for other pages."
-    rows.append(footer)
+        rows.append("Type '@mail page <n>' for other pages.")
     open_paginator(player, "\n".join(rows))
 
 
@@ -71,16 +82,20 @@ def read_message(n):
     if mr is None:
         print(f"There is no message {n}.")
         return
+    wrap = get_wrap_column()
     sender_name = mr.message.sender.title() if mr.message.sender else "(deleted)"
     date_str = mr.sent_at.strftime("%b %d %H:%M") if mr.sent_at else "?"
     subject = mr.message.subject or "(no subject)"
-    divider = "\u2500" * 45
-    content = "\n".join([
-        f"Message #{n} from {sender_name} \u2014 {date_str}",
-        f"Subject: {subject}",
-        divider,
-        mr.message.body,
-    ])
+    divider = "\u2500" * wrap
+    body = _.string_utils.rewrap(mr.message.body, wrap)
+    content = "\n".join(
+        [
+            f"Message #{n} from {sender_name} \u2014 {date_str}",
+            f"Subject: {subject}",
+            divider,
+            body,
+        ]
+    )
     mark_read(player, n)
     open_paginator(player, content)
 
