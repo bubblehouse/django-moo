@@ -79,6 +79,7 @@ spec_test_format = "{result} {docstring_summary}"
 [tool.mypy]
 ignore_missing_imports = true
 exclude = [
+    "moo/bootstrap/default/",
     "moo/bootstrap/default_verbs/",
     "moo/core/migrations/",
 ]
