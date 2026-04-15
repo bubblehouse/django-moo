@@ -16,6 +16,6 @@ elif verb_name == "page_echo_msg":
 elif verb_name == "whereis_location_msg":
     return _.string_utils.pronoun_sub(this.get_property("whereis_location_msg"), this)
 elif verb_name == "who_location_msg":
-    return _.string_utils.pronoun_sub(this.get_property("who_location_msg"))
+    return _.string_utils.pronoun_sub(this.get_property("who_location_msg"), this)
 else:
     raise ValueError(f"Unknown verb name: {verb_name}")

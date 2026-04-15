@@ -150,6 +150,7 @@ class MooPrompt:
             while not self.is_exiting:
                 try:
                     from django.core.cache import cache as _cache
+
                     cols = get_app().output.get_size().columns
                     if _session_settings.get(self.user.pk, {}).get("terminal_width") != cols:
                         _session_settings.setdefault(self.user.pk, {})["terminal_width"] = cols
@@ -247,7 +248,14 @@ class MooPrompt:
             # Clear cache-backed session settings so Celery workers see a clean slate
             from django.core.cache import cache
 
-            for key in ("quiet_mode", "output_prefix", "output_suffix", "color_system"):
+            for key in (
+                "quiet_mode",
+                "output_prefix",
+                "output_suffix",
+                "output_global_prefix",
+                "output_global_suffix",
+                "color_system",
+            ):
                 cache.delete(f"moo:session:{user_pk}:{key}")
         log.debug("REPL is exiting, stopping main thread...")
 
