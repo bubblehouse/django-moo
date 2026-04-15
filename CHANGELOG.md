@@ -1,3 +1,25 @@
+## [0.104.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.103.0...v0.104.0) (2026-04-15)
+
+### Features
+
+* **agent:** cache orchestrator flag at startup and skip post-drain LLM cycles for orchestrators ([71352f5](https://gitlab.com/bubblehouse/django-moo/commit/71352f551c11167c49531383448aefd347b2bb8d))
+
+### Bug Fixes
+
+* **agent:** add command-loop detector, remove stale check_inbox queuing, and broaden special-token regex ([b3e550f](https://gitlab.com/bubblehouse/django-moo/commit/b3e550f066bbded94d8f05ba787cf551674d9380))
+* **agent:** detect page verb in both conjugations for they/them players ([c760906](https://gitlab.com/bubblehouse/django-moo/commit/c7609063bf1e9fc9d6924445aba9c1b7a08111ed))
+* **agentmux:** correctly stop a single named agent without killing the whole group ([b67723a](https://gitlab.com/bubblehouse/django-moo/commit/b67723a0067b54abb2e1f971ecdc7c1c1ec385dd))
+* **agent:** normalize bare integer object references in tool arg translation ([716b98d](https://gitlab.com/bubblehouse/django-moo/commit/716b98d0f411f8f986e5e999878f254c8b2b2064))
+* **agent:** set current_goal on [Done] Blocked and relay token as 'Token: X go.' to avoid LLM misreading prior agent's completion message ([a2ecd5a](https://gitlab.com/bubblehouse/django-moo/commit/a2ecd5a78fb56f76c73b31b7bdebf89b52fbdece))
+* **agents:** reduce Foreman stall timeout to 180s based on observed P95 runtimes and update token chain order ([a8d8a3c](https://gitlab.com/bubblehouse/django-moo/commit/a8d8a3cfd210a47b013cc713a6295919b564016e))
+* **agent:** suppress prior session summary for all page-triggered agents to prevent stale context injection ([d965413](https://gitlab.com/bubblehouse/django-moo/commit/d965413d640bbf963bf2db0f7b6f940a50793f07))
+* **parse:** raise NoSuchObjectError from DoesNotExist for proper exception chaining ([150b5bc](https://gitlab.com/bubblehouse/django-moo/commit/150b5bc51bff38f7b7b913dd107fec88bad7e7a8))
+* **parser:** defer pobj AmbiguousObjectError so string-only verbs like [@alias](https://gitlab.com/alias) can run without triggering disambiguation ([1640e3e](https://gitlab.com/bubblehouse/django-moo/commit/1640e3e40ff5c34fb5b4a0f6e8e61c1594e2906f))
+* **verbs:** allow book read/write from any location via global object lookup ([be7154a](https://gitlab.com/bubblehouse/django-moo/commit/be7154a302e574d18510669b7ff8360753fcd9ce))
+* **verbs:** conjugate page verb for they/them pronouns and quote note read output ([d929123](https://gitlab.com/bubblehouse/django-moo/commit/d9291233e20d305e246e15f3daf0a51034467cc6))
+* **verbs:** handle NoSuchPropertyError on uninitialized bulletin board properties ([70f084d](https://gitlab.com/bubblehouse/django-moo/commit/70f084daa76931ea7cab21e559f87c07b1a519d6))
+* **verbs:** report an error when adding a duplicate alias instead of silently no-oping ([872867f](https://gitlab.com/bubblehouse/django-moo/commit/872867f7f7fb4d928bbf42ad6c70d33b3a5e57f2))
+
 ## [0.103.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.102.0...v0.103.0) (2026-04-13)
 
 ### Features
