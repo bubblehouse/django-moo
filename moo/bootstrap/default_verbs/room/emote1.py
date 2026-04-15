@@ -8,4 +8,6 @@ verb, it is possible to create special effects for emote actions that are only s
 :emote1 uses $room:announce to send it's message.
 """
 
-this.announce(args[0])
+from moo.sdk import context
+
+this.announce(context.player.name + " " + args[0])

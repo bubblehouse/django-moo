@@ -46,7 +46,7 @@ for p in gagplayers:
         changed = True
         tmp = player.gaglist
         tmp.append(p)
-        player.gaglist = tmp
+        player.set_property("gaglist", tmp)
 
 for o in gagobjs:
     if o in player.object_gaglist:
@@ -55,7 +55,7 @@ for o in gagobjs:
         changed = True
         tmp = player.object_gaglist
         tmp.append(o)
-        player.object_gaglist = tmp
+        player.set_property("object_gaglist", tmp)
 
 if changed:
     print("Gag list updated.")

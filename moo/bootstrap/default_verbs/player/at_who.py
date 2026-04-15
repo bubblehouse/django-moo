@@ -21,4 +21,5 @@ if not players:
 
 print("Connected players:")
 for player in players:
-    print(f"  {player.who_location_msg()}")
+    location = player.location.name if player.location else "nowhere"
+    print(f"  {player.name} [{location}]")

@@ -20,8 +20,8 @@ player = context.player
 target = context.parser.get_dobj_str()
 
 if target == "everyone":
-    player.gaglist = []
-    player.object_gaglist = []
+    player.set_property("gaglist", [])
+    player.set_property("object_gaglist", [])
     print("Gag lists cleared.")
     return
 
@@ -29,12 +29,12 @@ target = context.parser.get_dobj()
 if target in player.gaglist:
     gaglist = player.gaglist
     gaglist.remove(target)
-    player.gaglist = gaglist
+    player.set_property("gaglist", gaglist)
     print(f"You are no longer gagging {target.name}.")
 elif target in player.object_gaglist:
     gaglist = player.object_gaglist
     gaglist.remove(target)
-    player.object_gaglist = gaglist
+    player.set_property("object_gaglist", gaglist)
     print(f"You are no longer gagging {target.name}.")
 else:
     print(f"You are not gagging {target.name}.")
