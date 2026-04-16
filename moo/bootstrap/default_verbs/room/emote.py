@@ -17,5 +17,5 @@ if context.parser.words:
 else:
     message = " ".join(args)
 
-context.player.tell(context.player.name + " " + message)
+context.player.tell("You " + message)
 this.emote1(message)
