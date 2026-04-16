@@ -20,8 +20,12 @@ player = context.player
 target = context.parser.get_dobj_str()
 
 if target == "everyone":
-    player.set_property("gaglist", [])
-    player.set_property("object_gaglist", [])
+    gaglist = player.gaglist
+    gaglist.clear()
+    player.set_property("gaglist", gaglist)
+    obj_gaglist = player.object_gaglist
+    obj_gaglist.clear()
+    player.set_property("object_gaglist", obj_gaglist)
     print("Gag lists cleared.")
     return
 
