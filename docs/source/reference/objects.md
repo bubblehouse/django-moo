@@ -43,6 +43,62 @@ There are several fundamental attributes to every object, defined by `moo.core.m
 .. autoattribute:: Object.children
 
     This is the :class:`ReverseManyToOneDescriptor` of the `parent` field above
+
+.. autoattribute:: Object.placement_prep
+   :no-index:
+.. autoattribute:: Object.placement_target
+   :no-index:
+```
+
+## Placement
+
+Objects can be placed in a spatial relationship to another object in the same room.
+Placement is stored as two fields on the object: `placement_prep` (a preposition string
+like `"on"` or `"under"`) and `placement_target` (the object it is placed relative to).
+
+The supported prepositions are defined by `PLACEMENT_PREPS` in `settings.py`:
+
+```
+on, under, behind, before, beside, over
+```
+
+Of these, `under` and `behind` are *hidden* placements (defined by `HIDDEN_PLACEMENT_PREPS`):
+objects placed with those prepositions are invisible in the room contents listing and
+unfindable by name through the parser. They can only be revealed by `look under <target>`
+or `look behind <target>`.
+
+The remaining prepositions (`on`, `before`, `beside`, `over`) are *visible* placements.
+Obvious visible-placed objects appear grouped under their surface in the room contents:
+
+```
+On the desk: a coffee cup.
+```
+
+Placement is cleared automatically when an object is taken, dropped, or moved.
+If the placement target is deleted, `SET_NULL` clears the `placement_target` FK and
+the `placed_objects.update(placement_prep=None)` hook in `Object.delete()` clears the
+dangling `placement_prep` on all placed children.
+
+### Placement API
+
+```{eval-rst}
+.. py:currentmodule:: moo.core.models
+.. automethod:: Object.set_placement
+.. automethod:: Object.clear_placement
+.. automethod:: Object.is_placed
+.. automethod:: Object.is_hidden_placement
+.. autoattribute:: Object.placement
+
+    Read-only property. Returns ``(prep, target)`` tuple, or ``None`` if not placed.
+```
+
+The `surface_types` property on the target object restricts which prepositions are
+valid. If not set, any placement preposition is accepted:
+
+```python
+# In a verb or @eval:
+desk = lookup("writing desk")
+desk.set_property("surface_types", ["on", "beside"])
 ```
 
 A bigger change to the DjangoMOO architecture starts to emerge here, around how permissions are specified.
