@@ -21,7 +21,6 @@
    tutorials/first-verb
    tutorials/testing-verbs
    tutorials/custom-world
-   tutorials/first-agent
 
 .. toctree::
    :maxdepth: 2
@@ -34,7 +33,6 @@
    how-to/development
    how-to/connection-control
    how-to/ssh-key-management
-   how-to/moo-agent
 
 .. toctree::
    :maxdepth: 2

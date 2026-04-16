@@ -41,14 +41,8 @@ dependencies = [
     "django-extensions>=4.1",
     "django-allauth>=0.63.0",
     "mistune>=3.0.0",
-    "anthropic>=0.50.0",
-    "asynciolimiter>=1.0.0",
-    "openai>=2.30.0",
     "pyyaml>=6.0",
 ]
-
-[project.scripts]
-moo-agent = "moo.agent.cli:main"
 
 [project.urls]
 Repository = "https://gitlab.com/bubblehouse/django-moo"
