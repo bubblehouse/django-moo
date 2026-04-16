@@ -138,7 +138,9 @@ class Object(models.Model, AccessibleMixin):
     placement_prep = models.CharField(max_length=20, null=True, blank=True)
     #: The object this is placed on/under/behind. SET_NULL on target deletion.
     placement_target = models.ForeignKey(
-        "self", null=True, blank=True,
+        "self",
+        null=True,
+        blank=True,
         on_delete=models.SET_NULL,
         related_name="placed_objects",
     )
@@ -449,7 +451,7 @@ class Object(models.Model, AccessibleMixin):
                 else:
                     pn = PrepositionName.objects.get(name=prep)
                     p = pn.preposition
-                    prep_specifier = "none"
+                    prep_specifier = "any"
                 verb.indirect_objects.add(
                     PrepositionSpecifier.objects.update_or_create(
                         preposition=p, preposition_specifier=prep_specifier, specifier=specifier
