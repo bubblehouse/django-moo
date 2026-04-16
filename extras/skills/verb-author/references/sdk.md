@@ -251,6 +251,48 @@ with set_task_perms(system):
 
 - Wizard-owned verbs only.
 
+## `PLACEMENT_PREPS` / `HIDDEN_PLACEMENT_PREPS`
+
+Two constants for verbs that deal with spatial placement.
+
+```python
+from moo.sdk import PLACEMENT_PREPS, HIDDEN_PLACEMENT_PREPS
+```
+
+- `PLACEMENT_PREPS` — ordered list of all valid placement prepositions:
+  `["on", "under", "behind", "before", "beside", "over"]`
+- `HIDDEN_PLACEMENT_PREPS` — set of prepositions that hide the placed object from
+  room listings and parser lookups: `{"under", "behind"}`
+
+Use `PLACEMENT_PREPS` to iterate over supported prepositions in a verb rather than
+hard-coding them:
+
+```python
+from moo.sdk import context, PLACEMENT_PREPS, UsageError
+
+prep = None
+for p in PLACEMENT_PREPS:
+    if context.parser.has_pobj_str(p):
+        prep = p
+        break
+
+if prep is None:
+    raise UsageError(f"Usage: place <object> {'/'.join(PLACEMENT_PREPS)} <target>")
+```
+
+Object methods for placement (called on the placed object, not the target):
+
+| Method | Description |
+|--------|-------------|
+| `obj.set_placement(prep, target)` | Set both fields atomically and save |
+| `obj.clear_placement()` | Remove placement (sets both fields to null and saves) |
+| `obj.is_placed()` | `True` if `placement_prep` and `placement_target` are set |
+| `obj.is_hidden_placement()` | `True` if `placement_prep` is in `HIDDEN_PLACEMENT_PREPS` |
+| `obj.placement` | Read-only property: `(prep, target)` tuple or `None` |
+
+The `surface_types` property on the **target** restricts which prepositions are valid.
+If not set, all `PLACEMENT_PREPS` values are accepted.
+
 ## Exceptions
 
 All of these inherit from `UserError`. Any `UserError` (or subclass) raised inside a verb is automatically caught by the task runner and displayed to the player as a bold red message. Verbs do not need to wrap these in `try/except` just to report errors — raising them is the correct pattern.
