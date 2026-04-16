@@ -346,3 +346,56 @@ Then set a descriptive `take_failed_msg`:
 ```
 
 This blocks `take`, `give`, and any other movement without adding `sit`/`stand` verbs.
+
+## Spatial Placement (`place` verb)
+
+Any `$thing` (and its descendants) can be placed in a spatial relationship to another
+object in the same room using the `place` verb. Placement is stored as metadata on the
+placed object — the object itself stays in the room, it just gains a `placement_prep`
+and `placement_target`.
+
+**Prepositions:**
+
+| Preposition | Visibility | Notes |
+|-------------|-----------|-------|
+| `on` | Visible | Shown in room listing: `On the desk: a coffee cup.` |
+| `before` | Visible | Displayed as `in front of` in output |
+| `beside` | Visible | Shown in room listing |
+| `over` | Visible | Shown in room listing |
+| `under` | **Hidden** | Not in room listing; revealed by `look under <target>` |
+| `behind` | **Hidden** | Not in room listing; revealed by `look behind <target>` |
+
+**Usage:**
+
+```
+place book on desk
+place key under rug
+place coin behind painting
+```
+
+Visible-placed objects appear in the room contents grouped under their surface, but
+only if they are `obvious`. Non-obvious placed objects are invisible regardless of
+preposition. `under` and `behind` placements are always hidden regardless of obvious.
+
+Placement is cleared when the object is taken, dropped, or moved. If the target is
+recycled, both fields are set to null automatically.
+
+**Restricting valid prepositions on a surface:** Set the `surface_types` property on
+the target object to a list of allowed prepositions. When absent, all six prepositions
+are accepted.
+
+```
+@eval "lookup('writing desk').set_property('surface_types', ['on', 'beside'])"
+```
+
+With this, `place book on desk` succeeds but `place book under desk` fails with
+`"You can't place things under the writing desk."`.
+
+**When to use placement vs. containers:**
+
+- Use `place X on desk` for props that are *visually* on a surface (books, candles,
+  cups) where the player doesn't need to `put` them inside anything.
+- Use `$container` + `put X in cabinet` when the object is meant to hold things in
+  an inventory sense and can be opened/closed.
+- Do **not** place objects inside `$furniture` — `$furniture` does not accept
+  `put`/`get` and any `@move` into furniture will fail with a PermissionError.

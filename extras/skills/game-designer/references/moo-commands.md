@@ -165,6 +165,47 @@ Controls whether an object appears in the room contents listing when a player ty
 @nonobvious "hidden lever"      — lever is invisible until interacted with directly
 ```
 
+### `place`
+
+```
+place <object> on/under/behind/before/beside/over <target>
+```
+
+Positions `<object>` in a spatial relationship to `<target>` in the same room. Both
+objects must be in the current room. The placed object stays in the room — placement
+is stored as metadata (`placement_prep` + `placement_target`).
+
+Visible prepositions (`on`, `before`, `beside`, `over`) group the object under its
+surface in the room listing:
+
+```
+On the desk: a coffee cup.
+```
+
+Hidden prepositions (`under`, `behind`) suppress the object from all room listings
+and make it unreachable by name in the parser. It can only be found with
+`look under <target>` or `look behind <target>`.
+
+Placement is cleared when the object is taken, dropped, or moved.
+
+**Restricting valid prepositions on a surface:** Set the `surface_types` property on
+the target to limit which prepositions are accepted. When absent, all six are valid:
+
+```
+@eval "lookup('writing desk').set_property('surface_types', ['on', 'beside'])"
+```
+
+Examples:
+
+```
+place book on desk
+place key under rug
+place coin behind painting
+```
+
+Only `obvious` objects are shown in the surface grouping — non-obvious placed objects
+are invisible even with a visible preposition.
+
 ### `@lock`
 
 ```
