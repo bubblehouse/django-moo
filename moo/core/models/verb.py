@@ -219,7 +219,7 @@ def set_indirect_objects(verb, ispec):
         else:
             pn = PrepositionName.objects.get(name=prep)
             p = pn.preposition
-            prep_specifier = "none"
+            prep_specifier = "any"
         ps, _ = PrepositionSpecifier.objects.update_or_create(
             preposition=p, preposition_specifier=prep_specifier, specifier=specifier
         )
