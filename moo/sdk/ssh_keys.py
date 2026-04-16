@@ -3,9 +3,6 @@
 SSH key management functions.
 """
 
-from ..core.exceptions import UserError
-from .context import context
-
 
 def list_ssh_keys(player_obj):
     """
@@ -17,6 +14,8 @@ def list_ssh_keys(player_obj):
     :rtype: list
     :raises UserError: if the caller is not wizard-owned, or the player has no account
     """
+    from ..core.exceptions import UserError  # pylint: disable=import-outside-toplevel
+    from .context import context  # pylint: disable=import-outside-toplevel
     from ..core.models.auth import Player
     from simplesshkey.models import UserKey
 
@@ -46,6 +45,8 @@ def add_ssh_key(player_obj, key_string):
     :rtype: UserKey
     :raises UserError: if the caller is not wizard-owned, the key is invalid, or the player has no account
     """
+    from ..core.exceptions import UserError  # pylint: disable=import-outside-toplevel
+    from .context import context  # pylint: disable=import-outside-toplevel
     from ..core.models.auth import Player
     from simplesshkey.models import UserKey
     from django.core.exceptions import ValidationError
@@ -79,6 +80,8 @@ def remove_ssh_key(player_obj, index):
     :type index: int
     :raises UserError: if the caller is not wizard-owned, the index is out of range, or the player has no account
     """
+    from ..core.exceptions import UserError  # pylint: disable=import-outside-toplevel
+    from .context import context  # pylint: disable=import-outside-toplevel
     from ..core.models.auth import Player
     from simplesshkey.models import UserKey
 
