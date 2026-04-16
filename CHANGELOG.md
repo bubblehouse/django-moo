@@ -1,3 +1,29 @@
+## [0.105.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.104.0...v0.105.0) (2026-04-16)
+
+### Features
+
+* **agent:** add temperature config and wire it through to LLM calls ([de2edd1](https://gitlab.com/bubblehouse/django-moo/commit/de2edd1d30b746ec476f2d669a400ecf7f0696b8))
+* **agent:** add timer_only and clear_window_on_wakeup config options ([9b91c46](https://gitlab.com/bubblehouse/django-moo/commit/9b91c468192a1794aa7752b1a38b05afe409f42a))
+* **migration:** add placement_prep and placement_target fields ([4b7048e](https://gitlab.com/bubblehouse/django-moo/commit/4b7048e509e481812f66f81a87427b5fbe32f52f))
+* **models:** add placement fields, methods, and delete cleanup to Object ([51938b6](https://gitlab.com/bubblehouse/django-moo/commit/51938b6ac621b03beb4d6c833006c818f2e1ec7a))
+* **parser:** exclude hidden-placed objects from room lookups ([ebfbf79](https://gitlab.com/bubblehouse/django-moo/commit/ebfbf79320ddadff95687483e6b6d51ff4c2b38b))
+* **settings:** add PLACEMENT_PREPS and HIDDEN_PLACEMENT_PREPS ([e16ada2](https://gitlab.com/bubblehouse/django-moo/commit/e16ada294cdba4ec528b312539b512461366cb8f))
+* **verbs:** add place verb to $thing ([b6e9af6](https://gitlab.com/bubblehouse/django-moo/commit/b6e9af6f9be53fd4b930900fb13ca52294a3d0b9))
+* **verbs:** clear placement on take, drop, and moveto ([d10873e](https://gitlab.com/bubblehouse/django-moo/commit/d10873e235c23d50665b23f5e8b1d73d7372b0f5))
+* **verbs:** group placed items by surface in room tell_contents ([e942df8](https://gitlab.com/bubblehouse/django-moo/commit/e942df8cc0c21e30910c0b21b3714c2b570a6716))
+* **verbs:** reveal hidden placements in room look verb ([13fa659](https://gitlab.com/bubblehouse/django-moo/commit/13fa6594f8a0e27603c5b06c0ed5556eefd1c7c6))
+
+### Bug Fixes
+
+* **models:** store ispec preposition_specifier as 'any' for specific-prep indirect objects ([d3161f1](https://gitlab.com/bubblehouse/django-moo/commit/d3161f12b6508cc36100d32d41bbc164a98ff1a4))
+* **sdk:** defer ssh_keys imports inside functions to fix pylint C0413 warnings ([f25bdc1](https://gitlab.com/bubblehouse/django-moo/commit/f25bdc13ccee616632243f886ae770b449841ea5))
+* **verbs:** add article to single-item surface placement listing in tell_contents ([ef00fb9](https://gitlab.com/bubblehouse/django-moo/commit/ef00fb990c0c88c26c58abc1e504b445b6a3b1d0))
+* **verbs:** add sender confirmation to whisper and emote verbs ([9f8a0db](https://gitlab.com/bubblehouse/django-moo/commit/9f8a0db52e16bd70720d628c5a46cfa5fc1c75e4))
+* **verbs:** clear gaglist in place in [@ungag](https://gitlab.com/ungag) everyone path ([cb6caff](https://gitlab.com/bubblehouse/django-moo/commit/cb6caff34ae5da620a5a2bffc75f11dc4b4c129e))
+* **verbs:** correct emote output — caller sees 'You', others see raw message ([3d9b620](https://gitlab.com/bubblehouse/django-moo/commit/3d9b62013606a3e187a6a42426102f99984ef285))
+* **verbs:** correct gag persistence, emote attribution, [@who](https://gitlab.com/who) display, and session cache cleanup ([77346d5](https://gitlab.com/bubblehouse/django-moo/commit/77346d5755aa8e7c222473536d035764917079a2))
+* **verbs:** improve at_mail formatting with rewrap and divider ([a831de2](https://gitlab.com/bubblehouse/django-moo/commit/a831de2fe774a6fef490f1384d3f100fa1b33463))
+
 ## [0.104.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.103.0...v0.104.0) (2026-04-15)
 
 ### Features
