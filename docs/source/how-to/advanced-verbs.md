@@ -333,6 +333,94 @@ print(f"Version: {info['version']}, PID: {info['pid']}, Memory: {info['memory_mb
 
 Keys: `version`, `python`, `pid`, `memory_mb` (may be `None` on platforms where `resource` is unavailable).
 
+## Placement Verbs
+
+Objects can be placed in a spatial relationship to another object in the same room using
+the `place` verb (`$thing.place`) as the reference implementation. This section covers
+how to write verbs that read and write placement state.
+
+### How placement works
+
+Two fields on each Object record the placement:
+
+- `placement_prep` — a preposition string (`"on"`, `"under"`, `"behind"`, `"before"`, `"beside"`, `"over"`)
+- `placement_target` — the Object it is placed relative to
+
+`PLACEMENT_PREPS` (from `moo.sdk`) lists all valid prepositions. `HIDDEN_PLACEMENT_PREPS`
+is the subset (`{"under", "behind"}`) whose placed items are invisible to the room contents
+listing and unresolvable by name in the parser.
+
+Placement is cleared automatically when an object is taken, dropped, or moved. If the
+placement target is deleted, both fields go to `None`.
+
+### Using `PLACEMENT_PREPS` in a verb
+
+```python
+#!moo verb place --on $thing --dspec this --ispec on:any --ispec under:any --ispec behind:any --ispec before:any --ispec beside:any --ispec over:any
+
+from moo.sdk import context, NoSuchPropertyError, UsageError, PLACEMENT_PREPS
+
+prep = None
+for p in PLACEMENT_PREPS:
+    if context.parser.has_pobj_str(p):
+        prep = p
+        break
+
+if prep is None:
+    raise UsageError(f"Usage: place <object> {'/'.join(PLACEMENT_PREPS)} <target>")
+
+target = context.parser.get_pobj(prep)
+
+# Optional: check surface_types restriction on the target
+try:
+    allowed = target.get_property("surface_types")
+    if prep not in allowed:
+        print(f"You can't place things {prep} the {target.title()}.")
+        return
+except NoSuchPropertyError:
+    pass  # no restriction — all preps allowed
+
+this.set_placement(prep, target)
+print(f"You place {this.title()} {prep} the {target.title()}.")
+context.player.location.announce(
+    f"{context.player.title()} places {this.title()} {prep} the {target.title()}."
+)
+```
+
+Key points:
+
+- `--ispec` must enumerate each supported preposition explicitly — there is no wildcard form.
+- `PLACEMENT_PREPS` is the canonical list; use it to iterate rather than hard-coding.
+- `set_placement(prep, target)` is atomic — it sets both fields and calls `save()` in one call.
+- `clear_placement()` removes placement without touching any other fields.
+
+### Reading placement in a verb
+
+```python
+from moo.sdk import context
+
+placement = this.placement  # (prep, target) or None
+if placement is None:
+    print(f"The {this.title()} is not placed anywhere.")
+else:
+    prep, target = placement
+    print(f"The {this.title()} is {prep} the {target.title()}.")
+```
+
+### Restricting surface types
+
+Set the `surface_types` property on a target object to limit which prepositions are valid
+for it. `place` checks this list before calling `set_placement()`.
+
+```python
+# In a verb or via @eval:
+desk = context.player.location.find("desk").first()
+desk.set_property("surface_types", ["on", "beside"])
+# Now: "place book on desk" succeeds; "place book under desk" fails.
+```
+
+If `surface_types` is absent, all placement prepositions are accepted.
+
 ## Best Practices for Verb Development
 
 ### 1. Always Check Permissions First
