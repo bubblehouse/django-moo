@@ -63,8 +63,8 @@ all_items = list(this.contents.select_related("placement_target").all())
 room_pks = {item.pk for item in all_items}
 
 players = []
-items = []      # unplaced obvious items
-surfaces = {}   # {target_pk: (target_obj, prep, [placed_items])}
+items = []  # unplaced obvious items
+surfaces = {}  # {target_pk: (target_obj, prep, [placed_items])}
 
 for item in all_items:
     if item == context.player:
@@ -126,17 +126,21 @@ if ctype in (0, 1, 2, 3):
         disp = PREP_DISPLAY.get(prep, prep)
         tname = surface.title()
         if len(placed_items) == 1:
-            s = placed_items[0].title()
-            line = random.choice([
-                f"{disp.capitalize()} the {tname}: {s}.",
-                f"There is {s} {disp} the {tname}.",
-                f"You see {s} {disp} the {tname}.",
-            ])
+            s = _.string_utils.english_list(placed_items)
+            line = random.choice(
+                [
+                    f"{disp.capitalize()} the {tname}: {s}.",
+                    f"There is {s} {disp} the {tname}.",
+                    f"You see {s} {disp} the {tname}.",
+                ]
+            )
         else:
             lst = _.string_utils.english_list(placed_items)
-            line = random.choice([
-                f"{disp.capitalize()} the {tname}: {lst}.",
-                f"You see {lst} {disp} the {tname}.",
-                f"{lst.capitalize()} {disp} the {tname}.",
-            ])
+            line = random.choice(
+                [
+                    f"{disp.capitalize()} the {tname}: {lst}.",
+                    f"You see {lst} {disp} the {tname}.",
+                    f"{lst.capitalize()} {disp} the {tname}.",
+                ]
+            )
         print(line)
