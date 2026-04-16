@@ -10,4 +10,4 @@ verb, it is possible to create special effects for emote actions that are only s
 
 from moo.sdk import context
 
-this.announce(context.player.name + " " + args[0])
+this.announce(args[0])
