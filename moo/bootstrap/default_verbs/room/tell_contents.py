@@ -54,6 +54,9 @@ import random
 
 from moo.sdk import context
 
+if not this.is_lit():
+    return
+
 PREP_DISPLAY = {"before": "in front of"}
 
 # Collect all room contents in one query with placement_target joined.

@@ -8,11 +8,14 @@ list it's entrances. For every object kept in the room's entrances list, the exi
 aliases are displayed to the player.
 """
 
+from moo.sdk import prefetch_property
+
 entrances = this.get_property_objects("entrances", prefetch_related=["aliases"]) or []
 if not entrances:
     print("[red]There are no entrances defined for this room.[/red]")
     return
 
+prefetch_property(entrances, "dest")
 print("[cyan]Entrances defined for this room:[/cyan]")
 for exit_obj in entrances:
     exit_name = exit_obj.name

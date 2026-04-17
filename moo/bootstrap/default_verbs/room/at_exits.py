@@ -1,6 +1,6 @@
 #!moo verb @exits --on $room --dspec either
 
-# pylint: disable=return-outside-function,undefined-variable
+# pylint: disable=return-outside-function,undefined-variable,possibly-used-before-assignment
 
 """
 Print a list of the exits in a room. It can only be used by the owner of the
@@ -8,7 +8,7 @@ room. The verb simply runs through the list of defined exits, stored in the prop
 object reference number, destination name, and exit aliases.
 """
 
-from moo.sdk import context
+from moo.sdk import context, prefetch_property
 
 if context.parser.has_dobj_str():
     this = context.parser.get_dobj(lookup=True)
@@ -18,6 +18,7 @@ if not exits:
     print("[red]There are no exits defined for this room.[/red]")
     return
 
+prefetch_property(exits, "dest")
 print("[cyan]Exits defined for this room:[/cyan]")
 for exit_obj in exits:
     exit_name = exit_obj.name

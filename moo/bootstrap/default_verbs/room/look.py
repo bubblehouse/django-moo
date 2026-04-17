@@ -30,9 +30,13 @@ PREP_DISPLAY = {"before": "in front of"}
 # Handle spatial placement lookups: "look under rug", "look on desk", etc.
 for prep in PLACEMENT_PREPS:
     if context.parser.has_pobj_str(prep):
+        if not this.is_lit():
+            print("It's too dark to see.")
+            return
         target = context.parser.get_pobj(prep)
         found = [
-            item for item in this.contents.all()
+            item
+            for item in this.contents.all()
             if item.placement_prep == prep and item.placement_target_id == target.pk
         ]
         disp = PREP_DISPLAY.get(prep, prep)
@@ -58,21 +62,33 @@ if context.parser.has_pobj_str("in"):
 else:
     container = None
 
+in_inventory = False
 if context.parser.has_dobj() and container is None:
     obj = context.parser.get_dobj()
+    in_inventory = obj.location_id == context.player.pk
 elif context.parser.has_dobj_str():
     dobj_str = context.parser.get_dobj_str()
     if container:
         qs = container.find(dobj_str)
     else:
-        qs = context.player.find(dobj_str) or context.player.location.find(dobj_str)
+        inv_qs = context.player.find(dobj_str)
+        if inv_qs:
+            qs = inv_qs
+            in_inventory = True
+        else:
+            qs = context.player.location.find(dobj_str)
     if not qs:
         print(f"There is no '{dobj_str}' here.")
         return
     obj = qs[0]
 elif context.parser.has_pobj_str("at"):
     obj = context.parser.get_pobj("at", lookup=True)
+    in_inventory = obj.location_id == context.player.pk
 else:
     obj = context.player.location
+
+if not in_inventory and obj != context.player.location and not this.is_lit():
+    print("It's too dark to see.")
+    return
 
 obj.look_self()

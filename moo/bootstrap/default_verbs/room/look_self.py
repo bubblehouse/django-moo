@@ -14,15 +14,25 @@ from moo.sdk import get_session_setting, get_wrap_column
 
 # Direction -> (row, col) in 3x3 grid (0-indexed)
 GRID_POS = {
-    "northwest": (0, 0), "north": (0, 1), "northeast": (0, 2),
-    "west":      (1, 0),                  "east":      (1, 2),
-    "southwest": (2, 0), "south": (2, 1), "southeast": (2, 2),
+    "northwest": (0, 0),
+    "north": (0, 1),
+    "northeast": (0, 2),
+    "west": (1, 0),
+    "east": (1, 2),
+    "southwest": (2, 0),
+    "south": (2, 1),
+    "southeast": (2, 2),
 }
 
 ARROWS = {
-    "northwest": "\u2196", "north": "\u2191", "northeast": "\u2197",
-    "west":      "\u2190",                    "east":      "\u2192",
-    "southwest": "\u2199", "south": "\u2193", "southeast": "\u2198",
+    "northwest": "\u2196",
+    "north": "\u2191",
+    "northeast": "\u2197",
+    "west": "\u2190",
+    "east": "\u2192",
+    "southwest": "\u2199",
+    "south": "\u2193",
+    "southeast": "\u2198",
 }
 
 # Reverse map: (row, col) -> direction name
@@ -69,12 +79,16 @@ if not quiet:
 
     # Build the text block: title on line 1, wrapped description after.
     title_line = f"[color(226)]{this.title()}[/color(226)]"
-    if this.get_property("dark"):
+    is_dark = not this.is_lit()
+    if is_dark:
         text_lines = [title_line, "It's too dark to see anything."]
     else:
         description = this.get_property("description")
         if description:
-            desc_wrapped = [f"[deep_sky_blue1]{line}[/deep_sky_blue1]" for line in _.string_utils.rewrap(description, TEXT_WIDTH).split("\n")]
+            desc_wrapped = [
+                f"[deep_sky_blue1]{line}[/deep_sky_blue1]"
+                for line in _.string_utils.rewrap(description, TEXT_WIDTH).split("\n")
+            ]
             text_lines = [title_line] + desc_wrapped
         else:
             text_lines = [title_line]
@@ -92,12 +106,15 @@ if not quiet:
         print(f"{INDENT}{text_lines[i]}")
 else:
     print(f"[bright_yellow]{this.title()}[/bright_yellow]")
-    if this.get_property("dark"):
+    if not this.is_lit():
         print("It's too dark to see anything.")
         return
+    is_dark = False
     description = this.get_property("description")
     if description:
         print(description)
 
+if is_dark:
+    return
 print("")
 this.tell_contents()

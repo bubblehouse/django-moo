@@ -13,7 +13,7 @@ Usage:
     @survey #N    — survey room or object by object ID
 """
 
-from moo.sdk import context, NoSuchPropertyError
+from moo.sdk import context, prefetch_property, NoSuchPropertyError
 
 parser = context.parser
 if parser.has_dobj_str():
@@ -35,6 +35,7 @@ if room_class and obj.is_a(room_class):
     except NoSuchPropertyError:
         exits = []
     if exits:
+        prefetch_property(exits, "dest")
         print("[cyan]Exits:[/cyan]")
         for exit_obj in exits:
             aliases = [a.alias for a in exit_obj.aliases.all()]

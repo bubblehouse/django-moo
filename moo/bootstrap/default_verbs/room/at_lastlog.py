@@ -16,7 +16,7 @@ as found in the player's `last_connected_time` property.
 
 from datetime import datetime, timedelta, timezone
 
-from moo.sdk import context, players, NoSuchPropertyError
+from moo.sdk import context, players, prefetch_property, NoSuchPropertyError
 
 player = context.player
 parser = context.parser
@@ -42,7 +42,9 @@ else:
 
     today, this_week, this_month, older = [], [], [], []
 
-    for avatar in players():
+    all_players = list(players())
+    prefetch_property(all_players, "last_connected_time")
+    for avatar in all_players:
         try:
             last_time = avatar.get_property("last_connected_time")
         except NoSuchPropertyError:
