@@ -46,6 +46,9 @@ try:
 except NoSuchPropertyError:
     pass
 
+if this.location == context.player:
+    this.moveto(context.player.location)
+
 this.set_placement(prep, target)
 
 title = this.title()

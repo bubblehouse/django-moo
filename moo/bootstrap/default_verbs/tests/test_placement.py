@@ -97,6 +97,24 @@ def test_is_hidden_placement(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_place_from_inventory_moves_to_room(t_init: Object, t_wizard: Object):
+    printed, writer = _writer_ctx(t_wizard)
+    with code.ContextManager(t_wizard, writer) as ctx:
+        lab = t_wizard.location
+        desk = _make_thing("desk", lab)
+        book = _make_thing("book", lab)
+        book.moveto(t_wizard)  # put in inventory first
+        assert book.location == t_wizard
+        parse.interpret(ctx, "place book on desk")
+    book.refresh_from_db()
+    assert book.location == lab  # moved out of inventory into room
+    assert book.placement_prep == "on"
+    assert book.placement_target == desk
+    assert any("place" in m.lower() for m in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_place_on_object(t_init: Object, t_wizard: Object):
     printed, writer = _writer_ctx(t_wizard)
     with code.ContextManager(t_wizard, writer) as ctx:
@@ -107,7 +125,7 @@ def test_place_on_object(t_init: Object, t_wizard: Object):
     book.refresh_from_db()
     assert book.placement_prep == "on"
     assert book.placement_target == desk
-    assert book.location == lab        # metadata model: stays in room
+    assert book.location == lab  # metadata model: stays in room
     assert any("place" in m.lower() for m in printed)
 
 
@@ -124,7 +142,7 @@ def test_place_under_item(t_init: Object, t_wizard: Object):
     assert key.placement_prep == "under"
     assert key.placement_target == rug
     assert key.is_hidden_placement()
-    assert key.obvious   # obvious is unchanged
+    assert key.obvious  # obvious is unchanged
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -139,7 +157,7 @@ def test_place_behind_item(t_init: Object, t_wizard: Object):
     coin.refresh_from_db()
     assert coin.placement_prep == "behind"
     assert coin.is_hidden_placement()
-    assert coin.obvious   # unchanged
+    assert coin.obvious  # unchanged
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -332,7 +350,7 @@ def test_take_from_wrong_surface_fails(t_init: Object, t_wizard: Object):
         book.set_placement("on", desk)
         parse.interpret(ctx, "take book from table")
     book.refresh_from_db()
-    assert book.location == lab   # not taken
+    assert book.location == lab  # not taken
     assert any("isn't on" in m for m in printed)
 
 
@@ -345,7 +363,7 @@ def test_drop_clears_placement(t_init: Object, t_wizard: Object):
         desk = _make_thing("desk", lab)
         book = _make_thing("book", lab)
         book.set_placement("on", desk)
-        book.moveto(t_wizard)    # put in inventory first
+        book.moveto(t_wizard)  # put in inventory first
         parse.interpret(ctx, "drop book")
     book.refresh_from_db()
     assert book.placement is None
@@ -370,7 +388,7 @@ def test_moveto_clears_dependent_placements(t_init: Object, t_wizard: Object):
         desk.moveto(other_room)
     book.refresh_from_db()
     assert book.placement is None
-    assert book.location == lab   # book stays in room
+    assert book.location == lab  # book stays in room
 
 
 # ---------------------------------------------------------------------------
@@ -407,10 +425,10 @@ def test_parser_obvious_filter_hides_nonobvious(t_init: Object, t_wizard: Object
         lab = t_wizard.location
         rug = _make_thing("rug", lab)
         key = _make_thing("key", lab)
-        key.set_placement("under", rug)   # hidden placement makes key invisible to parser
+        key.set_placement("under", rug)  # hidden placement makes key invisible to parser
         parse.interpret(ctx, "take key")
     key.refresh_from_db()
-    assert key.location == lab   # not taken; hidden-placed objects are invisible to parser
+    assert key.location == lab  # not taken; hidden-placed objects are invisible to parser
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -421,8 +439,8 @@ def test_parser_obvious_filter_from_bypasses(t_init: Object, t_wizard: Object):
         lab = t_wizard.location
         rug = _make_thing("rug", lab)
         key = _make_thing("key", lab)
-        key.set_placement("under", rug)   # hidden placement; "from" bypasses the filter
+        key.set_placement("under", rug)  # hidden placement; "from" bypasses the filter
         parse.interpret(ctx, "take key from rug")
     key.refresh_from_db()
-    assert key.location == t_wizard   # taken successfully
+    assert key.location == t_wizard  # taken successfully
     assert key.placement is None
