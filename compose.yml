@@ -83,12 +83,20 @@ services:
     user: www-data
     ports:
       - 8022:8022
+      - 8023:8023
     links:
       - postgres
       - redis
     environment:
       DJANGO_SETTINGS_MODULE: moo.settings.local
       OTEL_SDK_DISABLED: 'true'
+    healthcheck:
+      test: [CMD-SHELL, nc -z localhost 8023 || exit 1]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
   # The PostgreSQL database needs to define a moo user with an appropriate password.
   # This is a simple deployment, so we're not using a production-ready PostgreSQL container.
   postgres:

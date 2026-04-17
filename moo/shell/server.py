@@ -4,9 +4,12 @@ AsyncSSH server components.
 """
 
 import asyncio
+import faulthandler
 import json
 import logging
 import os
+import signal
+import sys
 from typing import cast
 
 import asyncssh
@@ -19,6 +22,16 @@ from .prompt import embed
 
 log = logging.getLogger(__name__)
 
+_active_sessions: set[str] = set()
+_total_connections: int = 0
+
+
+def _fd_count() -> int:
+    try:
+        return len(os.listdir("/proc/self/fd"))
+    except OSError:
+        return -1
+
 
 class MooPromptToolkitSSHSession(PromptToolkitSSHSession):
     """
@@ -29,12 +42,10 @@ class MooPromptToolkitSSHSession(PromptToolkitSSHSession):
     """
 
     user = None  # set by MooSSHServer.session_requested() before the session starts
+    is_automation: bool = False
 
     def session_started(self) -> None:
         """Check terminal type and adjust CPR setting before starting interaction."""
-        import sys
-
-        self.is_automation = False
         if self._chan:
             term = self._chan.get_terminal_type()
             print(f"[MOO-DEBUG] Terminal type: {term!r}, enable_cpr={self.enable_cpr}", file=sys.stderr, flush=True)  # type: ignore[has-type]
@@ -51,10 +62,26 @@ async def interact(ssh_session: PromptToolkitSSHSession) -> None:
 
     :param ssh_session: the session being started
     """
+    global _total_connections  # pylint: disable=global-statement
     session = cast(MooPromptToolkitSSHSession, ssh_session)
     automation = getattr(session, "is_automation", False)
-    await embed(session.user, automation=automation)
-    log.info(f"{session.user} disconnected.")
+    username = session.user.username if session.user else "unknown"
+    _active_sessions.add(username)
+    _total_connections += 1
+    log.info(
+        "connect user=%s total=%d active=%d fds=%d", username, _total_connections, len(_active_sessions), _fd_count()
+    )
+    try:
+        await embed(session.user, automation=automation)
+    finally:
+        _active_sessions.discard(username)
+        log.info("disconnect user=%s active=%d fds=%d", username, len(_active_sessions), _fd_count())
+
+
+async def _health_handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
+    writer.write(b"OK\n")
+    await writer.drain()
+    writer.close()
 
 
 async def server(port=8022):
@@ -64,6 +91,28 @@ async def server(port=8022):
     :param port: the port to run the SSH daemon on.
     """
     await asyncio.sleep(1)
+
+    loop = asyncio.get_event_loop()
+    loop.set_debug(True)
+    loop.slow_callback_duration = 0.050  # warn on any callback >50ms
+
+    # faulthandler.register dumps ALL Python thread stacks synchronously on signal —
+    # works even when the asyncio event loop is blocked. loop.add_signal_handler()
+    # does NOT work when the loop is frozen because it requires the loop to be
+    # alive to deliver the signal callback.
+    faulthandler.register(signal.SIGUSR1, file=sys.stderr, all_threads=True, chain=False)
+
+    def _dump_state():
+        tasks = asyncio.all_tasks()
+        log.critical("SIGUSR2 state dump: sessions=%s tasks=%d fds=%d", _active_sessions, len(tasks), _fd_count())
+        for t in tasks:
+            log.critical("  TASK: %s", t)
+
+    loop.add_signal_handler(signal.SIGUSR2, _dump_state)
+
+    await asyncio.start_server(_health_handler, "", 8023)
+    log.info("Health endpoint listening on port 8023")
+
     await asyncssh.create_server(
         lambda: SSHServer(interact),
         "",
