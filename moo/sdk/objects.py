@@ -5,6 +5,8 @@ Object and player query functions.
 
 from typing import Union
 
+from django.db.models import F
+
 from ..core import moojson
 from ..core.code import ContextManager as _ContextManager
 from ..core.exceptions import (
@@ -85,6 +87,70 @@ def connected_players(within=None):
             result.append(prop.origin)
 
     return result
+
+
+def prefetch_property(objects: list, name: str) -> None:
+    """
+    Pre-warm the session property cache for `name` across all objects in 2 DB queries.
+
+    After this call, ``get_property(name)`` on any of these objects hits the in-process
+    cache — no further DB or Redis I/O. Handles inheritance via AncestorCache with
+    nearest-ancestor-wins semantics (same as ``get_property``).
+
+    Objects whose property resolves to missing are also marked so ``get_property``
+    raises ``NoSuchPropertyError`` without a DB hit.
+    """
+    from ..core.models.property import Property
+    from ..core.models.object import AncestorCache, _PROP_MISSING  # noqa: PLC2701
+
+    pcache = _ContextManager.get_prop_lookup_cache()
+    if pcache is None or not objects:
+        return
+
+    pks = [obj.pk for obj in objects]
+
+    # Pass 1: direct properties (objects that have `name` set on themselves)
+    direct = {}
+    for prop in Property.objects.filter(origin_id__in=pks, name=name).values("origin_id", "value"):
+        direct[prop["origin_id"]] = prop["value"]
+
+    # Pass 2: inherited properties for objects without a direct entry
+    no_direct = [pk for pk in pks if pk not in direct]
+    inherited = {}
+    if no_direct:
+        rows = (
+            Property.objects.filter(
+                origin__ancestor_descendants__descendant_id__in=no_direct,
+                name=name,
+            )
+            .annotate(
+                descendant_id=F("origin__ancestor_descendants__descendant_id"),
+                depth=F("origin__ancestor_descendants__depth"),
+                pw=F("origin__ancestor_descendants__path_weight"),
+            )
+            .values("descendant_id", "value", "depth", "pw")
+        )
+        # Take nearest ancestor (min depth, then max path_weight) per descendant
+        for row in rows:
+            did = row["descendant_id"]
+            if (
+                did not in inherited
+                or row["depth"] < inherited[did]["depth"]
+                or (row["depth"] == inherited[did]["depth"] and row["pw"] > inherited[did]["pw"])
+            ):
+                inherited[did] = row
+
+    # Populate session cache (skip entries already present)
+    for pk in pks:
+        cache_key = (pk, name, True)
+        if cache_key in pcache:
+            continue
+        if pk in direct:
+            pcache[cache_key] = moojson.filter_nothing(moojson.loads(direct[pk]))
+        elif pk in inherited:
+            pcache[cache_key] = moojson.filter_nothing(moojson.loads(inherited[pk]["value"]))
+        else:
+            pcache[cache_key] = _PROP_MISSING
 
 
 def players():

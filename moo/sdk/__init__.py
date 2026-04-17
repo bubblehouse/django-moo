@@ -11,6 +11,7 @@ from .objects import (
     create,
     players,
     connected_players,
+    prefetch_property,
     owned_objects,
     owned_objects_by_pks,
 )
@@ -59,19 +60,33 @@ from ..core.exceptions import (
 PLACEMENT_PREPS = ["on", "under", "behind", "before", "beside", "over"]
 
 DIRECTIONS = [
-    "north", "northeast", "east", "southeast",
-    "south", "southwest", "west", "northwest",
-    "up", "down",
+    "north",
+    "northeast",
+    "east",
+    "southeast",
+    "south",
+    "southwest",
+    "west",
+    "northwest",
+    "up",
+    "down",
 ]
 
 OPPOSITE_DIRECTIONS = {
-    "north": "south",     "south": "north",
-    "east":  "west",      "west":  "east",
-    "up":    "down",      "down":  "up",
-    "northeast": "southwest", "southwest": "northeast",
-    "northwest": "southeast", "southeast": "northwest",
-    "ne": "sw", "sw": "ne",
-    "nw": "se", "se": "nw",
+    "north": "south",
+    "south": "north",
+    "east": "west",
+    "west": "east",
+    "up": "down",
+    "down": "up",
+    "northeast": "southwest",
+    "southwest": "northeast",
+    "northwest": "southeast",
+    "southeast": "northwest",
+    "ne": "sw",
+    "sw": "ne",
+    "nw": "se",
+    "se": "nw",
 }
 
 __all__ = [
@@ -79,6 +94,7 @@ __all__ = [
     "create",
     "players",
     "connected_players",
+    "prefetch_property",
     "write",
     "open_editor",
     "open_paginator",
