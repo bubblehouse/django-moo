@@ -1,3 +1,13 @@
+## [0.106.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.105.0...v0.106.0) (2026-04-17)
+
+### Features
+
+* split moo.agent into standalone moo-agent package ([9ab7fd4](https://gitlab.com/bubblehouse/django-moo/commit/9ab7fd491f4c1c908d8671f8f07bc5a422886a4b))
+
+### Bug Fixes
+
+* force release ([0dd2fa8](https://gitlab.com/bubblehouse/django-moo/commit/0dd2fa89f8bb35a44a291089bbbe585fd2455d65))
+
 ## [0.90.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.89.3...v0.90.0) (2026-04-16)
 
 ### Features
