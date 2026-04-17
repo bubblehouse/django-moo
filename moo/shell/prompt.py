@@ -494,7 +494,7 @@ class MooPrompt:
         background output and the response to the next command they are about to send.
         """
         to_write = []
-        with app.default_connection() as conn:
+        with app.connection_for_read() as conn:
             channel = conn.channel()
             queue = Queue(
                 f"messages.{self.user.pk}",
@@ -567,7 +567,17 @@ class MooPrompt:
         """
         await asyncio.sleep(1)
         try:
-            with app.default_connection() as conn:
+            # Use connection_for_read() instead of default_connection() — the latter
+            # acquires from the broker pool (default limit 10), and each session
+            # holds its slot for the whole session lifetime. With 6+ concurrent
+            # sessions the pool saturates and queue.get() blocks the asyncio event
+            # loop thread, freezing the whole SSH server. A fresh connection per
+            # session avoids pool contention entirely.
+            _t0 = asyncio.get_event_loop().time()
+            with app.connection_for_read() as conn:
+                _conn_elapsed = asyncio.get_event_loop().time() - _t0
+                if _conn_elapsed > 0.010:
+                    log.warning("connection_for_read blocked event loop for %.0fms", _conn_elapsed * 1000)
                 channel = conn.channel()
                 queue = Queue(
                     f"messages.{self.user.pk}",
@@ -580,7 +590,11 @@ class MooPrompt:
                 try:
                     while not self.is_exiting:
                         try:
+                            _t1 = asyncio.get_event_loop().time()
                             msg = sb.get_nowait()
+                            _get_elapsed = asyncio.get_event_loop().time() - _t1
+                            if _get_elapsed > 0.010:
+                                log.warning("sb.get_nowait blocked event loop for %.0fms", _get_elapsed * 1000)
                         except sb.Empty:
                             msg = None
 
