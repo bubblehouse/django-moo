@@ -107,4 +107,8 @@ dev-dependencies = [
     "pexpect>=4.9.0",
     "types-pexpect>=4.9.0",
     "types-pyyaml>=6.0",
+    "moo-agent",
 ]
+
+[tool.uv.sources]
+moo-agent = { path = "../moo-agent", editable = true }
