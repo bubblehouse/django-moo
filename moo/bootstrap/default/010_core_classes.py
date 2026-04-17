@@ -79,6 +79,7 @@ thing.set_property("odrop_succeeded_msg", "%N drops %t.")
 thing.set_property("odrop_failed_msg", "%N tries to drop %t but fails!")
 thing.set_property("drop_succeeded_msg", "You drop %t.")
 thing.set_property("drop_failed_msg", "You can't seem to drop %t here.")
+thing.set_property("alight", False, inherit_owner=True)
 if not containers.parents.filter(pk=thing.pk).exists():
     containers.parents.add(thing)
 
