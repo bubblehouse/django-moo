@@ -1,3 +1,9 @@
+## [0.106.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.106.0...v0.106.1) (2026-04-17)
+
+### Bug Fixes
+
+* placement issue when object in inventory ([1e3a9e9](https://gitlab.com/bubblehouse/django-moo/commit/1e3a9e993b8ae4180dd18da6e59cfa5032057eba))
+
 ## [0.106.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.105.0...v0.106.0) (2026-04-17)
 
 ### Features
