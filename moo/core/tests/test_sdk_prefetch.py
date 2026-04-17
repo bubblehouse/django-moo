@@ -47,6 +47,7 @@ def test_direct_property(t_init: Object, t_wizard: Object):
         obj.set_property("x", 42)
         prefetch_property([obj], "x")
         pcache = code.ContextManager.get_prop_lookup_cache()
+        assert pcache is not None
     assert pcache[_pcache_key(obj.pk, "x")] == 42
 
 
@@ -61,6 +62,7 @@ def test_direct_overrides_ancestor(t_init: Object, t_wizard: Object):
         child.set_property("x", False)
         prefetch_property([child], "x")
         pcache = code.ContextManager.get_prop_lookup_cache()
+        assert pcache is not None
     assert pcache[_pcache_key(child.pk, "x")] is False
 
 
@@ -79,6 +81,7 @@ def test_inherited_property(t_init: Object, t_wizard: Object):
         child = _make_obj("inh_child", parent=parent, owner=t_wizard)
         prefetch_property([child], "x")
         pcache = code.ContextManager.get_prop_lookup_cache()
+        assert pcache is not None
     assert pcache[_pcache_key(child.pk, "x")] == 42
 
 
@@ -94,6 +97,7 @@ def test_nearest_ancestor_wins(t_init: Object, t_wizard: Object):
         child = _make_obj("na_child", parent=parent, owner=t_wizard)
         prefetch_property([child], "x")
         pcache = code.ContextManager.get_prop_lookup_cache()
+        assert pcache is not None
     assert pcache[_pcache_key(child.pk, "x")] == 1
 
 
@@ -110,6 +114,7 @@ def test_missing_property_sentinel(t_init: Object, t_wizard: Object):
         obj = _make_obj("missing_obj", owner=t_wizard)
         prefetch_property([obj], "no_such_prop_xyz")
         pcache = code.ContextManager.get_prop_lookup_cache()
+        assert pcache is not None
     assert pcache[_pcache_key(obj.pk, "no_such_prop_xyz")] is _PROP_MISSING
 
 
@@ -123,9 +128,12 @@ def test_missing_property_sentinel(t_init: Object, t_wizard: Object):
 def test_empty_list_noop(t_init: Object, t_wizard: Object):
     """Empty list is a no-op and does not raise."""
     with _open_ctx(t_wizard):
-        pcache_before = dict(code.ContextManager.get_prop_lookup_cache())
+        _cache = code.ContextManager.get_prop_lookup_cache()
+        assert _cache is not None
+        pcache_before = dict(_cache)
         prefetch_property([], "x")
         pcache_after = code.ContextManager.get_prop_lookup_cache()
+        assert pcache_after is not None
     assert pcache_after == pcache_before
 
 
@@ -146,6 +154,7 @@ def test_batch_mixed(t_init: Object, t_wizard: Object):
 
         prefetch_property([direct_obj, inherited_obj, missing_obj], "x")
         pcache = code.ContextManager.get_prop_lookup_cache()
+        assert pcache is not None
 
     assert pcache[_pcache_key(direct_obj.pk, "x")] == 7
     assert pcache[_pcache_key(inherited_obj.pk, "x")] == 99
@@ -161,6 +170,7 @@ def test_already_cached_not_overwritten(t_init: Object, t_wizard: Object):
         obj.set_property("x", 5)
         # Manually prime the cache with a different value
         pcache = code.ContextManager.get_prop_lookup_cache()
+        assert pcache is not None
         pcache[_pcache_key(obj.pk, "x")] = 999
         prefetch_property([obj], "x")
     # Should still be 999, not 5

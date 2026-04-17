@@ -3,7 +3,7 @@
 Object and player query functions.
 """
 
-from typing import Union
+from typing import Any, Union
 
 from django.db.models import F
 
@@ -116,7 +116,7 @@ def prefetch_property(objects: list, name: str) -> None:
 
     # Pass 2: inherited properties for objects without a direct entry
     no_direct = [pk for pk in pks if pk not in direct]
-    inherited = {}
+    inherited: dict[int, Any] = {}
     if no_direct:
         rows = (
             Property.objects.filter(
