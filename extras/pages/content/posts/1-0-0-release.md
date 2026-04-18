@@ -4,9 +4,7 @@ draft = false
 title = 'DjangoMOO 1.0.0'
 +++
 
-DjangoMOO has reached 1.0.0.
-
-The project has been in a 0.x series for a long time, and the infrastructure — semantic versioning, automated PyPI and Docker releases, ReadTheDocs, Helm charts — has been production-grade for a while. What kept it below 1.0 was the world itself: not enough built-in primitives to make something that was actually playable or worth building in. That's what changed.
+DjangoMOO 1.0.0 is out. The release pipeline, Docker images, and documentation have been production-grade for a while — what kept this in 0.x was the world itself. There weren't enough built-in primitives to make something actually playable or worth building in. Getting there took long enough that it's worth writing up what's in the box.
 
 ## What ships
 
