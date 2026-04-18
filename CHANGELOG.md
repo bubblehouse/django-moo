@@ -1,3 +1,22 @@
+## [0.107.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.106.1...v0.107.0) (2026-04-18)
+
+### Features
+
+* **bootstrap:** add Generic Flashlight and get_lights room verb ([6c18d86](https://gitlab.com/bubblehouse/django-moo/commit/6c18d86fb1ab4ab370d7964fbf95f167c96fa216))
+* **lighting:** add is_lit verb and alight property for room lighting system ([c04dc05](https://gitlab.com/bubblehouse/django-moo/commit/c04dc054b1b828be824df337048625077c2902dd))
+* **sdk:** add prefetch_property function to batch-warm the property cache ([df99ee7](https://gitlab.com/bubblehouse/django-moo/commit/df99ee7713cff18a84c229f6527392b2a57bc5d9))
+* **shell:** add health endpoint and SSH watchdog/soak-test tooling ([5a65856](https://gitlab.com/bubblehouse/django-moo/commit/5a65856d974c4b06e2c5795cd5add8c26d966abe))
+* **survey:** surface exit ids, lock expressions, and room/object state ([38d921b](https://gitlab.com/bubblehouse/django-moo/commit/38d921b17b3fc5378678dc2e2e1652ca0471b8a7))
+* **verbs:** integrate lighting checks and prefetch_property into room verbs ([ff19a6e](https://gitlab.com/bubblehouse/django-moo/commit/ff19a6e1f14b59d814a230e5c15eba3a909b142f))
+
+### Bug Fixes
+
+* **drop:** echo the typed name when item can't be found ([cf516cf](https://gitlab.com/bubblehouse/django-moo/commit/cf516cfeaf86c09f47d44e26d3c70f12689111b2))
+* **shell:** remove startup SimpleBuffer that duplicated message consumer ([c2389b3](https://gitlab.com/bubblehouse/django-moo/commit/c2389b340093d60ec86fff5a94085d16841cdd95))
+* **shell:** use per-session broker connection to avoid pool saturation ([9e6467f](https://gitlab.com/bubblehouse/django-moo/commit/9e6467f206f9160ebb727f686f5070f026b5c738))
+* **types:** resolve mypy errors in sdk objects, prefetch tests, and game-designer skill ([bbce9de](https://gitlab.com/bubblehouse/django-moo/commit/bbce9dee35ca718cc5474ca29ad9d4502b7debc6))
+* **verbs:** deliver page pagemsg and echo atomically in one tell ([da0dc63](https://gitlab.com/bubblehouse/django-moo/commit/da0dc635f57a7091c12ae6b413b71a898e6b5991))
+
 ## [0.106.1](https://gitlab.com/bubblehouse/django-moo/compare/v0.106.0...v0.106.1) (2026-04-17)
 
 ### Bug Fixes
