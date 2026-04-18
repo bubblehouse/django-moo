@@ -4,7 +4,7 @@
 
 ![release](https://gitlab.com/bubblehouse/django-moo/-/badges/release.svg)
 ![pipeline](https://gitlab.com/bubblehouse/django-moo/badges/main/pipeline.svg?ignore_skipped=true&job=test)
-![coverage](https://gitlab.com/bubblehouse/django-moo/badges/main/coverage.svg?job=test)
+![coverage](https://gitlab.com/bubblehouse/django-moo/badges/main/coverage.svg?job=test%3Acoverage)
 ![quality](https://bubblehouse.gitlab.io/django-moo/badges/lint.svg)
 ![docs](https://readthedocs.org/projects/django-moo/badge/?version=latest)
 
