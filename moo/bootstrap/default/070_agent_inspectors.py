@@ -1,7 +1,9 @@
 # pylint: disable=undefined-variable
 # The Inspectors — autonomous verb-testing agents (token chain via Foreman)
-# Quartermaster ($player): exercises container open/close/take/put/lock mechanics
-quartermaster_obj, _ = bootstrap.get_or_create_object("Quartermaster", unique_name=True, parents=[player])
+# Quartermaster ($builder): exercises container open/close/take/put/lock mechanics
+quartermaster_obj, _ = bootstrap.get_or_create_object("Quartermaster", unique_name=True, parents=[builders])
+if list(quartermaster_obj.parents.all()) != [builders]:
+    quartermaster_obj.parents.set([builders])
 quartermaster_obj.owner = quartermaster_obj
 quartermaster_obj.set_property("home", agency)
 quartermaster_obj.save()
@@ -11,8 +13,10 @@ if quartermaster_created:
     quartermaster_user.save()
 Player.objects.get_or_create(user=quartermaster_user, defaults=dict(avatar=quartermaster_obj))
 
-# Warden ($player): exercises exit locking, @lock/@unlock, key-based traversal
-warden_obj, _ = bootstrap.get_or_create_object("Warden", unique_name=True, parents=[player])
+# Warden ($builder): exercises exit locking, @lock/@unlock, key-based traversal
+warden_obj, _ = bootstrap.get_or_create_object("Warden", unique_name=True, parents=[builders])
+if list(warden_obj.parents.all()) != [builders]:
+    warden_obj.parents.set([builders])
 warden_obj.owner = warden_obj
 warden_obj.set_property("home", agency)
 warden_obj.save()

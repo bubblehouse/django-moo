@@ -63,7 +63,12 @@ player.set_property("who_location_msg", "%x(location)")
 player.set_property("victim_ejection_msg", "You have been ejected from %s by %s.")
 player.set_property("opaque", 0, inherit_owner=True)
 
-programmers, _ = bootstrap.get_or_create_object("Generic Programmer", unique_name=True, parents=[player])
+builders, _ = bootstrap.get_or_create_object("Generic Builder", unique_name=True, parents=[player])
+sys.set_property("builder", builders)
+
+programmers, _ = bootstrap.get_or_create_object("Generic Programmer", unique_name=True, parents=[builders])
+if list(programmers.parents.all()) != [builders]:
+    programmers.parents.set([builders])
 sys.set_property("programmer", programmers)
 wizards, _ = bootstrap.get_or_create_object("Generic Wizard", unique_name=True, parents=[programmers])
 sys.set_property("wizard", wizards)

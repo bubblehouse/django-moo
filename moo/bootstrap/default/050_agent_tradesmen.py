@@ -1,7 +1,9 @@
 # pylint: disable=undefined-variable
 # The Tradesmen — autonomous builder agents
-# Mason ($player): digs rooms and wires exits
-mason_obj, _ = bootstrap.get_or_create_object("Mason", unique_name=True, parents=[player])
+# Mason ($builder): digs rooms and wires exits
+mason_obj, _ = bootstrap.get_or_create_object("Mason", unique_name=True, parents=[builders])
+if list(mason_obj.parents.all()) != [builders]:
+    mason_obj.parents.set([builders])
 mason_obj.owner = mason_obj
 mason_obj.set_property("home", agency)
 mason_obj.save()
@@ -22,8 +24,10 @@ if tinker_created:
     tinker_user.save()
 Player.objects.get_or_create(user=tinker_user, defaults=dict(avatar=tinker_obj))
 
-# Joiner ($player): creates furniture and containers
-joiner_obj, _ = bootstrap.get_or_create_object("Joiner", unique_name=True, parents=[player])
+# Joiner ($builder): creates furniture and containers
+joiner_obj, _ = bootstrap.get_or_create_object("Joiner", unique_name=True, parents=[builders])
+if list(joiner_obj.parents.all()) != [builders]:
+    joiner_obj.parents.set([builders])
 joiner_obj.owner = joiner_obj
 joiner_obj.set_property("home", agency)
 joiner_obj.save()
