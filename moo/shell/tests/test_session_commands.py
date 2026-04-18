@@ -336,3 +336,42 @@ def test_flush_command_calls_drain_messages():
 
     assert drain_called
     assert not handle_called
+
+
+def test_startup_does_not_open_second_message_buffer():
+    """
+    Regression: process_commands() must not call _drain_messages during session
+    startup. A prior implementation drained once before the prompt loop started,
+    which opened a second Kombu SimpleBuffer on the same queue that raced with
+    the persistent consumer in process_messages. The two consumers split
+    incoming messages round-robin — every other page to the session was
+    silently discarded into the short-lived buffer.
+    """
+    user, _ = _make_prompt_user("Wizard")
+    prompt = MooPrompt(user)
+
+    drain_calls = []
+
+    async def fake_drain():
+        drain_calls.append(True)
+        return []
+
+    prompt._drain_messages = fake_drain
+
+    async def fake_prompt(*args, **kwargs):  # pylint: disable=unused-argument
+        raise EOFError()
+
+    with (
+        patch("moo.shell.prompt.PromptSession") as mock_ps,
+        patch.object(prompt, "_mark_connected", new=AsyncMock()),
+        patch.object(prompt, "_fire_confunc", new=AsyncMock(return_value=[])),
+        patch.object(prompt, "_await_tasks", new=AsyncMock()),
+        patch.object(prompt, "_fire_disfunc", new=AsyncMock()),
+        patch.object(prompt, "generate_prompt", new=AsyncMock(return_value=[("", "$ ")])),
+    ):
+        mock_session = MagicMock()
+        mock_session.prompt_async = fake_prompt
+        mock_ps.return_value = mock_session
+        asyncio.run(prompt.process_commands())
+
+    assert not drain_calls, "startup must not open a second SimpleBuffer via _drain_messages"
