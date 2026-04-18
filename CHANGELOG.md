@@ -1,3 +1,9 @@
+## [1.0.1](https://gitlab.com/bubblehouse/django-moo/compare/v1.0.0...v1.0.1) (2026-04-18)
+
+### Bug Fixes
+
+* force release because v1.0.0 is revoked from awhile ago ([25e8af5](https://gitlab.com/bubblehouse/django-moo/commit/25e8af510ff31fce4cf524de103cbc864117d747))
+
 ## [1.0.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.107.0...v1.0.0) (2026-04-18)
 
 ### ⚠ BREAKING CHANGES
