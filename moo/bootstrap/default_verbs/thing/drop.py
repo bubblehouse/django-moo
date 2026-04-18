@@ -16,7 +16,8 @@ from moo.sdk import context
 
 title = this.title()
 if this.location != context.player:
-    print(f"You check your pockets, but can't find {title}.")
+    typed = context.parser.get_dobj_str() if context.parser.has_dobj_str() else title
+    print(f"You check your pockets, but can't find {typed}.")
 elif this.location.accept(this):
     this.moveto(context.player.location)
     this.clear_placement()
