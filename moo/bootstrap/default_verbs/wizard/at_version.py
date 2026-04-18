@@ -1,4 +1,4 @@
-#!moo verb @version @memory --on $player
+#!moo verb @version @memory --on $wizard
 
 # pylint: disable=return-outside-function,undefined-variable
 

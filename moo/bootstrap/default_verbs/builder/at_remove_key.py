@@ -1,4 +1,4 @@
-#!moo verb @remove-key --on $player --dspec any
+#!moo verb @remove-key --on $builder --dspec any
 
 # pylint: disable=return-outside-function,undefined-variable
 

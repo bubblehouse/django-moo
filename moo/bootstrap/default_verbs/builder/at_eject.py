@@ -1,4 +1,4 @@
-#!moo verb @eject --on $player --dspec any --ispec from:any
+#!moo verb @eject --on $builder --dspec any --ispec from:any
 
 # pylint: disable=return-outside-function,undefined-variable
 

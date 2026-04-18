@@ -1,4 +1,4 @@
-#!moo verb @recycle --on $player --dspec either
+#!moo verb @recycle --on $builder --dspec either
 
 # pylint: disable=return-outside-function,undefined-variable
 

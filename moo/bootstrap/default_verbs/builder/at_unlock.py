@@ -1,4 +1,4 @@
-#!moo verb @unlock --on $player --dspec any
+#!moo verb @unlock --on $builder --dspec any
 
 # pylint: disable=return-outside-function,undefined-variable
 

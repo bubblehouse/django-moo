@@ -1,4 +1,4 @@
-#!moo verb @rooms --on $player --dspec none
+#!moo verb @rooms --on $builder --dspec none
 
 # pylint: disable=return-outside-function,undefined-variable
 

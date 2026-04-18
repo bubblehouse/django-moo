@@ -1,4 +1,4 @@
-#!moo verb @rename --on $player --dspec any --ispec to:any
+#!moo verb @rename --on $builder --dspec any --ispec to:any
 
 # pylint: disable=return-outside-function,undefined-variable
 

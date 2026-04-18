@@ -1,4 +1,4 @@
-#!moo verb @desc*ribe describe_callback --on $player --dspec any --ispec as:any
+#!moo verb @desc*ribe describe_callback --on $builder --dspec any --ispec as:any
 
 # pylint: disable=return-outside-function,undefined-variable
 

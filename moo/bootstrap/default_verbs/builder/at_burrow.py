@@ -1,4 +1,4 @@
-#!moo verb @burrow --on $player --dspec any --ispec "to:any"
+#!moo verb @burrow --on $builder --dspec any --ispec "to:any"
 
 # pylint: disable=return-outside-function,undefined-variable
 
@@ -43,13 +43,15 @@ forward_door.set_property("dest", dest)
 source.add_exit(forward_door)
 dest.add_entrance(forward_door)
 
-print(f'[yellow]Dug {direction} to {dest.name} (#{dest.pk}).[/yellow]')
+print(f"[yellow]Dug {direction} to {dest.name} (#{dest.pk}).[/yellow]")
 
 # Move player into new room
 context.player.moveto(dest)
 
 if not return_direction:
-    print(f"[yellow]Note: no automatic return direction for '{direction}'. Use @tunnel to wire the return exit.[/yellow]")
+    print(
+        f"[yellow]Note: no automatic return direction for '{direction}'. Use @tunnel to wire the return exit.[/yellow]"
+    )
     print(f"You are now in [bright_yellow]{dest.name}[/bright_yellow] (#{dest.pk}).")
     return
 
@@ -67,5 +69,5 @@ return_door.set_property("dest", source)
 dest.add_exit(return_door)
 source.add_entrance(return_door)
 
-print(f'[yellow]Tunnelled {return_direction} back to {source.name} (#{source.pk}).[/yellow]')
+print(f"[yellow]Tunnelled {return_direction} back to {source.name} (#{source.pk}).[/yellow]")
 print(f"You are now in [bright_yellow]{dest.name}[/bright_yellow] (#{dest.pk}).")

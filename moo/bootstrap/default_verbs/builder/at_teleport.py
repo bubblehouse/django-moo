@@ -1,4 +1,4 @@
-#!moo verb teleport --on $player --dspec any --ispec to:any
+#!moo verb teleport --on $builder --dspec any --ispec to:any
 
 # pylint: disable=return-outside-function,undefined-variable
 

@@ -1,4 +1,4 @@
-#!moo verb @survey --on $player --dspec either
+#!moo verb @survey --on $builder --dspec either
 
 # pylint: disable=return-outside-function,undefined-variable
 

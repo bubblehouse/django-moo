@@ -1,4 +1,4 @@
-#!moo verb @realm @classes --on $player --dspec either
+#!moo verb @realm @classes --on $builder --dspec either
 
 # pylint: disable=return-outside-function,undefined-variable
 

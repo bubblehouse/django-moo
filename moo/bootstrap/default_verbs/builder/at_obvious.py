@@ -1,10 +1,10 @@
-#!moo verb @nonobvious --on $player --dspec any
+#!moo verb @obvious --on $builder --dspec any
 
 # pylint: disable=return-outside-function,undefined-variable
 
 """
 
-Mark an object as non-obvious so it is hidden from room contents listings.
+Mark an object as obvious so it appears in room contents listings.
 The caller must have write permission on the object.
 """
 
@@ -12,6 +12,6 @@ from moo.sdk import context
 
 obj = context.parser.get_dobj()
 context.player.is_allowed("write", obj, fatal=True)
-obj.obvious = False
+obj.obvious = True
 obj.save()
-print(f"{obj.title()} is now non-obvious.")
+print(f"{obj.title()} is now obvious.")

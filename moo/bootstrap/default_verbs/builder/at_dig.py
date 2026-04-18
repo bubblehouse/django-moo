@@ -1,4 +1,4 @@
-#!moo verb @dig @tunnel --on $player --dspec any --ispec "through:any" --ispec "to:any"
+#!moo verb @dig @tunnel --on $builder --dspec any --ispec "through:any" --ispec "to:any"
 
 # pylint: disable=return-outside-function,undefined-variable
 
