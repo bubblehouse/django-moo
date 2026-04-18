@@ -1,3 +1,42 @@
+### What's in 1.0.0
+
+#### Core server
+
+- Parser with full dobj/iobj preposition support; verb dispatch through caller, inventory,
+  location, direct object, and indirect object
+- Objects, Properties, Verbs, and a ManyToMany inheritance hierarchy backed by PostgreSQL
+- Ownership, ACLs, and a wizard/builder/programmer class hierarchy
+- RestrictedPython verb sandbox with a security-audited allowlist tested against 55+ known
+  sandbox escape vectors
+- AsyncSSH connection layer with direct SSH and WebSocket proxy for browser access
+
+#### Bootstrap world
+
+The default world shipped with `moo_init` includes:
+
+- Rooms, exits, containers, players, and generic things
+- A lighting system with `is_lit` verb and `alight` property
+- In-world mail (`@mail`, `@send`, `@reply`, `@forward`)
+- An object placement system (`@place`, hidden placements, surface grouping)
+- In-world text (books, post boards, read/write verbs)
+- Builder and wizard class hierarchy with appropriate verb sets
+
+#### Infrastructure
+
+- Docker + Helm charts for self-hosting
+- Semantic versioning with automated PyPI and Docker releases via GitLab CI
+- Full Sphinx documentation with ReadTheDocs integration
+- Django admin for world management
+
+#### moo-agent (companion package)
+
+[moo-agent](https://gitlab.com/bubblehouse/moo-agent) — released as a standalone package at
+its own 1.0.0 — connects autonomous LLM agents to the world via SSH. Each agent has a SOUL.md
+personality file, persistent memory, and a tool set for interacting with the world. Multi-agent
+orchestration via a Foreman coordination layer. Supports Anthropic, AWS Bedrock, and LM Studio.
+
+---
+
 ## [0.107.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.106.1...v0.107.0) (2026-04-18)
 
 ### Features
