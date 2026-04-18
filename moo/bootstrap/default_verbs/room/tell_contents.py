@@ -57,6 +57,15 @@ from moo.sdk import context
 if not this.is_lit():
     return
 
+# If the room itself is dark but currently lit, attribute the light source(s)
+# so players know which object is casting it — useful when the source is
+# hidden (placed under/behind something) or sealed in a transparent container.
+if this.get_property("dark"):
+    lights = this.get_lights()
+    if lights:
+        names = _.string_utils.english_list(lights)
+        print(f"The room is lit by {names}.")
+
 PREP_DISPLAY = {"before": "in front of"}
 
 # Collect all room contents in one query with placement_target joined.

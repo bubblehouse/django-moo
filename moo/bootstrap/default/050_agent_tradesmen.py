@@ -99,3 +99,14 @@ sys.set_property("agent_of_the_moment", agent_of_the_moment)
 
 # Make the coordination objects obvious in The Agency so players see them on look
 agency.set_property("obvious", [dispatch_board.pk, survey_book.pk, agent_of_the_moment.pk])
+
+# Give each tradesman a personal flashlight so they can work in dark rooms.
+# Each flashlight is a $flashlight instance owned by the agent, starting in
+# their inventory with `flashlight` as an alias for `switch flashlight`.
+for _agent in (mason_obj, tinker_obj, joiner_obj, harbinger_obj, stocker_obj, foreman_obj):
+    _flash, _ = bootstrap.get_or_create_object(
+        f"{_agent.name}'s flashlight", unique_name=True, parents=[flashlight], location=_agent
+    )
+    _flash.owner = _agent
+    _flash.save()
+    _flash.add_alias("flashlight")

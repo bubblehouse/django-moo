@@ -43,3 +43,12 @@ if archivist_created:
     archivist_user.set_password("Wr7mK5pDcF3n")
     archivist_user.save()
 Player.objects.get_or_create(user=archivist_user, defaults=dict(avatar=archivist_obj))
+
+# Give each inspector a personal flashlight so they can work in dark rooms.
+for _agent in (quartermaster_obj, warden_obj, archivist_obj):
+    _flash, _ = bootstrap.get_or_create_object(
+        f"{_agent.name}'s flashlight", unique_name=True, parents=[flashlight], location=_agent
+    )
+    _flash.owner = _agent
+    _flash.save()
+    _flash.add_alias("flashlight")

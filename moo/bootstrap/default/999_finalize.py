@@ -15,6 +15,7 @@ for _cls in [
     letters,
     bulletin_board,
     book,
+    flashlight,
 ]:
     Access.objects.get_or_create(
         object=_cls,
