@@ -1,3 +1,18 @@
+## [1.0.0](https://gitlab.com/bubblehouse/django-moo/compare/v0.107.0...v1.0.0) (2026-04-18)
+
+### ⚠ BREAKING CHANGES
+
+* declare 1.0.0 stable release
+
+### Features
+
+* **bootstrap:** add $builder class between $player and $programmer ([8359b0f](https://gitlab.com/bubblehouse/django-moo/commit/8359b0fec30d915a3c54c14f0b9b5c33a97656a2))
+* declare 1.0.0 stable release ([b59ec75](https://gitlab.com/bubblehouse/django-moo/commit/b59ec75e0a472b88c334a4ac0c9101d829c270fb))
+
+### Bug Fixes
+
+* **builder:** use has_pobj_str guards instead of catching NoSuchPrepositionError in [@set](https://gitlab.com/set) ([00def81](https://gitlab.com/bubblehouse/django-moo/commit/00def8180bd094c7c17ef6bdfbff3e1b43cee18c))
+
 ### What's in 1.0.0
 
 #### Core server
