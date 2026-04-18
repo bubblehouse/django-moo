@@ -385,12 +385,14 @@ def test_rename_own_object(t_init: Object, t_wizard: Object, setup_item):
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_rename_permission_denied(t_init: Object, t_wizard: Object, setup_item):
-    """Non-owner cannot rename an object."""
-    player_npc = lookup("Player")
+    """Non-owner cannot rename an object. Uses a $builder avatar so @rename is
+    in scope — a plain $player would get 'Huh?' before reaching the perm check."""
+    system = lookup(1)
     with code.ContextManager(t_wizard, lambda _: None):
         widget = setup_item(t_wizard.location, "widget")
+        builder_npc = create("Apprentice", parents=[system.get_property("builder")], location=t_wizard.location)
     printed = []
-    with code.ContextManager(player_npc, printed.append) as ctx:
+    with code.ContextManager(builder_npc, printed.append) as ctx:
         parse.interpret(ctx, "@rename widget to gadget")
         widget.refresh_from_db()
     assert widget.name == "widget"
@@ -426,12 +428,13 @@ def test_version_wizard(t_init: Object, t_wizard: Object):
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_version_non_wizard_denied(t_init: Object, t_wizard: Object):
-    """@version is denied for non-wizards."""
-    player_npc = lookup("Player")
-    printed = []
-    with code.ContextManager(player_npc, printed.append) as ctx:
-        parse.interpret(ctx, "@version")
-    assert any("Permission denied" in line for line in printed)
+    """@version is unavailable for non-wizards — it lives on $wizard."""
+    system = lookup(1)
+    builder = system.get_property("builder")
+    player = system.get_property("player")
+    assert not player.has_verb("@version")
+    assert not builder.has_verb("@version")
+    assert t_wizard.has_verb("@version")
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
