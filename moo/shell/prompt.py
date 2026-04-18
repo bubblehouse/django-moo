@@ -138,14 +138,12 @@ class MooPrompt:
         await self._mark_connected()
         confunc_tasks = await self._fire_confunc()
         await self._await_tasks(confunc_tasks)
-        startup_pieces = await self._drain_messages()
-        if startup_pieces:
-
-            def _write_startup(pieces=startup_pieces):
-                for piece in pieces:
-                    self.writer(piece)
-
-            await run_in_terminal(_write_startup)
+        # NOTE: startup _drain_messages removed. It opened a second SimpleBuffer
+        # on the same queue that ran concurrently with process_messages during
+        # the first second, causing two consumers to race and split the message
+        # stream round-robin — every other message landed in the short-lived
+        # drain buffer and was discarded. process_messages picks up any
+        # backlog naturally once it starts.
         try:
             while not self.is_exiting:
                 try:
