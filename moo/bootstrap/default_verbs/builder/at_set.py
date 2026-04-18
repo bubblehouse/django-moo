@@ -36,12 +36,12 @@ parser = context.parser
 
 prop_name = parser.get_dobj_str().strip()
 
-try:
-    obj_ref = parser.get_pobj_str("on").strip()
-    value_expr = parser.get_pobj_str("to")
-except (TypeError, AttributeError, KeyError):
+if not parser.has_pobj_str("on") or not parser.has_pobj_str("to"):
     print("Usage: @set <property> on <object> to <value>")
     return
+
+obj_ref = parser.get_pobj_str("on").strip()
+value_expr = parser.get_pobj_str("to")
 
 if not prop_name or not obj_ref or not value_expr:
     print("Usage: @set <property> on <object> to <value>")
