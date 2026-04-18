@@ -21,21 +21,55 @@ if parser.has_dobj_str():
 else:
     obj = context.player.location
 
-system = context.player.location
 room_class = None
 try:
     room_class = _.room
 except Exception:  # pylint: disable=broad-except
     pass
 
+
+def safe_prop(o, name, default=None):
+    try:
+        return o.get_property(name)
+    except NoSuchPropertyError:
+        return default
+
+
+def render_keyexp(k):
+    if isinstance(k, int):
+        return f"#{k}"
+    if hasattr(k, "pk"):
+        return f"#{k.pk}"
+    if isinstance(k, list) and k:
+        op = k[0]
+        if op in ("&&", "||") and len(k) == 3:
+            return f"({render_keyexp(k[1])} {op} {render_keyexp(k[2])})"
+        if op == "!" and len(k) == 2:
+            return f"!{render_keyexp(k[1])}"
+        if op == "?" and len(k) == 2:
+            return f"?{render_keyexp(k[1])}"
+    return str(k)
+
+
 if room_class and obj.is_a(room_class):
     print(f"[bright_yellow]{obj.name}[/bright_yellow] (#{obj.id})")
+
+    state_bits = [
+        f"dark={bool(safe_prop(obj, 'dark'))}",
+        f"free_entry={safe_prop(obj, 'free_entry', default=True) is not False}",
+    ]
+    residents = safe_prop(obj, "residents") or []
+    resident_ids = [f"#{r.pk}" if hasattr(r, "pk") else f"#{r}" for r in residents]
+    state_bits.append(f"residents=[{', '.join(resident_ids)}]")
+    print(f"[cyan]State:[/cyan] {', '.join(state_bits)}")
+
     try:
         exits = obj.get_property_objects("exits", prefetch_related=["aliases"])
     except NoSuchPropertyError:
         exits = []
     if exits:
         prefetch_property(exits, "dest")
+        prefetch_property(exits, "key")
         print("[cyan]Exits:[/cyan]")
         for exit_obj in exits:
             aliases = [a.alias for a in exit_obj.aliases.all()]
@@ -43,9 +77,13 @@ if room_class and obj.is_a(room_class):
             try:
                 dest = exit_obj.get_property("dest")
                 dest_str = f"{dest.name} (#{dest.id})"
-            except (NoSuchPropertyError, Exception):  # pylint: disable=broad-except
+            except NoSuchPropertyError:
                 dest_str = "(unknown destination)"
-            print(f"  {direction}  \u2192  {dest_str} [exit #{exit_obj.id}]")
+            lock_tag = ""
+            key = safe_prop(exit_obj, "key")
+            if key is not None:
+                lock_tag = f" (locked: {render_keyexp(key)})"
+            print(f"  {direction} (#{exit_obj.id})  \u2192  {dest_str}{lock_tag}")
     contents = [o for o in obj.contents.all() if o.pk != context.player.pk]
     if contents:
         print("[cyan]Contents:[/cyan]")
@@ -54,6 +92,14 @@ if room_class and obj.is_a(room_class):
 else:
     print(f"[bright_yellow]{obj.name}[/bright_yellow] (#{obj.id})")
     print(f"  Location: {obj.location}")
+    state_bits = [
+        f"alight={bool(safe_prop(obj, 'alight'))}",
+        f"opaque={safe_prop(obj, 'opaque') or 0}",
+        f"open={safe_prop(obj, 'open') is True}",
+    ]
+    key = safe_prop(obj, "key")
+    state_bits.append(f"key={render_keyexp(key) if key is not None else 'none'}")
+    print(f"[cyan]State:[/cyan] {', '.join(state_bits)}")
     contents = [o for o in obj.contents.all() if o.pk != context.player.pk]
     if contents:
         print("[cyan]Contents:[/cyan]")

@@ -17,7 +17,7 @@ def test_survey_room_with_exits_and_contents(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, printed.append) as ctx:
         room = setup_room(t_wizard, name="The Vault")
         parse.interpret(ctx, "@dig north to The Annex")
-        item = setup_root_item(room, "gold coin")
+        setup_root_item(room, "gold coin")
         printed.clear()
         parse.interpret(ctx, "@survey")
     assert any("The Vault" in line for line in printed)
@@ -57,10 +57,69 @@ def test_survey_non_room_shows_location(t_init: Object, t_wizard: Object):
     printed = []
     with code.ContextManager(t_wizard, printed.append) as ctx:
         room = setup_room(t_wizard)
-        item = setup_root_item(room, "silver key")
+        setup_root_item(room, "silver key")
         parse.interpret(ctx, "@survey silver key")
     assert any("silver key" in line for line in printed)
     assert any("Location" in line for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_survey_shows_exit_id(t_init: Object, t_wizard: Object):
+    """@survey annotates each exit with its object id so agents can grant_write / lock without an @show follow-up."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        setup_room(t_wizard, name="The Atrium")
+        parse.interpret(ctx, "@dig north to The Vestibule")
+        exit_obj = lookup("north")
+        printed.clear()
+        parse.interpret(ctx, "@survey")
+    assert any(f"(#{exit_obj.pk})" in line for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_survey_shows_locked_exit(t_init: Object, t_wizard: Object):
+    """@survey tags a locked exit with [locked: #<key-id>]."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        room = setup_room(t_wizard, name="The Armory")
+        parse.interpret(ctx, "@dig east to The Barracks")
+        key = setup_root_item(room, "iron key")
+        exit_obj = lookup("east")
+        exit_obj.set_property("key", key.pk)
+        printed.clear()
+        parse.interpret(ctx, "@survey")
+    assert any(f"(locked: #{key.pk})" in line for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_survey_room_state_dark(t_init: Object, t_wizard: Object):
+    """@survey reports room state bits (dark=True) on a State: line."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        room = setup_room(t_wizard, name="The Cellar")
+        room.set_property("dark", True)
+        printed.clear()
+        parse.interpret(ctx, "@survey")
+    state_lines = [line for line in printed if "State:" in line]
+    assert state_lines
+    assert any("dark=True" in line for line in state_lines)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_survey_room_state_always_printed(t_init: Object, t_wizard: Object):
+    """State: line is always printed, even when all room state is at defaults."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        setup_room(t_wizard, name="The Hall")
+        printed.clear()
+        parse.interpret(ctx, "@survey")
+    state_lines = [line for line in printed if "State:" in line]
+    assert state_lines
+    assert any("dark=False" in line for line in state_lines)
 
 
 # --- @rooms ---
@@ -112,7 +171,7 @@ def test_exits_targeted_by_id(t_init: Object, t_wizard: Object):
         t_wizard.location = archive
         save_quietly(t_wizard)
         context.caller.refresh_from_db()
-        parse.interpret(ctx, f"@dig east to The Reading Room")
+        parse.interpret(ctx, "@dig east to The Reading Room")
         t_wizard.location = home
         save_quietly(t_wizard)
         context.caller.refresh_from_db()
@@ -132,7 +191,6 @@ def test_look_through_direction(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, printed.append) as ctx:
         setup_room(t_wizard)
         parse.interpret(ctx, "@dig south to The Garden")
-        dest = lookup("The Garden")
         printed.clear()
         parse.interpret(ctx, "look through south")
     assert any("The Garden" in line for line in printed)
