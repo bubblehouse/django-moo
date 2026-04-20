@@ -113,19 +113,33 @@ HIDDEN_PLACEMENT_PREPS = {"under", "behind"}
 OBJECT_SPECIFIER_CHOICES = (("this", "this"), ("any", "any"), ("none", "none"), ("either", "either"))
 
 DIRECTIONS = [
-    "north", "northeast", "east", "southeast",
-    "south", "southwest", "west", "northwest",
-    "up", "down",
+    "north",
+    "northeast",
+    "east",
+    "southeast",
+    "south",
+    "southwest",
+    "west",
+    "northwest",
+    "up",
+    "down",
 ]
 
 OPPOSITE_DIRECTIONS = {
-    "north": "south",     "south": "north",
-    "east":  "west",      "west":  "east",
-    "up":    "down",      "down":  "up",
-    "northeast": "southwest", "southwest": "northeast",
-    "northwest": "southeast", "southeast": "northwest",
-    "ne": "sw", "sw": "ne",
-    "nw": "se", "se": "nw",
+    "north": "south",
+    "south": "north",
+    "east": "west",
+    "west": "east",
+    "up": "down",
+    "down": "up",
+    "northeast": "southwest",
+    "southwest": "northeast",
+    "northwest": "southeast",
+    "southeast": "northwest",
+    "ne": "sw",
+    "sw": "ne",
+    "nw": "se",
+    "se": "nw",
 }
 
 PREPOSITION_SPECIFIER_CHOICES = (("any", "any"), ("none", "none"))
