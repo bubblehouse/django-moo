@@ -27,17 +27,22 @@ def set_password(player_obj, new_password, old_password=None):
     if context.player and not context.player.is_wizard() and player_obj != context.player:
         raise UserError("You can only change your own password.")
 
-    try:
-        player_record = Player.objects.get(avatar=player_obj)
-    except Player.DoesNotExist as exc:
-        raise UserError(f"{player_obj.title()} has no player account.") from exc
-    if player_record.user is None:
+    candidates = [p for p in Player.objects.filter(avatar=player_obj) if p.user is not None]
+    if not candidates:
         raise UserError(f"{player_obj.title()} has no Django user account.")
 
-    user = player_record.user
-
-    if old_password is not None and not user.check_password(old_password):
-        raise UserError("Incorrect old password.")
+    if old_password is not None:
+        matched = [p for p in candidates if p.user.check_password(old_password)]
+        if not matched:
+            raise UserError("Incorrect old password.")
+        user = matched[0].user
+    else:
+        if len(candidates) > 1:
+            raise UserError(
+                f"{player_obj.title()} has multiple user accounts; "
+                "old password is required to select which one to change."
+            )
+        user = candidates[0].user
 
     try:
         validate_password(new_password, user=user)
