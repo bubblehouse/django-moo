@@ -14,6 +14,7 @@ from prompt_toolkit.application import run_in_terminal
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.document import Document
 from prompt_toolkit.filters import Condition
+from prompt_toolkit.history import ThreadedHistory
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.shortcuts import print_formatted_text
 from prompt_toolkit.shortcuts.prompt import PromptSession
@@ -22,6 +23,7 @@ from rich.console import Console
 
 from ..celery import app
 from ..core import code, models, moojson, tasks
+from .history import RedisHistory
 
 log = logging.getLogger(__name__)
 
@@ -130,7 +132,10 @@ class MooPrompt:
         paginator request. Whichever arrives first is handled; the others are
         cancelled. Exits cleanly on EOF or KeyboardInterrupt.
         """
-        prompt_session = PromptSession(key_bindings=_make_key_bindings(self.automation))
+        prompt_session = PromptSession(
+            key_bindings=_make_key_bindings(self.automation),
+            history=ThreadedHistory(RedisHistory(self.user.pk)),
+        )
         # Clear any session settings left over from a previous connection on
         # this account (e.g. an agent that enabled QUIET/OUTPUTPREFIX).
         _session_settings.pop(self.user.pk, None)
