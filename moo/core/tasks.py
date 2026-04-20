@@ -30,10 +30,12 @@ def parse_command(self, caller_id: int, line: str) -> list[Any]:
     :return: a list of output lines
     :raises UserError: if a verb failure happens
     """
+    from django.core.cache import cache
+
     output: list[Any] = []
     task_id = self.request.id
     caller = Object.objects.get(pk=caller_id)
-    with code.ContextManager(caller, output.append, task_id=task_id) as ctx:
+    with code.ContextManager(caller, output.append, task_id=task_id, track_events=True) as ctx:
         with transaction.atomic():
             try:
                 log.info(f"{caller}: {line}")
@@ -51,6 +53,9 @@ def parse_command(self, caller_id: int, line: str) -> list[Any]:
                     import traceback
 
                     output.append(f"[bold red]{traceback.format_exc()}[/bold red]")
+        events = code.ContextManager.get("published_events") or []
+    if task_id:
+        cache.set(f"moo:task_events:{task_id}", list(events), timeout=60)
     return output
 
 

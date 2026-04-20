@@ -200,6 +200,7 @@ def _make_handle_command_mocks():
     prompt = MooPrompt(user)
     parse_result = MagicMock()
     parse_result.get.return_value = []
+    parse_result.id = "test-task-id"
     return prompt, avatar, parse_result
 
 
@@ -368,3 +369,138 @@ def test_disconnect_message_sets_is_exiting():
 
     assert prompt.is_exiting is True
     assert prompt.disconnect_event.is_set()
+
+
+# ---------------------------------------------------------------------------
+# Prompt-flash fix: handle_command reads events from cache; run_input_session
+# absorbs the callback chain in a single session.
+# ---------------------------------------------------------------------------
+
+
+def test_handle_command_reads_events_from_cache():
+    """handle_command() returns the event list stashed in the cache under the task id and clears the key."""
+    prompt, _, parse_result = _make_handle_command_mocks()
+    parse_result.id = "task-xyz"
+
+    def _fake_cache_get(key):
+        if key == "moo:task_events:task-xyz":
+            return ["input_prompt"]
+        return None
+
+    delete_calls = []
+    with (
+        patch("moo.shell.prompt.tasks.parse_command") as mock_task,
+        patch("moo.shell.prompt.code.ContextManager") as mock_ctx,
+        patch("django.core.cache.cache.get", side_effect=_fake_cache_get),
+        patch("django.core.cache.cache.delete", side_effect=delete_calls.append),
+    ):
+        mock_task.delay.return_value = parse_result
+        mock_ctx.return_value.__enter__ = MagicMock(return_value=None)
+        mock_ctx.return_value.__exit__ = MagicMock(return_value=False)
+        _to_write, events = asyncio.run(prompt.handle_command("look"))
+    assert events == ["input_prompt"]
+    assert "moo:task_events:task-xyz" in delete_calls
+
+
+def test_run_input_session_consumes_chain_without_prompt():
+    """run_input_session() drains sequential input_prompt events from input_queue in a single call."""
+    user = MagicMock()
+    user.pk = 1
+    prompt = MooPrompt(user)
+
+    req1 = {
+        "prompt": "Old password: ",
+        "password": True,
+        "caller_id": 1,
+        "player_id": 1,
+        "callback_this_id": 10,
+        "callback_verb_name": "at_password_new",
+        "args": [],
+    }
+    req2 = {
+        "prompt": "New password: ",
+        "password": True,
+        "caller_id": 1,
+        "player_id": 1,
+        "callback_this_id": 10,
+        "callback_verb_name": "at_password_confirm",
+        "args": ["old-input"],
+    }
+    req3 = {
+        "prompt": "Confirm: ",
+        "password": True,
+        "caller_id": 1,
+        "player_id": 1,
+        "callback_this_id": 10,
+        "callback_verb_name": "at_password_commit",
+        "args": ["old-input", "new-input"],
+    }
+
+    async def _run():
+        await prompt.input_queue.put(req2)
+        await prompt.input_queue.put(req3)
+        answers = iter(["old-input", "new-input", "confirm-input"])
+
+        class _MockSession:
+            def __init__(self, *a, **kw):
+                pass
+
+            async def prompt_async(self, *a, **kw):  # pylint: disable=unused-argument
+                return next(answers)
+
+        wizard_caller = MagicMock()
+        wizard_caller.is_wizard.return_value = True
+        with (
+            patch("moo.shell.prompt.PromptSession", _MockSession),
+            patch("moo.shell.prompt.models.Object.objects.get", return_value=wizard_caller),
+            patch("moo.shell.prompt.tasks.invoke_verb") as mock_task,
+        ):
+            await prompt.run_input_session(req1)
+            return mock_task.delay.call_count
+
+    invoke_count = asyncio.run(_run())
+    # All three prompts handled inside one session (one delay per stage).
+    assert invoke_count == 3
+    # Queue fully drained — no lingering messages to race with the next prompt_async.
+    assert prompt.input_queue.empty()
+
+
+def test_run_input_session_exits_when_queue_times_out():
+    """run_input_session() returns after a timeout once no further input_prompt events arrive."""
+    user = MagicMock()
+    user.pk = 1
+    prompt = MooPrompt(user)
+
+    req = {
+        "prompt": "Old password: ",
+        "password": True,
+        "caller_id": 1,
+        "player_id": 1,
+        "callback_this_id": 10,
+        "callback_verb_name": "at_password_new",
+        "args": [],
+    }
+
+    class _MockSession:
+        def __init__(self, *a, **kw):
+            pass
+
+        async def prompt_async(self, *a, **kw):  # pylint: disable=unused-argument
+            return "whatever"
+
+    async def _fake_wait_for(coro, timeout):  # pylint: disable=unused-argument
+        coro.close()
+        raise asyncio.TimeoutError()
+
+    wizard_caller = MagicMock()
+    wizard_caller.is_wizard.return_value = True
+    with (
+        patch("moo.shell.prompt.PromptSession", _MockSession),
+        patch("moo.shell.prompt.models.Object.objects.get", return_value=wizard_caller),
+        patch("moo.shell.prompt.tasks.invoke_verb") as mock_task,
+        patch("moo.shell.prompt.asyncio.wait_for", side_effect=_fake_wait_for),
+    ):
+        asyncio.run(prompt.run_input_session(req))
+    # Exactly one delay → after the first prompt the queue-wait timed out and
+    # the session exited normally rather than showing another prompt.
+    assert mock_task.delay.call_count == 1

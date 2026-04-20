@@ -3,6 +3,8 @@ import logging
 import warnings
 import pytest
 
+from django.core.cache import cache
+
 from .. import code, tasks
 from ..models import Object, Verb
 
@@ -116,3 +118,82 @@ raise RuntimeError()
     Object.objects.get(name="CreatedObjectWithAUniqueName")
     with pytest.raises(Object.DoesNotExist):
         Object.objects.get(name="ErroredObjectWithAUniqueName")
+
+
+# ---------------------------------------------------------------------------
+# published_events tracking (input_prompt / editor / paginator events emitted
+# during a parse_command task are recorded in a per-task list and exposed to the
+# shell via the Django cache, keyed by the Celery task id).
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_publish_to_player_records_event_when_context_tracks(t_init: Object, t_wizard: Object):
+    """_publish_to_player appends the event type to ``published_events`` when the context opts in."""
+    from moo.core import _publish_to_player  # pylint: disable=import-outside-toplevel
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        with code.ContextManager(t_wizard, lambda _: None, track_events=True):
+            _publish_to_player(t_wizard, {"event": "input_prompt", "prompt": "ok"})
+            tracked = code.ContextManager.get("published_events")
+            assert tracked == ["input_prompt"]
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_publish_to_player_skips_recording_when_context_untracked(t_init: Object, t_wizard: Object):
+    """_publish_to_player does not raise when ``published_events`` is None (default)."""
+    from moo.core import _publish_to_player  # pylint: disable=import-outside-toplevel
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        with code.ContextManager(t_wizard, lambda _: None):
+            # track_events defaults to False → published_events is None.
+            _publish_to_player(t_wizard, {"event": "input_prompt", "prompt": "ok"})
+            assert code.ContextManager.get("published_events") is None
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_parse_command_writes_events_to_cache(t_init: Object, t_wizard: Object):
+    """parse_command stashes published event types under ``moo:task_events:{task_id}`` in the cache."""
+    from moo.core.models import verb  # noqa: F401  pylint: disable=unused-import,import-outside-toplevel
+
+    v = t_wizard.add_verb(
+        "test-emits-input",
+        code="""\
+from moo.sdk import open_input, context
+this_verb = context.caller.get_verb("test-emits-input")
+open_input(context.caller, "prompt: ", this_verb)
+""",
+    )
+    v.owner = t_wizard
+    v.save()
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        result = tasks.parse_command.apply(args=[t_wizard.pk, "test-emits-input"])
+    try:
+        events = cache.get(f"moo:task_events:{result.id}")
+        assert events == ["input_prompt"]
+    finally:
+        cache.delete(f"moo:task_events:{result.id}")
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_parse_command_no_events_leaves_cache_empty(t_init: Object, t_wizard: Object):
+    """parse_command writes an empty list when the verb publishes no events."""
+    v = t_wizard.add_verb(
+        "test-emits-nothing",
+        code="""\
+print("hello")
+""",
+    )
+    v.owner = t_wizard
+    v.save()
+
+    result = tasks.parse_command.apply(args=[t_wizard.pk, "test-emits-nothing"])
+    try:
+        events = cache.get(f"moo:task_events:{result.id}")
+        assert events == [] or events is None
+    finally:
+        cache.delete(f"moo:task_events:{result.id}")

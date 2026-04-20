@@ -39,6 +39,7 @@ def _make_handle_command_mocks():
     prompt = MooPrompt(user)
     parse_result = MagicMock()
     parse_result.get.return_value = []
+    parse_result.id = "test-task-id"
     return prompt, avatar, parse_result
 
 
@@ -201,7 +202,7 @@ def test_handle_command_emits_global_prefix_and_suffix():
             mock_task.delay.return_value = parse_result
             mock_ctx.return_value.__enter__ = MagicMock(return_value=None)
             mock_ctx.return_value.__exit__ = MagicMock(return_value=False)
-            result = asyncio.run(prompt.handle_command("look"))
+            result, _events = asyncio.run(prompt.handle_command("look"))
     finally:
         _session_settings.pop(user_pk, None)
 
@@ -230,7 +231,7 @@ def test_handle_command_global_markers_are_outermost():
             mock_task.delay.return_value = parse_result
             mock_ctx.return_value.__enter__ = MagicMock(return_value=None)
             mock_ctx.return_value.__exit__ = MagicMock(return_value=False)
-            result = asyncio.run(prompt.handle_command("look"))
+            result, _events = asyncio.run(prompt.handle_command("look"))
     finally:
         _session_settings.pop(user_pk, None)
 

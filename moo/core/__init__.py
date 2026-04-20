@@ -64,15 +64,19 @@ def _publish_to_player(obj, message):
     from kombu import Exchange, Queue
     from ..celery import app
 
+    if isinstance(message, dict) and "event" in message:
+        tracked = ContextManager.get("published_events")
+        if isinstance(tracked, list):
+            tracked.append(message["event"])
     if app.conf.broker_url == "memory://":
         warnings.warn(RuntimeWarning(f"ConnectionError({obj}): {message}"))
         return
-    players = Player.objects.filter(avatar=obj)
+    matching_players = Player.objects.filter(avatar=obj)
     caller = ContextManager.get("caller")
     with app.default_connection() as conn:
         channel = conn.channel()
         with app.producer_or_acquire() as producer:
-            for player in players:
+            for player in matching_players:
                 # this is an uncommon scenario, but applies to the stock Player object if it hasn't been configured for login
                 if not player.user:
                     continue

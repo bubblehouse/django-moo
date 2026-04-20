@@ -224,7 +224,7 @@ class MooPrompt:
 
                             await run_in_terminal(_write_drain)
                     else:
-                        output_pieces = await self.handle_command(line)
+                        output_pieces, events = await self.handle_command(line)
                         if output_pieces:
 
                             def _write_command_output(pieces=output_pieces):
@@ -232,6 +232,12 @@ class MooPrompt:
                                     self.writer(piece)
 
                             await run_in_terminal(_write_command_output)
+                        # If the verb published an event, process_messages will
+                        # route it to the matching asyncio queue momentarily.
+                        # Wait for it directly and dispatch — skipping the
+                        # prompt_async race avoids the MOO prompt flashing
+                        # between the verb and its continuation.
+                        await self._dispatch_pending_event(events)
         except:  # pylint: disable=bare-except
             log.exception("Error in command processing")
         finally:
@@ -300,9 +306,42 @@ class MooPrompt:
 
         await run_paginator(req.get("content", ""), req.get("content_type", "text"))
 
+    async def _dispatch_pending_event(self, events: list) -> None:
+        """
+        If ``events`` indicates the just-finished verb published an editor,
+        paginator, or input_prompt message, wait briefly for it to arrive on the
+        matching asyncio queue and dispatch directly to the handler. This bypasses
+        the ``prompt_async`` race in ``process_commands`` so the MOO prompt does
+        not flash between a verb and its continuation.
+
+        :param events: list of event-type strings from ``handle_command``
+        """
+        if not events:
+            return
+        queue_map = {
+            "input_prompt": (self.input_queue, self.run_input_session),
+            "editor": (self.editor_queue, self.run_editor_session),
+            "paginator": (self.paginator_queue, self.run_paginator_session),
+        }
+        for event_type in events:
+            if event_type not in queue_map:
+                continue
+            queue, handler = queue_map[event_type]
+            try:
+                req = await asyncio.wait_for(queue.get(), timeout=2.0)
+            except asyncio.TimeoutError:
+                log.warning("pending %s event did not arrive within 2s", event_type)
+                return
+            await handler(req)
+
     async def run_input_session(self, req: dict):
         """
         Show an inline input prompt and invoke the callback verb with the result.
+
+        After the callback verb is dispatched, loops briefly on ``input_queue`` to
+        absorb any follow-up ``input_prompt`` event emitted by the callback. This
+        keeps the whole input chain inside one session so the MOO prompt is not
+        re-rendered between stages.
 
         In automation mode the prompt is skipped and the callback is not invoked
         (automation clients should pass arguments directly as verb arguments).
@@ -311,22 +350,24 @@ class MooPrompt:
             ``callback_this_id``, ``callback_verb_name``, ``caller_id``,
             ``player_id``, and optional ``args``
         """
-        if self.automation:
-            return
+        while req is not None:
+            if self.automation:
+                return
 
-        prompt_text = req.get("prompt", "")
-        is_password = req.get("password", False)
+            prompt_text = req.get("prompt", "")
+            is_password = req.get("password", False)
 
-        session = PromptSession()
-        try:
-            result = await session.prompt_async(
-                ANSI(prompt_text),
-                is_password=is_password,
-            )
-        except (EOFError, KeyboardInterrupt):
-            return
+            session = PromptSession()
+            try:
+                result = await session.prompt_async(
+                    ANSI(prompt_text),
+                    is_password=is_password,
+                )
+            except (EOFError, KeyboardInterrupt):
+                return
 
-        if req.get("callback_this_id") and req.get("callback_verb_name"):
+            if not (req.get("callback_this_id") and req.get("callback_verb_name")):
+                return
             caller = await sync_to_async(models.Object.objects.get)(pk=req["caller_id"])
             if not await sync_to_async(caller.is_wizard)():
                 log.warning("run_input_session: rejected callback with non-wizard caller_id=%s", req["caller_id"])
@@ -339,6 +380,11 @@ class MooPrompt:
                 this_id=req["callback_this_id"],
                 verb_name=req["callback_verb_name"],
             )
+
+            try:
+                req = await asyncio.wait_for(self.input_queue.get(), timeout=2.0)
+            except asyncio.TimeoutError:
+                return
 
     @sync_to_async
     def _mark_connected(self):
@@ -464,7 +510,7 @@ class MooPrompt:
         ]
 
     @sync_to_async
-    def handle_command(self, line: str) -> list:
+    def handle_command(self, line: str) -> tuple[list, list]:
         """
         Parse the command and execute it.
 
@@ -472,13 +518,14 @@ class MooPrompt:
         to avoid excessive property writes. Any exception from the Celery task is
         caught and rendered as a red traceback in the terminal.
 
-        Returns a list of Rich markup strings to be written by the caller via
-        ``run_in_terminal``, so that output is safely delivered from the async
-        event loop thread rather than from this sync executor thread.
-
         :param line: raw input string typed by the user
-        :returns: list of Rich markup strings to write to the terminal
+        :returns: ``(to_write, events)`` — list of Rich markup strings to write to
+            the terminal (delivered via ``run_in_terminal`` by the caller), and a
+            list of event-type strings (``"input_prompt"``, ``"editor"``,
+            ``"paginator"``) published by the verb during its Celery task.
         """
+        from django.core.cache import cache
+
         caller = self.user.player.avatar
         now = datetime.now(timezone.utc)
         if self.last_property_write is None or (now - self.last_property_write).total_seconds() > 15:
@@ -504,6 +551,9 @@ class MooPrompt:
             import traceback
 
             content.append(f"[bold red]{traceback.format_exc()}[/bold red]")
+        events_key = f"moo:task_events:{ct.id}"
+        events = cache.get(events_key) or []
+        cache.delete(events_key)
         # Only wrap with prefix/suffix delimiters when there is actual content.
         # Sending empty-content delimiter frames in automation mode leaves an
         # unresolved run_in_terminal future and hangs process_commands.
@@ -518,7 +568,7 @@ class MooPrompt:
                 to_write.append(output_suffix)
             if output_global_suffix:
                 to_write.append(output_global_suffix)
-        return to_write
+        return to_write, events
 
     @sync_to_async
     def _drain_messages(self):

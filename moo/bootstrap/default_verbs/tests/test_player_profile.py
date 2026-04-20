@@ -133,6 +133,24 @@ def test_password_entry_emits_input_prompt(t_init, t_wizard):
     assert any("input_prompt" in m for m in messages)
 
 
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_password_entry_records_event_in_cache(t_init, t_wizard):
+    """parse_command records ``input_prompt`` in the cache so the shell can skip the prompt race."""
+    import warnings
+    from django.core.cache import cache
+    from moo.core import tasks
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        result = tasks.parse_command.apply(args=[t_wizard.pk, "@password"])
+    try:
+        events = cache.get(f"moo:task_events:{result.id}")
+        assert events == ["input_prompt"]
+    finally:
+        cache.delete(f"moo:task_events:{result.id}")
+
+
 # --- confunc / disfunc ---
 
 

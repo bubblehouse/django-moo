@@ -297,6 +297,10 @@ _CONTEXT_VARS: dict[str, contextvars.ContextVar] = {
     "perm_cache": contextvars.ContextVar("perm_cache", default=None),
     "verb_lookup_cache": contextvars.ContextVar("verb_lookup_cache", default=None),
     "prop_lookup_cache": contextvars.ContextVar("prop_lookup_cache", default=None),
+    # When set to a list by parse_command, _publish_to_player appends each
+    # published event type so the shell can read what events to expect.
+    # Default None means "not tracking" — most sessions don't need this.
+    "published_events": contextvars.ContextVar("published_events", default=None),
 }
 
 
@@ -375,7 +379,15 @@ class ContextManager:
         _CONTEXT_VARS["caller_stack"].set(caller_stack)
         _CONTEXT_VARS["caller"].set(frame["previous_caller"])
 
-    def __init__(self, caller: Any, writer: Any, task_id: Any = None, player: Any = None, connection: Any = None) -> None:
+    def __init__(
+        self,
+        caller: Any,
+        writer: Any,
+        task_id: Any = None,
+        player: Any = None,
+        connection: Any = None,
+        track_events: bool = False,
+    ) -> None:
         self._tokens: dict = {}
         self._initial_values: dict = {
             "caller": caller,
@@ -393,6 +405,7 @@ class ContextManager:
             "perm_cache": {},
             "verb_lookup_cache": {},
             "prop_lookup_cache": {},
+            "published_events": [] if track_events else None,
         }
 
     def set_parser(self, parser):
