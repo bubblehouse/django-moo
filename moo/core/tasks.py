@@ -114,6 +114,23 @@ def invoke_verb(
         else:
             writer = background_log.info
         with code.ContextManager(caller, writer, task_id=task_id, player=player):
-            result = verb_obj(*args, _bypass_execute_check=True, **kwargs)
+            try:
+                result = verb_obj(*args, _bypass_execute_check=True, **kwargs)
+            except exceptions.UserError as e:
+                log.error(f"{caller}: {e}")
+                writer(f"[bold red]{e}[/bold red]")
+                return
+            except PermissionError as e:
+                log.error(f"{caller}: PermissionError: {e}")
+                writer(f"[bold red]PermissionError: {e}[/bold red]")
+                return
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                log.exception(f"Error executing verb {verb_name} for {caller}: {e}")
+                writer("[bold red]An error occurred while executing the verb.[/bold red]")
+                if caller.is_wizard():
+                    import traceback  # pylint: disable=import-outside-toplevel
+
+                    writer(f"[bold red]{traceback.format_exc()}[/bold red]")
+                return
             if callback_verb_name and callback_this_id:
                 invoke_verb.delay(result, caller_id=caller_id, this_id=callback_this_id, verb_name=callback_verb_name)
