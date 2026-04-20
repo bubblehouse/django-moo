@@ -66,8 +66,7 @@ The server is accessible through a browser-based SSH client at `/`. No SSH clien
 
 ### SSH
 
-Direct SSH access is also available. Associate an SSH key with your account in the Django
-admin to skip the password prompt.
+Direct SSH access is also available.
 
 ```bash
 ssh -p 8022 yourname@localhost
@@ -76,6 +75,22 @@ ssh -p 8022 yourname@localhost
 ![SSH Client Example](https://gitlab.com/bubblehouse/django-moo/-/raw/main/docs/images/ssh-client-example.png)
 
 Hit `Ctrl-D` to disconnect.
+
+#### Changing your password and managing SSH keys
+
+Credentials are managed from inside the world with in-game verbs rather than
+the Django admin:
+
+- `@password` — interactively changes your password. Prompts for the old
+  password, then the new one twice for confirmation. Wizards may leave the old
+  password blank to perform an administrative reset.
+- `@keys` — lists your currently registered SSH public keys.
+- `@add-key <public-key>` — registers a new SSH public key. The key name is
+  taken from the comment field automatically.
+- `@remove-key <index>` — removes a key by its index from `@keys`.
+
+Once a key is registered, reconnecting with `ssh -p 8022 yourname@localhost`
+skips the password prompt.
 
 ### Django Admin
 
