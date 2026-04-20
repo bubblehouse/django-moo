@@ -1,3 +1,16 @@
+## [1.1.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.0.1...v1.1.0) (2026-04-20)
+
+### Features
+
+* **password:** implement [@password](https://gitlab.com/password) verb with interactive input flow ([d2515b1](https://gitlab.com/bubblehouse/django-moo/commit/d2515b1d52097f6b381b421422c190af4e6c94f5))
+* **shell:** persist per-player prompt history in Redis ([bab3b62](https://gitlab.com/bubblehouse/django-moo/commit/bab3b6237c82f904f1baec2bb697973b76129353))
+
+### Bug Fixes
+
+* **password:** resolve identity by old_password when avatar is shared ([f4b0095](https://gitlab.com/bubblehouse/django-moo/commit/f4b00950b885d353c528edc3832b20c61b6ba2dc))
+* **shell:** eliminate prompt flash between [@password](https://gitlab.com/password) input stages ([4e33cb7](https://gitlab.com/bubblehouse/django-moo/commit/4e33cb786f3dfb56c7f15a8849f9f93eb9f7da29))
+* **tasks:** surface callback verb errors to the player's terminal ([2a1a5bc](https://gitlab.com/bubblehouse/django-moo/commit/2a1a5bce9244b00f6c7790e1a837f8b528b372f5))
+
 ## [1.0.1](https://gitlab.com/bubblehouse/django-moo/compare/v1.0.0...v1.0.1) (2026-04-18)
 
 ### Bug Fixes
