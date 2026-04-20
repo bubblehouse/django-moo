@@ -742,7 +742,7 @@ wheels = [
 
 [[package]]
 name = "django-moo"
-version = "0.107.0"
+version = "1.0.1"
 source = { editable = "." }
 dependencies = [
     { name = "asyncssh", extra = ["bcrypt"] },
