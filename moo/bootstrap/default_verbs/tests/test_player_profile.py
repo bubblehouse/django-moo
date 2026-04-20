@@ -63,14 +63,74 @@ def test_look_self_shows_idle(t_init: Object, t_wizard: Object):
 # --- @password ---
 
 
+@pytest.fixture
+def t_player_with_password(t_wizard):
+    from moo.core.models.auth import Player  # pylint: disable=import-outside-toplevel
+
+    player_record = Player.objects.get(avatar=t_wizard)
+    player_record.user.set_password("OldPassword1!")
+    player_record.user.save()
+    return player_record.user
+
+
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_password_not_implemented(t_init: Object, t_wizard: Object):
-    """@password prints a not-yet-implemented message."""
+def test_password_changes_via_confirm_callback(t_init, t_wizard, t_player_with_password):
+    """at_password_confirm changes the password when old password and confirmation match."""
     printed = []
-    with code.ContextManager(t_wizard, printed.append) as ctx:
-        parse.interpret(ctx, "@password")
-    assert "@password is not yet implemented." in printed
+    with code.ContextManager(t_wizard, printed.append):
+        confirm_cb = t_wizard.get_verb("at_password_confirm")
+        confirm_cb("NewPassword2@", "OldPassword1!", "NewPassword2@")
+    t_player_with_password.refresh_from_db()
+    assert t_player_with_password.check_password("NewPassword2@")
+    assert "Password changed." in printed
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_password_rejects_wrong_old(t_init, t_wizard, t_player_with_password):
+    """at_password_confirm raises UserError when old password is wrong."""
+    from moo.core.exceptions import UserError  # pylint: disable=import-outside-toplevel
+
+    with code.ContextManager(t_wizard, lambda _: None):
+        confirm_cb = t_wizard.get_verb("at_password_confirm")
+        with pytest.raises(UserError, match="Incorrect old password"):
+            confirm_cb("NewPassword2@", "WrongOld", "NewPassword2@")
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_password_rejects_mismatch(t_init, t_wizard, t_player_with_password):
+    """at_password_confirm prints error when new password and confirmation differ."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append):
+        confirm_cb = t_wizard.get_verb("at_password_confirm")
+        confirm_cb("Different3!", "OldPassword1!", "NewPassword2@")
+    assert any("do not match" in line for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_password_wizard_bypass_old(t_init, t_wizard, t_player_with_password):
+    """Wizard can change password by passing empty string for old password."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append):
+        confirm_cb = t_wizard.get_verb("at_password_confirm")
+        confirm_cb("NewPassword3#", "", "NewPassword3#")
+    t_player_with_password.refresh_from_db()
+    assert t_player_with_password.check_password("NewPassword3#")
+    assert "Password changed." in printed
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_password_entry_emits_input_prompt(t_init, t_wizard):
+    """@password publishes an input_prompt event to open the old-password prompt."""
+    with pytest.warns(RuntimeWarning, match="ConnectionError") as caught:
+        with code.ContextManager(t_wizard, lambda _: None) as ctx:
+            parse.interpret(ctx, "@password")
+    messages = [str(w.message) for w in caught.list]
+    assert any("input_prompt" in m for m in messages)
 
 
 # --- confunc / disfunc ---

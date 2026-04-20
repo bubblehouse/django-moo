@@ -19,6 +19,7 @@ from .output import (
     write,
     open_editor,
     open_paginator,
+    open_input,
     get_session_setting,
     set_session_setting,
     get_wrap_column,
@@ -32,6 +33,7 @@ from .tasks import (
     moo_eval,
 )
 from .ssh_keys import list_ssh_keys, add_ssh_key, remove_ssh_key
+from .password import set_password
 from .admin import server_info
 from .mail import (
     send_message,
@@ -107,6 +109,8 @@ __all__ = [
     "list_ssh_keys",
     "add_ssh_key",
     "remove_ssh_key",
+    "set_password",
+    "open_input",
     "owned_objects",
     "owned_objects_by_pks",
     "task_time_low",

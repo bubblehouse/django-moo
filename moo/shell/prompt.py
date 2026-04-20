@@ -112,6 +112,7 @@ class MooPrompt:
             _session_settings.setdefault(self.user.pk, {})["automation"] = True
         self.editor_queue: asyncio.Queue = asyncio.Queue()
         self.paginator_queue: asyncio.Queue = asyncio.Queue()
+        self.input_queue: asyncio.Queue = asyncio.Queue()
         self.disconnect_event = asyncio.Event()
         self.last_property_write: datetime | None = None
 
@@ -159,9 +160,11 @@ class MooPrompt:
                 prompt_task = asyncio.ensure_future(prompt_session.prompt_async(message, style=self.style))
                 editor_task = asyncio.ensure_future(self.editor_queue.get())
                 paginator_task = asyncio.ensure_future(self.paginator_queue.get())
+                input_task = asyncio.ensure_future(self.input_queue.get())
                 disconnect_task = asyncio.ensure_future(self.disconnect_event.wait())
                 done, pending = await asyncio.wait(
-                    [prompt_task, editor_task, paginator_task, disconnect_task], return_when=asyncio.FIRST_COMPLETED
+                    [prompt_task, editor_task, paginator_task, input_task, disconnect_task],
+                    return_when=asyncio.FIRST_COMPLETED,
                 )
                 for task in pending:
                     task.cancel()
@@ -203,6 +206,8 @@ class MooPrompt:
                         await self.run_editor_session(editor_task.result())
                 elif paginator_task in done:
                     await self.run_paginator_session(paginator_task.result())
+                elif input_task in done:
+                    await self.run_input_session(input_task.result())
                 elif prompt_task in done:
                     try:
                         line = prompt_task.result()
@@ -294,6 +299,46 @@ class MooPrompt:
         from .paginator import run_paginator
 
         await run_paginator(req.get("content", ""), req.get("content_type", "text"))
+
+    async def run_input_session(self, req: dict):
+        """
+        Show an inline input prompt and invoke the callback verb with the result.
+
+        In automation mode the prompt is skipped and the callback is not invoked
+        (automation clients should pass arguments directly as verb arguments).
+
+        :param req: input request dict with keys ``prompt``, ``password``,
+            ``callback_this_id``, ``callback_verb_name``, ``caller_id``,
+            ``player_id``, and optional ``args``
+        """
+        if self.automation:
+            return
+
+        prompt_text = req.get("prompt", "")
+        is_password = req.get("password", False)
+
+        session = PromptSession()
+        try:
+            result = await session.prompt_async(
+                ANSI(prompt_text),
+                is_password=is_password,
+            )
+        except (EOFError, KeyboardInterrupt):
+            return
+
+        if req.get("callback_this_id") and req.get("callback_verb_name"):
+            caller = await sync_to_async(models.Object.objects.get)(pk=req["caller_id"])
+            if not await sync_to_async(caller.is_wizard)():
+                log.warning("run_input_session: rejected callback with non-wizard caller_id=%s", req["caller_id"])
+                return
+            tasks.invoke_verb.delay(
+                result,
+                *req.get("args", []),
+                caller_id=req["caller_id"],
+                player_id=req["player_id"],
+                this_id=req["callback_this_id"],
+                verb_name=req["callback_verb_name"],
+            )
 
     @sync_to_async
     def _mark_connected(self):
@@ -623,6 +668,8 @@ class MooPrompt:
                                 await run_in_terminal(_write_paginator)
                             else:
                                 await self.paginator_queue.put(message)
+                        elif isinstance(message, dict) and message.get("event") == "input_prompt":
+                            await self.input_queue.put(message)
                         elif isinstance(message, dict) and message.get("event") == "session_setting":
                             user_pk = self.user.pk
                             if user_pk not in _session_settings:

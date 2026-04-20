@@ -56,7 +56,7 @@ BLOCKED_IMPORTS = {
     # `context` submodule is intentionally absent: its name is shadowed in
     # __init__.py by the exported _Context() singleton, so
     # `from moo.sdk import context` already returns the singleton, not the module.
-    "moo.sdk": {"objects", "output", "tasks", "ssh_keys", "admin", "mail"},
+    "moo.sdk": {"objects", "output", "tasks", "ssh_keys", "admin", "mail", "password"},
 }
 
 WIZARD_ALLOWED_MODULES = (

@@ -87,6 +87,38 @@ def open_paginator(obj, content: str, content_type: str = "text"):
     )
 
 
+def open_input(obj, prompt: str, callback_verb, *args, password: bool = False):
+    """
+    Request the connected SSH client to show an inline input prompt.
+    When the user submits, the entered text is passed to callback_verb as args[0],
+    followed by any extra positional arguments supplied here.
+    If the user cancels (Ctrl-C / Ctrl-D), the callback is not invoked.
+
+    :param obj: the player Object whose client should show the prompt
+    :param prompt: text to display before the input field
+    :param callback_verb: Verb to invoke with the entered text as args[0]
+    :param args: additional arguments forwarded to the callback verb as args[1:]
+    :param password: if True, input is hidden (no echo)
+    """
+    from moo.core import _publish_to_player  # pylint: disable=import-outside-toplevel
+
+    if context.caller and not context.caller.is_wizard():
+        raise UserError("Only verbs owned by wizards can open an input prompt.")
+    _publish_to_player(
+        obj,
+        {
+            "event": "input_prompt",
+            "prompt": prompt,
+            "password": password,
+            "args": list(args),
+            "callback_this_id": callback_verb._invoked_object.pk,  # pylint: disable=protected-access
+            "callback_verb_name": callback_verb._invoked_name,  # pylint: disable=protected-access
+            "caller_id": context.caller.pk,
+            "player_id": (context.player or context.caller).pk,
+        },
+    )
+
+
 def get_session_setting(key, default=None):
     """
     Get a session-specific output setting for the current player.
