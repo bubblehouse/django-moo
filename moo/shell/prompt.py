@@ -97,18 +97,19 @@ class MooPrompt:
     dedicated asyncio queues so they can interrupt the input prompt cleanly.
     """
 
-    style = Style.from_dict(
-        {
-            # User input (default text).
-            "": "#ffffff",
-            # Prompt.
-            "name": "#884444",
-            "at": "#00aa00",
-            "colon": "#0000aa",
-            "pound": "#00aa00",
-            "location": "#00aa55",
-        }
-    )
+    # Source of truth for prompt colours. Both ``style`` (prompt_toolkit, rich
+    # mode) and ``_render_prompt_tuples`` (Rich, raw mode) derive from this so
+    # the two modes render the same palette.
+    _PROMPT_PALETTE = {
+        "": "#ffffff",  # user input / default text
+        "name": "#884444",
+        "at": "#00aa00",
+        "colon": "#0000aa",
+        "pound": "#00aa00",
+        "location": "#00aa55",
+    }
+
+    style = Style.from_dict(_PROMPT_PALETTE)
 
     def __init__(self, user, session=None, mode: str = MODE_RICH, automation: bool = False):
         """
@@ -350,9 +351,11 @@ class MooPrompt:
                         self.writer(piece)
                 elif paginator_task in done:
                     # Raw mode dumps paginator events in process_messages, so
-                    # we should never land here. If we do, fall back to a
-                    # straight dump.
+                    # we should never land here. If we do, log and fall back
+                    # to a straight dump — the gating in process_messages has
+                    # drifted from the mode state and should be investigated.
                     req = paginator_task.result()
+                    log.warning("paginator event reached raw REPL loop; process_messages gate may be out of sync")
                     self.writer(req.get("content", ""))
                 elif raw_input_task in done:
                     await self.run_input_session(raw_input_task.result())
@@ -406,22 +409,15 @@ class MooPrompt:
         Render ``generate_prompt()`` tuples to an ANSI string suitable for
         direct writing to the SSH channel in raw mode.
 
-        Each tuple is ``(style_class, text)``; style classes are mapped to
-        the palette defined in ``MooPrompt.style``. Rich handles the SGR
-        encoding, matching the colours rich-mode clients see via
-        ``print_formatted_text``.
+        Each tuple is ``(style_class, text)``; the ``class:xxx`` prefix is
+        stripped and looked up in ``_PROMPT_PALETTE`` so raw-mode prompts
+        match the colours rich-mode clients see via ``print_formatted_text``.
         """
-        palette = {
-            "class:name": "#884444",
-            "class:at": "#00aa00",
-            "class:location": "#00aa55",
-            "class:colon": "#0000aa",
-            "class:pound": "#00aa00",
-        }
         console = Console(color_system="truecolor", force_terminal=True)
         with console.capture() as capture:
             for style_class, text in tuples:
-                colour = palette.get(style_class)
+                key = style_class[len("class:") :] if style_class.startswith("class:") else style_class
+                colour = self._PROMPT_PALETTE.get(key)
                 console.print(text, end="", style=colour)
         return capture.get()
 
@@ -444,6 +440,13 @@ class MooPrompt:
         Consumes keys from the prompt_toolkit PipeInput the contrib SSH
         session wires up around us, buffering until CR or LF. Returns the
         decoded line without trailing CR/LF. Returns ``None`` on EOF.
+
+        Escape sequences (arrow keys, function keys, bracketed-paste
+        envelopes — anything whose data starts with ``\\x1b``) are dropped on
+        the floor. This is deliberate: traditional MUD clients do their own
+        line editing and history; the server-side reader just buffers plain
+        bytes. If a future client needs server-side line editing in raw
+        mode, that's a separate feature.
         """
         from prompt_toolkit.application.current import get_app_session
         from prompt_toolkit.input import Input
