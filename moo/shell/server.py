@@ -35,17 +35,24 @@ def _fd_count() -> int:
 
 class MooPromptToolkitSSHSession(PromptToolkitSSHSession):
     """
-    Custom SSH session that disables CPR for automation clients.
+    Custom SSH session that selects a shell mode from the client's TERM.
 
-    Checks the terminal type - if it contains 'moo-automation', disables
-    CPR to avoid timeout delays during machine-driven command sequences.
+    ``TERM`` values route to:
+
+    - ``xterm-256-basic`` → ``mode="raw"``: line-based I/O for traditional MUD
+      clients that cannot handle cursor manipulation or bracketed paste.
+    - containing ``moo-automation`` → ``mode="rich"`` with
+      ``is_automation=True``: prompt_toolkit TUI with CPR disabled for
+      machine-driven command sequences.
+    - anything else → ``mode="rich"``: default prompt_toolkit TUI experience.
     """
 
     user = None  # set by MooSSHServer.session_requested() before the session starts
     is_automation: bool = False
+    mode: str = "rich"
 
     def session_started(self) -> None:
-        """Check terminal type and adjust CPR setting before starting interaction."""
+        """Check terminal type and set mode / CPR before starting interaction."""
         if self._chan:
             term = self._chan.get_terminal_type()
             print(f"[MOO-DEBUG] Terminal type: {term!r}, enable_cpr={self.enable_cpr}", file=sys.stderr, flush=True)  # type: ignore[has-type]
@@ -53,6 +60,10 @@ class MooPromptToolkitSSHSession(PromptToolkitSSHSession):
                 print("[MOO-DEBUG] Disabling CPR for automation", file=sys.stderr, flush=True)
                 self.enable_cpr = False  # type: ignore[attr-defined]
                 self.is_automation = True
+                self.mode = "rich"
+            elif term and term.strip().lower() == "xterm-256-basic":
+                print("[MOO-DEBUG] Selecting raw mode for MUD client", file=sys.stderr, flush=True)
+                self.mode = "raw"
         super().session_started()
 
 
@@ -65,14 +76,20 @@ async def interact(ssh_session: PromptToolkitSSHSession) -> None:
     global _total_connections  # pylint: disable=global-statement
     session = cast(MooPromptToolkitSSHSession, ssh_session)
     automation = getattr(session, "is_automation", False)
+    mode = getattr(session, "mode", "rich")
     username = session.user.username if session.user else "unknown"
     _active_sessions.add(username)
     _total_connections += 1
     log.info(
-        "connect user=%s total=%d active=%d fds=%d", username, _total_connections, len(_active_sessions), _fd_count()
+        "connect user=%s total=%d active=%d fds=%d mode=%s",
+        username,
+        _total_connections,
+        len(_active_sessions),
+        _fd_count(),
+        mode,
     )
     try:
-        await embed(session.user, automation=automation)
+        await embed(session.user, session=session, mode=mode, automation=automation)
     finally:
         _active_sessions.discard(username)
         log.info("disconnect user=%s active=%d fds=%d", username, len(_active_sessions), _fd_count())

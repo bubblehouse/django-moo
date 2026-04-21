@@ -28,9 +28,13 @@ from .history import RedisHistory
 log = logging.getLogger(__name__)
 
 # Session-specific output settings registry
-# Keyed by user_pk, stores {output_prefix, output_suffix, quiet_mode, color_system}
+# Keyed by user_pk, stores {mode, output_prefix, output_suffix, quiet_mode, color_system}
 # Settings are cleared when user disconnects
 _session_settings: dict[int, dict] = {}
+
+# Shell modes. See MooPromptToolkitSSHSession for how TERM selects one.
+MODE_RICH = "rich"
+MODE_RAW = "raw"
 
 PROMPT_SHORTCUTS = {
     '"': 'say "%"',
@@ -62,6 +66,8 @@ def _make_key_bindings(automation: bool = False) -> KeyBindings:
 
 async def embed(
     user: models.User,
+    session=None,
+    mode: str = MODE_RICH,
     automation: bool = False,
 ) -> None:
     """
@@ -71,9 +77,13 @@ async def embed(
     coroutines concurrently until either exits.
 
     :param user: the authenticated Django user whose avatar will be the active player
-    :param automation: if True, disables interactive shortcuts (e.g. ``"`` → say)
+    :param session: the asyncssh session; its ``_chan`` is the channel the
+        raw-mode loop reads from and writes to. Not used in rich mode.
+    :param mode: ``"rich"`` (default) or ``"raw"``.
+    :param automation: if True, disables interactive shortcuts (e.g. ``"`` → say).
+        Always paired with ``mode="rich"``.
     """
-    repl = MooPrompt(user, automation=automation)
+    repl = MooPrompt(user, session=session, mode=mode, automation=automation)
     await asyncio.wait([asyncio.ensure_future(f()) for f in (repl.process_commands, repl.process_messages)])
 
 
@@ -100,18 +110,28 @@ class MooPrompt:
         }
     )
 
-    def __init__(self, user, automation: bool = False):
+    def __init__(self, user, session=None, mode: str = MODE_RICH, automation: bool = False):
         """
         Initialize the prompt session for the given Django user.
 
         :param user: the authenticated Django user whose avatar will be the active player
+        :param session: the asyncssh session; used by raw mode to reach ``_chan``
+        :param mode: ``"rich"`` (prompt_toolkit) or ``"raw"`` (line I/O)
         :param automation: if True, disables interactive shortcuts
         """
         self.user = user
+        self.mode = mode
+        self._chan = getattr(session, "_chan", None) if session is not None else None
         self.automation = automation
         self.is_exiting = False
+        # _session_settings is populated in _repl_setup() (after clearing
+        # anything stale from a previous connection on the same account).
+        # We still write the mode here so code paths that construct a
+        # MooPrompt without running the REPL (e.g. unit tests) can observe
+        # the mode immediately.
+        _session_settings.setdefault(self.user.pk, {})["mode"] = mode
         if automation:
-            _session_settings.setdefault(self.user.pk, {})["automation"] = True
+            _session_settings[self.user.pk]["automation"] = True
         self.editor_queue: asyncio.Queue = asyncio.Queue()
         self.paginator_queue: asyncio.Queue = asyncio.Queue()
         self.input_queue: asyncio.Queue = asyncio.Queue()
@@ -124,9 +144,78 @@ class MooPrompt:
         self.quiet_mode = False  # Set by QUIET verb
         self.color_system = "truecolor"  # Default: full color support
 
+        # Buffer for raw-mode line input. Populated via the PipeInput the
+        # contrib SSH session wires up around us.
+        self._raw_line_buffer: str = ""
+
     async def process_commands(self):
+        """Dispatch to the rich or raw command loop based on ``self.mode``."""
+        if self.mode == MODE_RAW:
+            await self.process_commands_raw()
+        else:
+            await self.process_commands_rich()
+
+    async def _repl_setup(self) -> None:
         """
-        Read and dispatch user input in a loop.
+        Shared REPL startup: mark the player connected, fire confunc, stamp
+        session settings so Celery workers can read the mode.
+
+        Called at the top of both ``process_commands_rich`` and
+        ``process_commands_raw``. Clears any session settings left over from a
+        previous connection on the same account (e.g. an agent that enabled
+        QUIET / OUTPUTPREFIX) before re-stamping ``mode`` and ``automation``.
+        """
+        from django.core.cache import cache
+
+        _session_settings.pop(self.user.pk, None)
+        _session_settings.setdefault(self.user.pk, {})["mode"] = self.mode
+        if self.automation:
+            _session_settings[self.user.pk]["automation"] = True
+        # Mirror the mode into the Django cache so out-of-process verbs
+        # (Celery workers) can read it via get_client_mode().
+        cache.set(f"moo:session:{self.user.pk}:mode", self.mode, timeout=86400)
+        await self._mark_connected()
+        confunc_tasks = await self._fire_confunc()
+        await self._await_tasks(confunc_tasks)
+        # NOTE: startup _drain_messages removed. It opened a second
+        # SimpleBuffer on the same queue that ran concurrently with
+        # process_messages during the first second, causing two consumers to
+        # race and split the message stream round-robin — every other
+        # message landed in the short-lived drain buffer and was discarded.
+        # process_messages picks up any backlog naturally once it starts.
+
+    async def _repl_teardown(self) -> None:
+        """
+        Shared REPL shutdown: signal messages loop to exit, fire disfunc, and
+        clear session settings / cache keys.
+
+        Always runs in the ``finally`` of both command loops so the two
+        coroutines terminate together and leave no zombie state behind.
+        """
+        from django.core.cache import cache
+
+        self.is_exiting = True
+        self.disconnect_event.set()
+        await self._fire_disfunc()
+        await self._mark_disconnected()
+        user_pk = self.user.pk
+        if user_pk in _session_settings:
+            del _session_settings[user_pk]
+            log.debug(f"Cleared session settings for user {user_pk}")
+        for key in (
+            "mode",
+            "quiet_mode",
+            "output_prefix",
+            "output_suffix",
+            "output_global_prefix",
+            "output_global_suffix",
+            "color_system",
+        ):
+            cache.delete(f"moo:session:{user_pk}:{key}")
+
+    async def process_commands_rich(self):
+        """
+        Read and dispatch user input in a loop using prompt_toolkit.
 
         Waits simultaneously for a typed command, an editor request, or a
         paginator request. Whichever arrives first is handled; the others are
@@ -136,20 +225,7 @@ class MooPrompt:
             key_bindings=_make_key_bindings(self.automation),
             history=ThreadedHistory(RedisHistory(self.user.pk)),
         )
-        # Clear any session settings left over from a previous connection on
-        # this account (e.g. an agent that enabled QUIET/OUTPUTPREFIX).
-        _session_settings.pop(self.user.pk, None)
-        if self.automation:
-            _session_settings.setdefault(self.user.pk, {})["automation"] = True
-        await self._mark_connected()
-        confunc_tasks = await self._fire_confunc()
-        await self._await_tasks(confunc_tasks)
-        # NOTE: startup _drain_messages removed. It opened a second SimpleBuffer
-        # on the same queue that ran concurrently with process_messages during
-        # the first second, causing two consumers to race and split the message
-        # stream round-robin — every other message landed in the short-lived
-        # drain buffer and was discarded. process_messages picks up any
-        # backlog naturally once it starts.
+        await self._repl_setup()
         try:
             while not self.is_exiting:
                 try:
@@ -186,21 +262,7 @@ class MooPrompt:
                         # hangs app.run_async() waiting for keystrokes that never
                         # arrive, which corrupts the run_in_terminal Future chain
                         # and breaks every subsequent command in the session.
-                        # Send a delimited error so the automation client can retry
-                        # with `@edit ... with "..."`.
-                        settings = _session_settings.get(self.user.pk, {})
-                        gp = settings.get("output_global_prefix")
-                        gs = settings.get("output_global_suffix")
-                        err = (
-                            "[bold red]Error: editor not available in automation mode. "
-                            "Use '@edit ... with \"...\"' to set content directly.[/bold red]"
-                        )
-                        error_pieces = []
-                        if gp:
-                            error_pieces.append(gp)
-                        error_pieces.append(err)
-                        if gs:
-                            error_pieces.append(gs)
+                        error_pieces = self._editor_rejection_pieces()
 
                         def _write_editor_error(pieces=error_pieces):  # pylint: disable=dangerous-default-value
                             for piece in pieces:
@@ -246,32 +308,171 @@ class MooPrompt:
         except:  # pylint: disable=bare-except
             log.exception("Error in command processing")
         finally:
-            # Signal process_messages to stop regardless of how we exited.
-            # Without this, if process_commands exits via exception, is_exiting
-            # is never set and process_messages loops forever — keeping the
-            # asyncssh channel open as a zombie.
-            self.is_exiting = True
-            self.disconnect_event.set()
-            await self._fire_disfunc()
-            await self._mark_disconnected()
-            # Clean up session settings on disconnect
-            user_pk = self.user.pk
-            if user_pk in _session_settings:
-                del _session_settings[user_pk]
-                log.debug(f"Cleared session settings for user {user_pk}")
-            # Clear cache-backed session settings so Celery workers see a clean slate
-            from django.core.cache import cache
-
-            for key in (
-                "quiet_mode",
-                "output_prefix",
-                "output_suffix",
-                "output_global_prefix",
-                "output_global_suffix",
-                "color_system",
-            ):
-                cache.delete(f"moo:session:{user_pk}:{key}")
+            await self._repl_teardown()
         log.debug("REPL is exiting, stopping main thread...")
+
+    async def process_commands_raw(self):
+        """
+        Read and dispatch user input in a loop with plain line I/O.
+
+        Used by MUD clients that send ``TERM=xterm-256-basic``. No
+        prompt_toolkit, no cursor manipulation — the prompt is written once
+        per turn and async output just lands on new lines. TUI editor requests
+        are rejected with a hint pointing at the inline ``@edit … with "…"``
+        form; paginator requests never arrive because ``process_messages``
+        dumps them inline in raw mode.
+        """
+        await self._repl_setup()
+        try:
+            while not self.is_exiting:
+                prompt_tuples = await self.generate_prompt()
+                self._chan_write(self._render_prompt_tuples(prompt_tuples))
+                input_task = asyncio.ensure_future(self._read_line_raw())
+                editor_task = asyncio.ensure_future(self.editor_queue.get())
+                paginator_task = asyncio.ensure_future(self.paginator_queue.get())
+                raw_input_task = asyncio.ensure_future(self.input_queue.get())
+                disconnect_task = asyncio.ensure_future(self.disconnect_event.wait())
+                done, pending = await asyncio.wait(
+                    [input_task, editor_task, paginator_task, raw_input_task, disconnect_task],
+                    return_when=asyncio.FIRST_COMPLETED,
+                )
+                for task in pending:
+                    task.cancel()
+                    try:
+                        await task
+                    except asyncio.CancelledError:
+                        pass
+                if disconnect_task in done:
+                    self.is_exiting = True
+                    break
+                elif editor_task in done:
+                    for piece in self._editor_rejection_pieces():
+                        self.writer(piece)
+                elif paginator_task in done:
+                    # Raw mode dumps paginator events in process_messages, so
+                    # we should never land here. If we do, fall back to a
+                    # straight dump.
+                    req = paginator_task.result()
+                    self.writer(req.get("content", ""))
+                elif raw_input_task in done:
+                    await self.run_input_session(raw_input_task.result())
+                elif input_task in done:
+                    try:
+                        line = input_task.result()
+                    except (EOFError, ConnectionResetError):
+                        self.is_exiting = True
+                        break
+                    if line is None:
+                        self.is_exiting = True
+                        break
+                    if line.strip() == ".flush":
+                        for piece in await self._drain_messages():
+                            self.writer(piece)
+                    else:
+                        output_pieces, events = await self.handle_command(line)
+                        for piece in output_pieces:
+                            self.writer(piece)
+                        await self._dispatch_pending_event(events)
+        except:  # pylint: disable=bare-except
+            log.exception("Error in raw command processing")
+        finally:
+            await self._repl_teardown()
+        log.debug("Raw REPL is exiting, stopping main thread...")
+
+    def _editor_rejection_pieces(self) -> list[str]:
+        """
+        Build the "editor not available" error the REPL writes when a
+        verb-initiated editor event arrives in a mode that cannot open the
+        TUI (automation or raw). Wrapped in global prefix/suffix so
+        delimiter-driven clients parse the reply cleanly.
+        """
+        settings = _session_settings.get(self.user.pk, {})
+        gp = settings.get("output_global_prefix")
+        gs = settings.get("output_global_suffix")
+        err = (
+            "[bold red]Error: editor not available in this mode. "
+            "Use '@edit ... with \"...\"' to set content directly.[/bold red]"
+        )
+        pieces: list[str] = []
+        if gp:
+            pieces.append(gp)
+        pieces.append(err)
+        if gs:
+            pieces.append(gs)
+        return pieces
+
+    def _render_prompt_tuples(self, tuples: list) -> str:
+        """
+        Render ``generate_prompt()`` tuples to an ANSI string suitable for
+        direct writing to the SSH channel in raw mode.
+
+        Each tuple is ``(style_class, text)``; style classes are mapped to
+        the palette defined in ``MooPrompt.style``. Rich handles the SGR
+        encoding, matching the colours rich-mode clients see via
+        ``print_formatted_text``.
+        """
+        palette = {
+            "class:name": "#884444",
+            "class:at": "#00aa00",
+            "class:location": "#00aa55",
+            "class:colon": "#0000aa",
+            "class:pound": "#00aa00",
+        }
+        console = Console(color_system="truecolor", force_terminal=True)
+        with console.capture() as capture:
+            for style_class, text in tuples:
+                colour = palette.get(style_class)
+                console.print(text, end="", style=colour)
+        return capture.get()
+
+    def _chan_write(self, text: str) -> None:
+        """
+        Write text directly to the asyncssh channel, converting LF to CRLF.
+
+        Only used from the raw-mode path — rich mode goes through
+        ``print_formatted_text`` which handles newlines itself.
+        """
+        if self._chan is None:
+            # Defensive: tests may construct a MooPrompt without a session.
+            return
+        self._chan.write(text.replace("\n", "\r\n"))
+
+    async def _read_line_raw(self) -> str | None:
+        """
+        Read one line of input from the SSH channel in raw mode.
+
+        Consumes keys from the prompt_toolkit PipeInput the contrib SSH
+        session wires up around us, buffering until CR or LF. Returns the
+        decoded line without trailing CR/LF. Returns ``None`` on EOF.
+        """
+        from prompt_toolkit.application.current import get_app_session
+        from prompt_toolkit.input import Input
+        from prompt_toolkit.keys import Keys
+
+        sess = get_app_session()
+        inp: Input = sess.input
+        with inp.raw_mode():
+            with inp.attach(lambda: None):
+                while True:
+                    for key_press in inp.read_keys():
+                        key = key_press.key
+                        data = key_press.data
+                        if key in (Keys.ControlM, Keys.ControlJ):
+                            line = self._raw_line_buffer
+                            self._raw_line_buffer = ""
+                            self._chan_write("\r\n")
+                            return line
+                        if key in (Keys.ControlD,) and not self._raw_line_buffer:
+                            return None
+                        if key in (Keys.Backspace, Keys.ControlH):
+                            if self._raw_line_buffer:
+                                self._raw_line_buffer = self._raw_line_buffer[:-1]
+                                self._chan_write("\b \b")
+                            continue
+                        if data and not data.startswith("\x1b"):
+                            self._raw_line_buffer += data
+                            self._chan_write(data)
+                    await asyncio.sleep(0.01)
 
     async def run_editor_session(self, req: dict):
         """
@@ -623,10 +824,16 @@ class MooPrompt:
 
     def writer(self, s, is_error=False):
         """
-        Render a Rich markup string to the terminal via prompt_toolkit.
+        Render a Rich markup string to the terminal.
 
-        Captures Rich's ANSI output and passes it through print_formatted_text
-        so it prints above the active input prompt without clobbering it.
+        In rich mode, captures Rich's ANSI output and passes it through
+        ``print_formatted_text`` so it prints above the active input prompt
+        without clobbering it.
+
+        In raw mode, writes the captured ANSI bytes directly to the SSH
+        channel with LF→CRLF translation, bypassing prompt_toolkit entirely.
+        Rich only emits SGR colour sequences (no cursor control), so the
+        output is safe for traditional MUD clients.
 
         In quiet mode, colors are disabled at the Rich level so no ANSI escape
         sequences are emitted — automation clients receive clean plain text.
@@ -637,7 +844,15 @@ class MooPrompt:
         if not isinstance(s, str):
             s = str(s)
         settings = _session_settings.get(self.user.pk, {})
+        mode = settings.get("mode", MODE_RICH)
         color_system = None if settings.get("quiet_mode", False) else "truecolor"
+        if mode == MODE_RAW:
+            console = Console(color_system=color_system, force_terminal=True)
+            with console.capture() as capture:
+                console.print(s, end="")
+            content = capture.get()
+            self._chan_write(content + "\n")
+            return
         console = Console(color_system=color_system)
         with console.capture() as capture:
             console.print(s, end="")
@@ -706,7 +921,8 @@ class MooPrompt:
                             await self.editor_queue.put(message)
                         elif isinstance(message, dict) and message.get("event") == "paginator":
                             settings = _session_settings.get(self.user.pk, {})
-                            if settings.get("automation"):
+                            is_raw = settings.get("mode") == MODE_RAW
+                            if settings.get("automation") or is_raw:
                                 content = message.get("content", "")
 
                                 def _write_paginator(
@@ -720,7 +936,10 @@ class MooPrompt:
                                     if gs:
                                         self.writer(gs)
 
-                                await run_in_terminal(_write_paginator)
+                                if is_raw:
+                                    _write_paginator()
+                                else:
+                                    await run_in_terminal(_write_paginator)
                             else:
                                 await self.paginator_queue.put(message)
                         elif isinstance(message, dict) and message.get("event") == "input_prompt":
@@ -745,7 +964,10 @@ class MooPrompt:
                                 if gs:
                                     self.writer(gs)
 
-                            await run_in_terminal(_write_message)
+                            if settings.get("mode") == MODE_RAW:
+                                _write_message()
+                            else:
+                                await run_in_terminal(_write_message)
                 finally:
                     sb.close()
         except:  # pylint: disable=bare-except

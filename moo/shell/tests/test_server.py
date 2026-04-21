@@ -13,6 +13,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from django.contrib.auth import get_user_model
+from prompt_toolkit.contrib.ssh import PromptToolkitSSHSession
 
 from moo.shell.server import MooPromptToolkitSSHSession, SSHServer
 
@@ -76,3 +77,46 @@ def test_session_requested_sets_user():
 
     assert isinstance(session, MooPromptToolkitSSHSession)
     assert session.user is server.user
+
+
+# ---------------------------------------------------------------------------
+# MooPromptToolkitSSHSession.session_started() — TERM-driven mode detection
+# ---------------------------------------------------------------------------
+
+
+def _make_session_with_term(term: str) -> MooPromptToolkitSSHSession:
+    """Build a bare session with a channel that reports the given TERM string."""
+    session = MooPromptToolkitSSHSession.__new__(MooPromptToolkitSSHSession)
+    session._chan = MagicMock()
+    session._chan.get_terminal_type.return_value = term
+    session.enable_cpr = True
+    return session
+
+
+def test_session_started_default_term_is_rich_mode():
+    """A normal terminal (e.g. xterm-256color) produces rich mode with no automation."""
+    session = _make_session_with_term("xterm-256color")
+    with patch.object(PromptToolkitSSHSession, "session_started"):
+        session.session_started()
+    assert session.mode == "rich"
+    assert session.is_automation is False
+
+
+def test_session_started_xterm_256_basic_sets_raw_mode():
+    """TERM=xterm-256-basic selects raw mode; whitespace and case are tolerated."""
+    for term in ("xterm-256-basic", "  XTERM-256-BASIC  "):
+        session = _make_session_with_term(term)
+        with patch.object(PromptToolkitSSHSession, "session_started"):
+            session.session_started()
+        assert session.mode == "raw", term
+        assert session.is_automation is False
+
+
+def test_session_started_moo_automation_stays_rich():
+    """TERM containing moo-automation stays in rich mode with is_automation=True and CPR disabled."""
+    session = _make_session_with_term("moo-automation-v1")
+    with patch.object(PromptToolkitSSHSession, "session_started"):
+        session.session_started()
+    assert session.mode == "rich"
+    assert session.is_automation is True
+    assert session.enable_cpr is False

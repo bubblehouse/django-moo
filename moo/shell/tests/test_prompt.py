@@ -1,16 +1,27 @@
 # -*- coding: utf-8 -*-
+# pylint: disable=protected-access
 
 import asyncio
 import json
 from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
 from prompt_toolkit import ANSI
 from prompt_toolkit.document import Document
 from prompt_toolkit.key_binding import KeyBindings
 
 import moo.shell.prompt as prompt_module
-from moo.shell.prompt import MooPrompt, PROMPT_SHORTCUTS, _make_key_bindings
+from moo.shell.prompt import MODE_RAW, MODE_RICH, MooPrompt, PROMPT_SHORTCUTS, _make_key_bindings
+
+
+@pytest.fixture(autouse=True)
+def _clean_session_settings():
+    """Clear the module-level _session_settings dict before and after each test."""
+    prompt_module._session_settings.clear()
+    yield
+    prompt_module._session_settings.clear()
+
 
 # ---------------------------------------------------------------------------
 # Tests
@@ -63,6 +74,44 @@ def test_init():
     assert isinstance(prompt.disconnect_event, asyncio.Event)
     assert not prompt.disconnect_event.is_set()
     assert prompt.last_property_write is None
+    assert prompt.mode == MODE_RICH
+    assert prompt_module._session_settings[user.pk]["mode"] == MODE_RICH
+
+
+def test_init_raw_mode_stamps_session_settings():
+    """Passing mode=MODE_RAW records the mode in session settings and stores the channel."""
+    user = MagicMock()
+    session = MagicMock()
+    prompt = MooPrompt(user, session=session, mode=MODE_RAW)
+    assert prompt.mode == MODE_RAW
+    assert prompt_module._session_settings[user.pk]["mode"] == MODE_RAW
+    assert prompt._chan is session._chan
+
+
+def test_process_commands_dispatches_to_rich():
+    """process_commands() routes to process_commands_rich when mode is rich."""
+    user = MagicMock()
+    prompt = MooPrompt(user, mode=MODE_RICH)
+    with (
+        patch.object(MooPrompt, "process_commands_rich", new=AsyncMock()) as rich,
+        patch.object(MooPrompt, "process_commands_raw", new=AsyncMock()) as raw,
+    ):
+        asyncio.run(prompt.process_commands())
+    rich.assert_awaited_once()
+    raw.assert_not_awaited()
+
+
+def test_process_commands_dispatches_to_raw():
+    """process_commands() routes to process_commands_raw when mode is raw."""
+    user = MagicMock()
+    prompt = MooPrompt(user, session=MagicMock(), mode=MODE_RAW)
+    with (
+        patch.object(MooPrompt, "process_commands_rich", new=AsyncMock()) as rich,
+        patch.object(MooPrompt, "process_commands_raw", new=AsyncMock()) as raw,
+    ):
+        asyncio.run(prompt.process_commands())
+    raw.assert_awaited_once()
+    rich.assert_not_awaited()
 
 
 def _make_prompt_user(name, location=None):
@@ -96,14 +145,39 @@ def test_generate_prompt_no_location():
     assert ("class:location", "nowhere") in result
 
 
-def test_writer_renders_markup():
-    """writer() passes rendered ANSI output to print_formatted_text."""
+def test_writer_rich_mode_uses_print_formatted_text():
+    """writer() passes rendered ANSI output to print_formatted_text in rich mode."""
     prompt = MooPrompt(MagicMock())
     with patch("moo.shell.prompt.print_formatted_text") as mock_print:
         prompt.writer("hello [bold]world[/bold]")
     mock_print.assert_called_once()
     args, _ = mock_print.call_args
     assert isinstance(args[0], ANSI)
+
+
+def test_writer_raw_mode_writes_to_chan():
+    """writer() bypasses print_formatted_text and writes directly to the SSH channel in raw mode."""
+    user = MagicMock()
+    session = MagicMock()
+    prompt = MooPrompt(user, session=session, mode=MODE_RAW)
+    with patch("moo.shell.prompt.print_formatted_text") as mock_print:
+        prompt.writer("hello world")
+    mock_print.assert_not_called()
+    session._chan.write.assert_called_once()
+    written = session._chan.write.call_args[0][0]
+    assert "hello" in written
+    assert written.endswith("\r\n")
+
+
+def test_writer_raw_mode_rich_capture_preserves_colour():
+    """writer() in raw mode writes SGR escape sequences to the channel for styled markup."""
+    user = MagicMock()
+    session = MagicMock()
+    prompt = MooPrompt(user, session=session, mode=MODE_RAW)
+    prompt.writer("[red]alert[/red]")
+    written = session._chan.write.call_args[0][0]
+    assert "\x1b[" in written
+    assert "alert" in written
 
 
 def test_run_editor_session_invokes_callback():
@@ -291,7 +365,7 @@ def _run_process_messages(prompt, messages):
 
     with (
         patch("asyncio.sleep", new=AsyncMock()),
-        patch("moo.shell.prompt.app.default_connection", return_value=mock_conn),
+        patch("moo.shell.prompt.app.connection_for_read", return_value=mock_conn),
         patch("moo.shell.prompt.simple.SimpleBuffer", return_value=mock_sb),
         patch("moo.shell.prompt.moojson.loads", side_effect=json.loads),
     ):
@@ -463,6 +537,71 @@ def test_run_input_session_consumes_chain_without_prompt():
     assert invoke_count == 3
     # Queue fully drained — no lingering messages to race with the next prompt_async.
     assert prompt.input_queue.empty()
+
+
+def test_process_messages_raw_mode_paginator_dumps_inline():
+    """Paginator events are dumped through writer() without paging in raw mode."""
+    user = MagicMock()
+    user.pk = 77
+    prompt = MooPrompt(user, session=MagicMock(), mode=MODE_RAW)
+    with patch.object(prompt, "writer") as mock_writer:
+        _run_process_messages(prompt, [{"event": "paginator", "content": "lots of text"}])
+    mock_writer.assert_any_call("lots of text")
+    assert prompt.paginator_queue.empty()
+
+
+def test_process_messages_raw_mode_plain_tell_skips_run_in_terminal():
+    """Plain-message events reach writer() directly without run_in_terminal in raw mode."""
+    user = MagicMock()
+    user.pk = 78
+    prompt = MooPrompt(user, session=MagicMock(), mode=MODE_RAW)
+    with (
+        patch.object(prompt, "writer") as mock_writer,
+        patch("moo.shell.prompt.run_in_terminal", new=AsyncMock()) as mock_rit,
+    ):
+        _run_process_messages(prompt, ["hello from another player"])
+    mock_rit.assert_not_awaited()
+    mock_writer.assert_any_call("hello from another player")
+
+
+def test_process_messages_rich_mode_plain_tell_uses_run_in_terminal():
+    """Plain-message events go through run_in_terminal in rich mode."""
+    user = MagicMock()
+    user.pk = 79
+    prompt = MooPrompt(user)  # rich by default
+    with patch("moo.shell.prompt.run_in_terminal", new=AsyncMock()) as mock_rit:
+        _run_process_messages(prompt, ["hello"])
+    mock_rit.assert_awaited()
+
+
+def test_raw_editor_event_emits_rejection_text():
+    """An editor request in raw mode is refused with the inline-form hint."""
+    user = MagicMock()
+    prompt = MooPrompt(user, session=MagicMock(), mode=MODE_RAW)
+    pieces = prompt._editor_rejection_pieces()  # pylint: disable=protected-access
+    assert any("@edit" in p and "with" in p for p in pieces)
+
+
+def test_repl_setup_teardown_roundtrip():
+    """_repl_setup() stamps mode and _repl_teardown() clears it, with connect/disconnect fired."""
+    user = MagicMock()
+    user.pk = 91
+    prompt = MooPrompt(user, mode=MODE_RICH)
+    # _repl_setup writes 'mode' after clearing; teardown wipes the whole entry.
+    prompt._mark_connected = AsyncMock()  # pylint: disable=protected-access
+    prompt._fire_confunc = AsyncMock(return_value=[])  # pylint: disable=protected-access
+    prompt._await_tasks = AsyncMock()  # pylint: disable=protected-access
+    prompt._fire_disfunc = AsyncMock()  # pylint: disable=protected-access
+    prompt._mark_disconnected = AsyncMock()  # pylint: disable=protected-access
+    with patch("django.core.cache.cache.set"), patch("django.core.cache.cache.delete"):
+        asyncio.run(prompt._repl_setup())  # pylint: disable=protected-access
+        assert prompt_module._session_settings[user.pk]["mode"] == MODE_RICH
+        prompt._mark_connected.assert_awaited_once()  # pylint: disable=protected-access
+        prompt._fire_confunc.assert_awaited_once()  # pylint: disable=protected-access
+        asyncio.run(prompt._repl_teardown())  # pylint: disable=protected-access
+    prompt._fire_disfunc.assert_awaited_once()  # pylint: disable=protected-access
+    prompt._mark_disconnected.assert_awaited_once()  # pylint: disable=protected-access
+    assert user.pk not in prompt_module._session_settings
 
 
 def test_run_input_session_exits_when_queue_times_out():
