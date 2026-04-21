@@ -206,6 +206,19 @@ def get_wrap_column():
         return 80
 
 
+def get_client_mode() -> str:
+    """
+    Return the current player's shell mode.
+
+    Returns ``"rich"`` (prompt_toolkit TUI, the default) or ``"raw"`` (line-
+    based I/O for traditional MUD clients that cannot handle cursor control).
+
+    Verbs use this to short-circuit editor-opening code paths in raw mode and
+    suggest the inline ``@edit ... with "..."`` form instead.
+    """
+    return get_session_setting("mode", "rich")
+
+
 def boot_player(obj):
     """
 

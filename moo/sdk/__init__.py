@@ -23,6 +23,7 @@ from .output import (
     get_session_setting,
     set_session_setting,
     get_wrap_column,
+    get_client_mode,
     boot_player,
 )
 from .tasks import (
@@ -106,6 +107,7 @@ __all__ = [
     "moojson",
     "get_session_setting",
     "set_session_setting",
+    "get_client_mode",
     "list_ssh_keys",
     "add_ssh_key",
     "remove_ssh_key",
