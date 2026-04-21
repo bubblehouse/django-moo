@@ -10,7 +10,7 @@ Syntax:
     @edit <note> with "<text>"  set text inline without opening the editor
 """
 
-from moo.sdk import context, open_editor
+from moo.sdk import context, open_editor, get_client_mode
 
 if verb_name == "@edit":
     if not context.player.owns(this):
@@ -22,6 +22,10 @@ if verb_name == "@edit":
         this.set_property("text", new_text)
         print(f"Text set on {this}")
     else:
+        if get_client_mode() == "raw":
+            print(f'Raw mode: use `@edit {this} with "..."` to set note text inline.')
+            print("Escape newlines as `\\n` in the with-string.")
+            return
         content = this.get_property("text")
         callback = this.get_verb("edit_callback")
         open_editor(context.player, content, callback, content_type="text", title=str(this))

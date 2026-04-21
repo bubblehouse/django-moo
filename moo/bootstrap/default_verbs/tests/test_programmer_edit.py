@@ -1,3 +1,4 @@
+# pylint: disable=protected-access
 import pathlib
 
 import pytest
@@ -149,7 +150,7 @@ def test_edit_verb_with_malformed_shebang_prints_error(t_init: Object, t_wizard:
     printed = []
     with code.ContextManager(t_wizard, printed.append) as ctx:
         obj = create("widget", parents=[system.root_class], location=t_wizard.location)
-        parse.interpret(ctx, '@edit verb newverb on widget with "#!moo verb newverb --dsppec any\\nprint(\'hi\')"')
+        parse.interpret(ctx, "@edit verb newverb on widget with \"#!moo verb newverb --dsppec any\\nprint('hi')\"")
     assert any("malformed shebang" in str(m).lower() or "Error:" in str(m) for m in printed)
     obj.refresh_from_db()
     assert not obj.has_verb("newverb", recurse=False)
@@ -163,7 +164,9 @@ def test_edit_verb_with_valid_shebang_sets_dspec(t_init: Object, t_wizard: Objec
     printed = []
     with code.ContextManager(t_wizard, printed.append) as ctx:
         obj = create("widget", parents=[system.root_class], location=t_wizard.location)
-        parse.interpret(ctx, '@edit verb newverb on widget with "#!moo verb newverb --on $thing --dspec any\\nprint(\'hi\')"')
+        parse.interpret(
+            ctx, "@edit verb newverb on widget with \"#!moo verb newverb --on $thing --dspec any\\nprint('hi')\""
+        )
     obj.refresh_from_db()
     assert obj.has_verb("newverb", recurse=False)
     v = obj.get_verb("newverb", recurse=False)
@@ -347,3 +350,85 @@ def _write_verb_file(path: pathlib.Path, on: str, verb_name: str, body: str) -> 
     """Write a minimal verb source file to *path* and return it."""
     path.write_text(f"#!moo verb {verb_name} --on {on}\n{body}\n", encoding="utf8")
     return path
+
+
+# ---------------------------------------------------------------------------
+# Raw-mode @edit hint (MUD-client mode)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_at_edit_verb_raw_mode_hints_with_form(t_init: Object, t_wizard: Object):
+    """In raw mode, @edit <verb> on <obj> (no `with`) prints the inline-form hint and does not publish an editor event."""
+    from moo.shell import prompt as prompt_module
+
+    system = lookup(1)
+    printed = []
+    prompt_module._session_settings[t_wizard.owner.pk] = {"mode": "raw"}
+    try:
+        with code.ContextManager(t_wizard, printed.append) as ctx:
+            obj = create("widget", parents=[system.root_class], location=t_wizard.location)
+            v = Verb.objects.create(origin=obj, owner=t_wizard, code='print("hello")')
+            VerbName.objects.create(verb=v, name="myverb")
+            parse.interpret(ctx, "@edit myverb on widget")
+    finally:
+        prompt_module._session_settings.pop(t_wizard.owner.pk, None)
+    assert any("Raw mode" in str(m) and "with" in str(m) for m in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_at_edit_property_raw_mode_hints_with_form(t_init: Object, t_wizard: Object):
+    """In raw mode, @edit property <name> on <obj> (no `with`) prints the property-form hint."""
+    from moo.shell import prompt as prompt_module
+
+    system = lookup(1)
+    printed = []
+    prompt_module._session_settings[t_wizard.owner.pk] = {"mode": "raw"}
+    try:
+        with code.ContextManager(t_wizard, printed.append) as ctx:
+            obj = create("widget", parents=[system.root_class], location=t_wizard.location)
+            obj.set_property("myprop", "hello")
+            parse.interpret(ctx, "@edit property myprop on widget")
+    finally:
+        prompt_module._session_settings.pop(t_wizard.owner.pk, None)
+    assert any("Raw mode" in str(m) and "property" in str(m) for m in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_at_edit_verb_raw_mode_with_form_still_works(t_init: Object, t_wizard: Object):
+    """The inline `with` form succeeds in raw mode — the hint is gated on absence of `with`."""
+    from moo.shell import prompt as prompt_module
+
+    system = lookup(1)
+    printed = []
+    prompt_module._session_settings[t_wizard.owner.pk] = {"mode": "raw"}
+    try:
+        with code.ContextManager(t_wizard, printed.append) as ctx:
+            obj = create("widget", parents=[system.root_class], location=t_wizard.location)
+            v = Verb.objects.create(origin=obj, owner=t_wizard, code='print("original")')
+            VerbName.objects.create(verb=v, name="myverb")
+            parse.interpret(ctx, '@edit myverb on widget with print("updated")')
+    finally:
+        prompt_module._session_settings.pop(t_wizard.owner.pk, None)
+    v.refresh_from_db()
+    assert "updated" in v.code
+    assert not any("Raw mode" in str(m) for m in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_at_edit_rich_mode_still_opens_editor(t_init: Object, t_wizard: Object):
+    """In rich mode (default), @edit without `with` still publishes an editor event."""
+    from moo.shell import prompt as prompt_module
+
+    system = lookup(1)
+    prompt_module._session_settings.pop(t_wizard.owner.pk, None)  # explicit rich (default)
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        obj = create("widget", parents=[system.root_class], location=t_wizard.location)
+        v = Verb.objects.create(origin=obj, owner=t_wizard, code='print("hello")')
+        VerbName.objects.create(verb=v, name="myverb")
+        with pytest.warns(RuntimeWarning):
+            parse.interpret(ctx, "@edit myverb on widget")
