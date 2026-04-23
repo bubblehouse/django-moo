@@ -1,3 +1,4 @@
+# pylint: disable=protected-access
 import datetime
 from unittest.mock import patch
 
@@ -184,6 +185,38 @@ def test_gripe_opens_editor(t_init: Object, t_wizard: Object):
             parse.interpret(ctx, "@gripe")
     messages = [str(w.message) for w in caught.list]
     assert any("editor" in m for m in messages)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_gripe_with_syntax_delivers_message(t_init: Object, t_wizard: Object):
+    """@gripe with "<text>" sends the gripe inline without opening the editor."""
+    from moo.sdk.mail import get_mailbox
+
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, '@gripe with "The lights are too bright."')
+    mailbox = get_mailbox(t_wizard)
+    gripe = next((mr for mr in mailbox if mr.message.subject.startswith("@gripe from")), None)
+    assert gripe is not None
+    assert "The lights are too bright." in gripe.message.body
+    assert any("sent" in line.lower() for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_gripe_raw_mode_hints_with_form(t_init: Object, t_wizard: Object):
+    """In raw mode, @gripe (no `with`) prints the inline-form hint."""
+    from moo.shell import prompt as prompt_module
+
+    printed = []
+    prompt_module._session_settings[t_wizard.owner.pk] = {"mode": "raw"}
+    try:
+        with code.ContextManager(t_wizard, printed.append) as ctx:
+            parse.interpret(ctx, "@gripe")
+    finally:
+        prompt_module._session_settings.pop(t_wizard.owner.pk, None)
+    assert any("Raw mode" in str(m) and "with" in str(m) for m in printed)
 
 
 # --- news ---

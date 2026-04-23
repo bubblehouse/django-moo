@@ -13,7 +13,7 @@ When saved, the first line (stripped of the "Subject: " prefix) becomes the
 subject; all remaining lines become the body.
 """
 
-from moo.sdk import context, open_editor, lookup, send_message, NoSuchObjectError
+from moo.sdk import context, open_editor, get_client_mode, lookup, send_message, NoSuchObjectError
 
 if verb_name == "@send":
     if not context.parser.has_dobj_str():
@@ -33,6 +33,7 @@ if verb_name == "@send":
 
     if context.parser.has_pobj_str("with"):
         import re
+
         content = context.parser.get_pobj_str("with").replace("\\n", "\n")
         content = re.sub(r"\\([a-zA-Z_])", lambda m: "\n" + m.group(1), content)
         lines = content.split("\n")
@@ -50,6 +51,11 @@ if verb_name == "@send":
             return
         send_message(context.player, [recipient], subject, body)
         print(f"[green]Message sent to {recipient.title()}.[/green]")
+        return
+
+    if get_client_mode() == "raw":
+        print(f'Raw mode: use `@send {recipient} with "Subject: ...\\n\\nbody"` to send inline.')
+        print("Escape newlines as `\\n` in the with-string.")
         return
 
     callback = context.player.get_verb("at_send_callback")
