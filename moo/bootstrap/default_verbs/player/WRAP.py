@@ -13,7 +13,7 @@ Usage:
 The setting persists across sessions. When set to 'auto', the server
 detects your terminal width at connect time and updates it on resize.
 
-See also: QUIET, PREFIX, SUFFIX
+See also: a11y, PREFIX, SUFFIX
 """
 
 from moo.sdk import context, get_wrap_column

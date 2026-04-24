@@ -23,7 +23,7 @@ Example:
     ...
     >>MOO-END<<
 
-See also: PREFIX, QUIET
+See also: PREFIX, a11y
 """
 
 from moo.sdk import get_session_setting, set_session_setting, context

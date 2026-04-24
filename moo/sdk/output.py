@@ -124,7 +124,7 @@ def get_session_setting(key, default=None):
     Get a session-specific output setting for the current player.
 
     Session settings are stored per-user and cleared on disconnect.
-    Used by PREFIX, SUFFIX, and QUIET commands for machine-readable output.
+    Used by PREFIX, SUFFIX, OUTPUTPREFIX/SUFFIX, and the ``a11y`` verb.
 
     Checks the in-process ``_session_settings`` dict first (authoritative in the
     SSH server process and in tests), then falls back to the Django cache so
@@ -158,7 +158,7 @@ def set_session_setting(key, value):
     Set a session-specific output setting for the current player.
 
     Session settings are stored per-user and cleared on disconnect.
-    Used by PREFIX, SUFFIX, and QUIET commands for machine-readable output.
+    Used by PREFIX, SUFFIX, OUTPUTPREFIX/SUFFIX, and the ``a11y`` verb.
 
     Writes to the Django cache (accessible cross-process from Celery workers)
     and also publishes a ``session_setting`` event to the player's Kombu queue

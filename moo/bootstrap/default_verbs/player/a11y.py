@@ -17,8 +17,7 @@ Settings:
                output so meaning survives ANSI-color stripping
                (default: off)
     quiet      Suppress Rich color codes and use a bare "$" prompt; for
-               machine-readable output (default: off; replaces the
-               standalone QUIET verb)
+               machine-readable output (default: off)
 
 Settings are session-specific and cleared on disconnect. The verb is
 also reachable as @accessibility.

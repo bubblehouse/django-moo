@@ -25,7 +25,7 @@ Example:
     ...
     <<<
 
-See also: OUTPUTSUFFIX, PREFIX, SUFFIX, QUIET
+See also: OUTPUTSUFFIX, PREFIX, SUFFIX, a11y
 """
 
 from moo.sdk import get_session_setting, set_session_setting, context

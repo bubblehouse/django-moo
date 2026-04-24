@@ -23,7 +23,7 @@ Example:
     The Laboratory(#3)
     ...
 
-See also: SUFFIX, QUIET
+See also: SUFFIX, a11y
 """
 
 from moo.sdk import get_session_setting, set_session_setting, context
