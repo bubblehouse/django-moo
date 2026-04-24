@@ -1,6 +1,6 @@
 [project]
 name = "django-moo"
-version = "1.1.0"
+version = "1.2.0"
 description = "A game server for hosting text-based online MOO-like games."
 license = { text = "AGPL" }
 authors = [

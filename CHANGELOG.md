@@ -1,3 +1,12 @@
+## [1.2.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.1.0...v1.2.0) (2026-04-24)
+
+### Features
+
+* **sdk:** expose get_client_mode() helper ([49841c7](https://gitlab.com/bubblehouse/django-moo/commit/49841c793c81c5e7f038b45b42050cf237f04111))
+* **shell:** add raw mode for traditional MUD clients ([f088e39](https://gitlab.com/bubblehouse/django-moo/commit/f088e3978aff0c7a1fb2bfcc961311d96417f511))
+* **verbs:** add raw-mode inline forms and [@gripe](https://gitlab.com/gripe) with-syntax for editor-consuming verbs ([0eacbb7](https://gitlab.com/bubblehouse/django-moo/commit/0eacbb70a60ce556fe6ea8e9aeebb58e0e69e6e2))
+* **verbs:** hint [@edit](https://gitlab.com/edit) with-form when in raw mode ([6c210a6](https://gitlab.com/bubblehouse/django-moo/commit/6c210a646cc11147030852132bb352da04173510))
+
 ## [1.1.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.0.1...v1.1.0) (2026-04-20)
 
 ### Features
