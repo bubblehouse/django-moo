@@ -57,6 +57,7 @@
    explanation/architecture
    explanation/parser
    explanation/sandbox
+   explanation/shell-internals
 
 .. toctree::
    :maxdepth: 1

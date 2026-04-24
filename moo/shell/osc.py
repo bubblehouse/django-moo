@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-OSC (Operating System Command) escape sequences for shell output.
+OSC 133 (Semantic Shell Integration) escape sequences.
 
-OSC 133 (Semantic Shell Integration) lets screen readers and modern
-terminals navigate command-by-command instead of line-by-line. The four
-markers bracket each interactive cycle: prompt start, command start,
-output start, and command end with an exit status.
+The four markers bracket each interactive cycle: prompt start, command
+start, output start, and command end with exit status. See
+:doc:`/explanation/shell-internals` § "OSC 133 Semantic Shell Integration"
+for how the prompt uses them.
 """
 
 OSC_133_PROMPT_START = "\033]133;A\007"

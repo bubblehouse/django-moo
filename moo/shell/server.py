@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-AsyncSSH server components.
+AsyncSSH server entrypoint.
+
+See :doc:`/explanation/shell-internals` for the reasoning behind
+``line_editor=False``, the keepalive settings, and the signal handlers.
 """
 
 import asyncio
@@ -35,16 +38,10 @@ def _fd_count() -> int:
 
 class MooPromptToolkitSSHSession(PromptToolkitSSHSession):
     """
-    Custom SSH session that selects a shell mode from the client's TERM.
+    SSH session that selects a shell mode from the client's ``TERM``.
 
-    ``TERM`` values route to:
-
-    - ``xterm-256-basic`` → ``mode="raw"``: line-based I/O for traditional MUD
-      clients that cannot handle cursor manipulation or bracketed paste.
-    - containing ``moo-automation`` → ``mode="rich"`` with
-      ``is_automation=True``: prompt_toolkit TUI with CPR disabled for
-      machine-driven command sequences.
-    - anything else → ``mode="rich"``: default prompt_toolkit TUI experience.
+    See :doc:`/explanation/shell-internals` § "The Three Modes" for the full
+    mapping.
     """
 
     user = None  # set by MooSSHServer.session_requested() before the session starts
@@ -52,14 +49,10 @@ class MooPromptToolkitSSHSession(PromptToolkitSSHSession):
     mode: str = "rich"
 
     def session_started(self) -> None:
-        """Check terminal type and set mode / CPR before starting interaction."""
         if self._chan:
             term = self._chan.get_terminal_type()
             if term and "moo-automation" in term.lower():
-                # Automation clients drive the session deterministically and
-                # cannot supply CPR responses — leaving CPR enabled here
-                # makes prompt_toolkit stall waiting for a reply that never
-                # comes.
+                # Automation clients cannot answer CPR — prompt_toolkit would stall.
                 self.enable_cpr = False  # type: ignore[attr-defined]
                 self.is_automation = True
                 self.mode = "rich"
@@ -114,10 +107,8 @@ async def server(port=8022):
     loop.set_debug(True)
     loop.slow_callback_duration = 0.050  # warn on any callback >50ms
 
-    # faulthandler.register dumps ALL Python thread stacks synchronously on signal —
-    # works even when the asyncio event loop is blocked. loop.add_signal_handler()
-    # does NOT work when the loop is frozen because it requires the loop to be
-    # alive to deliver the signal callback.
+    # faulthandler dumps thread stacks synchronously, even when the event loop
+    # is blocked — unlike loop.add_signal_handler which needs a live loop.
     faulthandler.register(signal.SIGUSR1, file=sys.stderr, all_threads=True, chain=False)
 
     def _dump_state():
