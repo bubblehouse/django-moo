@@ -1,3 +1,9 @@
+## [1.3.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.2.0...v1.3.0) (2026-04-24)
+
+### Features
+
+* **shell:** screen-reader OSC 133 markers, [ERROR] prefix gating, a11y verb (closes [#15](https://gitlab.com/bubblehouse/django-moo/issues/15)) ([a28c5cd](https://gitlab.com/bubblehouse/django-moo/commit/a28c5cd3d93eb1939552cb5dcf7b5d9c74816cb2))
+
 ## [1.2.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.1.0...v1.2.0) (2026-04-24)
 
 ### Features
