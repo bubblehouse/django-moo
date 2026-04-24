@@ -251,6 +251,54 @@ with set_task_perms(system):
 
 - Wizard-owned verbs only.
 
+## `get_client_mode()`
+
+Return `"rich"` (default, prompt_toolkit TUI) or `"raw"` (line-based I/O for MUD clients). Branch here to avoid opening full-screen TUIs on a client that cannot handle them.
+
+```python
+from moo.sdk import get_client_mode, open_editor
+
+if get_client_mode() == "raw":
+    print('Use: @edit description with "your text here"')
+else:
+    open_editor(context.player, existing_text, this.save_description)
+```
+
+## `get_wrap_column()`
+
+Return the effective wrap width for the current player: their `wrap_column` property, or the session's `terminal_width` if set to `"auto"`, or 80 as final fallback.
+
+```python
+from moo.sdk import get_wrap_column
+width = get_wrap_column()
+```
+
+## `get_session_setting(key, default=None)` / `set_session_setting(key, value)`
+
+Read or write a per-session setting. Values cross the SSH-server / Celery-worker process boundary via the Django cache plus a `session_setting` Kombu event.
+
+Known keys: `output_prefix`, `output_suffix`, `output_global_prefix`, `output_global_suffix`, `quiet_mode`, `osc133_mode`, `prefixes_mode`, `terminal_width`, `mode`.
+
+```python
+from moo.sdk import get_session_setting, set_session_setting
+
+if get_session_setting("quiet_mode", False):
+    print("terse mode on")
+
+set_session_setting("output_prefix", ">>START<<")
+```
+
+All session settings clear automatically on disconnect.
+
+## `boot_player(obj)`
+
+Disconnect the given player. Publishes a `disconnect` event on the player's Kombu queue; the SSH server closes the channel. Only wizards can boot others; any player can boot themselves.
+
+```python
+from moo.sdk import boot_player, lookup
+boot_player(lookup("Guest"))
+```
+
 ## `PLACEMENT_PREPS` / `HIDDEN_PLACEMENT_PREPS`
 
 Two constants for verbs that deal with spatial placement.

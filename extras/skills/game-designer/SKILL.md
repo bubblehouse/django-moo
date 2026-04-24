@@ -225,7 +225,7 @@ The script accepts either a file path or a directory path.
 
 **Do not use `@reload`** — it creates duplicate verbs on a freshly-bootstrapped DB. The user handles verb state by refreshing the DB before each build.
 
-**Build time**: ~3-4 minutes for typical environments (5 rooms, 30+ objects). Each command takes ~1.1s (automation mode: PREFIX/SUFFIX delimiters + QUIET mode).
+**Build time**: ~3-4 minutes for typical environments (5 rooms, 30+ objects). Each command takes ~1.1s (automation mode: PREFIX/SUFFIX delimiters + `a11y quiet on`).
 
 **Monitor the log** for errors. Watch for `WARNING: Could not resolve object` (verb attachment failure) and tracebacks.
 

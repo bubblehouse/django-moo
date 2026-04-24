@@ -1,6 +1,8 @@
 # Connection Control Verbs
 
-DjangoMOO provides three built-in verbs that automation clients can use to make output machine-readable. They are defined on `$player` and are available to all connected players.
+DjangoMOO provides a set of built-in verbs that automation clients can use to make output machine-readable. They are defined on `$player` and are available to all connected players.
+
+For accessibility-focused settings (screen-reader markers, textual severity prefixes, quiet mode, MUD client compatibility), see {doc}`accessibility`.
 
 ## PREFIX and SUFFIX
 
@@ -91,35 +93,29 @@ This is especially useful in automation scripts: sending `.flush` before each co
 
 `.flush` is a connection-level command — it is not dispatched through the verb parser and does not require any verb to be defined.
 
-## QUIET
+## a11y quiet
 
-`QUIET` disables Rich color markup in command output and simplifies the prompt to a bare `$`. This removes ANSI escape sequences so automation clients receive clean plain text.
+Clean plain-text output — no ANSI colour, bare `$` prompt — is controlled by the `a11y` verb:
 
 ```
-QUIET enable
+a11y quiet on
 look
 The Laboratory(#3)
 You see nothing special.
 $
 ```
 
-**Syntax**:
-
-| Command | Effect |
-|---------|--------|
-| `QUIET enable` | Enable quiet mode |
-| `QUIET disable` | Disable quiet mode |
-| `QUIET` | Show current setting |
-
-Note: `enable` / `disable` are used rather than `on` / `off` because `on` and `off` are MOO prepositions and would not be parsed as a direct object.
+See {doc}`accessibility` for the full `a11y` verb reference. The earlier
+`QUIET enable` / `QUIET disable` command has been removed — use
+`a11y quiet on` / `a11y quiet off` instead.
 
 ## Automation Mode
 
-The `MooSSH` automation client in `extras/skills/game-designer/tools/moo_ssh.py` calls all three in a single helper:
+The `MooSSH` automation client in `extras/skills/game-designer/tools/moo_ssh.py` wires the common setup into a single helper:
 
 ```python
 with MooSSH() as moo:
-    moo.enable_automation_mode()   # PREFIX + SUFFIX + QUIET enable
+    moo.enable_automation_mode()   # PREFIX + SUFFIX + a11y quiet on
     output = moo.run("look")       # delimiter-based; ~1.1s per command
 ```
 
@@ -173,4 +169,4 @@ prompt, not interleaved with it. Disconnect callbacks are fire-and-forget.
 
 Session settings cross the Celery / SSH server process boundary via the Kombu message queue — the same mechanism used by the text editor and paginator. `set_session_setting()` in `moo/sdk/output.py` publishes a `{"event": "session_setting", ...}` message; the SSH server's `process_messages()` loop applies it to the connection's own registry.
 
-See `moo/bootstrap/default_verbs/player/PREFIX.py`, `SUFFIX.py`, `OUTPUTPREFIX.py`, `OUTPUTSUFFIX.py`, and `QUIET.py` for the verb implementations. `.flush` is handled directly in `moo/shell/prompt.py` (`process_commands` and `_drain_messages`).
+See `moo/bootstrap/default_verbs/player/PREFIX.py`, `SUFFIX.py`, `OUTPUTPREFIX.py`, `OUTPUTSUFFIX.py`, `a11y.py`, and `WRAP.py` for the verb implementations. `.flush` is handled directly in `moo/shell/prompt.py` (`process_commands` and `_drain_messages`).

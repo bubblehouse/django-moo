@@ -17,6 +17,21 @@ The bootstrap system initializes the game database with default game objects, cl
 - **default**: The production game world. Used when running the server normally.
 - **test**: A minimal dataset used by core pytest tests in `moo/core/tests/`.
 
+### Player Class Hierarchy
+
+The default dataset bootstraps four player classes, each inheriting from the previous:
+
+| Class         | Location             | Verbs they own                                                       |
+|---------------|----------------------|----------------------------------------------------------------------|
+| `$player`     | `default_verbs/player/`     | Everyday commands (`say`, `look`, `tell`, `inventory`, `@password`, PREFIX/SUFFIX, `a11y`, `WRAP`) |
+| `$builder`    | `default_verbs/builder/`    | World-building commands (`@create`, `@dig`, `@describe`, `@alias`, `@add_key`, `@burrow`) |
+| `$programmer` | `default_verbs/programmer/` | Verb authoring (`@edit`, `@eval`, `@reload`)                         |
+| `$wizard`     | `default_verbs/wizard/`     | Administrative (`@version` and whatever else requires full rights)   |
+
+When adding a new verb, place it on the lowest class that ought to run it. Putting `@edit` on `$player` would let any connected user open a verb in the editor, which is not what we want.
+
+Agents running on the Tradesmen mux (`mason`, `joiner`, `tinker`, `harbinger`) are assigned avatars of the appropriate class — so `joiner` (a `$builder`) cannot use `@edit`, while `tinker` (a `$programmer`) can.
+
 ### Testing
 
 - `moo/core/tests` – The core pytest tests for basic functionality shared by all MOO universes
@@ -565,7 +580,7 @@ except Exception as e:
 
 ## Connection Control Verbs and Session Settings
 
-Five verbs on `$player` allow automation clients to control how command output is delivered. They are implemented in `default_verbs/player/` and use the `set_session_setting` / `get_session_setting` SDK functions.
+Verbs on `$player` allow automation clients and accessibility-conscious users to control how command output is delivered. They are implemented in `default_verbs/player/` and use the `set_session_setting` / `get_session_setting` SDK functions.
 
 | Verb | Usage | Effect |
 |------|-------|--------|
@@ -573,7 +588,10 @@ Five verbs on `$player` allow automation clients to control how command output i
 | `SUFFIX <marker>` | `SUFFIX >>END<<` | Emits `<marker>` after each command's output |
 | `OUTPUTPREFIX <marker>` | `OUTPUTPREFIX >>>` | Emits `<marker>` before **all** output, including async tells |
 | `OUTPUTSUFFIX <marker>` | `OUTPUTSUFFIX <<<` | Emits `<marker>` after **all** output, including async tells |
-| `QUIET enable\|disable` | `QUIET enable` | Suppresses ANSI color codes; simplifies prompt to `$` |
+| `a11y quiet on\|off` | `a11y quiet on` | Suppresses ANSI color codes; simplifies prompt to `$` |
+| `a11y osc133 on\|off` | `a11y osc133 off` | Toggles OSC 133 semantic shell markers (default on) |
+| `a11y prefixes on\|off` | `a11y prefixes on` | Prepends `[ERROR]`/`[WARN]`/`[INFO]` tags to coloured output |
+| `WRAP auto\|<n>` | `WRAP 120` | Sets the render-layer wrap column; persists on the player object |
 
 When both layers are active, global markers are outermost: `OUTPUTPREFIX` → `PREFIX` → output → `SUFFIX` → `OUTPUTSUFFIX`.
 
@@ -592,13 +610,13 @@ prefix = get_session_setting('output_prefix')       # reads from the SSH server'
 
 `set_session_setting` publishes a `{"event": "session_setting", ...}` message to the player's Kombu queue. The SSH server's `process_messages()` loop picks it up and updates its own in-process registry. This is the same cross-process bridge used by `open_editor` and `open_paginator`.
 
-**Key names**: `output_prefix`, `output_suffix`, `output_global_prefix`, `output_global_suffix`, `quiet_mode` (bool).
+**Key names**: `output_prefix`, `output_suffix`, `output_global_prefix`, `output_global_suffix`, `quiet_mode` (bool), `osc133_mode` (bool), `prefixes_mode` (bool), `terminal_width` (int), `mode` (``"rich"``/``"raw"``).
 
 All settings are session-scoped — they are cleared automatically when the player disconnects.
 
-### QUIET mode and prepositions
+### `on` / `off` versus prepositions
 
-`QUIET` uses `enable` / `disable` rather than `on` / `off` because `on` and `off` are MOO prepositions. If you add similar toggle verbs, use words that are not in `settings.PREPOSITIONS`.
+`on` and `off` are MOO prepositions — the parser strips them when used as standalone pobj tokens. The `a11y` verb gets around this by reading `context.parser.words` directly instead of going through `get_pobj_str`. If you write a similar toggle verb, either do the same or use words that are not in `settings.PREPOSITIONS` (e.g. `enable` / `disable`).
 
 ## Additional Resources
 

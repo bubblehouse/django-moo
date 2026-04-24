@@ -32,6 +32,7 @@
    how-to/bootstrapping
    how-to/development
    how-to/connection-control
+   how-to/accessibility
    how-to/ssh-key-management
 
 .. toctree::

@@ -333,6 +333,61 @@ print(f"Version: {info['version']}, PID: {info['pid']}, Memory: {info['memory_mb
 
 Keys: `version`, `python`, `pid`, `memory_mb` (may be `None` on platforms where `resource` is unavailable).
 
+### `get_client_mode()`
+
+Returns `"rich"` (default, prompt_toolkit TUI) or `"raw"` (line-based I/O for traditional MUD clients). Verbs that would open a full-screen editor or paginator check this and route to inline forms in raw mode so the user gets usable output on a client that cannot handle the TUI.
+
+```python
+from moo.sdk import get_client_mode, open_editor
+
+if get_client_mode() == "raw":
+    print("Use: @edit description with \"your text here\"")
+else:
+    open_editor(context.player, existing_text, callback_verb)
+```
+
+See {doc}`accessibility` for the full mode-selection story.
+
+### `get_wrap_column()`
+
+Returns the effective wrap column for the current player — the value of their `wrap_column` property (or `"auto"` → the session's `terminal_width` setting, falling back to 80). Use this when formatting tabular or wrap-aware output.
+
+```python
+from moo.sdk import get_wrap_column
+
+width = get_wrap_column()
+print("-" * width)
+```
+
+### `get_session_setting(key, default=None)` / `set_session_setting(key, value)`
+
+Read and write cross-process session-scoped settings for the current player. The SSH server process is the source of truth; `get_session_setting` checks the in-process `_session_settings` dict first and falls back to the Django cache so Celery workers can still read values. `set_session_setting` writes to the cache and publishes a `session_setting` Kombu event so the SSH server updates its own registry.
+
+```python
+from moo.sdk import get_session_setting, set_session_setting
+
+if get_session_setting("quiet_mode", False):
+    # render a terse version
+    ...
+
+set_session_setting("output_prefix", ">>START<<")
+```
+
+Known keys: `output_prefix`, `output_suffix`, `output_global_prefix`, `output_global_suffix`, `quiet_mode`, `osc133_mode`, `prefixes_mode`, `terminal_width`, `mode`.
+
+### `boot_player(obj)`
+
+Disconnects the given player. Publishes a `disconnect` event on the player's Kombu queue, which the SSH server picks up and closes the channel.
+
+```python
+from moo.sdk import boot_player, lookup
+
+troublemaker = lookup("Guest")
+boot_player(troublemaker)
+```
+
+Only wizards can boot other players; any player can boot themselves.
+
 ## Placement Verbs
 
 Objects can be placed in a spatial relationship to another object in the same room using

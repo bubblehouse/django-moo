@@ -126,7 +126,7 @@ Two modes:
 
 ```python
 with MooSSH() as moo:
-    moo.enable_automation_mode()  # enables delimiters + quiet mode
+    moo.enable_automation_mode()  # enables delimiters + `a11y quiet on`
     output = moo.run("look")      # ~1.1s instead of ~7.5s
 ```
 
