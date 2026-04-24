@@ -141,7 +141,7 @@ class MooSSH:
         Call this once after connect() before issuing build commands.
         """
         self.enable_delimiters()
-        self.run("QUIET enable")
+        self.run("a11y quiet on")
 
     def run(self, command):
         """
@@ -206,6 +206,39 @@ class MooSSH:
             self._log(f"    {indented}")
         return output
 
+    def run_raw(self, command):
+        """
+        Send a single MOO command and return the un-stripped accumulated buffer.
+
+        Mirrors ``run()`` but skips the strip_ansi pass so callers can inspect
+        OSC sequences (e.g. OSC 133 prompt/output markers) byte-for-byte.
+        Useful for accessibility/screen-reader integration tests.
+        """
+        command = command.strip()
+        if not command or command.startswith("#"):
+            return ""
+
+        self.child.sendline(command)
+        accumulated = []
+        deadline = time.time() + self.timeout
+        suffix_seen_at = None
+        # After the suffix marker arrives, drain for another 250ms so trailing
+        # OSC sequences (e.g. OSC 133;D) that the server emits AFTER the
+        # delimiter still land in the buffer.
+        post_suffix_drain = 0.25
+        while time.time() < deadline:
+            try:
+                chunk = self.child.read_nonblocking(size=8192, timeout=0.1)
+                if chunk:
+                    accumulated.append(chunk)
+                    if self.suffix_marker and suffix_seen_at is None and self.suffix_marker in "".join(accumulated):
+                        suffix_seen_at = time.time()
+            except (pexpect.TIMEOUT, pexpect.EOF):
+                time.sleep(0.05)
+            if suffix_seen_at is not None and (time.time() - suffix_seen_at) >= post_suffix_drain:
+                break
+        return "".join(accumulated)
+
     def _extract_delimited_output(self, raw):
         """Extract output between PREFIX and SUFFIX markers."""
         stripped = strip_ansi(raw)
@@ -229,7 +262,9 @@ class MooSSH:
             # Check if first line looks like a command echo
             first = lines[0].strip()
             # Remove if it matches the start of recent commands or looks like echo
-            if any(first.startswith(cmd) for cmd in ["PREFIX", "SUFFIX", "QUIET", "look", "@", "help"]):
+            if any(
+                first.startswith(cmd) for cmd in ["PREFIX", "SUFFIX", "a11y", "@accessibility", "look", "@", "help"]
+            ):
                 lines = lines[1:]
 
         return "\n".join(lines).strip()

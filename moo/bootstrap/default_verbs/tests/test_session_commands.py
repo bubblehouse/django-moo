@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Tests for session-control verbs: PREFIX, SUFFIX, QUIET, OUTPUTPREFIX, OUTPUTSUFFIX.
+Tests for session-control verbs: PREFIX, SUFFIX, a11y, OUTPUTPREFIX, OUTPUTSUFFIX.
 
 These verbs set connection-level session settings via the Kombu message queue.
 The set/clear tests verify the verb prints the correct confirmation message.
@@ -139,43 +139,45 @@ def test_suffix_show_when_unset(t_init: Object, t_wizard: Object):
 
 
 # ---------------------------------------------------------------------------
-# QUIET
+# a11y quiet (replaces the standalone QUIET verb)
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_quiet_enable(t_init: Object, t_wizard: Object):
-    """QUIET enable prints confirmation that quiet mode was enabled."""
+    """a11y quiet on prints confirmation that quiet mode was turned on."""
     printed = []
     with pytest.warns(RuntimeWarning):
         with code.ContextManager(t_wizard, printed.append) as ctx:
-            parse.interpret(ctx, "QUIET enable")
-    assert any("enabled" in line.lower() for line in printed)
+            parse.interpret(ctx, "a11y quiet on")
+    assert any(line.strip().endswith("on") for line in printed)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_quiet_disable(t_init: Object, t_wizard: Object):
-    """QUIET disable prints confirmation that quiet mode was disabled."""
+    """a11y quiet off prints confirmation that quiet mode was turned off."""
     printed = []
     with pytest.warns(RuntimeWarning):
         with code.ContextManager(t_wizard, printed.append) as ctx:
-            parse.interpret(ctx, "QUIET disable")
-    assert any("disabled" in line.lower() for line in printed)
+            parse.interpret(ctx, "a11y quiet off")
+    assert any(line.strip().endswith("off") for line in printed)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_quiet_show_when_on(t_init: Object, t_wizard: Object):
-    """QUIET with no args shows quiet mode is on when enabled."""
+    """`a11y` (no args) shows quiet on when quiet_mode is set."""
     user_pk = t_wizard.owner.pk
     _set_registry(user_pk, "quiet_mode", True)
     try:
         printed = []
         with code.ContextManager(t_wizard, printed.append) as ctx:
-            parse.interpret(ctx, "QUIET")
-        assert any("enabled" in line.lower() or "on" in line.lower() for line in printed)
+            parse.interpret(ctx, "a11y")
+        quiet_lines = [line for line in printed if "quiet" in line.lower()]
+        assert quiet_lines, f"no quiet line in output: {printed!r}"
+        assert any(line.strip().endswith("on") for line in quiet_lines)
     finally:
         _clear_registry(user_pk, "quiet_mode")
 
@@ -183,14 +185,16 @@ def test_quiet_show_when_on(t_init: Object, t_wizard: Object):
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_quiet_show_when_off(t_init: Object, t_wizard: Object):
-    """QUIET with no args shows quiet mode is off when not set."""
+    """`a11y` (no args) shows quiet off when quiet_mode is unset."""
     user_pk = t_wizard.owner.pk
     _set_registry(user_pk, "quiet_mode", False)
     try:
         printed = []
         with code.ContextManager(t_wizard, printed.append) as ctx:
-            parse.interpret(ctx, "QUIET")
-        assert any("disabled" in line.lower() or "off" in line.lower() for line in printed)
+            parse.interpret(ctx, "a11y")
+        quiet_lines = [line for line in printed if "quiet" in line.lower()]
+        assert quiet_lines, f"no quiet line in output: {printed!r}"
+        assert any(line.strip().endswith("off") for line in quiet_lines)
     finally:
         _clear_registry(user_pk, "quiet_mode")
 

@@ -127,7 +127,7 @@ def test_ambiguous_object_error_caught_by_parse_command(t_init, t_wizard):
     create("coin", parents=[], location=loc)
     _add_verb(t_wizard, "grab", "pass", t_wizard)
 
-    result = tasks.parse_command(t_wizard.pk, "grab coin")
+    result, _ = tasks.parse_command(t_wizard.pk, "grab coin")
 
     assert any("[bold red]" in line for line in result)
     assert any("coin" in line for line in result)
@@ -152,7 +152,7 @@ def test_quota_error_caught_by_parse_command(t_init, t_wizard):
     t_wizard.set_property("ownership_quota", 0)
     _add_verb(t_wizard, "test-quota", 'from moo.sdk import create; create("quota test object")', t_wizard)
 
-    result = tasks.parse_command(t_wizard.pk, "test-quota")
+    result, _ = tasks.parse_command(t_wizard.pk, "test-quota")
 
     assert any("[bold red]" in line for line in result)
     assert any("quota" in line.lower() for line in result)
@@ -186,7 +186,7 @@ def test_no_such_preposition_error_caught_by_parse_command(t_init, t_wizard):
         t_wizard,
     )
 
-    result = tasks.parse_command(t_wizard.pk, "test-prep")
+    result, _ = tasks.parse_command(t_wizard.pk, "test-prep")
 
     assert any("[bold red]" in line for line in result)
     assert any("I don't understand you." in line for line in result)
@@ -311,7 +311,7 @@ def test_no_such_object_error_caught_by_parse_command(t_init, t_wizard):
         t_wizard,
         direct_object="any",
     )
-    result = tasks.parse_command(t_wizard.pk, "test-get-dobj ghost")
+    result, _ = tasks.parse_command(t_wizard.pk, "test-get-dobj ghost")
     assert any("[bold red]" in line for line in result)
     assert any("ghost" in line for line in result)
 
@@ -337,7 +337,7 @@ def test_no_such_verb_error_caught_by_parse_command(t_init, t_wizard):
     room.add_verb("accept", code="return True")
     t_wizard.location = room
     t_wizard.save()
-    result = tasks.parse_command(t_wizard.pk, "xyzzy-no-such-verb")
+    result, _ = tasks.parse_command(t_wizard.pk, "xyzzy-no-such-verb")
     assert any("[bold red]" in line for line in result)
 
 
@@ -366,5 +366,82 @@ def test_no_such_property_error_caught_by_parse_command(t_init, t_wizard):
         'this.get_property("nonexistent_xyz_prop_qwerty")',
         t_wizard,
     )
-    result = tasks.parse_command(t_wizard.pk, "test-get-prop")
+    result, _ = tasks.parse_command(t_wizard.pk, "test-get-prop")
     assert any("[bold red]" in line for line in result)
+
+
+# =============================================================================
+# Section 4 — exit_status return value and [ERROR] prefix gating
+# =============================================================================
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_parse_command_returns_exit_status_zero_on_success(t_init, t_wizard):
+    """A successful command sets exit_status=0."""
+    _add_verb(t_wizard, "test-ok", 'print("hello")', t_wizard)
+    _result, exit_status = tasks.parse_command(t_wizard.pk, "test-ok")
+    assert exit_status == 0
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_parse_command_returns_exit_status_one_on_user_error(t_init, t_wizard):
+    """UserError raises exit_status=1."""
+    _add_verb(
+        t_wizard,
+        "test-raise",
+        "from moo.core.exceptions import UserError\nraise UserError('boom')",
+        t_wizard,
+    )
+    _result, exit_status = tasks.parse_command(t_wizard.pk, "test-raise")
+    assert exit_status == 1
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_parse_command_returns_exit_status_one_on_no_such_verb(t_init, t_wizard):
+    """NoSuchVerbError sets exit_status=1."""
+    room = Object.objects.create(name="exit-status-room")
+    room.add_verb("accept", code="return True")
+    t_wizard.location = room
+    t_wizard.save()
+    _result, exit_status = tasks.parse_command(t_wizard.pk, "xyzzy-still-no-such-verb")
+    assert exit_status == 1
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_parse_command_omits_error_prefix_when_prefixes_off(t_init, t_wizard):
+    """Without prefixes_mode set, error output does not contain [ERROR] tag."""
+    from moo.shell.prompt import _session_settings
+
+    _add_verb(
+        t_wizard,
+        "test-raise2",
+        "from moo.core.exceptions import UserError\nraise UserError('boom')",
+        t_wizard,
+    )
+    user_pk = t_wizard.owner.pk
+    _session_settings.pop(user_pk, None)
+    try:
+        result, _exit = tasks.parse_command(t_wizard.pk, "test-raise2")
+    finally:
+        _session_settings.pop(user_pk, None)
+    assert not any("[ERROR]" in line for line in result)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_parse_command_includes_error_prefix_when_prefixes_on(t_init, t_wizard):
+    """With prefixes_mode=True, error output contains the [ERROR] tag."""
+    from moo.shell.prompt import _session_settings
+
+    _add_verb(
+        t_wizard,
+        "test-raise3",
+        "from moo.core.exceptions import UserError\nraise UserError('boom')",
+        t_wizard,
+    )
+    user_pk = t_wizard.owner.pk
+    _session_settings[user_pk] = {"prefixes_mode": True}
+    try:
+        result, _exit = tasks.parse_command(t_wizard.pk, "test-raise3")
+    finally:
+        _session_settings.pop(user_pk, None)
+    assert any("[ERROR]" in line for line in result)

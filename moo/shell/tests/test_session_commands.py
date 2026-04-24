@@ -14,7 +14,8 @@ import asyncio
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from moo.shell.prompt import MooPrompt, _session_settings
+from moo.shell.osc import OSC_133_OUTPUT_START, osc_133_command_end
+from moo.shell.prompt import MooPrompt, _RawAnsi, _session_settings
 from moo.shell.server import MooPromptToolkitSSHSession
 
 
@@ -38,18 +39,18 @@ def _make_handle_command_mocks():
     user, avatar = _make_prompt_user("Wizard")
     prompt = MooPrompt(user)
     parse_result = MagicMock()
-    parse_result.get.return_value = []
+    parse_result.get.return_value = ([], 0)
     parse_result.id = "test-task-id"
     return prompt, avatar, parse_result
 
 
-def _run_process_messages(prompt, messages):
+def _install_mock_session_buffer(prompt, messages):
     """
-    Run process_messages() against a list of message dicts, then stop.
+    Attach a MagicMock ``SimpleBuffer`` to ``prompt`` that yields ``messages``.
 
-    Each item in ``messages`` becomes ``content["message"]`` as seen by the
-    dispatch logic. After all messages are delivered, the helper sets
-    ``prompt.is_exiting = True`` so the loop exits cleanly.
+    Each item becomes ``content["message"]`` as seen by the dispatch logic;
+    once the iterator is exhausted, ``sb.Empty`` is raised to end the drain.
+    Returns the mock so tests can assert on it if needed.
     """
     MockEmpty = type("MockEmpty", (Exception,), {})
     msg_iter = iter(messages)
@@ -61,21 +62,41 @@ def _run_process_messages(prompt, messages):
             mock_msg.body = json.dumps({"message": body_dict, "caller_id": None})
             return mock_msg
         except StopIteration as exc:
-            prompt.is_exiting = True
             raise MockEmpty() from exc
 
     mock_sb = MagicMock()
     mock_sb.Empty = MockEmpty
     mock_sb.get_nowait.side_effect = get_nowait
+    prompt._session_buffer = mock_sb
+    return mock_sb
 
-    mock_conn = MagicMock()
-    mock_conn.__enter__ = MagicMock(return_value=mock_conn)
-    mock_conn.__exit__ = MagicMock(return_value=False)
+
+def _run_process_messages(prompt, messages):
+    """
+    Run process_messages() against a list of message dicts, then stop.
+
+    Each item in ``messages`` becomes ``content["message"]`` as seen by the
+    dispatch logic. After all messages are delivered, the helper sets
+    ``prompt.is_exiting = True`` so the loop exits cleanly.
+    """
+    _install_mock_session_buffer(prompt, messages)
+    prompt.startup_drain_complete.set()
+    prompt.prompt_app_ready.set()
+    prompt._chan = None  # avoid MagicMock.is_closing() short-circuit
+
+    # Stop the loop as soon as the last message is drained.
+    real_drain = prompt._drain_session_buffer
+
+    async def stopping_drain():
+        result = await real_drain()
+        if not result[0] and not result[1]:
+            prompt.is_exiting = True
+        return result
+
+    prompt._drain_session_buffer = stopping_drain
 
     with (
         patch("asyncio.sleep", new=AsyncMock()),
-        patch("moo.shell.prompt.app.default_connection", return_value=mock_conn),
-        patch("moo.shell.prompt.simple.SimpleBuffer", return_value=mock_sb),
         patch("moo.shell.prompt.moojson.loads", side_effect=json.loads),
     ):
         asyncio.run(prompt.process_messages())
@@ -88,31 +109,9 @@ def _run_drain_messages(prompt, messages):
     Each item in ``messages`` becomes ``content["message"]``.
     Returns the list of strings returned by _drain_messages().
     """
-    MockEmpty = type("MockEmpty", (Exception,), {})
-    msg_iter = iter(messages)
+    _install_mock_session_buffer(prompt, messages)
 
-    def get_nowait():
-        try:
-            body_dict = next(msg_iter)
-            mock_msg = MagicMock()
-            mock_msg.body = json.dumps({"message": body_dict, "caller_id": None})
-            return mock_msg
-        except StopIteration as exc:
-            raise MockEmpty() from exc
-
-    mock_sb = MagicMock()
-    mock_sb.Empty = MockEmpty
-    mock_sb.get_nowait.side_effect = get_nowait
-
-    mock_conn = MagicMock()
-    mock_conn.__enter__ = MagicMock(return_value=mock_conn)
-    mock_conn.__exit__ = MagicMock(return_value=False)
-
-    with (
-        patch("moo.shell.prompt.app.default_connection", return_value=mock_conn),
-        patch("moo.shell.prompt.simple.SimpleBuffer", return_value=mock_sb),
-        patch("moo.shell.prompt.moojson.loads", side_effect=json.loads),
-    ):
+    with patch("moo.shell.prompt.moojson.loads", side_effect=json.loads):
         return asyncio.run(prompt._drain_messages())
 
 
@@ -190,9 +189,13 @@ def test_session_setting_message_updates_registry():
 def test_handle_command_emits_global_prefix_and_suffix():
     """handle_command() wraps output with output_global_prefix and output_global_suffix."""
     prompt, _, parse_result = _make_handle_command_mocks()
-    parse_result.get.return_value = ["room output"]
+    parse_result.get.return_value = (["room output"], 0)
     user_pk = prompt.user.pk
-    _session_settings[user_pk] = {"output_global_prefix": ">>>", "output_global_suffix": "<<<"}
+    _session_settings[user_pk] = {
+        "output_global_prefix": ">>>",
+        "output_global_suffix": "<<<",
+        "osc133_mode": False,
+    }
 
     try:
         with (
@@ -214,13 +217,14 @@ def test_handle_command_emits_global_prefix_and_suffix():
 def test_handle_command_global_markers_are_outermost():
     """When PREFIX/SUFFIX and global markers are both set, global markers are outermost."""
     prompt, _, parse_result = _make_handle_command_mocks()
-    parse_result.get.return_value = ["room output"]
+    parse_result.get.return_value = (["room output"], 0)
     user_pk = prompt.user.pk
     _session_settings[user_pk] = {
         "output_global_prefix": "G_START",
         "output_global_suffix": "G_END",
         "output_prefix": "CMD_START",
         "output_suffix": "CMD_END",
+        "osc133_mode": False,
     }
 
     try:
@@ -251,20 +255,31 @@ def test_plain_message_wrapped_with_global_prefix_suffix():
     prompt = MooPrompt(user)
     _session_settings[77] = {"output_global_prefix": ">>>", "output_global_suffix": "<<<"}
 
-    written = []
+    printed = []
     try:
-        with patch("moo.shell.prompt.run_in_terminal", new=AsyncMock()) as mock_rit:
+        with (
+            patch("moo.shell.prompt.run_in_terminal", new=AsyncMock()) as mock_rit,
+            patch("moo.shell.prompt.print_formatted_text", side_effect=lambda content, **_: printed.append(content)),
+        ):
 
             async def capture_write(fn):
-                await fn()
+                result = fn()
+                if asyncio.iscoroutine(result):
+                    await result
 
             mock_rit.side_effect = capture_write
-            with patch.object(prompt, "writer", side_effect=written.append):
-                _run_process_messages(prompt, ["hello from another player"])
+            _run_process_messages(prompt, ["hello from another player"])
     finally:
         _session_settings.pop(77, None)
 
-    assert written == [">>>", "hello from another player", "<<<"]
+    # Rich mode concatenates prefix + message + suffix into a single rendered
+    # ANSI blob and emits it via one print_formatted_text call, so the per-
+    # piece call count is 1, not 3. Check the rendered content instead.
+    assert len(printed) == 1
+    rendered = printed[0].value if hasattr(printed[0], "value") else str(printed[0])
+    assert ">>>" in rendered
+    assert "hello from another player" in rendered
+    assert "<<<" in rendered
 
 
 # ---------------------------------------------------------------------------
@@ -339,25 +354,29 @@ def test_flush_command_calls_drain_messages():
     assert not handle_called
 
 
-def test_startup_does_not_open_second_message_buffer():
+def test_startup_opens_session_buffer_before_firing_confunc():
     """
-    Regression: process_commands() must not call _drain_messages during session
-    startup. A prior implementation drained once before the prompt loop started,
-    which opened a second Kombu SimpleBuffer on the same queue that raced with
-    the persistent consumer in process_messages. The two consumers split
-    incoming messages round-robin — every other page to the session was
-    silently discarded into the short-lived buffer.
+    Regression: ``_repl_setup`` must open the player's Kombu consumer BEFORE
+    dispatching confunc tasks, otherwise the room's ``tell()`` messages are
+    published to the exchange while no queue exists (queues bind with
+    ``auto_delete=True``) and get silently dropped. Connect-time ``look_self``
+    output would intermittently vanish until the user issued a command that
+    happened to land AFTER ``process_messages`` finally opened the consumer.
     """
     user, _ = _make_prompt_user("Wizard")
     prompt = MooPrompt(user)
 
-    drain_calls = []
+    order = []
 
-    async def fake_drain():
-        drain_calls.append(True)
+    async def fake_open():
+        order.append("open")
+
+    async def fake_fire():
+        order.append("fire")
         return []
 
-    prompt._drain_messages = fake_drain
+    async def fake_drain():
+        return [], []
 
     async def fake_prompt(*args, **kwargs):  # pylint: disable=unused-argument
         raise EOFError()
@@ -365,8 +384,11 @@ def test_startup_does_not_open_second_message_buffer():
     with (
         patch("moo.shell.prompt.PromptSession") as mock_ps,
         patch.object(prompt, "_mark_connected", new=AsyncMock()),
-        patch.object(prompt, "_fire_confunc", new=AsyncMock(return_value=[])),
+        patch.object(prompt, "_open_session_buffer", new=fake_open),
+        patch.object(prompt, "_close_session_buffer", new=AsyncMock()),
+        patch.object(prompt, "_fire_confunc", new=fake_fire),
         patch.object(prompt, "_await_tasks", new=AsyncMock()),
+        patch.object(prompt, "_drain_session_buffer", new=fake_drain),
         patch.object(prompt, "_fire_disfunc", new=AsyncMock()),
         patch.object(prompt, "generate_prompt", new=AsyncMock(return_value=[("", "$ ")])),
     ):
@@ -375,4 +397,162 @@ def test_startup_does_not_open_second_message_buffer():
         mock_ps.return_value = mock_session
         asyncio.run(prompt.process_commands())
 
-    assert not drain_calls, "startup must not open a second SimpleBuffer via _drain_messages"
+    assert order == ["open", "fire"], f"expected open before fire, got {order}"
+
+
+# ---------------------------------------------------------------------------
+# OSC 133 / accessibility prefix wrapping
+# ---------------------------------------------------------------------------
+
+
+def _run_handle_command(prompt, parse_result, line="look"):
+    with (
+        patch("moo.shell.prompt.tasks.parse_command") as mock_task,
+        patch("moo.shell.prompt.code.ContextManager") as mock_ctx,
+    ):
+        mock_task.delay.return_value = parse_result
+        mock_ctx.return_value.__enter__ = MagicMock(return_value=None)
+        mock_ctx.return_value.__exit__ = MagicMock(return_value=False)
+        return asyncio.run(prompt.handle_command(line))
+
+
+def test_handle_command_wraps_with_osc133_by_default():
+    """handle_command() prepends OSC 133;C and appends ;D;0 when osc133 is on (default)."""
+    prompt, _, parse_result = _make_handle_command_mocks()
+    parse_result.get.return_value = (["room output"], 0)
+    user_pk = prompt.user.pk
+    _session_settings.pop(user_pk, None)
+    try:
+        result, _events = _run_handle_command(prompt, parse_result)
+    finally:
+        _session_settings.pop(user_pk, None)
+
+    assert isinstance(result[0], _RawAnsi)
+    assert result[0] == OSC_133_OUTPUT_START
+    assert isinstance(result[-1], _RawAnsi)
+    assert result[-1] == osc_133_command_end(0)
+
+
+def test_handle_command_wraps_with_exit_status_one_on_error():
+    """handle_command() emits OSC 133;D;1 when parse_command reports exit_status=1."""
+    prompt, _, parse_result = _make_handle_command_mocks()
+    parse_result.get.return_value = (["[bold red]oops[/bold red]"], 1)
+    user_pk = prompt.user.pk
+    _session_settings.pop(user_pk, None)
+    try:
+        result, _events = _run_handle_command(prompt, parse_result)
+    finally:
+        _session_settings.pop(user_pk, None)
+
+    assert result[-1] == osc_133_command_end(1)
+
+
+def test_handle_command_skips_osc133_when_disabled():
+    """handle_command() omits OSC 133 wrappers when osc133_mode is False."""
+    prompt, _, parse_result = _make_handle_command_mocks()
+    parse_result.get.return_value = (["room output"], 0)
+    user_pk = prompt.user.pk
+    _session_settings[user_pk] = {"osc133_mode": False}
+    try:
+        result, _events = _run_handle_command(prompt, parse_result)
+    finally:
+        _session_settings.pop(user_pk, None)
+
+    assert not any(isinstance(p, _RawAnsi) for p in result)
+    assert "room output" in result
+
+
+def test_editor_rejection_includes_error_prefix_when_prefixes_on():
+    """_editor_rejection_pieces wraps the message with [ERROR] when prefixes_mode is True."""
+    user, _ = _make_prompt_user("Wizard")
+    prompt = MooPrompt(user)
+    user_pk = prompt.user.pk
+    _session_settings[user_pk] = {"prefixes_mode": True}
+    try:
+        pieces = prompt._editor_rejection_pieces()
+    finally:
+        _session_settings.pop(user_pk, None)
+
+    assert any("[ERROR]" in p for p in pieces)
+
+
+def test_editor_rejection_omits_error_prefix_when_prefixes_off():
+    """_editor_rejection_pieces does NOT add [ERROR] when prefixes_mode is False (default)."""
+    user, _ = _make_prompt_user("Wizard")
+    prompt = MooPrompt(user)
+    user_pk = prompt.user.pk
+    _session_settings.pop(user_pk, None)
+    try:
+        pieces = prompt._editor_rejection_pieces()
+    finally:
+        _session_settings.pop(user_pk, None)
+
+    assert not any("[ERROR]" in p for p in pieces)
+
+
+def test_osc133_default_on():
+    """The osc133 accessor defaults to True when no setting is recorded."""
+    user, _ = _make_prompt_user("Wizard")
+    prompt = MooPrompt(user)
+    user_pk = prompt.user.pk
+    _session_settings.pop(user_pk, None)
+    try:
+        assert prompt._osc133_enabled() is True
+    finally:
+        _session_settings.pop(user_pk, None)
+
+
+def test_osc133_disabled_when_set_false():
+    """The osc133 accessor honours an explicit False setting."""
+    user, _ = _make_prompt_user("Wizard")
+    prompt = MooPrompt(user)
+    user_pk = prompt.user.pk
+    _session_settings[user_pk] = {"osc133_mode": False}
+    try:
+        assert prompt._osc133_enabled() is False
+    finally:
+        _session_settings.pop(user_pk, None)
+
+
+def test_writer_emits_raw_ansi_to_chan_in_raw_mode():
+    """writer() with a _RawAnsi argument writes the raw bytes to the channel without LF translation."""
+    user, _ = _make_prompt_user("Wizard")
+    prompt = MooPrompt(user, mode="raw")
+    written = []
+    prompt._chan = MagicMock()
+    prompt._chan.write = written.append
+    user_pk = prompt.user.pk
+    _session_settings.setdefault(user_pk, {})["mode"] = "raw"
+    try:
+        prompt.writer(_RawAnsi(OSC_133_OUTPUT_START))
+    finally:
+        _session_settings.pop(user_pk, None)
+
+    assert written == [OSC_133_OUTPUT_START]
+
+
+def test_repl_setup_signals_startup_drain_complete():
+    """_repl_setup must open the session buffer, fire confunc, and signal
+    process_messages that startup has finished.
+
+    The drain is deliberately deferred to ``process_messages`` so it runs
+    via ``run_in_terminal`` after the prompt Application is live —
+    draining directly to the SSH channel from ``_repl_setup`` would be
+    wiped by the Application's initial erase-in-display.
+    """
+    user, _ = _make_prompt_user("Wizard")
+    prompt = MooPrompt(user)
+
+    with (
+        patch.object(prompt, "_mark_connected", new=AsyncMock()),
+        patch.object(prompt, "_open_session_buffer", new=AsyncMock()) as mock_open,
+        patch.object(prompt, "_fire_confunc", new=AsyncMock(return_value=[])) as mock_fire,
+        patch.object(prompt, "_await_tasks", new=AsyncMock()) as mock_await,
+        patch("django.core.cache.cache.set"),
+    ):
+        asyncio.run(prompt._repl_setup())
+
+    mock_open.assert_awaited_once()
+    mock_fire.assert_awaited_once()
+    mock_await.assert_awaited_once()
+    assert prompt.startup_drain_complete.is_set()

@@ -21,42 +21,50 @@ background_log = logging.getLogger(f"{__name__}.background")
 
 
 @shared_task(bind=True)
-def parse_command(self, caller_id: int, line: str) -> list[Any]:
+def parse_command(self, caller_id: int, line: str) -> tuple[list[Any], int]:
     """
     Parse a command-line and invoke the requested verb.
 
     :param caller_id: the PK of the caller of this command
     :param line: the natural-language command to parse and execute
-    :return: a list of output lines
+    :return: ``(output, exit_status)`` — list of output lines and ``0`` on
+        success, ``1`` if any caught exception fired.
     :raises UserError: if a verb failure happens
     """
     from django.core.cache import cache
 
+    from moo.sdk import get_session_setting
+
     output: list[Any] = []
+    exit_status = 0
     task_id = self.request.id
     caller = Object.objects.get(pk=caller_id)
     with code.ContextManager(caller, output.append, task_id=task_id, track_events=True) as ctx:
+        prefix = "[ERROR] " if get_session_setting("prefixes_mode", False) else ""
         with transaction.atomic():
             try:
                 log.info(f"{caller}: {line}")
                 parse.interpret(ctx, line)
             except exceptions.UserError as e:
                 log.error(f"{caller}: {e}")
-                output.append(f"[bold red]{e}[/bold red]")
+                exit_status = 1
+                output.append(f"[bold red]{prefix}{e}[/bold red]")
             except PermissionError as e:
                 log.error(f"{caller}: PermissionError: {e}")
-                output.append(f"[bold red]PermissionError: {e}[/bold red]")
+                exit_status = 1
+                output.append(f"[bold red]{prefix}PermissionError: {e}[/bold red]")
             except Exception as e:  # pylint: disable=broad-exception-caught
                 log.exception(f"Error executing command for {caller}: {e}")
-                output.append("[bold red]An error occurred while executing the command.[/bold red]")
+                exit_status = 1
+                output.append(f"[bold red]{prefix}An error occurred while executing the command.[/bold red]")
                 if caller.is_wizard():
                     import traceback
 
-                    output.append(f"[bold red]{traceback.format_exc()}[/bold red]")
+                    output.append(f"[bold red]{prefix}{traceback.format_exc()}[/bold red]")
         events = code.ContextManager.get("published_events") or []
     if task_id:
         cache.set(f"moo:task_events:{task_id}", list(events), timeout=60)
-    return output
+    return output, exit_status
 
 
 @shared_task(bind=True)
@@ -118,24 +126,27 @@ def invoke_verb(
             writer = _player_writer
         else:
             writer = background_log.info
+        from moo.sdk import get_session_setting
+
         with code.ContextManager(caller, writer, task_id=task_id, player=player):
+            prefix = "[ERROR] " if get_session_setting("prefixes_mode", False) else ""
             try:
                 result = verb_obj(*args, _bypass_execute_check=True, **kwargs)
             except exceptions.UserError as e:
                 log.error(f"{caller}: {e}")
-                writer(f"[bold red]{e}[/bold red]")
+                writer(f"[bold red]{prefix}{e}[/bold red]")
                 return
             except PermissionError as e:
                 log.error(f"{caller}: PermissionError: {e}")
-                writer(f"[bold red]PermissionError: {e}[/bold red]")
+                writer(f"[bold red]{prefix}PermissionError: {e}[/bold red]")
                 return
             except Exception as e:  # pylint: disable=broad-exception-caught
                 log.exception(f"Error executing verb {verb_name} for {caller}: {e}")
-                writer("[bold red]An error occurred while executing the verb.[/bold red]")
+                writer(f"[bold red]{prefix}An error occurred while executing the verb.[/bold red]")
                 if caller.is_wizard():
                     import traceback  # pylint: disable=import-outside-toplevel
 
-                    writer(f"[bold red]{traceback.format_exc()}[/bold red]")
+                    writer(f"[bold red]{prefix}{traceback.format_exc()}[/bold red]")
                 return
             if callback_verb_name and callback_this_id:
                 invoke_verb.delay(result, caller_id=caller_id, this_id=callback_this_id, verb_name=callback_verb_name)

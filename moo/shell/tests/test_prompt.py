@@ -273,7 +273,7 @@ def _make_handle_command_mocks():
     user, avatar = _make_prompt_user("Wizard")
     prompt = MooPrompt(user)
     parse_result = MagicMock()
-    parse_result.get.return_value = []
+    parse_result.get.return_value = ([], 0)
     parse_result.id = "test-task-id"
     return prompt, avatar, parse_result
 
@@ -339,8 +339,8 @@ def _run_process_messages(prompt, messages):
     Run process_messages() against a list of message dicts, then stop.
 
     Each item in ``messages`` becomes ``content["message"]`` as seen by the
-    dispatch logic. After all messages are delivered, the helper sets
-    ``prompt.is_exiting = True`` so the loop exits cleanly.
+    dispatch logic. After all messages are delivered, ``is_exiting`` is set
+    so the loop terminates.
     """
     MockEmpty = type("MockEmpty", (Exception,), {})
     msg_iter = iter(messages)
@@ -358,15 +358,15 @@ def _run_process_messages(prompt, messages):
     mock_sb = MagicMock()
     mock_sb.Empty = MockEmpty
     mock_sb.get_nowait.side_effect = get_nowait
-
-    mock_conn = MagicMock()
-    mock_conn.__enter__ = MagicMock(return_value=mock_conn)
-    mock_conn.__exit__ = MagicMock(return_value=False)
+    prompt._session_buffer = mock_sb
+    prompt.startup_drain_complete.set()
+    prompt.prompt_app_ready.set()
+    # The real _chan is a live SSH channel; MagicMock's auto-generated
+    # is_closing() returns truthy and would short-circuit the loop.
+    prompt._chan = None
 
     with (
         patch("asyncio.sleep", new=AsyncMock()),
-        patch("moo.shell.prompt.app.connection_for_read", return_value=mock_conn),
-        patch("moo.shell.prompt.simple.SimpleBuffer", return_value=mock_sb),
         patch("moo.shell.prompt.moojson.loads", side_effect=json.loads),
     ):
         asyncio.run(prompt.process_messages())

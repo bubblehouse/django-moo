@@ -55,14 +55,15 @@ class MooPromptToolkitSSHSession(PromptToolkitSSHSession):
         """Check terminal type and set mode / CPR before starting interaction."""
         if self._chan:
             term = self._chan.get_terminal_type()
-            print(f"[MOO-DEBUG] Terminal type: {term!r}, enable_cpr={self.enable_cpr}", file=sys.stderr, flush=True)  # type: ignore[has-type]
             if term and "moo-automation" in term.lower():
-                print("[MOO-DEBUG] Disabling CPR for automation", file=sys.stderr, flush=True)
+                # Automation clients drive the session deterministically and
+                # cannot supply CPR responses — leaving CPR enabled here
+                # makes prompt_toolkit stall waiting for a reply that never
+                # comes.
                 self.enable_cpr = False  # type: ignore[attr-defined]
                 self.is_automation = True
                 self.mode = "rich"
             elif term and term.strip().lower() == "xterm-256-basic":
-                print("[MOO-DEBUG] Selecting raw mode for MUD client", file=sys.stderr, flush=True)
                 self.mode = "raw"
         super().session_started()
 
