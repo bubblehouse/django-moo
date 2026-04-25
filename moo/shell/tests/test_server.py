@@ -367,3 +367,188 @@ def test_data_received_full_mtts_negotiation_flow():
         assert mirrored.get("mtts") == mtts
     finally:
         _session_settings.pop(user.pk, None)
+
+
+# ---------------------------------------------------------------------------
+# GMCP Editor handoff — Core.Supports tracking, Editor.Save/Cancel dispatch
+# ---------------------------------------------------------------------------
+
+
+def _make_gmcp_session(user_pk: int = 8801) -> MooPromptToolkitSSHSession:
+    """Build a bare session with a mock user.pk for GMCP routing tests."""
+    session = MooPromptToolkitSSHSession.__new__(MooPromptToolkitSSHSession)
+    session.user = MagicMock()
+    session.user.pk = user_pk
+    session._chan = MagicMock()
+    return session
+
+
+def test_record_gmcp_supports_set_replaces_packages():
+    """Core.Supports.Set wipes any existing gmcp_packages and installs the new list."""
+    from moo.shell.prompt import _session_settings
+
+    user_pk = 8801
+    session = _make_gmcp_session(user_pk)
+    _session_settings.setdefault(user_pk, {}).setdefault("iac", {})["gmcp_packages"] = {"Stale": 1}
+    try:
+        session._record_gmcp_supports("Core.Supports.Set", ["Editor 1", "Char 1"])
+        pkgs = _session_settings[user_pk]["iac"]["gmcp_packages"]
+        assert pkgs == {"Editor": 1, "Char": 1}
+        assert "Stale" not in pkgs
+    finally:
+        _session_settings.pop(user_pk, None)
+
+
+def test_record_gmcp_supports_add_merges():
+    """Core.Supports.Add merges into existing gmcp_packages without clearing."""
+    from moo.shell.prompt import _session_settings
+
+    user_pk = 8802
+    session = _make_gmcp_session(user_pk)
+    _session_settings.setdefault(user_pk, {}).setdefault("iac", {})["gmcp_packages"] = {"Char": 1}
+    try:
+        session._record_gmcp_supports("Core.Supports.Add", ["Editor 1"])
+        pkgs = _session_settings[user_pk]["iac"]["gmcp_packages"]
+        assert pkgs == {"Char": 1, "Editor": 1}
+    finally:
+        _session_settings.pop(user_pk, None)
+
+
+def test_record_gmcp_supports_remove_drops_packages():
+    """Core.Supports.Remove pops named packages; version field on remove is optional."""
+    from moo.shell.prompt import _session_settings
+
+    user_pk = 8803
+    session = _make_gmcp_session(user_pk)
+    _session_settings.setdefault(user_pk, {}).setdefault("iac", {})["gmcp_packages"] = {
+        "Char": 1,
+        "Editor": 1,
+        "Room": 1,
+    }
+    try:
+        session._record_gmcp_supports("Core.Supports.Remove", ["Editor", "Room 1"])
+        pkgs = _session_settings[user_pk]["iac"]["gmcp_packages"]
+        assert pkgs == {"Char": 1}
+    finally:
+        _session_settings.pop(user_pk, None)
+
+
+def test_record_gmcp_supports_ignores_non_list_payload():
+    """A malformed payload (not a list) is ignored without raising."""
+    from moo.shell.prompt import _session_settings
+
+    user_pk = 8804
+    session = _make_gmcp_session(user_pk)
+    try:
+        session._record_gmcp_supports("Core.Supports.Set", "not-a-list")  # type: ignore[arg-type]
+        assert "iac" not in _session_settings.get(user_pk, {})
+    finally:
+        _session_settings.pop(user_pk, None)
+
+
+def test_dispatch_editor_save_invokes_callback():
+    """Editor.Save with a known edit_id schedules invoke_verb.delay with the saved metadata."""
+    from moo.shell.prompt import _session_settings
+
+    user_pk = 8810
+    edit_id = "abc123"
+    _session_settings.setdefault(user_pk, {})["pending_edits"] = {
+        edit_id: {
+            "callback_this_id": 42,
+            "callback_verb_name": "edit_callback",
+            "caller_id": 1234,
+            "player_id": 1234,
+            "args": [99, "verb"],
+        },
+    }
+    session = _make_gmcp_session(user_pk)
+    fake_caller = MagicMock()
+    fake_caller.is_wizard.return_value = True
+    try:
+        with (
+            patch("moo.core.tasks.invoke_verb.delay") as mock_delay,
+            patch("moo.core.models.Object.objects.get", return_value=fake_caller),
+        ):
+            session._dispatch_editor_save({"id": edit_id, "content": "edited"})
+        mock_delay.assert_called_once()
+        call = mock_delay.call_args
+        assert call.args[0] == "edited"
+        assert call.args[1:] == (99, "verb")
+        assert call.kwargs["this_id"] == 42
+        assert call.kwargs["verb_name"] == "edit_callback"
+        assert edit_id not in _session_settings[user_pk]["pending_edits"]
+    finally:
+        _session_settings.pop(user_pk, None)
+
+
+def test_dispatch_editor_save_rejects_non_wizard_caller():
+    """Editor.Save bound to a non-wizard caller is dropped without dispatching."""
+    from moo.shell.prompt import _session_settings
+
+    user_pk = 8811
+    edit_id = "deadbeef"
+    _session_settings.setdefault(user_pk, {})["pending_edits"] = {
+        edit_id: {
+            "callback_this_id": 1,
+            "callback_verb_name": "edit_callback",
+            "caller_id": 5678,
+            "player_id": 5678,
+            "args": [],
+        },
+    }
+    session = _make_gmcp_session(user_pk)
+    fake_caller = MagicMock()
+    fake_caller.is_wizard.return_value = False
+    try:
+        with (
+            patch("moo.core.tasks.invoke_verb.delay") as mock_delay,
+            patch("moo.core.models.Object.objects.get", return_value=fake_caller),
+        ):
+            session._dispatch_editor_save({"id": edit_id, "content": "anything"})
+        mock_delay.assert_not_called()
+    finally:
+        _session_settings.pop(user_pk, None)
+
+
+def test_dispatch_editor_save_unknown_id_is_noop():
+    """An Editor.Save with an unknown edit_id logs and returns without crashing."""
+    from moo.shell.prompt import _session_settings
+
+    user_pk = 8812
+    _session_settings.setdefault(user_pk, {})["pending_edits"] = {}
+    session = _make_gmcp_session(user_pk)
+    try:
+        with patch("moo.core.tasks.invoke_verb.delay") as mock_delay:
+            session._dispatch_editor_save({"id": "nope", "content": "x"})
+        mock_delay.assert_not_called()
+    finally:
+        _session_settings.pop(user_pk, None)
+
+
+def test_dispatch_editor_cancel_pops_pending():
+    """Editor.Cancel removes the pending edit without invoking the callback."""
+    from moo.shell.prompt import _session_settings
+
+    user_pk = 8813
+    edit_id = "cafebabe"
+    _session_settings.setdefault(user_pk, {})["pending_edits"] = {edit_id: {"args": []}}
+    session = _make_gmcp_session(user_pk)
+    try:
+        session._dispatch_editor_cancel({"id": edit_id})
+        assert edit_id not in _session_settings[user_pk]["pending_edits"]
+    finally:
+        _session_settings.pop(user_pk, None)
+
+
+def test_on_gmcp_dispatches_core_supports():
+    """The _on_gmcp top-level dispatcher routes Core.Supports.Set to the recorder."""
+    from moo.shell.prompt import _session_settings
+
+    user_pk = 8814
+    session = _make_gmcp_session(user_pk)
+    try:
+        session._on_gmcp("Core.Supports.Set", ["Editor 1"])
+        pkgs = _session_settings.get(user_pk, {}).get("iac", {}).get("gmcp_packages", {})
+        assert pkgs == {"Editor": 1}
+    finally:
+        _session_settings.pop(user_pk, None)

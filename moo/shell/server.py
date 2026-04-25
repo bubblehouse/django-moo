@@ -186,7 +186,14 @@ class MooPromptToolkitSSHSession(PromptToolkitSSHSession):
     # --- IAC callbacks ------------------------------------------------------
 
     def _mirror_capabilities(self) -> None:
-        """Copy negotiated IAC capabilities into the per-user session settings and cache."""
+        """Copy negotiated IAC capabilities into the per-user session settings and cache.
+
+        Preserves ``gmcp_packages`` if it was set previously by
+        ``_record_gmcp_supports`` -- the negotiator only knows about
+        IAC-level flags (gmcp, ttype, mtts, client_name, ...), so
+        replacing the whole ``iac`` dict on every capability flip would
+        wipe the GMCP package map that arrived via ``Core.Supports.Set``.
+        """
         if self.user is None:
             return
         from django.core.cache import cache  # pylint: disable=import-outside-toplevel
@@ -194,6 +201,9 @@ class MooPromptToolkitSSHSession(PromptToolkitSSHSession):
         from .prompt import _session_settings  # pylint: disable=import-outside-toplevel
 
         caps = dict(self.iac_negotiator.capabilities)
+        existing = _session_settings.get(self.user.pk, {}).get("iac")
+        if isinstance(existing, dict) and "gmcp_packages" in existing:
+            caps["gmcp_packages"] = existing["gmcp_packages"]
         _session_settings.setdefault(self.user.pk, {})["iac"] = caps
         # Mirror to cache so Celery workers (separate process) can see it.
         cache.set(f"moo:session:{self.user.pk}:iac", caps, timeout=86400)
@@ -206,8 +216,120 @@ class MooPromptToolkitSSHSession(PromptToolkitSSHSession):
             log.info("MTTS detected MUD client user=%s name=%s mtts=%d", self.user, client_name, mtts)
 
     def _on_gmcp(self, module: str, data: object) -> None:
-        # Inbound GMCP from the client — log for now; verb dispatch is future work.
+        """
+        Dispatch inbound GMCP packages.
+
+        Currently recognised:
+
+        - ``Core.Supports.Set`` / ``Core.Supports.Add`` / ``Core.Supports.Remove``:
+          track the client's supported GMCP packages so server-side code
+          (e.g. ``can_open_editor``) can decide whether to use rich features
+          like the GMCP-based editor handoff.
+        - ``Editor.Save``: a previously-issued ``Editor.Start`` has completed
+          on the client side; invoke the stored callback verb with the new
+          content via Celery (same dispatch path as the prompt-toolkit editor).
+        - ``Editor.Cancel``: discard the pending edit without invoking the
+          callback.
+
+        Anything else is logged at debug level.
+        """
         log.debug("GMCP recv user=%s module=%s data=%r", self.user, module, data)
+        if module in ("Core.Supports.Set", "Core.Supports.Add", "Core.Supports.Remove"):
+            self._record_gmcp_supports(module, data)
+        elif module == "Editor.Save":
+            self._dispatch_editor_save(data)
+        elif module == "Editor.Cancel":
+            self._dispatch_editor_cancel(data)
+
+    def _record_gmcp_supports(self, module: str, data: object) -> None:
+        """
+        Apply a ``Core.Supports.{Set,Add,Remove}`` payload to the per-session
+        GMCP package map. Each entry in ``data`` is a string of the form
+        ``"<package> <version>"`` (Remove may omit the version).
+        """
+        if not isinstance(data, list) or self.user is None:
+            return
+        from django.core.cache import cache  # pylint: disable=import-outside-toplevel
+
+        from .prompt import _session_settings  # pylint: disable=import-outside-toplevel
+
+        settings = _session_settings.setdefault(self.user.pk, {})
+        iac = settings.setdefault("iac", {})
+        pkgs = iac.setdefault("gmcp_packages", {})
+        if module == "Core.Supports.Set":
+            pkgs.clear()
+        if module in ("Core.Supports.Set", "Core.Supports.Add"):
+            for entry in data:
+                if not isinstance(entry, str):
+                    continue
+                parts = entry.split(None, 1)
+                if not parts:
+                    continue
+                name = parts[0]
+                try:
+                    version = int(parts[1]) if len(parts) > 1 else 1
+                except ValueError:
+                    version = 1
+                pkgs[name] = version
+        elif module == "Core.Supports.Remove":
+            for entry in data:
+                if isinstance(entry, str) and entry:
+                    pkgs.pop(entry.split(None, 1)[0], None)
+        cache.set(f"moo:session:{self.user.pk}:iac", iac, timeout=86400)
+        log.info("GMCP %s user=%s pkgs=%r", module, self.user, pkgs)
+
+    def _dispatch_editor_save(self, data: object) -> None:
+        """
+        Invoke the callback verb stored when ``Editor.Start`` was sent.
+        ``data`` is expected to be ``{"id": "<edit_id>", "content": "..."}``.
+        """
+        if not isinstance(data, dict) or self.user is None:
+            return
+        edit_id = data.get("id")
+        content = data.get("content")
+        if not edit_id or not isinstance(content, str):
+            log.warning("Editor.Save user=%s missing id or content: %r", self.user, data)
+            return
+
+        from moo.core import models, tasks  # pylint: disable=import-outside-toplevel
+
+        from .prompt import _session_settings  # pylint: disable=import-outside-toplevel
+
+        pending = _session_settings.get(self.user.pk, {}).get("pending_edits", {})
+        req = pending.pop(edit_id, None)
+        if req is None:
+            log.warning("Editor.Save user=%s unknown edit_id=%s", self.user, edit_id)
+            return
+        try:
+            caller = models.Object.objects.get(pk=req["caller_id"])
+        except models.Object.DoesNotExist:
+            log.warning("Editor.Save user=%s caller_id=%s not found", self.user, req["caller_id"])
+            return
+        if not caller.is_wizard():
+            log.warning(
+                "Editor.Save user=%s rejected callback with non-wizard caller_id=%s", self.user, req["caller_id"]
+            )
+            return
+        tasks.invoke_verb.delay(
+            content,
+            *req.get("args", []),
+            caller_id=req["caller_id"],
+            player_id=req["player_id"],
+            this_id=req["callback_this_id"],
+            verb_name=req["callback_verb_name"],
+        )
+
+    def _dispatch_editor_cancel(self, data: object) -> None:
+        """Drop the pending edit without invoking the callback."""
+        if not isinstance(data, dict) or self.user is None:
+            return
+        edit_id = data.get("id")
+        if not edit_id:
+            return
+        from .prompt import _session_settings  # pylint: disable=import-outside-toplevel
+
+        pending = _session_settings.get(self.user.pk, {}).get("pending_edits", {})
+        pending.pop(edit_id, None)
 
     def _on_mssp_request(self) -> dict:
         from django.conf import settings as django_settings  # pylint: disable=import-outside-toplevel

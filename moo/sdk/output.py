@@ -214,9 +214,55 @@ def get_client_mode() -> str:
     based I/O for traditional MUD clients that cannot handle cursor control).
 
     Verbs use this to short-circuit editor-opening code paths in raw mode and
-    suggest the inline ``@edit ... with "..."`` form instead.
+    suggest the inline ``@edit ... with "..."`` form instead. Most verbs
+    should call :func:`can_open_editor` instead, which also returns ``True``
+    for raw-mode clients that advertise GMCP Editor support (e.g. the
+    djangomoo Mudlet bridge).
     """
     return get_session_setting("mode", "rich")
+
+
+def can_open_editor() -> bool:
+    """
+    True if the current player's client can display an editor.
+
+    Either the player is in ``rich`` mode (prompt_toolkit TUI), or their
+    client advertises support for the GMCP ``Editor`` package via
+    ``Core.Supports.Set`` (the djangomoo Mudlet bridge does this; the
+    server hands the edit off to the client's preferred local editor over
+    GMCP). Verbs that open the editor should gate on this rather than
+    ``get_client_mode() == "raw"`` so bridge-equipped MUD clients are not
+    forced onto the inline ``with "..."`` fallback.
+    """
+    if get_client_mode() == "rich":
+        return True
+    return _client_supports_gmcp_package(context.player, "Editor")
+
+
+def _client_supports_gmcp_package(obj, package: str) -> bool:
+    """
+    True when the player avatar ``obj``'s SSH session has advertised
+    support for the named GMCP package via ``Core.Supports.Set`` /
+    ``Core.Supports.Add``. Reads the same in-process / Django-cache
+    fallback chain as :func:`_client_supports`.
+    """
+    from django.core.cache import cache  # pylint: disable=import-outside-toplevel
+
+    from ..core.models.auth import Player  # pylint: disable=import-outside-toplevel
+    from ..shell import prompt as prompt_module  # pylint: disable=import-outside-toplevel
+
+    if obj is None:
+        return False
+    player = Player.objects.filter(avatar=obj).select_related("user").first()
+    if player is None or player.user is None:
+        return False
+    user_pk = player.user.pk
+    settings = prompt_module._session_settings.get(user_pk, {})  # pylint: disable=protected-access
+    iac = settings.get("iac")
+    if not iac:
+        iac = cache.get(f"moo:session:{user_pk}:iac") or {}
+    pkgs = iac.get("gmcp_packages") or {}
+    return package in pkgs
 
 
 def send_oob(obj, data: bytes):

@@ -44,7 +44,6 @@ _session_settings: dict[int, dict] = {}
 MODE_RICH = "rich"
 MODE_RAW = "raw"
 
-EMPTY_LINE_PROMPT = "What do you want to do next?"
 
 PROMPT_SHORTCUTS = {
     '"': 'say "%"',
@@ -393,11 +392,10 @@ class MooPrompt:
                         self.is_exiting = True
                         break
                     if not line.strip():
-
-                        def _write_empty_prompt(msg=EMPTY_LINE_PROMPT):
-                            self.writer(msg)
-
-                        await self._run_in_terminal_marked(_write_empty_prompt)
+                        # Silently swallow empty lines. Some MUD clients
+                        # (Mudlet without "Strict UNIX line endings", etc.)
+                        # send a stray LF after each CR-LF terminated command;
+                        # we don't want those to redraw a "what now?" prompt.
                         continue
                     if line.strip() == ".flush":
                         drain_pieces = await self._drain_messages()
@@ -490,7 +488,7 @@ class MooPrompt:
                         self.is_exiting = True
                         break
                     if not line.strip():
-                        self.writer(EMPTY_LINE_PROMPT)
+                        # See note above: empty lines from CR-LF clients are dropped.
                         continue
                     if line.strip() == ".flush":
                         drain_pieces = await self._drain_messages()
@@ -987,6 +985,53 @@ class MooPrompt:
             await self._route_event(message)
         return to_write
 
+    def _try_gmcp_editor_handoff(self, message: dict) -> bool:
+        """
+        Hand the editor request off to the client via GMCP if it has
+        advertised the ``Editor`` package via ``Core.Supports.Set``.
+
+        On success, sends ``Editor.Start { id, content, content_type, title }``
+        on the wire and stashes the callback metadata in
+        ``_session_settings[user_pk]["pending_edits"][id]`` so the matching
+        ``Editor.Save`` (handled in ``server.py``) can dispatch the callback
+        verb. Returns ``True`` if the handoff happened (caller should NOT
+        also enqueue the prompt-toolkit fallback).
+        """
+        import uuid  # pylint: disable=import-outside-toplevel
+
+        from .iac import encode_gmcp  # pylint: disable=import-outside-toplevel
+
+        if self.user is None:
+            return False
+        settings = _session_settings.get(self.user.pk, {})
+        iac = settings.get("iac") or {}
+        pkgs = iac.get("gmcp_packages") or {}
+        if "Editor" not in pkgs:
+            return False
+
+        edit_id = uuid.uuid4().hex
+        pending = _session_settings.setdefault(self.user.pk, {}).setdefault("pending_edits", {})
+        pending[edit_id] = {
+            "callback_this_id": message.get("callback_this_id"),
+            "callback_verb_name": message.get("callback_verb_name"),
+            "caller_id": message.get("caller_id"),
+            "player_id": message.get("player_id"),
+            "args": message.get("args", []),
+        }
+        payload = {
+            "id": edit_id,
+            "content": message.get("content", ""),
+            "content_type": message.get("content_type", "text"),
+            "title": message.get("title"),
+        }
+        try:
+            self._chan_write_iac(encode_gmcp("Editor.Start", payload))
+        except Exception:  # pylint: disable=broad-except
+            log.exception("Editor.Start send failed user=%s edit_id=%s", self.user, edit_id)
+            pending.pop(edit_id, None)
+            return False
+        return True
+
     async def _route_event(self, message):
         """Forward a dict-typed broker event to its matching asyncio queue."""
         kind = message.get("event")
@@ -996,6 +1041,8 @@ class MooPrompt:
                 self._chan_write_iac(bytes(payload))
             return
         if kind == "editor":
+            if self._try_gmcp_editor_handoff(message):
+                return
             await self.editor_queue.put(message)
         elif kind == "paginator":
             settings = _session_settings.get(self.user.pk, {})
