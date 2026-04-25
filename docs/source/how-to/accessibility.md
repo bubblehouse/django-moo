@@ -172,6 +172,13 @@ parser, encoder, and negotiator. It is *not* a general telnet
 implementation: it only speaks the options the MUD-client ecosystem
 actually uses.
 
+The IAC plumbing is gated on the client's `TERM` value. To opt in, set
+`TERM=xterm-256-basic` (raw mode) or use a MUD client whose `TERM`
+contains its name (`mudlet`, `tintin`, `mushclient`, `blowtorch`,
+`mudrammer`, `zmud`, `cmud`). Vanilla SSH clients (`xterm-256color`,
+`tmux`, `screen`, etc.) get a regular rich-mode session with no IAC
+bytes on the wire — emitting one would render as garbage.
+
 ### Tier 1 — the OOB channel
 
 | Protocol | Telnet option | What it does |
@@ -202,16 +209,71 @@ their client-side pack can resolve.
 ### Emitting GMCP from verbs
 
 ```python
-from moo.sdk import send_gmcp, play_sound
+from moo.sdk import send_gmcp, play_sound, room_info_payload
 
 send_gmcp(player, "Char.Vitals", {"hp": 50, "maxhp": 100})
-send_gmcp(player, "Room.Info", {"num": room.pk, "name": room.name})
+send_gmcp(player, "Room.Info", room_info_payload(room))
 play_sound(player, "door_close.wav", volume=70)
 ```
 
 Both calls silently no-op when the target player's client did not
 negotiate the relevant capability, so adding them to default verbs is safe
 even when most users connect from plain SSH.
+
+### `Room.Info` payload shape
+
+`room_info_payload(room)` returns the IRE-style
+([Achaea / Aardwolf](https://www.gammon.com.au/gmcp))
+`Room.Info` payload that mapping clients expect:
+
+```json
+{
+  "num": "204",
+  "name": "Exhaust Chamber",
+  "exits": {"e": "22", "u": "47"}
+}
+```
+
+- `num` — string, the room's primary key.
+- `name` — string, the room's display name.
+- `exits` — direction → destination-room-id dict. Cardinal direction names
+  (`"north from grand foyer"`, `"east from courtyard"`, etc.) are reduced
+  to short codes (`n`, `s`, `e`, `w`, `ne`, `nw`, `se`, `sw`, `u`, `d`,
+  `in`, `out`); custom-named exits (`"ladder"`, `"portal"`) round-trip
+  unchanged. All values are strings, per the IRE convention.
+- `area` — not currently emitted (DjangoMOO does not model areas
+  server-side). Mapping clients fall back to a default area when this
+  field is absent.
+
+Default verbs emit `Room.Info` from
+[`player/confunc`](../../../moo/bootstrap/default_verbs/player/confunc.py)
+on connect and from
+[`exit/move`](../../../moo/bootstrap/default_verbs/exit/move.py) after
+every successful move.
+
+### Mudlet mapper integration
+
+Mudlet's bundled "generic mapper" script (the one behind
+`map basics`, `start mapping`, `find prompt`, etc.) is text-trigger
+based by design — it reads room info from the `look` output, not from
+GMCP. To wire DjangoMOO's `Room.Info` events into the mapper's internal
+state, install the
+[`extras/mudlet/djangomoo_mapper_bridge.mpackage`](../../../extras/mudlet/)
+package via *Settings → Package Manager → Install*. The package is a
+~30-line bridge that copies `gmcp.Room.Info.{name,exits,area}` into the
+mapper's `currentName` / `currentExits` / `currentArea` slots whenever a
+fresh `gmcp.Room.Info` event arrives.
+
+After installing, move once, then run `map basics` — both "room name"
+and "exits" should show ✅, and `start mapping <area>` will work. The
+package source lives in `extras/mudlet/`; rebuild with
+`extras/mudlet/build.sh` if you change the bridge.
+
+Other clients (MUSHclient, TinTin++, ZMUD/CMUD) need their own
+equivalent shim — there is no universal mapping protocol. The
+`Room.Info` payload shape documented above is the contract; pick
+whatever scripting hook your client provides and copy the fields into
+its mapper state.
 
 ### Deferred out of scope
 

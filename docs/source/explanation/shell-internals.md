@@ -374,14 +374,21 @@ prefix bytes pass through SSH channels transparently, and
 [sshelnet](https://gitlab.com/bubblehouse/sshelnet) bridges plain-telnet
 clients onto the SSH port. No second listener is needed.
 
-To get raw 0xFF bytes through the asyncssh channel, `connection_made`
-switches the channel to bytes mode (`encoding=None`). prompt_toolkit's
-`Stdout.write` is wrapped to UTF-8 encode before handing data to the
-channel, and `_chan_write` in `prompt.py` does the same for raw-mode
-writes. Inbound bytes land in an overridden `data_received` that feeds
-them through `IacParser`; the parser strips IAC frames and returns the
-residue as plain bytes, which are decoded and forwarded to prompt_toolkit's
-input pipe.
+The IAC plumbing is **gated on the client's `TERM` value**. Vanilla SSH
+clients (`TERM=xterm-256color`, `tmux`, `screen`, etc.) leave the channel
+in default strict UTF-8 and never see an IAC byte — emitting one would
+render as garbage in xterm. MUD clients opt in via either
+`TERM=xterm-256-basic` (the existing raw-mode opt-in, also the default
+sshelnet picks for telnet bridging) or a known MUD-client name
+(`mudlet`, `tintin`, `mushclient`, ...). For those sessions,
+`connection_made` switches the channel's UTF-8 error policy to
+`surrogateescape` so 0xFF IAC bytes round-trip cleanly: outbound IAC
+frames go out by decoding raw bytes through `surrogateescape` (the
+channel's UTF-8 encoder re-emits them as the original bytes), and
+inbound 0xFF arrives as `\udcff` surrogate chars in `data_received`,
+which we re-encode for the IAC parser. The channel stays in str mode
+the whole time, so prompt_toolkit's renderer, CPR detection, and
+`Stdout` pipeline work unchanged.
 
 `IacNegotiator` (also in `moo/shell/iac.py`) owns the per-session
 capability state. On connect, the server offers `WILL GMCP`, `WILL MSSP`,
