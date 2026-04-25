@@ -256,18 +256,27 @@ every successful move.
 Mudlet's bundled "generic mapper" script (the one behind
 `map basics`, `start mapping`, `find prompt`, etc.) is text-trigger
 based by design — it reads room info from the `look` output, not from
-GMCP. To wire DjangoMOO's `Room.Info` events into the mapper's internal
-state, install the
-[`extras/mudlet/djangomoo_mapper_bridge.mpackage`](../../../extras/mudlet/)
-package via *Settings → Package Manager → Install*. The package is a
-~30-line bridge that copies `gmcp.Room.Info.{name,exits,area}` into the
-mapper's `currentName` / `currentExits` / `currentArea` slots whenever a
-fresh `gmcp.Room.Info` event arrives.
+GMCP. To wire DjangoMOO's `Room.Info` events into the mapper, install
+two packages from *Settings → Package Manager → Install*:
 
-After installing, move once, then run `map basics` — both "room name"
-and "exits" should show ✅, and `start mapping <area>` will work. The
-package source lives in `extras/mudlet/`; rebuild with
-`extras/mudlet/build.sh` if you change the bridge.
+1. **DjangoMOO** — [`extras/mudlet/djangomoo.mpackage`](../../../extras/mudlet/).
+   Bundles the SSH launcher, setup wizard, external-editor handoff, and
+   the mapper bridge. The bridge sets `map.prompt.room` /
+   `map.prompt.exits` from each `gmcp.Room.Info` and raises `onNewRoom`,
+   so the generic mapper's `capture_room_info` → `move_map` pipeline takes
+   over.
+2. **Generic mapper** — Mudlet's bundled `generic_mapper.mpackage`,
+   shipped with the application. On macOS:
+   `/Applications/mudlet.app/Contents/Resources/mudlet-lua/lua/generic-mapper/generic_mapper.mpackage`.
+   Without it, the bridge prints a one-time warning and mapping stays
+   off.
+
+After both are installed, connect, then run `start mapping <area>` (e.g.
+`start mapping moo`). `map basics` should show ✅ for "room name" and
+"exits", the first room is created from the current `Room.Info`, and
+each subsequent move adds and links a room. The bridge source lives in
+`extras/mudlet/`; rebuild with `extras/mudlet/build.sh` if you change
+it.
 
 Other clients (MUSHclient, TinTin++, ZMUD/CMUD) need their own
 equivalent shim — there is no universal mapping protocol. The
