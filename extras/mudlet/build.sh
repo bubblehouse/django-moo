@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-# Build djangomoo_mapper_bridge.mpackage from the source XML and config.lua.
+# Build djangomoo.mpackage from the source files.
 #
-# Mudlet packages are zip archives with .mpackage extension. This script
-# runs from the directory it lives in so paths stay simple.
+# Mudlet packages are zip archives with .mpackage extension. The package
+# extracts to <Mudlet profile dir>/djangomoo/ on install, so the relative
+# paths inside the zip are referenced by lua modules at runtime.
 set -euo pipefail
 
 cd "$(dirname "$0")"
-out="djangomoo_mapper_bridge.mpackage"
+out="djangomoo.mpackage"
 rm -f "$out"
-zip -q "$out" config.lua djangomoo_mapper_bridge.xml
+zip -q -r "$out" config.lua djangomoo.xml icon.png lua/
 echo "built $out ($(wc -c < "$out") bytes)"

@@ -1,25 +1,35 @@
-mpackage = [[djangomoo_mapper_bridge]]
+mpackage = [[djangomoo]]
 author = [[DjangoMOO Project]]
-title = [[DjangoMOO bridge for Mudlet's generic mapper.]]
-description = [[# DjangoMOO Mapper Bridge
+title = [[DjangoMOO client integration for Mudlet.]]
+description = [[# DjangoMOO
 
-Connects DjangoMOO's `gmcp.Room.Info` event stream to the room-detection
-slots the bundled "generic mapper" script reads (`map.currentName`,
-`map.currentExits`, `map.currentArea`).
+End-to-end Mudlet integration for [DjangoMOO](https://gitlab.com/bubblehouse/django-moo)
+servers. Bundles three things:
 
-After installing this package, no other configuration is needed:
+- A managed [sshelnet](https://gitlab.com/bubblehouse/sshelnet) launcher
+  that downloads the right release binary on first use and bridges
+  Mudlet's TCP connection to the SSH server transparently.
+- A setup wizard (`dmsetup`) that captures host/port/username/auth and
+  writes the matching sshelnet profile.
+- The original generic-mapper bridge: `gmcp.Room.Info` -> `map.prompt`
+  -> `onNewRoom` -> Mudlet's bundled mapper pipeline.
 
-1. Connect to your DjangoMOO server through Mudlet.
-2. Move once so a fresh `gmcp.Room.Info` event arrives.
-3. Run `map basics` — both "room name" and "exits" should show ✅.
-4. Run `start mapping <area name>` to begin.
+## Quick start
 
-The generic mapper script (`map basics`, `start mapping`, `map debug`,
-etc.) is itself bundled with Mudlet — this package only supplies the
-glue between GMCP and the mapper's internal state.
+1. `dmsetup host moo.example.com`
+2. `dmsetup port 8022`
+3. `dmsetup username yourname`
+4. `dmsetup auth password` (or `key` / `agent`)
+5. `dmconnect` -- prompts once per Mudlet session for the SSH password.
 
-See the DjangoMOO project documentation for the exact Room.Info payload
-shape this bridge consumes.
+Subsequent reconnects in the same session reuse the cached password.
+The SSH password is never written to disk; sshelnet receives it via the
+`SSHELNET_PASSWORD` environment variable.
+
+Run `dmstatus` to see current state, `dmupgrade` to refresh the bundled
+sshelnet to the latest GitLab release.
 ]]
-version = [[1.3.1]]
+version = [[1.3.0]]
 created = "2026-04-25T00:00:00+00:00"
+icon = [[icon.png]]
+sshelnet_pinned_version = [[v1.1.0]]

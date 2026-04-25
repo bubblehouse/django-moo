@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE MudletPackage>
+<MudletPackage version="1.001">
+	<ScriptPackage>
+		<Script isActive="yes" isFolder="no">
+			<name>djangomoo_bootstrap</name>
+			<packageName></packageName>
+			<script>-- Bootstrap: load all djangomoo Lua modules from the package directory.
+-- Runs once when Mudlet loads the package; everything afterward goes
+-- through the djangomoo.* tables defined here.
+
+local pkgDir = getMudletHomeDir() .. "/djangomoo"
+
+dofile(pkgDir .. "/lua/bridge_config.lua")
+dofile(pkgDir .. "/lua/binary.lua")
+dofile(pkgDir .. "/lua/mapper.lua")
+dofile(pkgDir .. "/lua/setup.lua")
+dofile(pkgDir .. "/lua/editor.lua")
+dofile(pkgDir .. "/lua/connection.lua")
+
+-- Read the pinned sshelnet version out of config.lua without polluting globals.
+local cfgEnv = {}
+local f = loadfile(pkgDir .. "/config.lua")
+if f then
+	setfenv(f, cfgEnv)
+	pcall(f)
+	if cfgEnv.sshelnet_pinned_version and cfgEnv.sshelnet_pinned_version ~= "" then
+		djangomoo.binary.setPinnedVersion(cfgEnv.sshelnet_pinned_version)
+	end
+end
+</script>
+			<eventHandlerList />
+		</Script>
+		<Script isActive="yes" isFolder="no">
+			<name>djangomoo_on_load</name>
+			<packageName></packageName>
+			<script>function djangomoo_on_load()
+	if djangomoo and djangomoo.binary then
+		djangomoo.binary.checkForUpdate()
+	end
+end
+</script>
+			<eventHandlerList>
+				<string>sysLoadEvent</string>
+			</eventHandlerList>
+		</Script>
+		<Script isActive="yes" isFolder="no">
+			<name>djangomoo_on_protocol_enabled</name>
+			<packageName></packageName>
+			<script>function djangomoo_on_protocol_enabled(event, protocol)
+	if event ~= "sysProtocolEnabled" then return end
+	if protocol ~= "GMCP" then return end
+	if djangomoo and djangomoo.editor then
+		djangomoo.editor.advertiseCapability("sysProtocolEnabled GMCP")
+	end
+end
+</script>
+			<eventHandlerList>
+				<string>sysProtocolEnabled</string>
+			</eventHandlerList>
+		</Script>
+		<Script isActive="yes" isFolder="no">
+			<name>djangomoo_on_connection</name>
+			<packageName></packageName>
+			<script>function djangomoo_on_connection(event)
+	if event ~= "sysConnectionEvent" then return end
+	-- Fallback: if sysProtocolEnabled didn't fire (or fired before our
+	-- handler was registered), wait long enough for IAC negotiation to
+	-- finish and try again. advertiseCapability is idempotent.
+	tempTimer(1.5, function()
+		if djangomoo and djangomoo.editor then
+			djangomoo.editor.advertiseCapability("sysConnectionEvent +1.5s fallback")
+		end
+	end)
+end
+</script>
+			<eventHandlerList>
+				<string>sysConnectionEvent</string>
+			</eventHandlerList>
+		</Script>
+		<Script isActive="yes" isFolder="no">
+			<name>djangomoo_editor_start</name>
+			<packageName></packageName>
+			<script>function djangomoo_editor_start(event)
+	if event ~= "gmcp.Editor.Start" then return end
+	if djangomoo and djangomoo.editor then
+		djangomoo.editor.onEditorStart()
+	end
+end
+</script>
+			<eventHandlerList>
+				<string>gmcp.Editor.Start</string>
+			</eventHandlerList>
+		</Script>
+		<Script isActive="yes" isFolder="no">
+			<name>djangomoo_mapper</name>
+			<packageName></packageName>
+			<script>function djangomoo_mapper(event)
+	if event ~= "gmcp.Room.Info" then return end
+	if djangomoo and djangomoo.mapper then
+		djangomoo.mapper.handle_room_info()
+	end
+end
+</script>
+			<eventHandlerList>
+				<string>gmcp.Room.Info</string>
+			</eventHandlerList>
+		</Script>
+		<Script isActive="yes" isFolder="no">
+			<name>djangomoo_on_disconnect</name>
+			<packageName></packageName>
+			<script>function djangomoo_on_disconnect()
+	if djangomoo and djangomoo.connection then
+		djangomoo.connection.onDisconnect()
+	end
+end
+</script>
+			<eventHandlerList>
+				<string>sysDisconnectionEvent</string>
+			</eventHandlerList>
+		</Script>
+		<Script isActive="yes" isFolder="no">
+			<name>djangomoo_on_exit</name>
+			<packageName></packageName>
+			<script>function djangomoo_on_exit()
+	if djangomoo and djangomoo.connection then
+		djangomoo.connection.onExit()
+	end
+end
+</script>
+			<eventHandlerList>
+				<string>sysExitEvent</string>
+			</eventHandlerList>
+		</Script>
+	</ScriptPackage>
+	<AliasPackage>
+		<Alias isActive="yes" isFolder="no">
+			<name>dmsetup</name>
+			<script>if djangomoo and djangomoo.setup then
+	djangomoo.setup.dispatch(matches[2], matches[3])
+end
+</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^dmsetup(?:\s+(\S+))?(?:\s+(.+))?$</regex>
+		</Alias>
+		<Alias isActive="yes" isFolder="no">
+			<name>dmconnect</name>
+			<script>if djangomoo and djangomoo.connection then
+	djangomoo.connection.dmconnect()
+end
+</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^dmconnect$</regex>
+		</Alias>
+		<Alias isActive="yes" isFolder="no">
+			<name>dmkill</name>
+			<script>if djangomoo and djangomoo.connection then
+	djangomoo.connection.dmkill()
+end
+</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^dmkill$</regex>
+		</Alias>
+		<Alias isActive="yes" isFolder="no">
+			<name>dmupgrade</name>
+			<script>if djangomoo and djangomoo.connection then
+	djangomoo.connection.dmupgrade()
+end
+</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^dmupgrade$</regex>
+		</Alias>
+		<Alias isActive="no" isFolder="no">
+			<name>djangomoo_password_capture</name>
+			<script>if djangomoo and djangomoo.connection then
+	djangomoo.connection.onPasswordCapture(matches[2])
+end
+</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^(.+)$</regex>
+		</Alias>
+		<Alias isActive="yes" isFolder="no">
+			<name>dmpassword</name>
+			<script>if djangomoo and djangomoo.connection then
+	djangomoo.connection.dmpassword(matches[2])
+end
+</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^dmpassword(?:\s+(.+))?$</regex>
+		</Alias>
+		<Alias isActive="yes" isFolder="no">
+			<name>dmstatus</name>
+			<script>if djangomoo and djangomoo.connection then
+	djangomoo.connection.dmstatus()
+end
+</script>
+			<command></command>
+			<packageName></packageName>
+			<regex>^dmstatus$</regex>
+		</Alias>
+	</AliasPackage>
+</MudletPackage>
