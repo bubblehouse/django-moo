@@ -13,7 +13,7 @@ The editor is pre-populated with the current description (if any).
 When the editor is saved, the description is updated on the object.
 """
 
-from moo.sdk import context, open_editor, get_client_mode, lookup, NoSuchPropertyError
+from moo.sdk import context, open_editor, can_open_editor, lookup, NoSuchPropertyError
 
 if verb_name == "@describe":
     if not context.parser.has_dobj_str():
@@ -27,7 +27,7 @@ if verb_name == "@describe":
         subject.describe(desc)
         print("[yellow]Description set for %s[/yellow]" % subject)
     else:
-        if get_client_mode() == "raw":
+        if not can_open_editor():
             print(f'Raw mode: use `@describe {subject} as "..."` to set the description inline.')
             print("Escape newlines as `\\n` in the as-string.")
             return

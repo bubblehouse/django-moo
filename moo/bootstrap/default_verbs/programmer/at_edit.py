@@ -19,7 +19,7 @@ Otherwise, the editor is opened.
 Use "verb" or "property" prefix to disambiguate when an object has both.
 """
 
-from moo.sdk import context, open_editor, get_client_mode, NoSuchVerbError, NoSuchPropertyError, moojson
+from moo.sdk import context, open_editor, can_open_editor, NoSuchVerbError, NoSuchPropertyError, moojson
 
 if verb_name == "@edit":
     dobj_str = context.parser.get_dobj_str()
@@ -38,7 +38,7 @@ if verb_name == "@edit":
 
     # Check if "with" preposition was provided
     use_editor = not context.parser.has_pobj_str("with")
-    if use_editor and get_client_mode() == "raw":
+    if use_editor and not can_open_editor():
         prefix = "verb " if edit_type == "verb" else "property " if edit_type == "property" else ""
         print(f'Raw mode: use `@edit {prefix}{attribute} on {target} with "..."` to set content inline.')
         print("Escape newlines as `\\n` in the with-string.")

@@ -13,7 +13,7 @@ prefixed with "> ") and a "Subject: Re: ..." header.  When saved, the reply
 is sent to the original sender.
 """
 
-from moo.sdk import context, open_editor, get_client_mode, lookup, get_message, send_message, NoSuchObjectError
+from moo.sdk import context, open_editor, can_open_editor, lookup, get_message, send_message, NoSuchObjectError
 
 if verb_name == "@reply":
     if not context.parser.has_dobj_str():
@@ -54,7 +54,7 @@ if verb_name == "@reply":
         print(f"[green]Reply sent to {mr.message.sender.title()}.[/green]")
         return
 
-    if get_client_mode() == "raw":
+    if not can_open_editor():
         print(f'Raw mode: use `@reply {n} with "body"` to send inline.')
         print("Escape newlines as `\\n` in the with-string.")
         return

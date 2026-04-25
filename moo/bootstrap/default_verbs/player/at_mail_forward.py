@@ -12,7 +12,7 @@ Opens the editor pre-filled with the forwarded body and a "Fwd: " subject
 prefix.  When saved, the message is sent to the target player.
 """
 
-from moo.sdk import context, open_editor, get_client_mode, lookup, get_message, send_message, NoSuchObjectError
+from moo.sdk import context, open_editor, can_open_editor, lookup, get_message, send_message, NoSuchObjectError
 
 if verb_name == "@forward":
     parser = context.parser
@@ -67,7 +67,7 @@ if verb_name == "@forward":
         print(f"[green]Message forwarded to {recipient.title()}.[/green]")
         return
 
-    if get_client_mode() == "raw":
+    if not can_open_editor():
         print(f'Raw mode: use `@forward {n} to {recipient} with "optional note"` to forward inline.')
         print("Escape newlines as `\\n` in the with-string; the original message is appended automatically.")
         return

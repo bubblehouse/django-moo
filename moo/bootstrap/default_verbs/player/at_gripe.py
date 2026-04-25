@@ -14,7 +14,7 @@ The gripe is sent as a mail message to all players listed in the
 "@gripe from <player>".
 """
 
-from moo.sdk import context, open_editor, get_client_mode, send_message, NoSuchPropertyError
+from moo.sdk import context, open_editor, can_open_editor, send_message, NoSuchPropertyError
 
 if verb_name == "@gripe":
     player = context.player
@@ -42,7 +42,7 @@ if verb_name == "@gripe":
         print("[green]Your gripe has been sent to the administrators.[/green]")
         return
 
-    if get_client_mode() == "raw":
+    if not can_open_editor():
         print('Raw mode: use `@gripe with "..."` to send a gripe inline.')
         print("Escape newlines as `\\n` in the with-string.")
         return
