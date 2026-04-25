@@ -22,7 +22,7 @@ sending a suitable message to them if they are connected. Similarly, you may wis
 room you are in when you connect.
 """
 
-from moo.sdk import context, count_unread, send_gmcp
+from moo.sdk import context, count_unread, room_info_payload, send_gmcp
 
 if not context.player.location:
     home = context.player.get_property("home") or _.player_start  # noqa: F821
@@ -37,4 +37,4 @@ if unread:
 send_gmcp(context.player, "Char.Name", {"name": context.player.name, "fullname": context.player.title()})
 loc = context.player.location
 if loc is not None:
-    send_gmcp(context.player, "Room.Info", {"num": loc.pk, "name": loc.name})
+    send_gmcp(context.player, "Room.Info", room_info_payload(loc))

@@ -268,6 +268,50 @@ def send_gmcp(obj, module: str, data=None):
     send_oob(obj, encode_gmcp(module, data))
 
 
+def room_info_payload(room) -> dict:
+    """
+    Build the IRE-style GMCP ``Room.Info`` payload for ``room``.
+
+    Returns ``{"num", "name", "exits"}`` with values stringified per the
+    Achaea/Aardwolf/Mudlet-generic-mapper convention. Exit keys are
+    normalized to short codes (``n``, ``ne``, ``u``, …); custom-named
+    exits (``"ladder"``, ``"portal"``) round-trip unchanged so they still
+    appear on the client.
+
+    DjangoMOO names cardinal exits ``"<direction> from <room>"`` — e.g.
+    ``"east from grand foyer"`` — to keep them globally unique. We check
+    the exit's exact name, then its first word, then its aliases for a
+    direction match before falling back to the raw name.
+
+    :param room: an Object representing a room
+    :returns: a dict suitable for ``send_gmcp(player, "Room.Info", payload)``
+    """
+    from . import DIRECTION_SHORTCODES  # pylint: disable=import-outside-toplevel
+
+    exits_dict: dict[str, str] = {}
+    for exit_obj in room.get_property_objects("exits") or []:
+        if not exit_obj.dest:
+            continue
+        exit_name = (exit_obj.name or "").lower()
+        key = DIRECTION_SHORTCODES.get(exit_name)
+        if key is None and exit_name:
+            first = exit_name.split()[0]
+            key = DIRECTION_SHORTCODES.get(first)
+        if key is None:
+            try:
+                for alias_obj in exit_obj.aliases.all():
+                    alias = (alias_obj.alias or "").lower()
+                    if alias in DIRECTION_SHORTCODES:
+                        key = DIRECTION_SHORTCODES[alias]
+                        break
+            except AttributeError:
+                pass
+        if key is None:
+            key = exit_name or exit_obj.name
+        exits_dict[key] = str(exit_obj.dest.pk)
+    return {"num": str(room.pk), "name": room.name, "exits": exits_dict}
+
+
 def play_sound(obj, name: str, volume: int = 100, priority: int = 10):
     """
     Play a sound on ``obj``'s client.

@@ -19,7 +19,7 @@ destination of the exit. Once this has been done, the arrive messages for the ex
 destination room's occupants.
 """
 
-from moo.sdk import context, send_gmcp, NoSuchPropertyError
+from moo.sdk import context, room_info_payload, send_gmcp, NoSuchPropertyError
 
 thing = args[0]
 source = this.get_property("source")
@@ -56,7 +56,7 @@ if accepted:
     thing.tell(this.arrive_msg(source, dest))
     dest.announce_all_but(thing, this.oarrive_msg(source, dest), dest_contents)
     # GMCP Room.Info — update the client's map on successful move.
-    send_gmcp(thing, "Room.Info", {"num": dest.pk, "name": dest.name})
+    send_gmcp(thing, "Room.Info", room_info_payload(dest))
 else:
     thing.tell(this.nogo_msg(source, dest))
     source.announce_all_but(thing, this.onogo_msg(source, dest), source_contents)

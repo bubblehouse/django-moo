@@ -27,6 +27,7 @@ from .output import (
     boot_player,
     send_oob,
     send_gmcp,
+    room_info_payload,
     play_sound,
 )
 from .tasks import (
@@ -95,6 +96,25 @@ OPPOSITE_DIRECTIONS = {
     "se": "nw",
 }
 
+# Long direction names → IRE-style short codes for GMCP Room.Info payloads.
+# Mudlet's generic mapper, MUSHclient mappers, and the Achaea/Aardwolf
+# protocol convention all key on these. Unknown direction names round-trip
+# unchanged so non-cardinal exits ("ladder up", "portal") still appear.
+DIRECTION_SHORTCODES = {
+    "north": "n",
+    "south": "s",
+    "east": "e",
+    "west": "w",
+    "northeast": "ne",
+    "northwest": "nw",
+    "southeast": "se",
+    "southwest": "sw",
+    "up": "u",
+    "down": "d",
+    "in": "in",
+    "out": "out",
+}
+
 __all__ = [
     "lookup",
     "create",
@@ -113,6 +133,7 @@ __all__ = [
     "get_client_mode",
     "send_oob",
     "send_gmcp",
+    "room_info_payload",
     "play_sound",
     "list_ssh_keys",
     "add_ssh_key",
@@ -135,6 +156,7 @@ __all__ = [
     "PLACEMENT_PREPS",
     "DIRECTIONS",
     "OPPOSITE_DIRECTIONS",
+    "DIRECTION_SHORTCODES",
     "NoSuchObjectError",
     "NoSuchVerbError",
     "NoSuchPropertyError",
