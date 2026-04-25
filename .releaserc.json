@@ -64,6 +64,22 @@
               }
             ],
             "countMatches": true
+          },
+          {
+            "files": [
+              "extras/mudlet/config.lua"
+            ],
+            "from": "^version = \\[\\[.*\\]\\]",
+            "to": "version = [[${nextRelease.version}]]",
+            "results": [
+              {
+                "file": "extras/mudlet/config.lua",
+                "hasChanged": true,
+                "numMatches": 1,
+                "numReplacements": 1
+              }
+            ],
+            "countMatches": true
           }
         ]
       }
@@ -105,6 +121,7 @@
           "Dockerfile",
           "moo/__init__.py",
           "extras/helm/Chart.yaml",
+          "extras/mudlet/config.lua",
           "pyproject.toml",
           "package.json",
           "package-lock.json",
