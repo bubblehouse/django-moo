@@ -219,6 +219,111 @@ def get_client_mode() -> str:
     return get_session_setting("mode", "rich")
 
 
+def send_oob(obj, data: bytes):
+    """
+    Send a raw IAC subnegotiation frame to ``obj``'s SSH channel.
+
+    Publishes an ``{"event": "oob", "data": <bytes>}`` Kombu message to the
+    player's queue; the SSH server's ``_route_event`` writes the bytes
+    directly onto the channel with no LF→CRLF translation.
+
+    :param obj: the Object (player avatar) whose channel should receive the frame
+    :param data: pre-encoded IAC subnegotiation bytes (``IAC SB ... IAC SE``)
+    """
+    from moo.core import _publish_to_player  # pylint: disable=import-outside-toplevel
+
+    if context.caller and not context.caller.is_wizard():
+        raise UserError("Only verbs owned by wizards can send OOB data.")
+    if not isinstance(data, (bytes, bytearray)):
+        raise UserError(f"send_oob data must be bytes, not {type(data).__name__}.")
+    _publish_to_player(obj, {"event": "oob", "data": bytes(data)})
+
+
+def send_gmcp(obj, module: str, data=None):
+    """
+    Send a GMCP event to ``obj``'s SSH channel.
+
+    GMCP (Generic MUD Communication Protocol) is the canonical OOB channel
+    for structured MUD events. Clients that negotiated GMCP receive
+    ``IAC SB GMCP <module> <json> IAC SE``; clients that did not see it as
+    zero bytes on the wire (the SSH server skips the emit if the capability
+    flag is false).
+
+    Example::
+
+        send_gmcp(player, "Char.Vitals", {"hp": 50, "maxhp": 100})
+        send_gmcp(player, "Room.Info", {"num": 12, "name": "A dim hall"})
+        send_gmcp(player, "Core.Ping")  # no payload
+
+    :param obj: the Object (player avatar) to send the GMCP event to
+    :param module: GMCP module/package name, e.g. ``"Char.Vitals"``
+    :param data: JSON-serializable value, or ``None`` for an empty event
+    """
+    from ..shell.iac import encode_gmcp  # pylint: disable=import-outside-toplevel
+
+    if context.caller and not context.caller.is_wizard():
+        raise UserError("Only verbs owned by wizards can send GMCP events.")
+    if not _client_supports(obj, "gmcp"):
+        return
+    send_oob(obj, encode_gmcp(module, data))
+
+
+def play_sound(obj, name: str, volume: int = 100, priority: int = 10):
+    """
+    Play a sound on ``obj``'s client.
+
+    Prefers GMCP ``Client.Media.Play`` when the client negotiated GMCP;
+    falls back to the inline MSP ``!!SOUND(...)`` marker if the client
+    negotiated MSP; no-ops otherwise.
+
+    DjangoMOO does not bundle any sound assets. Sound pack authors are
+    expected to provide filenames that their client-side pack can
+    resolve.
+
+    :param obj: the player to play the sound on
+    :param name: filename (client-resolvable), e.g. ``"door.wav"``
+    :param volume: 0–100
+    :param priority: higher numbers preempt lower-priority sounds
+    """
+    from moo.core import _publish_to_player  # pylint: disable=import-outside-toplevel
+
+    from ..shell.iac import msp_sound_marker  # pylint: disable=import-outside-toplevel
+
+    if context.caller and not context.caller.is_wizard():
+        raise UserError("Only verbs owned by wizards can play sounds.")
+    if _client_supports(obj, "gmcp"):
+        send_gmcp(obj, "Client.Media.Play", {"name": name, "volume": volume, "priority": priority})
+        return
+    if _client_supports(obj, "msp"):
+        _publish_to_player(obj, msp_sound_marker(name, volume=volume, priority=priority))
+
+
+def _client_supports(obj, capability: str) -> bool:
+    """
+    Check whether the player avatar ``obj``'s SSH session negotiated
+    ``capability`` (``"gmcp"``, ``"mssp"``, ``"msp"``, ``"eor"``, ``"charset"``).
+
+    Returns ``False`` for non-player objects and for players not currently
+    connected. Reads from the in-process session-settings dict first, then
+    falls back to the Django cache so Celery workers can make the same
+    determination.
+    """
+    from django.core.cache import cache  # pylint: disable=import-outside-toplevel
+
+    from ..core.models.auth import Player  # pylint: disable=import-outside-toplevel
+    from ..shell import prompt as prompt_module  # pylint: disable=import-outside-toplevel
+
+    player = Player.objects.filter(avatar=obj).select_related("user").first()
+    if player is None or player.user is None:
+        return False
+    user_pk = player.user.pk
+    settings = prompt_module._session_settings.get(user_pk, {})  # pylint: disable=protected-access
+    iac = settings.get("iac")
+    if not iac:
+        iac = cache.get(f"moo:session:{user_pk}:iac") or {}
+    return bool(iac.get(capability, False))
+
+
 def boot_player(obj):
     """
 

@@ -25,6 +25,9 @@ from .output import (
     get_wrap_column,
     get_client_mode,
     boot_player,
+    send_oob,
+    send_gmcp,
+    play_sound,
 )
 from .tasks import (
     invoke,
@@ -108,6 +111,9 @@ __all__ = [
     "get_session_setting",
     "set_session_setting",
     "get_client_mode",
+    "send_oob",
+    "send_gmcp",
+    "play_sound",
     "list_ssh_keys",
     "add_ssh_key",
     "remove_ssh_key",
