@@ -2,6 +2,7 @@
 Encode/decode MOO JSON
 """
 
+import base64
 import json
 from datetime import date, datetime, time
 from typing import Any
@@ -15,16 +16,17 @@ def _get_nothing() -> Any:
     Return the $nothing sentinel object, or None if the bootstrap hasn't run yet.
     Uses a module-level cache; call clear_nothing_cache() in test teardown if needed.
     """
-    global _nothing_cached
+    global _nothing_cached  # pylint: disable=global-statement
     if _nothing_cached is _UNSET:
         from .models.object import Object
+
         _nothing_cached = Object.objects.filter(name="nothing").first()
     return _nothing_cached
 
 
 def clear_nothing_cache() -> None:
     """Reset the $nothing object cache (call between tests that reset the DB)."""
-    global _nothing_cached
+    global _nothing_cached  # pylint: disable=global-statement
     _nothing_cached = _UNSET
 
 
@@ -43,6 +45,8 @@ def loads(j):
             return date.fromisoformat(d[key])
         if key == "t#":
             return time.fromisoformat(d[key])
+        if key == "b#":
+            return base64.b64decode(d[key])
         if len(key) >= 2 and key[1] == "#":
             if key[0] == "o":
                 try:
@@ -82,6 +86,8 @@ def dumps(obj):
             return {"v#%d" % o.pk: o.name()}
         elif isinstance(o, Property):
             return {"p#%d" % o.pk: o.name}
+        elif isinstance(o, (bytes, bytearray)):
+            return {"b#": base64.b64encode(bytes(o)).decode("ascii")}
         else:
             raise TypeError("Unserializable object {} of type {}".format(obj, type(obj)))
 

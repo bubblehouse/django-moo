@@ -154,6 +154,44 @@ def test_publish_to_player_skips_recording_when_context_untracked(t_init: Object
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_publish_to_player_closes_channel(t_init: Object, t_wizard: Object):
+    """
+    The channel acquired from the pooled connection must be closed after each
+    publish; otherwise it leaks back to the broker and eventually exhausts
+    the per-connection channel pool.
+    """
+    from unittest.mock import MagicMock, patch
+
+    from moo.core import _publish_to_player  # pylint: disable=import-outside-toplevel
+
+    fake_channel = MagicMock()
+    fake_conn = MagicMock()
+    fake_conn.channel.return_value = fake_channel
+    conn_cm = MagicMock()
+    conn_cm.__enter__.return_value = fake_conn
+    conn_cm.__exit__.return_value = False
+
+    fake_producer = MagicMock()
+    producer_cm = MagicMock()
+    producer_cm.__enter__.return_value = fake_producer
+    producer_cm.__exit__.return_value = False
+
+    from moo.celery import app  # pylint: disable=import-outside-toplevel
+
+    original_broker = app.conf.broker_url
+    app.conf.broker_url = "redis://fake"  # bypass the memory:// short-circuit
+    try:
+        with patch.object(app, "default_connection", return_value=conn_cm):
+            with patch.object(app, "producer_or_acquire", return_value=producer_cm):
+                with code.ContextManager(t_wizard, lambda _: None):
+                    _publish_to_player(t_wizard, {"event": "input_prompt", "prompt": "ok"})
+    finally:
+        app.conf.broker_url = original_broker
+
+    fake_channel.close.assert_called_once()
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_parse_command_writes_events_to_cache(t_init: Object, t_wizard: Object):
     """parse_command stashes published event types under ``moo:task_events:{task_id}`` in the cache."""
     from moo.core.models import verb  # noqa: F401  pylint: disable=unused-import,import-outside-toplevel

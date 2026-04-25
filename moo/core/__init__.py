@@ -74,24 +74,34 @@ def _publish_to_player(obj, message):
     matching_players = Player.objects.filter(avatar=obj)
     caller = ContextManager.get("caller")
     with app.default_connection() as conn:
+        # The channel is bound to Queue/Exchange for the declare() pass below.
+        # It must be closed explicitly — releasing the pooled connection does
+        # NOT release per-call channels, so leaving it open leaks one channel
+        # per publish, eventually exhausting the broker's channel pool.
         channel = conn.channel()
-        with app.producer_or_acquire() as producer:
-            for player in matching_players:
-                # this is an uncommon scenario, but applies to the stock Player object if it hasn't been configured for login
-                if not player.user:
-                    continue
-                queue = Queue(
-                    f"messages.{player.user.pk}",
-                    Exchange("moo", type="direct", channel=channel),
-                    f"user-{player.user.pk}",
-                    channel=channel,
-                    auto_delete=True,
-                )
-                producer.publish(
-                    dict(message=message, caller_id=caller.pk if caller else None),
-                    serializer="moojson",
-                    exchange=queue.exchange,
-                    routing_key=f"user-{player.user.pk}",
-                    declare=[queue],
-                    retry=True,
-                )
+        try:
+            with app.producer_or_acquire() as producer:
+                for player in matching_players:
+                    # this is an uncommon scenario, but applies to the stock Player object if it hasn't been configured for login
+                    if not player.user:
+                        continue
+                    queue = Queue(
+                        f"messages.{player.user.pk}",
+                        Exchange("moo", type="direct", channel=channel),
+                        f"user-{player.user.pk}",
+                        channel=channel,
+                        auto_delete=True,
+                    )
+                    producer.publish(
+                        dict(message=message, caller_id=caller.pk if caller else None),
+                        serializer="moojson",
+                        exchange=queue.exchange,
+                        routing_key=f"user-{player.user.pk}",
+                        declare=[queue],
+                        retry=True,
+                    )
+        finally:
+            try:
+                channel.close()
+            except Exception:  # pylint: disable=broad-except
+                pass
