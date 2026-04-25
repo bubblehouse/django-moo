@@ -10,6 +10,8 @@ stages:
 # fail GitLab's "ci_must_pass" merge check with a "skipped" pipeline.
 mr:gate:
   stage: lint
+  tags:
+    - shacklyn
   image: alpine:3.19
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
