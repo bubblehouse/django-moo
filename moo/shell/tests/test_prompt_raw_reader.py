@@ -88,3 +88,22 @@ def test_read_line_raw_yields_none_on_eof():
     batches = [[KeyPress(Keys.ControlD, "\x04")]]
     result = _run_reader(prompt, _FakeInput(batches))
     assert result is None
+
+
+def test_read_line_raw_does_not_echo_input_back_to_channel():
+    """
+    Server-side echo would land as a duplicate copy in MUD clients that
+    local-echo (Mudlet, MUSHclient, TinTin++). The raw reader must stay
+    silent on the channel and let the client display its own input.
+    """
+    prompt = _make_prompt()
+    batches = [
+        [
+            KeyPress("h", "h"),
+            KeyPress("i", "i"),
+            KeyPress(Keys.ControlM, "\r"),
+        ],
+    ]
+    _run_reader(prompt, _FakeInput(batches))
+    # _chan_write should never have been called from inside _read_line_raw.
+    prompt._chan.write.assert_not_called()

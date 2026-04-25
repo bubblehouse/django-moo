@@ -124,25 +124,24 @@ def _make_prompt_user(name, location=None):
     return user, avatar
 
 
-def test_generate_prompt_with_location():
-    """generate_prompt() includes the avatar's location name in the prompt."""
+def test_generate_prompt_is_stable_marker():
+    """
+    generate_prompt() returns a single stable ``>>> `` marker. Per-room
+    state belongs in GMCP Room.Info so MUD-client mappers and screen
+    readers can rely on a constant prompt pattern.
+    """
     location = MagicMock()
     location.name = "The Laboratory"
     user, _ = _make_prompt_user("Wizard", location=location)
     result = asyncio.run(MooPrompt(user).generate_prompt())
-    assert len(result) == 5
-    assert ("class:name", "Wizard") in result
-    assert ("class:at", "@") in result
-    assert ("class:location", "The Laboratory") in result
-    assert ("class:colon", ":") in result
-    assert ("class:pound", "$ ") in result
+    assert result == [("class:pound", ">>> ")]
 
 
-def test_generate_prompt_no_location():
-    """generate_prompt() shows 'nowhere' when the avatar has no location."""
+def test_generate_prompt_no_location_still_stable():
+    """The prompt does not change shape when the avatar has no location."""
     user, _ = _make_prompt_user("Wizard", location=None)
     result = asyncio.run(MooPrompt(user).generate_prompt())
-    assert ("class:location", "nowhere") in result
+    assert result == [("class:pound", ">>> ")]
 
 
 def test_writer_rich_mode_uses_print_formatted_text():
@@ -165,11 +164,8 @@ def test_writer_raw_mode_writes_to_chan():
     mock_print.assert_not_called()
     session._chan.write.assert_called_once()
     written = session._chan.write.call_args[0][0]
-    # Channel is in bytes mode (encoding=None) so IAC bytes can pass through;
-    # _chan_write UTF-8 encodes text before handing it off.
-    assert isinstance(written, bytes)
-    assert b"hello" in written
-    assert written.endswith(b"\r\n")
+    assert "hello" in written
+    assert written.endswith("\r\n")
 
 
 def test_writer_raw_mode_rich_capture_preserves_colour():
@@ -179,13 +175,16 @@ def test_writer_raw_mode_rich_capture_preserves_colour():
     prompt = MooPrompt(user, session=session, mode=MODE_RAW)
     prompt.writer("[red]alert[/red]")
     written = session._chan.write.call_args[0][0]
-    assert isinstance(written, bytes)
-    assert b"\x1b[" in written
-    assert b"alert" in written
+    assert "\x1b[" in written
+    assert "alert" in written
 
 
-def test_route_event_oob_writes_raw_bytes_to_channel():
-    """The "oob" event bypasses text encoding and writes raw IAC bytes straight to the channel."""
+def test_route_event_oob_writes_iac_bytes_via_surrogate_str():
+    """
+    The "oob" event hands raw IAC bytes to ``_chan_write_iac``, which converts
+    them to surrogate-escaped str so the channel's UTF-8 encoder re-emits the
+    original bytes on the wire.
+    """
     from moo.shell.iac import IAC, OPT_GMCP, SB, SE
 
     user = MagicMock()
@@ -193,7 +192,10 @@ def test_route_event_oob_writes_raw_bytes_to_channel():
     prompt = MooPrompt(user, session=session, mode=MODE_RAW)
     frame = bytes((IAC, SB, OPT_GMCP)) + b"Core.Hello" + bytes((IAC, SE))
     asyncio.run(prompt._route_event({"event": "oob", "data": frame}))
-    session._chan.write.assert_called_once_with(frame)
+    session._chan.write.assert_called_once()
+    written = session._chan.write.call_args[0][0]
+    # Round-trip: surrogate-escape str re-encodes back to the original bytes.
+    assert written.encode("utf-8", errors="surrogateescape") == frame
 
 
 def test_prompt_end_marker_emits_eor_when_negotiated():
@@ -204,37 +206,67 @@ def test_prompt_end_marker_emits_eor_when_negotiated():
     user = MagicMock()
     user.pk = 4242
     session = MagicMock()
+    session.iac_enabled = True
     prompt = MooPrompt(user, session=session, mode=MODE_RAW)
     _session_settings.setdefault(user.pk, {})["iac"] = {"eor": True}
     try:
         prompt._emit_prompt_end_marker()
     finally:
         _session_settings.pop(user.pk, None)
-    session._chan.write.assert_called_once_with(bytes((IAC, EOR)))
+    session._chan.write.assert_called_once()
+    written = session._chan.write.call_args[0][0]
+    assert written.encode("utf-8", errors="surrogateescape") == bytes((IAC, EOR))
 
 
-def test_prompt_end_marker_falls_back_to_ga():
-    """When EOR isn't negotiated but ga_or_eor is set, IAC GA goes out instead."""
+def test_prompt_end_marker_defaults_to_ga_for_iac_sessions():
+    """
+    When the session is IAC-enabled but EOR was not negotiated, the prompt-end
+    marker defaults to IAC GA — the MUD convention; Mudlet's mapper relies on
+    it for prompt boundary detection.
+    """
     from moo.shell.iac import GA, IAC
-    from moo.shell.prompt import _session_settings
 
     user = MagicMock()
     user.pk = 4243
     session = MagicMock()
+    session.iac_enabled = True
     prompt = MooPrompt(user, session=session, mode=MODE_RAW)
-    _session_settings.setdefault(user.pk, {})["iac"] = {"eor": False, "ga_or_eor": True}
-    try:
-        prompt._emit_prompt_end_marker()
-    finally:
-        _session_settings.pop(user.pk, None)
-    session._chan.write.assert_called_once_with(bytes((IAC, GA)))
+    prompt._emit_prompt_end_marker()
+    session._chan.write.assert_called_once()
+    written = session._chan.write.call_args[0][0]
+    assert written.encode("utf-8", errors="surrogateescape") == bytes((IAC, GA))
 
 
-def test_prompt_end_marker_noop_without_negotiation():
-    """No IAC bytes are emitted when neither EOR nor GA was negotiated."""
+def test_osc133_disabled_for_iac_sessions():
+    """
+    MUD-client (IAC-enabled) sessions skip OSC 133 wrapping — Mudlet doesn't
+    parse OSC 133 and the BEL-terminated frames swallow the trailing IAC GA,
+    breaking the mapper's prompt-line detection.
+    """
+    user = MagicMock()
+    user.pk = 4250
+    session = MagicMock()
+    session.iac_enabled = True
+    prompt = MooPrompt(user, session=session, mode=MODE_RAW)
+    assert prompt._osc133_enabled() is False
+
+
+def test_osc133_enabled_for_vanilla_ssh():
+    """Vanilla SSH sessions retain OSC 133 wrapping (the default)."""
+    user = MagicMock()
+    user.pk = 4251
+    session = MagicMock()
+    session.iac_enabled = False
+    prompt = MooPrompt(user, session=session, mode=MODE_RICH)
+    assert prompt._osc133_enabled() is True
+
+
+def test_prompt_end_marker_noop_for_vanilla_ssh():
+    """No IAC bytes are emitted when the session is not IAC-enabled."""
     user = MagicMock()
     user.pk = 4244
     session = MagicMock()
+    session.iac_enabled = False
     prompt = MooPrompt(user, session=session, mode=MODE_RAW)
     prompt._emit_prompt_end_marker()
     session._chan.write.assert_not_called()

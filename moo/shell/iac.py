@@ -373,8 +373,11 @@ class IacNegotiator:
     Celery can branch on them.
     """
 
-    # Options we're willing to enable on our side (WILL).
-    _WE_OFFER = frozenset({OPT_GMCP, OPT_MSSP, OPT_MSP, OPT_EOR, OPT_CHARSET, OPT_SGA})
+    # Options we're willing to enable on our side (WILL). SGA is intentionally
+    # absent — agreeing to "suppress go-ahead" would tell MUD clients to stop
+    # expecting an IAC GA after each prompt, which breaks Mudlet's mapper
+    # auto-detection.
+    _WE_OFFER = frozenset({OPT_GMCP, OPT_MSSP, OPT_MSP, OPT_EOR, OPT_CHARSET})
 
     # Options we want the client to enable on its side (DO).
     _WE_ACCEPT_CLIENT = frozenset({OPT_TTYPE, OPT_NAWS, OPT_CHARSET})
@@ -405,6 +408,12 @@ class IacNegotiator:
     def initial_offers(self) -> bytes:
         """
         Return the initial set of IAC commands to send on session start.
+
+        Includes a proactive ``WONT SGA``: Mudlet (and many MUD clients) only
+        enter "expect IAC GA after each prompt" mode after the server has
+        explicitly disclaimed SGA. Without it the GA bytes we emit get
+        ignored and the mapper auto-detect / prompt-line heuristic stays in
+        the ``<no GA>`` state.
         """
         return b"".join(
             [
@@ -413,6 +422,7 @@ class IacNegotiator:
                 encode_cmd(WILL, OPT_MSP),
                 encode_cmd(WILL, OPT_EOR),
                 encode_cmd(WILL, OPT_CHARSET),
+                encode_cmd(WONT, OPT_SGA),
                 encode_cmd(DO, OPT_TTYPE),
                 encode_cmd(DO, OPT_NAWS),
             ]

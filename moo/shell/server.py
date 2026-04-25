@@ -37,23 +37,59 @@ def _fd_count() -> int:
         return -1
 
 
+_MUD_CLIENT_TERM_MARKERS = ("mudlet", "tintin", "mushclient", "blowtorch", "mudrammer", "zmud", "cmud")
+
+
+def _iac_bytes_to_str(data: bytes) -> str:
+    """
+    Convert raw IAC bytes to a str the surrogate-escape UTF-8 channel
+    can re-emit verbatim. ``\\xff`` becomes ``\\udcff``, etc.
+    """
+    return data.decode("utf-8", errors="surrogateescape")
+
+
+def _is_mud_term(term: str | None) -> bool:
+    """
+    True when the SSH client's ``TERM`` string signals a MUD client.
+
+    Matches the existing ``xterm-256-basic`` raw-mode opt-in plus a small
+    allowlist of major MUD-client `TERM` values. Anything else (xterm,
+    tmux, screen, ...) gets a plain rich-mode session with no IAC
+    negotiation, since IAC bytes render as garbage in regular terminals.
+    """
+    if not term:
+        return False
+    lowered = term.strip().lower()
+    if lowered == "xterm-256-basic":
+        return True
+    return any(marker in lowered for marker in _MUD_CLIENT_TERM_MARKERS)
+
+
 class MooPromptToolkitSSHSession(PromptToolkitSSHSession):
     """
     SSH session that selects a shell mode from the client's ``TERM`` and
-    speaks the IAC subnegotiation channel on top of SSH.
+    speaks the IAC subnegotiation channel on top of SSH for MUD clients.
 
-    The channel is switched to bytes mode (``encoding=None``) during
-    :meth:`connection_made` so the :class:`IacParser` can see 0xFF
-    prefix bytes directly. Outbound prompt_toolkit/Rich text is UTF-8
-    encoded in :meth:`_encoded_stdout_write` before reaching the channel.
+    For MUD clients (TERM = ``xterm-256-basic`` or a known MUD-client
+    name), the channel switches its UTF-8 error policy to
+    ``surrogateescape`` so 0xFF IAC bytes round-trip as ``\\udcff``
+    surrogate code points: outbound IAC frames go out by decoding raw
+    bytes through surrogateescape (the channel's UTF-8 encoder
+    re-emits them as the original bytes), and inbound 0xFF arrives as
+    surrogate chars in :meth:`data_received` which we re-encode for
+    the IAC parser. The channel stays in str mode the whole time, so
+    prompt_toolkit's renderer, CPR detection, and Stdout pipeline work
+    unchanged. Vanilla SSH terminals leave the channel in strict UTF-8
+    and never see an IAC byte.
 
-    See :doc:`/explanation/shell-internals` § "The Three Modes" for the
-    full mapping.
+    See :doc:`/explanation/shell-internals` § "The Three Modes" for
+    the full mapping.
     """
 
     user = None  # set by MooSSHServer.session_requested() before the session starts
     is_automation: bool = False
     mode: str = "rich"
+    iac_enabled: bool = False  # set to True in connection_made when TERM looks like a MUD client
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -64,22 +100,24 @@ class MooPromptToolkitSSHSession(PromptToolkitSSHSession):
             on_mssp_request=self._on_mssp_request,
         )
 
-    def connection_made(self, chan) -> None:
-        super().connection_made(chan)
-        # Bytes mode so the IAC parser can see 0xFF prefix bytes. Rich/
-        # prompt_toolkit output is UTF-8 encoded in _encoded_stdout_write.
-        chan.set_encoding(None)
+    def _clear_iac_cache(self) -> None:
+        """Remove any cached IAC capability snapshot for this user."""
+        if self.user is None:
+            return
+        try:
+            from django.core.cache import cache  # pylint: disable=import-outside-toplevel
 
-        def _encoded_stdout_write(data: str) -> None:
-            try:
-                if self._chan is not None:
-                    self._chan.write(data.replace("\n", "\r\n").encode("utf-8"))
-            except BrokenPipeError:
-                pass
+            from .prompt import _session_settings  # pylint: disable=import-outside-toplevel
 
-        self.stdout.write = _encoded_stdout_write  # type: ignore[method-assign]
+            _session_settings.get(self.user.pk, {}).pop("iac", None)
+            cache.delete(f"moo:session:{self.user.pk}:iac")
+        except Exception:  # pylint: disable=broad-except
+            log.exception("failed to clear stale IAC cache for user=%s", self.user)
 
     def session_started(self) -> None:
+        # All TERM-dependent setup happens here, not in connection_made:
+        # asyncssh populates the terminal type from the client's PTY request,
+        # which arrives between connection_made and session_started.
         if self._chan:
             term = self._chan.get_terminal_type()
             if term and "moo-automation" in term.lower():
@@ -89,32 +127,52 @@ class MooPromptToolkitSSHSession(PromptToolkitSSHSession):
                 self.mode = "rich"
             elif term and term.strip().lower() == "xterm-256-basic":
                 self.mode = "raw"
+            self.iac_enabled = _is_mud_term(term)
+            if self.iac_enabled:
+                # Lenient UTF-8 so 0xFF IAC bytes round-trip as \udcff
+                # surrogates; the channel stays in str mode so prompt_toolkit's
+                # renderer and CPR detection work unchanged.
+                self._chan.set_encoding("utf-8", errors="surrogateescape")
+            else:
+                # Clear any stale IAC capability cache from a previous
+                # MUD-client session — send_gmcp would otherwise return True
+                # via _client_supports for the next 24h and try to publish
+                # OOB events the current client cannot consume.
+                self._clear_iac_cache()
         super().session_started()
-        # Send initial IAC option offers on session start. Automation clients
-        # cannot round-trip IAC safely, so we suppress negotiation for them.
+        # Initial IAC option offers go out only when we're talking to a real
+        # MUD client. Automation clients cannot round-trip IAC; vanilla SSH
+        # would render the offer bytes as garbage characters. The channel is
+        # in surrogate-escape UTF-8 mode for MUD clients, so we feed it str.
         negotiator = getattr(self, "iac_negotiator", None)
-        if negotiator is not None and not self.is_automation and self._chan is not None:
+        if self.iac_enabled and negotiator is not None and not self.is_automation and self._chan is not None:
             try:
-                self._chan.write(negotiator.initial_offers())
+                self._chan.write(_iac_bytes_to_str(negotiator.initial_offers()))
             except BrokenPipeError:
                 pass
 
     def data_received(self, data, datatype) -> None:  # type: ignore[override]
-        # With encoding=None on the channel, asyncssh delivers raw bytes here.
-        if not isinstance(data, (bytes, bytearray)):
-            # Fallback for automation/tests that still feed str through.
-            if self._input is not None:
+        # Vanilla SSH clients (no MUD-client TERM) — just forward as-is.
+        if not self.iac_enabled:
+            if self._input is not None and isinstance(data, str):
                 self._input.send_text(data)
             return
 
-        events, residual = self.iac_parser.feed(bytes(data))
+        # MUD-client path: data is str with possible \udcXX surrogates from
+        # surrogateescape decoding. Re-encode to bytes for IAC parsing.
+        if isinstance(data, str):
+            data_bytes = data.encode("utf-8", errors="surrogateescape")
+        else:
+            data_bytes = bytes(data)
+
+        events, residual_bytes = self.iac_parser.feed(data_bytes)
         if events:
             prev_caps = dict(self.iac_negotiator.capabilities)
             for event in events:
                 reply = self.iac_negotiator.handle(event)
                 if reply and self._chan is not None:
                     try:
-                        self._chan.write(reply)
+                        self._chan.write(_iac_bytes_to_str(reply))
                     except BrokenPipeError:
                         return
             # Mirror to _session_settings + cache whenever any capability flipped,
@@ -122,12 +180,8 @@ class MooPromptToolkitSSHSession(PromptToolkitSSHSession):
             # without ever running the TTYPE dance.
             if self.iac_negotiator.capabilities != prev_caps:
                 self._mirror_capabilities()
-        if residual and self._input is not None:
-            try:
-                text = residual.decode("utf-8")
-            except UnicodeDecodeError:
-                text = residual.decode("utf-8", errors="replace")
-            self._input.send_text(text)
+        if residual_bytes and self._input is not None:
+            self._input.send_text(residual_bytes.decode("utf-8", errors="surrogateescape"))
 
     # --- IAC callbacks ------------------------------------------------------
 

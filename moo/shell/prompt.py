@@ -44,6 +44,8 @@ _session_settings: dict[int, dict] = {}
 MODE_RICH = "rich"
 MODE_RAW = "raw"
 
+EMPTY_LINE_PROMPT = "What do you want to do next?"
+
 PROMPT_SHORTCUTS = {
     '"': 'say "%"',
     "'": "say '%'",
@@ -142,6 +144,7 @@ class MooPrompt:
         self.user = user
         self.mode = mode
         self._chan = getattr(session, "_chan", None) if session is not None else None
+        self._iac_enabled = bool(getattr(session, "iac_enabled", False)) if session is not None else False
         self.automation = automation
         self.is_exiting = False
         # Stamp settings pre-_repl_setup so unit tests that construct a
@@ -178,6 +181,10 @@ class MooPrompt:
         self._raw_line_buffer: str = ""
 
     def _osc133_enabled(self) -> bool:
+        # MUD clients don't speak OSC 133; the BEL-terminated frames upset
+        # Mudlet's prompt-line heuristic and swallow the trailing IAC GA.
+        if self._iac_enabled:
+            return False
         return _session_settings.get(self.user.pk, {}).get("osc133_mode", True)
 
     def _prefixes_enabled(self) -> bool:
@@ -309,6 +316,7 @@ class MooPrompt:
             "output_global_prefix",
             "output_global_suffix",
             "color_system",
+            "iac",
         ):
             cache.delete(f"moo:session:{user_pk}:{key}")
         await self._close_session_buffer()
@@ -384,6 +392,13 @@ class MooPrompt:
                     except (EOFError, KeyboardInterrupt):
                         self.is_exiting = True
                         break
+                    if not line.strip():
+
+                        def _write_empty_prompt(msg=EMPTY_LINE_PROMPT):
+                            self.writer(msg)
+
+                        await self._run_in_terminal_marked(_write_empty_prompt)
+                        continue
                     if line.strip() == ".flush":
                         drain_pieces = await self._drain_messages()
                         if drain_pieces:
@@ -474,6 +489,9 @@ class MooPrompt:
                     if line is None:
                         self.is_exiting = True
                         break
+                    if not line.strip():
+                        self.writer(EMPTY_LINE_PROMPT)
+                        continue
                     if line.strip() == ".flush":
                         drain_pieces = await self._drain_messages()
                         if drain_pieces:
@@ -488,11 +506,43 @@ class MooPrompt:
                         for piece in output_pieces:
                             self.writer(piece)
                         await self._dispatch_pending_event(events)
+                        # Async tell() output (e.g. exit.move's leave/arrive
+                        # broadcasts) lands in Kombu, not in handle_command's
+                        # return value. Drain it here so it appears before the
+                        # next prompt instead of below it.
+                        await self._drain_async_tell_output()
         except:  # pylint: disable=bare-except
             log.exception("Error in raw command processing")
         finally:
             await self._repl_teardown()
         log.debug("Raw REPL is exiting, stopping main thread...")
+
+    async def _drain_async_tell_output(self) -> None:
+        """
+        Drain any tell()/write() output the just-completed verb published
+        through Kombu, before raw mode re-renders the next prompt.
+
+        Kombu publish→consume has ~5-20ms broker latency, so we wait a brief
+        deadline for in-flight messages to arrive, then drain. Without this
+        the next prompt races the drain and lands above the verb's output.
+        """
+        deadline = asyncio.get_event_loop().time() + 0.15
+        empty_in_a_row = 0
+        while empty_in_a_row < 2 and asyncio.get_event_loop().time() < deadline:
+            to_write, events = await self._drain_session_buffer()
+            for message in events:
+                if message.get("event") == "disconnect":
+                    self.is_exiting = True
+                    self.disconnect_event.set()
+                else:
+                    await self._route_event(message)
+            for piece in to_write:
+                self.writer(piece)
+            if to_write or events:
+                empty_in_a_row = 0
+            else:
+                empty_in_a_row += 1
+            await asyncio.sleep(0.02)
 
     def _editor_rejection_pieces(self) -> list[str]:
         """Build the "editor not available" error for automation/raw modes."""
@@ -523,28 +573,30 @@ class MooPrompt:
         return capture.get()
 
     def _chan_write(self, text: str) -> None:
-        """
-        Write to the asyncssh channel with LF→CRLF translation (raw mode only).
-
-        The channel is configured in bytes mode (``encoding=None``) so the
-        IAC parser can see 0xFF prefix bytes; we UTF-8 encode here before
-        sending.
-        """
+        """Write to the asyncssh channel with LF→CRLF translation (raw mode only)."""
         if self._chan is None:
             return
-        self._chan.write(text.replace("\n", "\r\n").encode("utf-8"))
+        encoded = text.replace("\n", "\r\n")
+        if self._iac_enabled and log.isEnabledFor(logging.DEBUG):
+            wire = encoded.encode("utf-8", errors="surrogateescape")
+            log.debug("chan_write user=%s len=%d head=%r", self.user.pk, len(wire), wire[:80])
+        self._chan.write(encoded)
 
     def _chan_write_iac(self, data: bytes) -> None:
         """
         Write raw IAC bytes to the asyncssh channel.
 
-        No LF→CRLF translation, no encoding. Used for IAC subnegotiation
-        frames emitted via the ``"oob"`` event path.
+        For MUD-client sessions the channel uses UTF-8 with
+        ``errors='surrogateescape'``, so we decode the bytes through that
+        codec to get a str that re-emits as the original bytes on the
+        wire. Used for IAC subnegotiation frames from the ``"oob"`` path.
         """
         if self._chan is None:
             return
+        if log.isEnabledFor(logging.DEBUG):
+            log.debug("chan_write_iac user=%s bytes=%r", self.user.pk, data)
         try:
-            self._chan.write(data)
+            self._chan.write(data.decode("utf-8", errors="surrogateescape"))
         except BrokenPipeError:
             pass
 
@@ -553,19 +605,20 @@ class MooPrompt:
         Emit ``IAC EOR`` or ``IAC GA`` after a prompt render so MUD clients
         and screen readers can detect the server-to-client turnaround.
 
-        EOR is preferred when the client negotiated it (option 25). Some
-        older clients still key off GA; we emit GA when EOR is not
-        negotiated and the client or server opted into it.
-
-        No-op for clients that did not negotiate either option — both
-        bytes would render as garbage in a plain terminal.
+        For IAC-capable sessions we always emit a marker, defaulting to GA
+        (the MUD convention — Mudlet's mapper auto-detect needs it). EOR is
+        used instead when the client explicitly negotiated option 25. For
+        vanilla SSH sessions this is a no-op since the bytes would render
+        as garbage in a plain terminal.
         """
+        if not self._iac_enabled:
+            return
         from .iac import encode_eor, encode_ga  # pylint: disable=import-outside-toplevel
 
         iac = _session_settings.get(self.user.pk, {}).get("iac", {})
         if iac.get("eor"):
             self._chan_write_iac(encode_eor())
-        elif iac.get("ga_or_eor"):
+        else:
             self._chan_write_iac(encode_ga())
 
     async def _read_line_raw(self) -> str | None:
@@ -574,6 +627,10 @@ class MooPrompt:
 
         Buffers plain bytes until CR/LF; drops escape sequences (MUD clients
         do their own line editing). Returns ``None`` on EOF.
+
+        Per telnet RFC defaults the server does not echo input — MUD clients
+        (Mudlet, MUSHclient, TinTin++, ...) all local-echo by default and a
+        server-side echo would land as a duplicate copy on the user's screen.
         """
         from prompt_toolkit.application.current import get_app_session
         from prompt_toolkit.input import Input
@@ -590,18 +647,15 @@ class MooPrompt:
                         if key in (Keys.ControlM, Keys.ControlJ):
                             line = self._raw_line_buffer
                             self._raw_line_buffer = ""
-                            self._chan_write("\r\n")
                             return line
                         if key in (Keys.ControlD,) and not self._raw_line_buffer:
                             return None
                         if key in (Keys.Backspace, Keys.ControlH):
                             if self._raw_line_buffer:
                                 self._raw_line_buffer = self._raw_line_buffer[:-1]
-                                self._chan_write("\b \b")
                             continue
                         if data and not data.startswith("\x1b"):
                             self._raw_line_buffer += data
-                            self._chan_write(data)
                     await asyncio.sleep(0.01)
 
     async def run_editor_session(self, req: dict):
@@ -786,23 +840,11 @@ class MooPrompt:
     @sync_to_async
     def generate_prompt(self):
         """
-        Build the prompt message tuple for the current avatar/location.
-
-        :returns: list of ``(style_class, text)`` pairs. Quiet mode returns a
-            bare ``$ `` instead.
+        Build the prompt message tuple — a stable ``>>> `` marker. Stable
+        prompts make MUD-client mappers and screen readers happy; per-room
+        details belong in GMCP ``Room.Info`` (and the room description).
         """
-        settings = _session_settings.get(self.user.pk, {})
-        if settings.get("quiet_mode", False):
-            return [("", "$ ")]
-        caller = self.user.player.avatar
-        caller.refresh_from_db()
-        return [
-            ("class:name", str(caller.name)),
-            ("class:at", "@"),
-            ("class:location", str(caller.location.name) if caller.location else "nowhere"),
-            ("class:colon", ":"),
-            ("class:pound", "$ "),
-        ]
+        return [("class:pound", ">>> ")]
 
     @sync_to_async
     def handle_command(self, line: str) -> tuple[list, list]:

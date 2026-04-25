@@ -24,6 +24,7 @@ from moo.shell.iac import (
     OPT_GMCP,
     OPT_MSSP,
     OPT_NAWS,
+    OPT_SGA,
     OPT_TTYPE,
     SB,
     SE,
@@ -316,6 +317,9 @@ def test_negotiator_initial_offers_include_expected_set():
     assert bytes((IAC, WILL, OPT_MSSP)) in offers
     assert bytes((IAC, DO, OPT_TTYPE)) in offers
     assert bytes((IAC, DO, OPT_NAWS)) in offers
+    # Proactive WONT SGA — Mudlet only enters GA-detect mode after the
+    # server explicitly disclaims SGA.
+    assert bytes((IAC, WONT, OPT_SGA)) in offers
 
 
 def test_negotiator_client_do_gmcp_sets_capability():
