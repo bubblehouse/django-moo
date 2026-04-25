@@ -29,7 +29,7 @@ The SSH password is never written to disk; sshelnet receives it via the
 Run `dmstatus` to see current state, `dmupgrade` to refresh the bundled
 sshelnet to the latest GitLab release.
 ]]
-version = [[1.3.0]]
+version = [[1.4.0]]
 created = "2026-04-25T00:00:00+00:00"
 icon = [[icon.png]]
 sshelnet_pinned_version = [[v1.1.0]]

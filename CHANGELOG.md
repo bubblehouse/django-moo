@@ -1,3 +1,22 @@
+## [1.4.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.3.0...v1.4.0) (2026-04-25)
+
+### Features
+
+* **extras:** add Mudlet generic-mapper bridge package ([b2ca569](https://gitlab.com/bubblehouse/django-moo/commit/b2ca569acd54f01439ff679570549320695010a0))
+* **extras:** rebrand mudlet package as djangomoo with SSH, setup, editor and mapper modules ([4ce952c](https://gitlab.com/bubblehouse/django-moo/commit/4ce952c6c9cbf1a8d077ac7fe1134eed6195a7b3))
+* **sdk:** add room_info_payload helper for IRE-style GMCP Room.Info ([4e05284](https://gitlab.com/bubblehouse/django-moo/commit/4e05284ad216b553fad30e78619ac92d1835ff43))
+* **sdk:** add send_oob, send_gmcp, and play_sound for MUD-client OOB ([561932a](https://gitlab.com/bubblehouse/django-moo/commit/561932a7d24c03b8cdf1963fd85a6499299d4725))
+* **shell:** add GMCP-based external editor handoff via Editor.Start/Save/Cancel ([316d92f](https://gitlab.com/bubblehouse/django-moo/commit/316d92f83065f01c1f82ff40c1a7f89b7a7d5e8d))
+* **shell:** add IAC subnegotiation library for MUD-client OOB protocols ([e9466bc](https://gitlab.com/bubblehouse/django-moo/commit/e9466bcf4fc82a1b53edd12b75497f1637376a43))
+* **shell:** add MOO_SHELL_LOGLEVEL env hook for opt-in DEBUG logging ([251efe4](https://gitlab.com/bubblehouse/django-moo/commit/251efe44510dbc6d6e3b35eda6b877450a8c04a0))
+* **shell:** wire IAC negotiation into the SSH session and prompt lifecycle ([077f18d](https://gitlab.com/bubblehouse/django-moo/commit/077f18d73cd7696ff539d737dfe952d34ffa260f))
+* **verbs:** emit GMCP events from say, emote, page, whisper, confunc, and exit.move ([16707e4](https://gitlab.com/bubblehouse/django-moo/commit/16707e4e37fab80b7a911ab67e0858ec8bcfae00))
+
+### Bug Fixes
+
+* **core:** close kombu channel after publish; add bytes serialization to moojson ([1c6a830](https://gitlab.com/bubblehouse/django-moo/commit/1c6a8304eeccedbc1e48dd915822a17d70c6f244))
+* **shell:** defer IAC setup to session_started, emit WONT SGA, stabilize prompt ([00dbbab](https://gitlab.com/bubblehouse/django-moo/commit/00dbbab8c627a79daf4d80ee29ba1749cadb1a42))
+
 ## [1.3.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.2.0...v1.3.0) (2026-04-24)
 
 ### Features
