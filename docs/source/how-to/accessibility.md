@@ -155,65 +155,70 @@ inline alternatives instead.
 See {doc}`../explanation/shell-internals` § "The Three Modes" for the full
 mode-selection logic.
 
-## Upcoming: Out-of-Band Telnet Protocols (Issue #16)
+## Out-of-Band MUD Client Protocols
 
-Raw mode gets a MUD client connected, but it stops at "plain line stream".
-Blind MUD players have spent decades building client-side tooling — sound
+Raw mode gets a MUD client connected, but text alone is not enough for the
+accessibility tooling blind players have built up over decades — sound
 packs, virtual output buffers, gag filters, speedwalk maps, vitals readouts
-— that works dramatically better when the server emits structured *out-of-band*
-events alongside the human-readable text.
-
-GitLab issue
-[#16](https://gitlab.com/bubblehouse/django-moo/-/issues/16) scopes the
-support. django-moo is SSH-only, but
+— which key off *structured out-of-band events* emitted alongside the
+human-readable text. django-moo speaks those protocols on top of the SSH
+session itself: IAC byte sequences pass through SSH transparently, and
 [sshelnet](https://gitlab.com/bubblehouse/sshelnet) bridges plain-telnet
-clients onto the SSH port, and IAC byte sequences pass through SSH
-transparently — so the full suite of telnet-subnegotiation MUD protocols
-can be implemented without a second listener.
+clients onto the SSH port for free, so no second listener is needed.
+
+The full MUD-accessibility protocol stack lives in
+[`moo/shell/iac.py`](../../../moo/shell/iac.py) — an IAC subnegotiation
+parser, encoder, and negotiator. It is *not* a general telnet
+implementation: it only speaks the options the MUD-client ecosystem
+actually uses.
 
 ### Tier 1 — the OOB channel
 
 | Protocol | Telnet option | What it does |
 |----------|---------------|--------------|
-| **IAC state machine**  | — | Inbound parser (`DO`/`DONT`/`WILL`/`WONT` + `SB…SE`), outbound encoder, per-session negotiation state. Lands as a new `moo/shell/telnet.py`. |
-| **GMCP** (Generic MUD Communication Protocol) | 201 | JSON-over-subneg side channel. Emits `Core.Hello`, `Char.Name`, `Char.Vitals`, `Room.Info`, `Room.Players`, `Comm.Channel.Text`. The canonical modern OOB protocol. |
-| **MTTS / TTYPE** | 24 | Three-stage terminal-type negotiation. Replaces the fragile `TERM=xterm-256-basic` opt-in — Mudlet and friends will auto-select raw mode without environment magic. |
+| **GMCP** (Generic MUD Communication Protocol) | 201 | JSON-over-subneg side channel. Default verbs emit `Char.Name` / `Room.Info` at login and on movement, and `Comm.Channel.Text` for say / emote / page / whisper. |
+| **MTTS / TTYPE** | 24 | Three-stage terminal-type negotiation. Identifies real MUD clients (Mudlet, MUSHclient, TinTin++) without the `TERM=xterm-256-basic` opt-in. |
 
 ### Tier 2 — protocol polish
 
 | Protocol | Telnet option | What it does |
 |----------|---------------|--------------|
 | **MSSP** | 70 | MUD-server status, answers discovery probes from The Mud Server Status Protocol directory and the Mudlet directory. |
-| **GA / EOR** | 249 / 25 | Prompt-end signal. Critical for screen readers — tells the client "the server is done talking; focus the input line." |
-| **CHARSET** | 42 | Lock the session to UTF-8 so clients that default to Latin-1 do not mojibake. |
+| **GA / EOR** | 249 / 25 | Prompt-end signal emitted after every prompt render when the client negotiated it. Critical for screen readers — tells the client "the server is done talking; focus the input line." |
+| **CHARSET** | 42 | Locks the session to UTF-8 so clients that default to Latin-1 do not mojibake. |
 
 ### Tier 3 — audio UI
 
 | Protocol | What it does |
 |----------|--------------|
-| **MSP** (MUD Sound Protocol) | Inline `!!SOUND(file.wav V=100)` / `!!MUSIC(...)` markers in the text stream. |
-| **GMCP `Client.Media.Play`** | Same event, delivered via GMCP for clients (e.g. Mudlet) that prefer it. |
+| **GMCP `Client.Media.Play`** | Preferred path when the client negotiated GMCP (e.g. Mudlet). |
+| **MSP** (MUD Sound Protocol) | Inline `!!SOUND(file.wav V=100)` / `!!MUSIC(...)` markers — the fallback for clients that speak MSP but not GMCP. |
 
-An `moo.sdk.output.play_sound(obj, name, volume=100, priority=10)` helper
-will prefer GMCP when negotiated and fall back to MSP otherwise. **The
-server ships protocol support only — no bundled sound assets.** Wizards and
-pack authors wire events to files themselves.
+`moo.sdk.play_sound(obj, name, volume=100, priority=10)` picks the right
+wire format automatically. **The server ships protocol support only — no
+bundled sound assets.** Wizards and pack authors supply the filenames that
+their client-side pack can resolve.
 
-### Rich-mode freebie: category metadata
+### Emitting GMCP from verbs
 
-The GMCP encoder needs to know that a given line of output is a
-`Comm.Channel.Text` event rather than a `Room.Info` event, so an optional
-`category=` kwarg will be added to `tell()` / `print()` — or a new
-`emit(category, text, payload)` helper. Categories are metadata, **not** a
-fourth output channel: `tell` vs `print` vs `write` stays as-is. As a side
-benefit, rich-mode clients will be able to set per-category colours via a
-new `COLORS` session setting (`COLORS chat=cyan room=dim.white combat=red`)
-— default empty, no visible change for existing users.
+```python
+from moo.sdk import send_gmcp, play_sound
+
+send_gmcp(player, "Char.Vitals", {"hp": 50, "maxhp": 100})
+send_gmcp(player, "Room.Info", {"num": room.pk, "name": room.name})
+play_sound(player, "door_close.wav", volume=70)
+```
+
+Both calls silently no-op when the target player's client did not
+negotiate the relevant capability, so adding them to default verbs is safe
+even when most users connect from plain SSH.
 
 ### Deferred out of scope
 
-Named side-windows (split panes), NAWS, MCCP2/3 compression, MXP, and MSDP
-are all explicitly deferred — see issue #16 for the reasoning on each.
+NAWS (window size — prompt_toolkit already reports it), MCCP2/3 compression
+(bandwidth only, no accessibility value), MXP (largely superseded by GMCP),
+MSDP (GMCP's older sibling — most modern blind-user scripts target GMCP),
+named side-windows (split panes). See issue #16 for the reasoning.
 
 ## Testing Your Setup
 

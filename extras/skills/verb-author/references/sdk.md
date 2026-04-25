@@ -299,6 +299,36 @@ from moo.sdk import boot_player, lookup
 boot_player(lookup("Guest"))
 ```
 
+## `send_gmcp(obj, module, data=None)` / `send_oob(obj, data)` / `play_sound(obj, name, volume=100, priority=10)`
+
+Structured out-of-band channel for MUD clients. Emits GMCP / MSP frames to
+the player's SSH channel when the connected client negotiated support for
+the relevant option; silently no-ops otherwise, so adding these calls is
+safe even when most users connect from plain SSH.
+
+```python
+from moo.sdk import send_gmcp, play_sound, lookup
+
+# Update a Mudlet character panel after an HP change.
+send_gmcp(player, "Char.Vitals", {"hp": 50, "maxhp": 100})
+
+# Announce a room change so client-side maps can track the player.
+send_gmcp(player, "Room.Info", {"num": room.pk, "name": room.name})
+
+# Play a door-closing sound. Prefers GMCP Client.Media.Play; falls back to
+# inline MSP !!SOUND(...) for clients that speak MSP but not GMCP.
+play_sound(player, "door_close.wav", volume=70, priority=5)
+```
+
+`send_oob(obj, data)` is the low-level escape hatch — it publishes raw
+pre-encoded IAC subnegotiation bytes. Use `send_gmcp` for normal GMCP
+events; reach for `send_oob` only when you need a protocol the SDK does
+not wrap.
+
+All three are wizard-only (they share the same caller check as `write()`).
+DjangoMOO does not bundle any sound assets; pack authors supply their own
+filenames that the client can resolve.
+
 ## `PLACEMENT_PREPS` / `HIDDEN_PLACEMENT_PREPS`
 
 Two constants for verbs that deal with spatial placement.

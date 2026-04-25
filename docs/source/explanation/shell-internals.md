@@ -365,6 +365,51 @@ management command. Key choices:
 - A plain TCP health endpoint listens on port 8023 for Kubernetes liveness
   probes. It replies `OK\n` and closes.
 
+## IAC Subnegotiation (GMCP / MSSP / MTTS / MSP)
+
+MUD-client accessibility tooling — sound packs, virtual buffers, gags,
+speedwalk maps — runs on *out-of-band events* delivered over the telnet
+IAC subnegotiation channel. django-moo speaks IAC on top of SSH: 0xFF
+prefix bytes pass through SSH channels transparently, and
+[sshelnet](https://gitlab.com/bubblehouse/sshelnet) bridges plain-telnet
+clients onto the SSH port. No second listener is needed.
+
+To get raw 0xFF bytes through the asyncssh channel, `connection_made`
+switches the channel to bytes mode (`encoding=None`). prompt_toolkit's
+`Stdout.write` is wrapped to UTF-8 encode before handing data to the
+channel, and `_chan_write` in `prompt.py` does the same for raw-mode
+writes. Inbound bytes land in an overridden `data_received` that feeds
+them through `IacParser`; the parser strips IAC frames and returns the
+residue as plain bytes, which are decoded and forwarded to prompt_toolkit's
+input pipe.
+
+`IacNegotiator` (also in `moo/shell/iac.py`) owns the per-session
+capability state. On connect, the server offers `WILL GMCP`, `WILL MSSP`,
+`WILL MSP`, `WILL EOR`, `WILL CHARSET`, `DO TTYPE`, `DO NAWS`; the
+negotiator responds to counter-offers, runs the three-stage MTTS dance,
+and accepts client-initiated CHARSET requests. Negotiated capabilities
+are mirrored into `_session_settings[user_pk]["iac"]` and the Django
+cache so Celery workers (verb execution) can branch on them.
+
+Outbound GMCP emits go through the SDK: `send_gmcp(obj, module, data)`
+in `moo/sdk/output.py` encodes the frame, publishes an
+`{"event": "oob", "data": <bytes>}` Kombu message to the player's queue,
+and the shell's `_route_event` writes the bytes straight to the channel
+via `_chan_write_iac` (no LF→CRLF, no encoding). `play_sound` prefers
+GMCP `Client.Media.Play` when negotiated and falls back to inline MSP
+`!!SOUND(...)` markers otherwise. All SDK OOB entry points are
+wizard-only, consistent with `write()` and `open_editor`.
+
+After each prompt render, `_emit_prompt_end_marker` emits `IAC EOR`
+(preferred) or `IAC GA` so screen readers can detect the
+server-to-client turnaround and focus the input line. No-op for clients
+that negotiated neither — the bytes would render as garbage in a plain
+terminal.
+
+Scope note: this is the IAC subnegotiation layer only. We do not
+implement the wider telnet protocol (ECHO, SGA, LINEMODE, etc.) because
+we do not need to — SSH already handles the transport.
+
 ## History
 
 `RedisHistory` (`moo/shell/history.py`) is a small prompt_toolkit `History`
