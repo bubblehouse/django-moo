@@ -104,16 +104,51 @@ nudges you via a yellow message in the main window when there's an upgrade.
 
 ## External editor for `@edit`
 
-The bridge advertises GMCP `Editor` support via `Core.Supports.Set`, so
-when you run `@edit verb_name on $obj` (or any other verb that calls
-`open_editor()` server-side -- `@describe`, `@send`, `@reply`, `@gripe`,
-`@forward`, `@edit` for notes), the server sends the content to your
-client over GMCP and the bridge launches your **local** editor on it.
-When you save and close, the new content is sent back over GMCP and the
-server applies it. The prompt-toolkit TUI editor that doesn't render
-correctly in Mudlet is bypassed entirely.
+The bridge advertises GMCP `Editor` support via `Core.Supports.Set`
+on connect, so any server-side verb that calls `open_editor()` --
+`@edit` (for verbs and notes), `@describe`, `@send`, `@reply`,
+`@gripe`, `@forward` -- hands the content off to your **local**
+editor instead of trying to draw the prompt-toolkit TUI editor over
+the Mudlet TCP stream (which doesn't render correctly).
 
-Default editor commands per OS (use `{file}` as the path placeholder):
+### Protocol flow
+
+1. **Server sends `Editor.Start`** with `{id, content, content_type, title}`.
+2. **Bridge writes a temp file** at `$TMPDIR/djangomoo-edit-<id><ext>`.
+   The extension is chosen from `content_type` so editors pick the
+   right syntax highlighter:
+
+   | content_type | extension |
+   |--------------|-----------|
+   | `python`     | `.py`     |
+   | `json`       | `.json`   |
+   | `text`       | `.txt`    |
+
+3. **Bridge spawns your editor** (see commands below) and watches for
+   it to exit. For blocking editors (`code --wait`, `open -W`) the
+   spawn handle is polled every 200ms; for non-blocking openers
+   (`xdg-open`) it falls back to file-mtime polling at 2s once the
+   spawn returns.
+4. **On exit**: if mtime changed, bridge reads the file and sends
+   `Editor.Save {id, content}` back to the server. If mtime is
+   unchanged (closed without saving), it sends `Editor.Cancel {id}`
+   and the server discards the pending callback. Either way the temp
+   file is deleted.
+5. **30-minute backstop**: if the editor never exits, the session
+   times out and the file is read back as-is.
+
+The bridge supports stacked edits -- you can fire several `@edit`
+commands in a row and the bridge polls each session independently
+(keyed by `edit_id`).
+
+Editor stdout/stderr is streamed line-by-line into Mudlet's main
+window prefixed with `[editor]` in dim grey, so spawn errors are
+visible immediately.
+
+### Picking an editor
+
+Default editor commands per OS (use `{file}` as the path placeholder;
+if `{file}` is omitted, the path is appended):
 
 | OS      | Default                | Notes                                                 |
 |---------|------------------------|-------------------------------------------------------|
@@ -121,16 +156,34 @@ Default editor commands per OS (use `{file}` as the path placeholder):
 | Linux   | `xdg-open {file}`      | Doesn't block; bridge falls back to mtime polling     |
 | Windows | `notepad {file}`       | Blocks naturally                                      |
 
-Override with:
+Override with `dmsetup editor`:
 
 ```text
 dmsetup editor code --wait {file}        # VS Code, blocking
 dmsetup editor subl --wait {file}        # Sublime Text, blocking
+dmsetup editor mate -w {file}            # TextMate, blocking
 dmsetup editor open -W -a Atom {file}    # Force a specific Mac app
+dmsetup editor vim {file}                # Won't work -- terminal editors
+                                         # need a terminal, which spawn
+                                         # does not provide
 ```
 
-Closing the editor without saving cancels the edit. Bridge sends
-`Editor.Cancel` and the server discards the pending callback.
+The setting is stored in the sshelnet YAML profile alongside host /
+port / auth, so it survives Mudlet restarts. Use `dmsetup show` to
+print the current value.
+
+### Troubleshooting
+
+- **"no editor configured"**: the bridge fell through to the empty
+  default. Run `dmsetup editor <command>` and try again.
+- **Edit closes but nothing happens server-side**: check the spawn
+  command actually blocks until the file is closed. `code` without
+  `--wait` returns immediately and the bridge has nothing to wait
+  on -- on Linux it then mtime-polls, but on macOS `open` without
+  `-W` goes straight to Cancel because the spawn exits before you've
+  saved.
+- **Multiple editor windows pop open**: harmless. Each `Editor.Start`
+  spawns its own session; close them in any order.
 
 ## Requirements
 
