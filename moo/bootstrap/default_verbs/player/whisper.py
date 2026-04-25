@@ -7,10 +7,12 @@ the one that is invoked. The message — everything following the verb — is pr
 surrounding it to indicate that is it a whisper.
 """
 
-from moo.sdk import context
+from moo.sdk import context, send_gmcp
 
 source = context.player.title()
 target = context.parser.get_pobj("to")
 message = context.parser.get_dobj_str()
 target.tell(f"{source} whispers to you: {message}")
 context.player.tell(f"You whisper to {target.name}: {message}")
+
+send_gmcp(target, "Comm.Channel.Text", {"channel": "whisper", "talker": context.player.name, "text": message})

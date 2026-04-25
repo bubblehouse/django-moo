@@ -47,7 +47,7 @@ Here, `in`` is used to check if the player``s name occurs in the string we sent 
 does, then we print the player's subjective pronoun, capitalised. If it doesn't, we print the player's name.
 """
 
-from moo.sdk import context
+from moo.sdk import context, send_gmcp
 
 player = context.player
 who = context.parser.get_dobj(lookup=True)
@@ -71,3 +71,6 @@ if message:
 else:
     who.tell(pagemsg)
 print(player.page_echo_msg())
+
+# GMCP Comm.Channel.Text — page is a private channel between sender and recipient.
+send_gmcp(who, "Comm.Channel.Text", {"channel": "page", "talker": player.name, "text": message or ""})

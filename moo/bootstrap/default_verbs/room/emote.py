@@ -10,7 +10,7 @@ other objects in the room of the pose action. This provides a two stage mechanis
 overridden to provide special effects.
 """
 
-from moo.sdk import context
+from moo.sdk import connected_players, context, send_gmcp
 
 if context.parser.words:
     message = " ".join(context.parser.words[1:])
@@ -19,3 +19,9 @@ else:
 
 context.player.tell("You " + message)
 this.emote1(message)
+
+gmcp_event = {"channel": "emote", "talker": context.player.name, "text": message}
+connected = {p.pk for p in connected_players()}
+for obj in this.contents.all():
+    if obj.pk in connected:
+        send_gmcp(obj, "Comm.Channel.Text", gmcp_event)

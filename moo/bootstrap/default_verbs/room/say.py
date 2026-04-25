@@ -11,7 +11,7 @@ By overriding this verb, it is possible to provide all sorts of effects that wor
 example, you could redirect messages to other rooms, or repeat messages to provide cavernous echoes.
 """
 
-from moo.sdk import context
+from moo.sdk import connected_players, context, send_gmcp
 
 if context.parser.words:
     message = " ".join(context.parser.words[1:])
@@ -20,3 +20,13 @@ else:
 
 context.player.tell("You: " + message)
 this.announce_all_but(context.player, context.player.name + ": " + message)
+
+# GMCP Comm.Channel.Text to every connected player in the room (including the
+# speaker, so accessibility clients can gag by `talker`). Intersecting
+# connected_players against room contents avoids a per-object player lookup
+# when the room has non-player items (furniture, keys, notes, etc.).
+gmcp_event = {"channel": "say", "talker": context.player.name, "text": message}
+connected = {p.pk for p in connected_players()}
+for obj in this.contents.all():
+    if obj.pk in connected:
+        send_gmcp(obj, "Comm.Channel.Text", gmcp_event)
