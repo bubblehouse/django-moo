@@ -12,5 +12,10 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         import logging
 
-        logging.info("Starting shell server...")
+        shell_log = logging.getLogger("moo.shell")
+        logging.info(
+            "Starting shell server... moo.shell effective_level=%s (DEBUG=%s)",
+            logging.getLevelName(shell_log.getEffectiveLevel()),
+            shell_log.isEnabledFor(logging.DEBUG),
+        )
         asyncio.run(server())
