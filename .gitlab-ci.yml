@@ -5,6 +5,17 @@ stages:
   - release
   - deploy
 
+# Always-on gate so MR pipelines are never empty when only docs/extras
+# changed. Without this, any commit that doesn't touch moo/**/*.py would
+# fail GitLab's "ci_must_pass" merge check with a "skipped" pipeline.
+mr:gate:
+  stage: lint
+  image: alpine:3.19
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  script:
+    - echo "MR pipeline gate ($CI_COMMIT_SHORT_SHA on $CI_COMMIT_REF_NAME)"
+
 lint:score:
   stage: lint
   tags:
