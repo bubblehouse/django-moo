@@ -21,6 +21,7 @@ from django.contrib.auth.models import User  # pylint: disable=imported-auth-use
 from prompt_toolkit.contrib.ssh import PromptToolkitSSHServer, PromptToolkitSSHSession
 from simplesshkey.models import UserKey
 
+from .iac import IacNegotiator, IacParser, is_known_mud_client
 from .prompt import embed
 
 log = logging.getLogger(__name__)
@@ -38,15 +39,45 @@ def _fd_count() -> int:
 
 class MooPromptToolkitSSHSession(PromptToolkitSSHSession):
     """
-    SSH session that selects a shell mode from the client's ``TERM``.
+    SSH session that selects a shell mode from the client's ``TERM`` and
+    speaks the IAC subnegotiation channel on top of SSH.
 
-    See :doc:`/explanation/shell-internals` § "The Three Modes" for the full
-    mapping.
+    The channel is switched to bytes mode (``encoding=None``) during
+    :meth:`connection_made` so the :class:`IacParser` can see 0xFF
+    prefix bytes directly. Outbound prompt_toolkit/Rich text is UTF-8
+    encoded in :meth:`_encoded_stdout_write` before reaching the channel.
+
+    See :doc:`/explanation/shell-internals` § "The Three Modes" for the
+    full mapping.
     """
 
     user = None  # set by MooSSHServer.session_requested() before the session starts
     is_automation: bool = False
     mode: str = "rich"
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.iac_parser = IacParser()
+        self.iac_negotiator = IacNegotiator(
+            on_ttype=self._on_ttype,
+            on_gmcp=self._on_gmcp,
+            on_mssp_request=self._on_mssp_request,
+        )
+
+    def connection_made(self, chan) -> None:
+        super().connection_made(chan)
+        # Bytes mode so the IAC parser can see 0xFF prefix bytes. Rich/
+        # prompt_toolkit output is UTF-8 encoded in _encoded_stdout_write.
+        chan.set_encoding(None)
+
+        def _encoded_stdout_write(data: str) -> None:
+            try:
+                if self._chan is not None:
+                    self._chan.write(data.replace("\n", "\r\n").encode("utf-8"))
+            except BrokenPipeError:
+                pass
+
+        self.stdout.write = _encoded_stdout_write  # type: ignore[method-assign]
 
     def session_started(self) -> None:
         if self._chan:
@@ -59,6 +90,88 @@ class MooPromptToolkitSSHSession(PromptToolkitSSHSession):
             elif term and term.strip().lower() == "xterm-256-basic":
                 self.mode = "raw"
         super().session_started()
+        # Send initial IAC option offers on session start. Automation clients
+        # cannot round-trip IAC safely, so we suppress negotiation for them.
+        negotiator = getattr(self, "iac_negotiator", None)
+        if negotiator is not None and not self.is_automation and self._chan is not None:
+            try:
+                self._chan.write(negotiator.initial_offers())
+            except BrokenPipeError:
+                pass
+
+    def data_received(self, data, datatype) -> None:  # type: ignore[override]
+        # With encoding=None on the channel, asyncssh delivers raw bytes here.
+        if not isinstance(data, (bytes, bytearray)):
+            # Fallback for automation/tests that still feed str through.
+            if self._input is not None:
+                self._input.send_text(data)
+            return
+
+        events, residual = self.iac_parser.feed(bytes(data))
+        if events:
+            prev_caps = dict(self.iac_negotiator.capabilities)
+            for event in events:
+                reply = self.iac_negotiator.handle(event)
+                if reply and self._chan is not None:
+                    try:
+                        self._chan.write(reply)
+                    except BrokenPipeError:
+                        return
+            # Mirror to _session_settings + cache whenever any capability flipped,
+            # not just when TTYPE finalizes — a client may enable GMCP via DO
+            # without ever running the TTYPE dance.
+            if self.iac_negotiator.capabilities != prev_caps:
+                self._mirror_capabilities()
+        if residual and self._input is not None:
+            try:
+                text = residual.decode("utf-8")
+            except UnicodeDecodeError:
+                text = residual.decode("utf-8", errors="replace")
+            self._input.send_text(text)
+
+    # --- IAC callbacks ------------------------------------------------------
+
+    def _mirror_capabilities(self) -> None:
+        """Copy negotiated IAC capabilities into the per-user session settings and cache."""
+        if self.user is None:
+            return
+        from django.core.cache import cache  # pylint: disable=import-outside-toplevel
+
+        from .prompt import _session_settings  # pylint: disable=import-outside-toplevel
+
+        caps = dict(self.iac_negotiator.capabilities)
+        _session_settings.setdefault(self.user.pk, {})["iac"] = caps
+        # Mirror to cache so Celery workers (separate process) can see it.
+        cache.set(f"moo:session:{self.user.pk}:iac", caps, timeout=86400)
+
+    def _on_ttype(self, client_name: str, mtts: int) -> None:
+        # Capability mirroring happens in data_received after handle() runs;
+        # this callback only records the MUD-client detection for mode-select
+        # logic on the next connection.
+        if is_known_mud_client(client_name):
+            log.info("MTTS detected MUD client user=%s name=%s mtts=%d", self.user, client_name, mtts)
+
+    def _on_gmcp(self, module: str, data: object) -> None:
+        # Inbound GMCP from the client — log for now; verb dispatch is future work.
+        log.debug("GMCP recv user=%s module=%s data=%r", self.user, module, data)
+
+    def _on_mssp_request(self) -> dict:
+        from django.conf import settings as django_settings  # pylint: disable=import-outside-toplevel
+        from moo import __version__  # pylint: disable=import-outside-toplevel
+
+        players_online = str(len(_active_sessions))
+        return {
+            "NAME": getattr(django_settings, "MOO_NAME", "DjangoMOO"),
+            "CODEBASE": "DjangoMOO",
+            "VERSION": __version__,
+            "PLAYERS": players_online,
+            "UPTIME": str(_total_connections),
+            "FAMILY": "Custom",
+            "GENRE": "None",
+            "LANGUAGE": "English",
+            "CHARSET": "UTF-8",
+            "SSL": "0",
+        }
 
 
 async def interact(ssh_session: PromptToolkitSSHSession) -> None:

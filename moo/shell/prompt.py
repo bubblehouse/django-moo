@@ -214,6 +214,7 @@ class MooPrompt:
                 try:
                     pt_app.output.write_raw(OSC_133_COMMAND_START)
                     pt_app.output.flush()
+                    self._emit_prompt_end_marker()
                     self._osc_needs_markers[0] = False
                 except Exception:  # pylint: disable=broad-except
                     pass
@@ -434,6 +435,7 @@ class MooPrompt:
                 if self._osc133_enabled():
                     rendered = OSC_133_PROMPT_START + rendered + OSC_133_COMMAND_START
                 self._chan_write(rendered)
+                self._emit_prompt_end_marker()
                 input_task = asyncio.ensure_future(self._read_line_raw())
                 editor_task = asyncio.ensure_future(self.editor_queue.get())
                 paginator_task = asyncio.ensure_future(self.paginator_queue.get())
@@ -521,10 +523,50 @@ class MooPrompt:
         return capture.get()
 
     def _chan_write(self, text: str) -> None:
-        """Write to the asyncssh channel with LF→CRLF translation (raw mode only)."""
+        """
+        Write to the asyncssh channel with LF→CRLF translation (raw mode only).
+
+        The channel is configured in bytes mode (``encoding=None``) so the
+        IAC parser can see 0xFF prefix bytes; we UTF-8 encode here before
+        sending.
+        """
         if self._chan is None:
             return
-        self._chan.write(text.replace("\n", "\r\n"))
+        self._chan.write(text.replace("\n", "\r\n").encode("utf-8"))
+
+    def _chan_write_iac(self, data: bytes) -> None:
+        """
+        Write raw IAC bytes to the asyncssh channel.
+
+        No LF→CRLF translation, no encoding. Used for IAC subnegotiation
+        frames emitted via the ``"oob"`` event path.
+        """
+        if self._chan is None:
+            return
+        try:
+            self._chan.write(data)
+        except BrokenPipeError:
+            pass
+
+    def _emit_prompt_end_marker(self) -> None:
+        """
+        Emit ``IAC EOR`` or ``IAC GA`` after a prompt render so MUD clients
+        and screen readers can detect the server-to-client turnaround.
+
+        EOR is preferred when the client negotiated it (option 25). Some
+        older clients still key off GA; we emit GA when EOR is not
+        negotiated and the client or server opted into it.
+
+        No-op for clients that did not negotiate either option — both
+        bytes would render as garbage in a plain terminal.
+        """
+        from .iac import encode_eor, encode_ga  # pylint: disable=import-outside-toplevel
+
+        iac = _session_settings.get(self.user.pk, {}).get("iac", {})
+        if iac.get("eor"):
+            self._chan_write_iac(encode_eor())
+        elif iac.get("ga_or_eor"):
+            self._chan_write_iac(encode_ga())
 
     async def _read_line_raw(self) -> str | None:
         """
@@ -906,6 +948,11 @@ class MooPrompt:
     async def _route_event(self, message):
         """Forward a dict-typed broker event to its matching asyncio queue."""
         kind = message.get("event")
+        if kind == "oob":
+            payload = message.get("data")
+            if isinstance(payload, (bytes, bytearray)):
+                self._chan_write_iac(bytes(payload))
+            return
         if kind == "editor":
             await self.editor_queue.put(message)
         elif kind == "paginator":

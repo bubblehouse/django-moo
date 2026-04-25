@@ -165,8 +165,11 @@ def test_writer_raw_mode_writes_to_chan():
     mock_print.assert_not_called()
     session._chan.write.assert_called_once()
     written = session._chan.write.call_args[0][0]
-    assert "hello" in written
-    assert written.endswith("\r\n")
+    # Channel is in bytes mode (encoding=None) so IAC bytes can pass through;
+    # _chan_write UTF-8 encodes text before handing it off.
+    assert isinstance(written, bytes)
+    assert b"hello" in written
+    assert written.endswith(b"\r\n")
 
 
 def test_writer_raw_mode_rich_capture_preserves_colour():
@@ -176,8 +179,65 @@ def test_writer_raw_mode_rich_capture_preserves_colour():
     prompt = MooPrompt(user, session=session, mode=MODE_RAW)
     prompt.writer("[red]alert[/red]")
     written = session._chan.write.call_args[0][0]
-    assert "\x1b[" in written
-    assert "alert" in written
+    assert isinstance(written, bytes)
+    assert b"\x1b[" in written
+    assert b"alert" in written
+
+
+def test_route_event_oob_writes_raw_bytes_to_channel():
+    """The "oob" event bypasses text encoding and writes raw IAC bytes straight to the channel."""
+    from moo.shell.iac import IAC, OPT_GMCP, SB, SE
+
+    user = MagicMock()
+    session = MagicMock()
+    prompt = MooPrompt(user, session=session, mode=MODE_RAW)
+    frame = bytes((IAC, SB, OPT_GMCP)) + b"Core.Hello" + bytes((IAC, SE))
+    asyncio.run(prompt._route_event({"event": "oob", "data": frame}))
+    session._chan.write.assert_called_once_with(frame)
+
+
+def test_prompt_end_marker_emits_eor_when_negotiated():
+    """After a prompt render, IAC EOR goes to the channel when the client negotiated EOR."""
+    from moo.shell.iac import EOR, IAC
+    from moo.shell.prompt import _session_settings
+
+    user = MagicMock()
+    user.pk = 4242
+    session = MagicMock()
+    prompt = MooPrompt(user, session=session, mode=MODE_RAW)
+    _session_settings.setdefault(user.pk, {})["iac"] = {"eor": True}
+    try:
+        prompt._emit_prompt_end_marker()
+    finally:
+        _session_settings.pop(user.pk, None)
+    session._chan.write.assert_called_once_with(bytes((IAC, EOR)))
+
+
+def test_prompt_end_marker_falls_back_to_ga():
+    """When EOR isn't negotiated but ga_or_eor is set, IAC GA goes out instead."""
+    from moo.shell.iac import GA, IAC
+    from moo.shell.prompt import _session_settings
+
+    user = MagicMock()
+    user.pk = 4243
+    session = MagicMock()
+    prompt = MooPrompt(user, session=session, mode=MODE_RAW)
+    _session_settings.setdefault(user.pk, {})["iac"] = {"eor": False, "ga_or_eor": True}
+    try:
+        prompt._emit_prompt_end_marker()
+    finally:
+        _session_settings.pop(user.pk, None)
+    session._chan.write.assert_called_once_with(bytes((IAC, GA)))
+
+
+def test_prompt_end_marker_noop_without_negotiation():
+    """No IAC bytes are emitted when neither EOR nor GA was negotiated."""
+    user = MagicMock()
+    user.pk = 4244
+    session = MagicMock()
+    prompt = MooPrompt(user, session=session, mode=MODE_RAW)
+    prompt._emit_prompt_end_marker()
+    session._chan.write.assert_not_called()
 
 
 def test_run_editor_session_invokes_callback():
