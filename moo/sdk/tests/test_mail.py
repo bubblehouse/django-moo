@@ -66,7 +66,7 @@ def test_send_message_multiple_recipients(t_init: Object, t_wizard: Object):
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_get_mailbox_empty(t_init: Object, t_wizard: Object):
     player = lookup("Player")
-    assert get_mailbox(player) == []
+    assert not get_mailbox(player)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -160,7 +160,7 @@ def test_delete_message_soft_deletes(t_init: Object, t_wizard: Object):
     send_message(t_wizard, [player], "Msg", "body")
     result = delete_message(player, 1)
     assert result is True
-    assert get_mailbox(player) == []
+    assert not get_mailbox(player)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)

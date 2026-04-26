@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-Tests for connected_players() in moo/core/__init__.py.
+Tests for moo.sdk.objects.connected_players.
 """
 
 from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from .. import code, connected_players, create
-from ..models import Player
-from .utils import ctx as _ctx
+from moo.core import code
+from moo.core.models import Player
+from moo.core.tests.utils import ctx as _ctx
+from moo.sdk import connected_players, create
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)

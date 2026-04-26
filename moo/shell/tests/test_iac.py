@@ -10,6 +10,11 @@ option-state machine.
 import pytest
 
 from moo.shell.iac import (
+    AYT,
+    BRK,
+    CHARSET_ACCEPTED,
+    CHARSET_REJECTED,
+    CHARSET_REQUEST,
     DO,
     DONT,
     EOR,
@@ -20,6 +25,8 @@ from moo.shell.iac import (
     MTTS_ANSI,
     MTTS_SCREEN_READER,
     MTTS_UTF8,
+    NOP,
+    OPT_BINARY,
     OPT_CHARSET,
     OPT_GMCP,
     OPT_MSSP,
@@ -34,12 +41,14 @@ from moo.shell.iac import (
     IacNegotiator,
     IacParser,
     encode_charset_accepted,
+    encode_charset_request,
     encode_cmd,
     encode_gmcp,
     encode_mssp,
     encode_sb,
     encode_ttype_send,
     is_known_mud_client,
+    msp_music_marker,
     msp_sound_marker,
     parse_gmcp,
     parse_mtts_bitfield,
@@ -427,3 +436,249 @@ def test_negotiator_charset_request_without_utf8_rejected():
     # Rejected frame starts with subcmd 3.
     assert bytes((3,)) in reply
     assert neg.capabilities["charset"] is False
+
+
+# ---------------------------------------------------------------------------
+# IacParser edge cases — single-byte commands, corrupt SB frames
+# ---------------------------------------------------------------------------
+
+
+def test_parser_consumes_single_byte_iac_commands_silently():
+    """
+    NOP/DM/BRK/IP/AO/AYT/EC/EL after IAC are valid single-byte commands the
+    server is allowed to ignore — but the parser must consume them, not leak
+    them into the residual byte stream.
+    """
+    parser = IacParser()
+    events, residual = parser.feed(bytes((IAC, NOP, IAC, AYT, IAC, BRK)) + b"hi")
+    assert not events
+    assert residual == b"hi"
+
+
+def test_parser_recovers_from_unexpected_byte_after_iac():
+    """An IAC followed by an unexpected non-command byte is dropped, not raised."""
+    parser = IacParser()
+    # 0x42 ('B') is not a valid IAC follow-up byte.
+    events, residual = parser.feed(bytes((IAC, 0x42)) + b"after")
+    assert not events
+    assert residual == b"after"
+
+
+def test_parser_recovers_from_corrupt_sb_frame():
+    """
+    A non-IAC/non-SE byte arriving after IAC inside an SB payload aborts the
+    frame without raising; the parser is back in NORMAL state for the next
+    feed and does not mix the abandoned payload into a later event.
+    """
+    parser = IacParser()
+    # IAC SB GMCP "X" IAC <garbage 0x42> — the garbage is not IAC and not SE,
+    # so the frame is aborted and the parser drops back to NORMAL.
+    parser.feed(bytes((IAC, SB, OPT_GMCP)) + b"X" + bytes((IAC, 0x42)))
+    # Now feed a clean GMCP frame; it must arrive as one event with no leakage
+    # from the previous garbage.
+    events, _ = parser.feed(bytes((IAC, SB, OPT_GMCP)) + b"Core.Hello" + bytes((IAC, SE)))
+    assert events == [("sb", OPT_GMCP, b"Core.Hello")]
+
+
+# ---------------------------------------------------------------------------
+# Encoders / parsers — under-tested branches
+# ---------------------------------------------------------------------------
+
+
+def test_encode_charset_request_uses_default_space_separator():
+    out = encode_charset_request(["UTF-8", "LATIN-1"])
+    expected = bytes((IAC, SB, OPT_CHARSET, CHARSET_REQUEST)) + b" UTF-8 LATIN-1" + bytes((IAC, SE))
+    assert out == expected
+
+
+def test_encode_charset_request_honors_custom_separator():
+    """RFC 2066 lets the server pick any single-byte ASCII separator."""
+    out = encode_charset_request(["UTF-8", "LATIN-1"], sep=";")
+    expected = bytes((IAC, SB, OPT_CHARSET, CHARSET_REQUEST)) + b";UTF-8;LATIN-1" + bytes((IAC, SE))
+    assert out == expected
+
+
+def test_msp_music_marker_default_volume():
+    assert msp_music_marker("theme.mid") == "!!MUSIC(theme.mid V=100)"
+
+
+def test_msp_music_marker_custom_volume():
+    assert msp_music_marker("battle.mid", volume=40) == "!!MUSIC(battle.mid V=40)"
+
+
+def test_parse_gmcp_module_with_trailing_space_returns_none_data():
+    """
+    A GMCP frame with the module name followed by a space but no JSON body
+    decodes to ``(module, None)`` — the spec allows callers to send an empty
+    payload as ``"<module> "``, not just ``"<module>"``.
+    """
+    module, data = parse_gmcp(b"Core.Ping ")
+    assert module == "Core.Ping"
+    assert data is None
+
+
+# ---------------------------------------------------------------------------
+# IacNegotiator — under-tested handle() branches
+# ---------------------------------------------------------------------------
+
+
+def test_negotiator_unknown_event_kind_returns_empty_bytes():
+    """``handle()`` is called from a generic dispatch loop; unknown kinds must not raise."""
+    neg = IacNegotiator()
+    assert neg.handle(("ga",)) == b""
+    assert neg.handle(("eor",)) == b""
+
+
+def test_negotiator_client_will_naws_replies_do_without_send():
+    """
+    NAWS is in ``_WE_ACCEPT_CLIENT`` but is not TTYPE — the reply is a plain
+    DO with no follow-up subnegotiation request.
+    """
+    neg = IacNegotiator()
+    reply = neg.handle(("cmd", WILL, OPT_NAWS))
+    assert reply == encode_cmd(DO, OPT_NAWS)
+
+
+def test_negotiator_client_wont_replies_dont():
+    neg = IacNegotiator()
+    reply = neg.handle(("cmd", WONT, OPT_GMCP))
+    assert reply == encode_cmd(DONT, OPT_GMCP)
+
+
+def test_negotiator_dont_we_offer_replies_wont():
+    """
+    Client DONT for an option we *do* offer must produce a WONT reply (telnet
+    Q-method); for options we never offered the negotiator stays silent.
+    """
+    neg = IacNegotiator()
+    assert neg.handle(("cmd", DONT, OPT_GMCP)) == encode_cmd(WONT, OPT_GMCP)
+    # DONT for an option we never offered → no reply.
+    assert neg.handle(("cmd", DONT, OPT_BINARY)) == b""
+
+
+def test_negotiator_gmcp_sb_without_callback_is_silent():
+    """If no ``on_gmcp`` was registered the negotiator drops the payload — no exception, no reply."""
+    neg = IacNegotiator()  # default on_gmcp=None
+    assert neg.handle(("sb", OPT_GMCP, b'Core.Hello {"x":1}')) == b""
+
+
+def test_negotiator_mssp_sb_without_provider_is_silent():
+    """Without an ``on_mssp_request`` provider the negotiator returns an empty reply."""
+    neg = IacNegotiator()  # default on_mssp_request=None
+    assert neg.handle(("sb", OPT_MSSP, b"")) == b""
+
+
+def test_negotiator_unknown_sb_opt_returns_empty():
+    """A subnegotiation for an option we don't handle (e.g. NAWS) is ignored."""
+    neg = IacNegotiator()
+    assert neg.handle(("sb", OPT_NAWS, b"\x00\x50\x00\x18")) == b""
+
+
+# ---------------------------------------------------------------------------
+# TTYPE state-machine edge cases
+# ---------------------------------------------------------------------------
+
+
+def test_negotiator_ttype_sb_with_malformed_payload_is_silent():
+    """A TTYPE SB whose first byte is not ``IS`` is dropped without raising."""
+    neg = IacNegotiator()
+    neg.handle(("cmd", WILL, OPT_TTYPE))
+    # 0x05 is not TTYPE_IS / TTYPE_SEND.
+    assert neg.handle(("sb", OPT_TTYPE, bytes((0x05,)) + b"junk")) == b""
+
+
+def test_negotiator_ttype_third_stage_loop_finalizes_without_mtts():
+    """
+    Some clients return three TTYPEs but the third stage echoes the second
+    rather than an MTTS bitfield. The negotiator should still finalize.
+    """
+    captured: list[tuple[str, int]] = []
+    neg = IacNegotiator(on_ttype=lambda n, m: captured.append((n, m)))
+    neg.handle(("cmd", WILL, OPT_TTYPE))
+    neg.handle(("sb", OPT_TTYPE, bytes((TTYPE_IS,)) + b"BLIGHTMUD"))
+    neg.handle(("sb", OPT_TTYPE, bytes((TTYPE_IS,)) + b"XTERM-256COLOR"))
+    # Third stage repeats the terminal name instead of giving "MTTS <int>".
+    neg.handle(("sb", OPT_TTYPE, bytes((TTYPE_IS,)) + b"XTERM-256COLOR"))
+    assert neg.capabilities["ttype"] is True
+    assert neg.capabilities["mtts"] == 0
+    assert captured == [("BLIGHTMUD", 0)]
+
+
+def test_negotiator_ttype_third_stage_unexpected_value_is_recorded():
+    """
+    A non-MTTS, non-looped third TTYPE response is stashed in
+    ``terminal_extra`` rather than crashing or being dropped silently.
+    """
+    neg = IacNegotiator()
+    neg.handle(("cmd", WILL, OPT_TTYPE))
+    neg.handle(("sb", OPT_TTYPE, bytes((TTYPE_IS,)) + b"Mudlet"))
+    neg.handle(("sb", OPT_TTYPE, bytes((TTYPE_IS,)) + b"XTERM-256COLOR"))
+    neg.handle(("sb", OPT_TTYPE, bytes((TTYPE_IS,)) + b"some-extra-thing"))
+    assert neg.capabilities["terminal_extra"] == "some-extra-thing"
+    assert neg.capabilities["ttype"] is True
+
+
+def test_negotiator_ttype_sb_in_stage_zero_is_ignored():
+    """
+    A TTYPE subnegotiation arriving before we ever asked for one (stage 0)
+    is dropped — without this the state machine would advance into stage 2
+    on garbage input.
+    """
+    neg = IacNegotiator()
+    assert neg.handle(("sb", OPT_TTYPE, bytes((TTYPE_IS,)) + b"Mudlet")) == b""
+    assert neg.capabilities["client_name"] == ""
+
+
+def test_negotiator_finalize_ttype_without_callback_does_not_raise():
+    """When no ``on_ttype`` is registered the finalize step still flips the capability flag."""
+    neg = IacNegotiator()  # default on_ttype=None
+    neg.handle(("cmd", WILL, OPT_TTYPE))
+    neg.handle(("sb", OPT_TTYPE, bytes((TTYPE_IS,)) + b"VT100"))
+    neg.handle(("sb", OPT_TTYPE, bytes((TTYPE_IS,)) + b"VT100"))
+    assert neg.capabilities["ttype"] is True
+
+
+# ---------------------------------------------------------------------------
+# CHARSET subneg edge cases
+# ---------------------------------------------------------------------------
+
+
+def test_negotiator_charset_sb_empty_payload_is_silent():
+    """An empty CHARSET subnegotiation is dropped, not rejected."""
+    neg = IacNegotiator()
+    assert neg.handle(("sb", OPT_CHARSET, b"")) == b""
+
+
+def test_negotiator_charset_sb_non_request_subcmd_is_silent():
+    """ACCEPTED/REJECTED arriving at the server are no-ops (we initiated nothing)."""
+    neg = IacNegotiator()
+    assert neg.handle(("sb", OPT_CHARSET, bytes((CHARSET_ACCEPTED,)) + b"UTF-8")) == b""
+    assert neg.handle(("sb", OPT_CHARSET, bytes((CHARSET_REJECTED,)))) == b""
+
+
+def test_negotiator_charset_request_with_empty_list_rejected():
+    """A REQUEST with no separator/charsets is rejected to keep the wire predictable."""
+    neg = IacNegotiator()
+    reply = neg.handle(("sb", OPT_CHARSET, bytes((CHARSET_REQUEST,))))
+    assert reply == bytes((IAC, SB, OPT_CHARSET, CHARSET_REJECTED)) + bytes((IAC, SE))
+
+
+# ---------------------------------------------------------------------------
+# _mark_enabled / _mark_disabled — unknown opt branch
+# ---------------------------------------------------------------------------
+
+
+def test_negotiator_mark_unknown_opt_does_not_pollute_capabilities():
+    """
+    DO/DONT for an option that has no entry in the label map (e.g. OPT_BINARY)
+    must not write a stray capability key — capabilities only ever holds the
+    documented set.
+    """
+    neg = IacNegotiator()
+    before = set(neg.capabilities)
+    # OPT_BINARY is in _WE_OFFER? No — but the private maps may still get
+    # poked if a future change adds it. Drive the path via _mark_enabled
+    # directly with an option that is not in _opt_label.
+    neg._mark_enabled(0x99)  # pylint: disable=protected-access
+    neg._mark_disabled(0x99)  # pylint: disable=protected-access
+    assert set(neg.capabilities) == before
