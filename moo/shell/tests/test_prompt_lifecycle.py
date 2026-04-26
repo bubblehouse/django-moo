@@ -370,3 +370,66 @@ def test_repl_setup_teardown_roundtrip():
     prompt._fire_disfunc.assert_awaited_once()
     prompt._mark_disconnected.assert_awaited_once()
     assert user.pk not in prompt_module._session_settings
+
+
+# ---------------------------------------------------------------------------
+# pre_run flushes pending connect output (Bug 1: initial look on connect)
+# ---------------------------------------------------------------------------
+
+
+def _make_pre_run_session():
+    """Build a mock prompt_session whose output recorder captures write_raw calls."""
+    written: list[str] = []
+    output = MagicMock()
+    output.write_raw.side_effect = written.append
+    app = MagicMock()
+    app.output = output
+    session = MagicMock()
+    session.app = app
+    return session, written
+
+
+def test_pre_run_flushes_pending_connect_output_with_osc133():
+    """The pre_run callback flushes _pending_connect_output before the prompt
+    renders, so the on-connect look is visible to the user."""
+    user = MagicMock()
+    user.pk = 100
+    prompt = MooPrompt(user)
+    prompt._pending_connect_output = "WELCOME TO THE ROOM\n"
+    session, written = _make_pre_run_session()
+    pre_run = prompt._make_pre_run(session, with_osc133=True)
+    pre_run()
+    assert "WELCOME TO THE ROOM\n" in written
+    assert prompt._pending_connect_output == ""
+    assert prompt.prompt_app_ready.is_set()
+
+
+def test_pre_run_flushes_pending_connect_output_without_osc133():
+    """Without OSC 133 (e.g. classic MUD clients via IAC), the pending
+    connect output must STILL be flushed — otherwise the room description
+    is silently dropped and the user sees a bare prompt."""
+    user = MagicMock()
+    user.pk = 101
+    prompt = MooPrompt(user)
+    prompt._pending_connect_output = "ROOM DESCRIPTION\n"
+    session, written = _make_pre_run_session()
+    pre_run = prompt._make_pre_run(session, with_osc133=False)
+    pre_run()
+    assert "ROOM DESCRIPTION\n" in written
+    assert prompt._pending_connect_output == ""
+    # Without osc133, render hooks must not be wired up.
+    session.app.before_render.__iadd__.assert_not_called()
+    session.app.after_render.__iadd__.assert_not_called()
+
+
+def test_pre_run_no_pending_output_is_noop():
+    """When there's nothing buffered, pre_run does not write to the output."""
+    user = MagicMock()
+    user.pk = 102
+    prompt = MooPrompt(user)
+    prompt._pending_connect_output = ""
+    session, written = _make_pre_run_session()
+    pre_run = prompt._make_pre_run(session, with_osc133=False)
+    pre_run()
+    assert not written
+    assert prompt.prompt_app_ready.is_set()

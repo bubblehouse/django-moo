@@ -181,11 +181,16 @@ class MooPrompt:
     def _prefixes_enabled(self) -> bool:
         return _session_settings.get(self.user.pk, {}).get("prefixes_mode", False)
 
-    def _make_osc_pre_run(self, prompt_session):
+    def _make_pre_run(self, prompt_session, with_osc133):
         """
-        Build a ``pre_run`` callback that flushes the confunc burst and wires
-        OSC 133 ;A/;B emission into the prompt's render events — see
+        Build a ``pre_run`` callback that always flushes the confunc burst
+        before the first prompt renders. When ``with_osc133`` is True, also
+        wire OSC 133 ;A/;B emission into the prompt's render events — see
         :doc:`/explanation/shell-internals` § "OSC 133 Semantic Shell Integration".
+
+        The flush MUST run even when OSC 133 is disabled (e.g. MUD clients
+        connecting via IAC), otherwise the on-connect ``look`` output is
+        silently dropped and the user sees the prompt on a blank screen.
         """
 
         def pre_run():
@@ -198,27 +203,30 @@ class MooPrompt:
                 except Exception:  # pylint: disable=broad-except
                     log.exception("failed to flush pending connect-time output")
 
-            def before_render(pt_app):
-                if not self._osc_needs_markers[0]:
-                    return
-                try:
-                    pt_app.output.write_raw(OSC_133_PROMPT_START)
-                except Exception:  # pylint: disable=broad-except
-                    pass
+            if with_osc133:
 
-            def after_render(pt_app):
-                if not self._osc_needs_markers[0]:
-                    return
-                try:
-                    pt_app.output.write_raw(OSC_133_COMMAND_START)
-                    pt_app.output.flush()
-                    self._emit_prompt_end_marker()
-                    self._osc_needs_markers[0] = False
-                except Exception:  # pylint: disable=broad-except
-                    pass
+                def before_render(pt_app):
+                    if not self._osc_needs_markers[0]:
+                        return
+                    try:
+                        pt_app.output.write_raw(OSC_133_PROMPT_START)
+                    except Exception:  # pylint: disable=broad-except
+                        pass
 
-            prompt_session.app.before_render += before_render
-            prompt_session.app.after_render += after_render
+                def after_render(pt_app):
+                    if not self._osc_needs_markers[0]:
+                        return
+                    try:
+                        pt_app.output.write_raw(OSC_133_COMMAND_START)
+                        pt_app.output.flush()
+                        self._emit_prompt_end_marker()
+                        self._osc_needs_markers[0] = False
+                    except Exception:  # pylint: disable=broad-except
+                        pass
+
+                prompt_session.app.before_render += before_render
+                prompt_session.app.after_render += after_render
+
             self.prompt_app_ready.set()
 
         return pre_run
@@ -334,9 +342,7 @@ class MooPrompt:
                 except Exception:  # pylint: disable=broad-except
                     pass
                 message = await self.generate_prompt()
-                pre_run = None
-                if self._osc133_enabled():
-                    pre_run = self._make_osc_pre_run(prompt_session)
+                pre_run = self._make_pre_run(prompt_session, with_osc133=self._osc133_enabled())
                 prompt_task = asyncio.ensure_future(
                     prompt_session.prompt_async(message, style=self.style, pre_run=pre_run)
                 )
