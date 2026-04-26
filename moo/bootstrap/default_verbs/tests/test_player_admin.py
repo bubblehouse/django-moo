@@ -24,13 +24,15 @@ def test_create_basic_lands_in_inventory(t_init: Object, t_wizard: Object):
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_create_from_parent(t_init: Object, t_wizard: Object):
-    """@create <name> from <parent> creates an object with the specified parent."""
+    """@create <name> from <parent> creates an object with the specified parent
+    and does not emit the legacy two-step "Created.../Transmuted..." output."""
     system = lookup(1)
     printed = []
     with code.ContextManager(t_wizard, printed.append) as ctx:
         parse.interpret(ctx, '@create "widget" from $thing')
     assert any("Created" in line for line in printed)
-    assert any("Transmuted" in line for line in printed)
+    # The parent is wired during create() now — no second "Transmuted" line.
+    assert not any("Transmuted" in line for line in printed)
     obj = t_wizard.contents.filter(name="widget").first()
     assert obj is not None
     assert obj.parents.filter(pk=system.thing.pk).exists()
@@ -76,7 +78,8 @@ def test_create_from_parent_in_void(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, printed.append) as ctx:
         parse.interpret(ctx, '@create "phantom" from $thing in void')
     assert any("Created" in line for line in printed)
-    assert any("Transmuted" in line for line in printed)
+    # Parent wired during create() now — no separate "Transmuted" line.
+    assert not any("Transmuted" in line for line in printed)
     assert any("void" in line for m in printed for line in [str(m)])
     obj = Object.objects.filter(name="phantom").first()
     assert obj is not None

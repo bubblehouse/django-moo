@@ -42,8 +42,17 @@ if context.parser.has_pobj_str("in"):
 if not place_in_void and location is None:
     location = context.player
 
+# Resolve parent up front so we can pass it to create() in one step.
+parent = None
+if context.parser.has_pobj_str("from"):
+    with set_task_perms(context.player):
+        parent = context.parser.get_pobj("from", lookup=True)
+
 with set_task_perms(context.player):
-    new_obj = create(name, owner=context.player, location=location)
+    if parent is not None:
+        new_obj = create(name, owner=context.player, location=location, parents=[parent])
+    else:
+        new_obj = create(name, owner=context.player, location=location)
 
 if place_in_void:
     placement = "in the void"
@@ -57,9 +66,3 @@ else:
         placement = "in your inventory"
 
 print(f"[yellow]Created {new_obj} {placement}.[/yellow]")
-
-if context.parser.has_pobj_str("from"):
-    with set_task_perms(context.player):
-        parent = context.parser.get_pobj("from", lookup=True)
-        new_obj.add_parent(parent)
-    print(f"[yellow]Transmuted {new_obj} to {parent}.[/yellow]")
