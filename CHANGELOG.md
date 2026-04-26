@@ -1,3 +1,9 @@
+## [1.5.1](https://gitlab.com/bubblehouse/django-moo/compare/v1.5.0...v1.5.1) (2026-04-26)
+
+### Bug Fixes
+
+* **prompt:** handle CPR timeouts more gently ([4979b21](https://gitlab.com/bubblehouse/django-moo/commit/4979b218d50ef14798af5b74c429590e4a856a02))
+
 ## [1.5.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.4.1...v1.5.0) (2026-04-26)
 
 ### Features
