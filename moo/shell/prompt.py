@@ -329,6 +329,17 @@ class MooPrompt:
             key_bindings=_make_key_bindings(),
             history=ThreadedHistory(RedisHistory(self.user.pk)),
         )
+
+        # Fix: log the timeout to the server log (so real failures remain detectable) but
+        # never call run_in_terminal(), so no orphaned task is ever created.
+        def _safe_cpr_not_supported(app=prompt_session.app):  # pylint: disable=redefined-outer-name
+            if app.output.responds_to_cpr:
+                log.warning(
+                    "CPR query timed out for user=%s — terminal did not respond within 2s",
+                    self.user,
+                )
+
+        prompt_session.app.cpr_not_supported_callback = _safe_cpr_not_supported
         await self._repl_setup()
         try:
             while not self.is_exiting:
