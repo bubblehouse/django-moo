@@ -63,9 +63,9 @@ def open_paginator(obj, content: str, content_type: str = "text"):
     Request the connected SSH client to open a full-screen read-only paginator.
     The user can scroll through the content and press Q to quit.
 
-    In automation mode (TERM=moo-automation), the SSH server intercepts the
-    paginator event and writes the content directly to the terminal instead of
-    opening the interactive UI.
+    In raw-mode sessions (MUD clients, line-oriented terminals) the SSH server
+    intercepts the paginator event and writes the content directly to the
+    terminal instead of opening the interactive UI.
 
     :param obj: the player Object whose client should open the paginator
     :param content: text to display

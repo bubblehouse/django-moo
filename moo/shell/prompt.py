@@ -57,10 +57,8 @@ class _RawAnsi(str):
     """Marker subclass: ``writer`` emits these verbatim, bypassing Rich."""
 
 
-def _make_key_bindings(automation: bool = False) -> KeyBindings:
+def _make_key_bindings() -> KeyBindings:
     kb = KeyBindings()
-    if automation:
-        return kb
     buffer_is_empty = Condition(lambda: get_app().current_buffer.text == "")
     for char, template in PROMPT_SHORTCUTS.items():
 
@@ -81,7 +79,6 @@ async def embed(
     user: models.User,
     session=None,
     mode: str = MODE_RICH,
-    automation: bool = False,
 ) -> None:
     """
     Start the interactive MOO shell for the given user.
@@ -93,9 +90,8 @@ async def embed(
     :param user: the authenticated Django user whose avatar is the active player
     :param session: the asyncssh session; its ``_chan`` drives raw-mode I/O
     :param mode: ``"rich"`` (default) or ``"raw"``
-    :param automation: disables interactive shortcuts; always paired with rich mode
     """
-    repl = MooPrompt(user, session=session, mode=mode, automation=automation)
+    repl = MooPrompt(user, session=session, mode=mode)
     repl_tasks = [asyncio.ensure_future(f()) for f in (repl.process_commands, repl.process_messages)]
     try:
         await asyncio.wait(repl_tasks, return_when=asyncio.FIRST_COMPLETED)
@@ -133,24 +129,20 @@ class MooPrompt:
 
     style = Style.from_dict(_PROMPT_PALETTE)
 
-    def __init__(self, user, session=None, mode: str = MODE_RICH, automation: bool = False):
+    def __init__(self, user, session=None, mode: str = MODE_RICH):
         """
         :param user: the authenticated Django user whose avatar is the active player
         :param session: the asyncssh session; used by raw mode to reach ``_chan``
         :param mode: ``"rich"`` (prompt_toolkit) or ``"raw"`` (line I/O)
-        :param automation: if True, disables interactive shortcuts
         """
         self.user = user
         self.mode = mode
         self._chan = getattr(session, "_chan", None) if session is not None else None
         self._iac_enabled = bool(getattr(session, "iac_enabled", False)) if session is not None else False
-        self.automation = automation
         self.is_exiting = False
         # Stamp settings pre-_repl_setup so unit tests that construct a
         # MooPrompt without running the REPL can observe the mode.
         _session_settings.setdefault(self.user.pk, {})["mode"] = mode
-        if automation:
-            _session_settings[self.user.pk]["automation"] = True
         self.editor_queue: asyncio.Queue = asyncio.Queue()
         self.paginator_queue: asyncio.Queue = asyncio.Queue()
         self.input_queue: asyncio.Queue = asyncio.Queue()
@@ -256,8 +248,6 @@ class MooPrompt:
 
         _session_settings.pop(self.user.pk, None)
         _session_settings.setdefault(self.user.pk, {})["mode"] = self.mode
-        if self.automation:
-            _session_settings[self.user.pk]["automation"] = True
         cache.set(f"moo:session:{self.user.pk}:mode", self.mode, timeout=86400)
         await self._mark_connected()
         await self._open_session_buffer()
@@ -328,7 +318,7 @@ class MooPrompt:
         disconnect queues and dispatches whichever fires first.
         """
         prompt_session = PromptSession(
-            key_bindings=_make_key_bindings(self.automation),
+            key_bindings=_make_key_bindings(),
             history=ThreadedHistory(RedisHistory(self.user.pk)),
         )
         await self._repl_setup()
@@ -368,19 +358,7 @@ class MooPrompt:
                     self.is_exiting = True
                     break
                 elif editor_task in done:
-                    if self.automation:
-                        # Editor TUI would hang on keystrokes that never arrive
-                        # and break the run_in_terminal Future chain for the rest
-                        # of the session.
-                        error_pieces = self._editor_rejection_pieces()
-
-                        def _write_editor_error(pieces=error_pieces):  # pylint: disable=dangerous-default-value
-                            for piece in pieces:
-                                self.writer(piece)
-
-                        await self._run_in_terminal_marked(_write_editor_error)
-                    else:
-                        await self.run_editor_session(editor_task.result())
+                    await self.run_editor_session(editor_task.result())
                 elif paginator_task in done:
                     await self.run_paginator_session(paginator_task.result())
                 elif input_task in done:
@@ -543,7 +521,7 @@ class MooPrompt:
             await asyncio.sleep(0.02)
 
     def _editor_rejection_pieces(self) -> list[str]:
-        """Build the "editor not available" error for automation/raw modes."""
+        """Build the "editor not available" error for raw mode (no TUI)."""
         settings = _session_settings.get(self.user.pk, {})
         gp = settings.get("output_global_prefix")
         gs = settings.get("output_global_suffix")
@@ -723,16 +701,12 @@ class MooPrompt:
 
         After dispatch, polls ``input_queue`` briefly for any follow-up prompt
         from the callback so multi-stage input chains stay in one session.
-        Automation mode skips the prompt (arguments go in as verb args).
 
         :param req: input request dict with keys ``prompt``, ``password``,
             ``callback_this_id``, ``callback_verb_name``, ``caller_id``,
             ``player_id``, and optional ``args``
         """
         while req is not None:
-            if self.automation:
-                return
-
             prompt_text = req.get("prompt", "")
             is_password = req.get("password", False)
 
@@ -1047,7 +1021,7 @@ class MooPrompt:
         elif kind == "paginator":
             settings = _session_settings.get(self.user.pk, {})
             is_raw = settings.get("mode") == MODE_RAW
-            if settings.get("automation") or is_raw:
+            if is_raw:
                 content = message.get("content", "")
 
                 def _write_paginator(

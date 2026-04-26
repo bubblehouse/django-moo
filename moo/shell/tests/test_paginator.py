@@ -82,12 +82,12 @@ def test_open_paginator_non_wizard_raises(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_open_paginator_automation_mode_still_publishes_event(t_init: Object, t_wizard: Object):
-    """open_paginator always publishes a paginator event regardless of automation mode.
-    The SSH server (process_messages) intercepts it and writes content directly
-    when automation is set in _session_settings."""
+def test_open_paginator_publishes_event_for_raw_mode_inline_render(t_init: Object, t_wizard: Object):
+    """open_paginator always publishes a paginator event. The SSH server
+    (process_messages) intercepts it and writes content directly when the
+    session is in raw mode instead of opening the interactive UI."""
     with code.ContextManager(t_wizard, lambda _: None):
         with pytest.warns(RuntimeWarning) as w:
-            open_paginator(t_wizard, "automation content")
+            open_paginator(t_wizard, "raw-mode content")
     messages = [str(warning.message) for warning in w.list]
     assert any("'event': 'paginator'" in m for m in messages)

@@ -3,7 +3,7 @@
 Tests for shell-layer session control features.
 
 Covers:
-- TERM=moo-automation detection in MooPromptToolkitSSHSession.session_started()
+- TERM detection in MooPromptToolkitSSHSession.session_started()
 - Session setting registry updates via process_messages()
 - Global output prefix/suffix wrapping in handle_command() and process_messages()
 - .flush / _drain_messages()
@@ -116,12 +116,12 @@ def _run_drain_messages(prompt, messages):
 
 
 # ---------------------------------------------------------------------------
-# TERM=moo-automation detection (moved from test_server.py)
+# TERM detection (moved from test_server.py)
 # ---------------------------------------------------------------------------
 
 
-def test_session_started_non_automation():
-    """Terminal type without 'moo-automation' leaves is_automation False and enable_cpr unchanged."""
+def test_session_started_default_term_keeps_cpr_enabled():
+    """A vanilla terminal type produces a rich session with CPR untouched."""
     session = MooPromptToolkitSSHSession.__new__(MooPromptToolkitSSHSession)
     session.enable_cpr = True
     chan = MagicMock()
@@ -131,12 +131,12 @@ def test_session_started_non_automation():
     with patch.object(MooPromptToolkitSSHSession.__bases__[0], "session_started", lambda self: None):
         session.session_started()
 
-    assert session.is_automation is False
+    assert session.mode == "rich"
     assert session.enable_cpr is True
 
 
-def test_session_started_automation():
-    """Terminal type containing 'moo-automation' sets is_automation=True and enable_cpr=False."""
+def test_session_started_legacy_moo_automation_term_no_longer_special_cased():
+    """The retired moo-automation TERM is treated as any other unknown terminal."""
     session = MooPromptToolkitSSHSession.__new__(MooPromptToolkitSSHSession)
     session.enable_cpr = True
     chan = MagicMock()
@@ -146,12 +146,14 @@ def test_session_started_automation():
     with patch.object(MooPromptToolkitSSHSession.__bases__[0], "session_started", lambda self: None):
         session.session_started()
 
-    assert session.is_automation is True
-    assert session.enable_cpr is False
+    # No more CPR override, no forced mode change, no IAC.
+    assert session.mode == "rich"
+    assert session.enable_cpr is True
+    assert session.iac_enabled is False
 
 
 def test_session_started_no_channel():
-    """session_started() with _chan=None sets is_automation=False and does not crash."""
+    """session_started() with _chan=None does not crash."""
     session = MooPromptToolkitSSHSession.__new__(MooPromptToolkitSSHSession)
     session.enable_cpr = True
     session._chan = None
@@ -159,7 +161,9 @@ def test_session_started_no_channel():
     with patch.object(MooPromptToolkitSSHSession.__bases__[0], "session_started", lambda self: None):
         session.session_started()
 
-    assert session.is_automation is False
+    # Session left in its class-default state — rich mode, no IAC.
+    assert session.mode == "rich"
+    assert session.iac_enabled is False
 
 
 # ---------------------------------------------------------------------------

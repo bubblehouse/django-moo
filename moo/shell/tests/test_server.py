@@ -94,12 +94,11 @@ def _make_session_with_term(term: str) -> MooPromptToolkitSSHSession:
 
 
 def test_session_started_default_term_is_rich_mode():
-    """A normal terminal (e.g. xterm-256color) produces rich mode with no automation."""
+    """A normal terminal (e.g. xterm-256color) produces rich mode."""
     session = _make_session_with_term("xterm-256color")
     with patch.object(PromptToolkitSSHSession, "session_started"):
         session.session_started()
     assert session.mode == "rich"
-    assert session.is_automation is False
 
 
 def test_session_started_xterm_256_basic_sets_raw_mode():
@@ -109,17 +108,18 @@ def test_session_started_xterm_256_basic_sets_raw_mode():
         with patch.object(PromptToolkitSSHSession, "session_started"):
             session.session_started()
         assert session.mode == "raw", term
-        assert session.is_automation is False
 
 
-def test_session_started_moo_automation_stays_rich():
-    """TERM containing moo-automation stays in rich mode with is_automation=True and CPR disabled."""
+def test_session_started_moo_automation_term_is_no_longer_special_cased():
+    """The legacy TERM=moo-automation special case has been removed; treated as a vanilla terminal."""
     session = _make_session_with_term("moo-automation-v1")
     with patch.object(PromptToolkitSSHSession, "session_started"):
         session.session_started()
+    # No CPR override, no special mode forcing — falls through to the rich
+    # default like any other unknown terminal type.
     assert session.mode == "rich"
-    assert session.is_automation is True
-    assert session.enable_cpr is False
+    assert session.iac_enabled is False
+    assert session.enable_cpr is True  # unchanged from the default in _make_session_with_term
 
 
 # ---------------------------------------------------------------------------
@@ -167,14 +167,14 @@ def test_session_started_emits_iac_only_for_mud_clients():
     assert plain._chan.write.call_count == 0
 
 
-def test_session_started_automation_skips_iac():
-    """Automation sessions skip IAC negotiation because clients cannot round-trip 0xFF."""
+def test_session_started_unknown_term_skips_iac():
+    """A non-MUD TERM (e.g. left over from the retired moo-automation client) skips IAC negotiation."""
     from moo.shell.iac import IacNegotiator, IacParser
 
     session = _make_session_with_term("moo-automation-v1")
     session.iac_parser = IacParser()
     session.iac_negotiator = IacNegotiator()
-    session.iac_enabled = False  # moo-automation TERM is not a MUD client
+    session.iac_enabled = False  # not a MUD-client TERM
     with patch.object(PromptToolkitSSHSession, "session_started"):
         session.session_started()
     assert session._chan.write.call_count == 0

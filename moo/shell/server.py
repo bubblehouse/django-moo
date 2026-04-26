@@ -87,7 +87,6 @@ class MooPromptToolkitSSHSession(PromptToolkitSSHSession):
     """
 
     user = None  # set by MooSSHServer.session_requested() before the session starts
-    is_automation: bool = False
     mode: str = "rich"
     iac_enabled: bool = False  # set to True in connection_made when TERM looks like a MUD client
 
@@ -120,12 +119,7 @@ class MooPromptToolkitSSHSession(PromptToolkitSSHSession):
         # which arrives between connection_made and session_started.
         if self._chan:
             term = self._chan.get_terminal_type()
-            if term and "moo-automation" in term.lower():
-                # Automation clients cannot answer CPR — prompt_toolkit would stall.
-                self.enable_cpr = False  # type: ignore[attr-defined]
-                self.is_automation = True
-                self.mode = "rich"
-            elif term and term.strip().lower() == "xterm-256-basic":
+            if term and term.strip().lower() == "xterm-256-basic":
                 self.mode = "raw"
             self.iac_enabled = _is_mud_term(term)
             if self.iac_enabled:
@@ -140,12 +134,12 @@ class MooPromptToolkitSSHSession(PromptToolkitSSHSession):
                 # OOB events the current client cannot consume.
                 self._clear_iac_cache()
         super().session_started()
-        # Initial IAC option offers go out only when we're talking to a real
-        # MUD client. Automation clients cannot round-trip IAC; vanilla SSH
-        # would render the offer bytes as garbage characters. The channel is
-        # in surrogate-escape UTF-8 mode for MUD clients, so we feed it str.
+        # Initial IAC option offers go out only when we're talking to a MUD
+        # client; vanilla SSH would render the offer bytes as garbage
+        # characters. The channel is in surrogate-escape UTF-8 mode for MUD
+        # clients, so we feed it str.
         negotiator = getattr(self, "iac_negotiator", None)
-        if self.iac_enabled and negotiator is not None and not self.is_automation and self._chan is not None:
+        if self.iac_enabled and negotiator is not None and self._chan is not None:
             try:
                 self._chan.write(_iac_bytes_to_str(negotiator.initial_offers()))
             except BrokenPipeError:
@@ -358,7 +352,6 @@ async def interact(ssh_session: PromptToolkitSSHSession) -> None:
     """
     global _total_connections  # pylint: disable=global-statement
     session = cast(MooPromptToolkitSSHSession, ssh_session)
-    automation = getattr(session, "is_automation", False)
     mode = getattr(session, "mode", "rich")
     username = session.user.username if session.user else "unknown"
     _active_sessions.add(username)
@@ -372,7 +365,7 @@ async def interact(ssh_session: PromptToolkitSSHSession) -> None:
         mode,
     )
     try:
-        await embed(session.user, session=session, mode=mode, automation=automation)
+        await embed(session.user, session=session, mode=mode)
     finally:
         _active_sessions.discard(username)
         log.info("disconnect user=%s active=%d fds=%d", username, len(_active_sessions), _fd_count())
