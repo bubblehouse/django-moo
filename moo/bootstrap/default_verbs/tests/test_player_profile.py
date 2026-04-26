@@ -307,6 +307,28 @@ def test_who_no_connected_players(t_init: Object, t_wizard: Object):
     assert any("No players" in line or "no players" in line for line in printed)
 
 
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_connected_players_dedupes_shared_avatar(t_init: Object, t_wizard: Object):
+    """An avatar referenced by multiple Player records should appear once.
+    Player.avatar is a ForeignKey, so the JOIN in connected_players() can
+    produce duplicate rows; the function must dedupe by origin."""
+    from django.contrib.auth import get_user_model
+    from moo.core.models.auth import Player
+    from moo.sdk import connected_players
+
+    now = datetime.datetime.now(datetime.timezone.utc)
+    with code.ContextManager(t_wizard, lambda _: None):
+        t_wizard.set_property("last_connected_time", now)
+        # Add a second Player row pointing at the same avatar — simulates the
+        # multi-Player-per-avatar state that produces the duplicate @who rows.
+        extra_user = get_user_model().objects.create_user(username="ghost-session", password="x")
+        Player.objects.create(user=extra_user, avatar=t_wizard)
+        result = connected_players()
+    pks = [p.pk for p in result]
+    assert pks.count(t_wizard.pk) == 1, f"avatar {t_wizard.pk} appeared multiple times: {pks}"
+
+
 # --- @quit ---
 
 

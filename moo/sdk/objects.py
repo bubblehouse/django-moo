@@ -75,15 +75,19 @@ def connected_players(within=None):
 
     # Single query: restrict to player avatars only and eagerly load the
     # origin Object to avoid per-row SELECT on prop.origin access.
+    # `Player.avatar` is a ForeignKey, so the JOIN can produce duplicate
+    # rows when multiple Player records share an avatar — dedupe by origin_id.
     props = Property.objects.filter(name="last_connected_time", origin__player__isnull=False).select_related("origin")
 
     pcache = _ContextManager.get_prop_lookup_cache()
+    seen: set[int] = set()
     result = []
     for prop in props:
         value = moojson.loads(prop.value)
         if pcache is not None:
             pcache[(prop.origin_id, "last_connected_time", True)] = value
-        if value is not None and value >= threshold:
+        if value is not None and value >= threshold and prop.origin_id not in seen:
+            seen.add(prop.origin_id)
             result.append(prop.origin)
 
     return result
