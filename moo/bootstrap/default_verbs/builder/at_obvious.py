@@ -10,7 +10,7 @@ The caller must have write permission on the object.
 
 from moo.sdk import context
 
-obj = context.parser.get_dobj()
+obj = context.parser.get_dobj(lookup=True)
 context.player.is_allowed("write", obj, fatal=True)
 obj.obvious = True
 obj.save()

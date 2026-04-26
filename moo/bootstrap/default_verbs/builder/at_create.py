@@ -3,13 +3,19 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-Create an instance of an object or class. It parses the arguments to extract the
-parent object we wish to create an instance of, along with the name we wish to give to the created object. The
-`create()`` primitive is called, with the derived parent added afterwards. The resulting object is moved to the player``s
-inventory, using the `move()` primitive.
+Create an instance of an object or class. The new object is placed in the
+player's inventory by default — players typically don't own the room they are
+standing in, so dropping new objects there would surprise the room owner (and
+may be rejected by the room's `accept` verb). Pass an explicit location with
+``in <location>`` to place the object somewhere else, or ``in the void`` to
+leave it unlocated.
 
-Special syntax: @create "name" from "parent" in the void
-  Creates object with location = None (not in player's inventory or any room)
+Usage:
+    @create <name>
+    @create <name> from <parent>
+    @create <name> in <location>
+    @create <name> from <parent> in <location>
+    @create <name> in the void
 """
 
 from moo.sdk import context, create, set_task_perms
@@ -24,27 +30,36 @@ name = context.parser.get_dobj_str()
 # bypassing any moveto verb (e.g. $furniture.moveto returns False for non-wizards).
 location = None
 place_in_void = False
+explicit_location = False
 if context.parser.has_pobj_str("in"):
     location_str = context.parser.get_pobj_str("in").lower()
     if location_str == "void":
         place_in_void = True
     else:
         location = context.parser.get_pobj("in", lookup=True)
+        explicit_location = True
 
 if not place_in_void and location is None:
-    # No "in" specified — pass player's inventory as location directly to create(),
-    # so the accept/PermissionError check and the initial INSERT happen in a single
-    # atomic save. This prevents orphan objects if the location rejects the new item.
     location = context.player
 
 with set_task_perms(context.player):
     new_obj = create(name, owner=context.player, location=location)
-    print("[yellow]Created %s[/yellow]" % new_obj)
-
-    if context.parser.has_pobj_str("from"):
-        parent = context.parser.get_pobj("from", lookup=True)
-        new_obj.add_parent(parent)
-        print("[yellow]Transmuted %s to %s[/yellow]" % (new_obj, parent))
 
 if place_in_void:
-    print("[yellow]%s exists in the void[/yellow]" % new_obj)
+    placement = "in the void"
+elif explicit_location:
+    placement = f"in {location}"
+else:
+    room = context.player.location
+    if room is not None and room.owner_id != context.player.pk:
+        placement = f"in your inventory (you don't own {room})"
+    else:
+        placement = "in your inventory"
+
+print(f"[yellow]Created {new_obj} {placement}.[/yellow]")
+
+if context.parser.has_pobj_str("from"):
+    with set_task_perms(context.player):
+        parent = context.parser.get_pobj("from", lookup=True)
+        new_obj.add_parent(parent)
+    print(f"[yellow]Transmuted {new_obj} to {parent}.[/yellow]")

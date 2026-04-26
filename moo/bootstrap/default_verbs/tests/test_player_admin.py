@@ -409,6 +409,65 @@ def test_rename_requires_to_clause(t_init: Object, t_wizard: Object, setup_item)
             parse.interpret(ctx, "@rename widget")
 
 
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_rename_accepts_as_preposition(t_init: Object, t_wizard: Object, setup_item):
+    """@rename <obj> as <name> works alongside the 'to' form."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        widget = setup_item(t_wizard.location, "widget")
+        parse.interpret(ctx, "@rename widget as gadget")
+        widget.refresh_from_db()
+    assert widget.name == "gadget"
+    assert any("gadget" in line for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_rename_quoted_multiword_name(t_init: Object, t_wizard: Object, setup_item):
+    """@rename "<long name>" to <short> resolves the dobj locally without
+    triggering a global lookup that mistakes the name for a property ref."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        widget = setup_item(t_wizard.location, "ornate brass widget")
+        parse.interpret(ctx, '@rename "ornate brass widget" to gadget')
+        widget.refresh_from_db()
+    assert widget.name == "gadget"
+
+
+# --- @obvious ---
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_obvious_marks_object_visible(t_init: Object, t_wizard: Object, setup_item):
+    """@obvious <name> flips the obvious flag on an object findable by name."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        widget = setup_item(t_wizard.location, "widget")
+        assert widget.obvious is False
+        parse.interpret(ctx, "@obvious widget")
+        widget.refresh_from_db()
+    assert widget.obvious is True
+    assert any("obvious" in line for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_obvious_resolves_globally(t_init: Object, t_wizard: Object, setup_item):
+    """@obvious must use a global lookup so it can target objects regardless
+    of whether they're sitting in the player's location or inventory."""
+    system = lookup(1)
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        elsewhere = create("Elsewhere", parents=[system.room])
+        widget = setup_item(elsewhere, "remote-widget")
+        assert widget.obvious is False
+        parse.interpret(ctx, "@obvious remote-widget")
+        widget.refresh_from_db()
+    assert widget.obvious is True
+
+
 # --- @version / @memory ---
 
 
