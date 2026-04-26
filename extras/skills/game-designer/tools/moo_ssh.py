@@ -97,7 +97,12 @@ class MooSSH:
             f"-p {self.port} {self.user}@{self.host}'"
         )
         self._log(f"[moo_ssh] Connecting to {self.user}@{self.host}:{self.port}...")
-        self.child = pexpect.spawn(ssh_cmd, timeout=CONNECT_TIMEOUT, encoding="utf-8")
+        self.child = pexpect.spawn(
+            ssh_cmd,
+            timeout=CONNECT_TIMEOUT,
+            encoding="utf-8",
+            codec_errors="replace",
+        )
 
         idx = self.child.expect(["[Pp]assword:", pexpect.EOF, pexpect.TIMEOUT])
         if idx != 0:
