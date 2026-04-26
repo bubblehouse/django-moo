@@ -244,6 +244,40 @@ def test_parse_with_complex_name(t_init: Object, t_wizard: Object):
     assert parser.get_dobj() == box
 
 
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_get_dobj_lookup_prefers_local_match(t_init: Object, t_wizard: Object):
+    """get_dobj(lookup=True) returns the locally-matched object when one exists.
+
+    Regression: was unconditionally going through global lookup() and ignoring
+    the parse-time local match, which caused commands like `@obvious crate` to
+    grab a faraway "wooden crate" instead of the player's own crate.
+    """
+    room = Object.objects.create(name="test room")
+    room.add_verb("accept", code="return True")
+    t_wizard.location = room
+    t_wizard.save()
+    # Two objects share the alias "widget" — one local to the wizard, one elsewhere.
+    local = Object.objects.create(name="widget", location=t_wizard.location)
+    Object.objects.create(name="widget", location=None)
+    lex = parse.Lexer("@obvious widget")
+    parser = parse.Parser(lex, t_wizard)
+    # Local match should win even though lookup=True is on.
+    assert parser.get_dobj(lookup=True) == local
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_get_dobj_lookup_falls_back_when_no_local_match(t_init: Object, t_wizard: Object):
+    """get_dobj(lookup=True) falls back to global lookup() when no local match."""
+    room = Object.objects.create(name="empty room")
+    room.add_verb("accept", code="return True")
+    t_wizard.location = room
+    t_wizard.save()
+    elsewhere = Object.objects.create(name="elsewhere-thing", location=None)
+    lex = parse.Lexer("@recycle elsewhere-thing")
+    parser = parse.Parser(lex, t_wizard)
+    assert parser.get_dobj(lookup=True) == elsewhere
+
+
 def test_lex_synonym_preposition_normalized():
     # "using" is a synonym for "with"; the Lexer should store it under the canonical key "with"
     lex = parse.Lexer("take hammer using tongs")

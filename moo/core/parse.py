@@ -501,15 +501,20 @@ class Parser:  # pylint: disable=too-many-instance-attributes
     def get_dobj(self, lookup=False):
         """
         Get the direct object for this parser. If there was no
-        direct object found, raise a NoSuchObjectError
+        direct object found, raise a NoSuchObjectError.
+
+        With ``lookup=True`` and no local match, fall back to a global
+        ``lookup()`` by name. Local matches always take precedence — this
+        prevents `@obvious crate` from resolving to a faraway "wooden crate"
+        when the player has their own newly-made crate in the room.
         """
+        if self.dobj:
+            return self.dobj
         if lookup and self.dobj_str is not None:
             from moo.core import lookup
 
             return lookup(self.dobj_str)
-        if not (self.dobj):
-            raise NoSuchObjectError(self.dobj_str)
-        return self.dobj
+        raise NoSuchObjectError(self.dobj_str)
 
     def get_pobj(self, prep, lookup=False):
         """
