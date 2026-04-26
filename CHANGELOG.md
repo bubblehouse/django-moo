@@ -1,3 +1,9 @@
+## [1.4.1](https://gitlab.com/bubblehouse/django-moo/compare/v1.4.0...v1.4.1) (2026-04-26)
+
+### Bug Fixes
+
+* **bootstrap:** remove broken Agent of the Moment plaque from tradesmen setup ([5f4cac3](https://gitlab.com/bubblehouse/django-moo/commit/5f4cac314c2f022e9ba9f143362a88d1f6816182))
+
 ## [1.4.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.3.0...v1.4.0) (2026-04-25)
 
 ### Features
