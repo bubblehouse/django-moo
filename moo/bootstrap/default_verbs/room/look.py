@@ -1,4 +1,4 @@
-#!moo verb look inspect --on $room --dspec either --ispec at:any --ispec through:any --ispec on:any --ispec under:any --ispec behind:any --ispec before:any --ispec beside:any --ispec over:any
+#!moo verb look inspect --on $room --dspec either --ispec at:any --ispec through:any --ispec in:any --ispec on:any --ispec under:any --ispec behind:any --ispec before:any --ispec beside:any --ispec over:any
 
 # pylint: disable=return-outside-function,undefined-variable
 
@@ -61,6 +61,12 @@ if context.parser.has_pobj_str("in"):
     container = context.parser.get_pobj("in")
 else:
     container = None
+
+if container is not None and not context.parser.has_dobj_str():
+    container.look_self()
+    if container.has_verb("tell_contents"):
+        container.tell_contents()
+    return
 
 in_inventory = False
 if context.parser.has_dobj() and container is None:

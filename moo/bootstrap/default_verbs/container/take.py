@@ -1,4 +1,4 @@
-#!moo verb get remove --on $container --dspec any --ispec from:this
+#!moo verb get remove take --on $container --dspec any --ispec from:this
 
 # pylint: disable=return-outside-function,undefined-variable
 
@@ -13,7 +13,7 @@ When you look at pipe now you should see:
     It is empty.
 """
 
-from moo.sdk import context
+from moo.sdk import context, NoSuchObjectError
 
 if args:
     obj = args[0]
@@ -25,7 +25,7 @@ else:
     try:
         obj = context.parser.get_dobj()
         name = obj.title()
-    except Exception:  # pylint: disable=broad-exception-caught
+    except NoSuchObjectError:
         obj = this.find(name).first()
 
 if not this.is_open():

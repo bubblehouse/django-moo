@@ -16,7 +16,11 @@ If pipe is open, then tobacco will be put into the pipe. If you look at pipe you
         tobacco
 """
 
-from moo.sdk import context
+from moo.sdk import context, UsageError
+
+if not args:
+    if not (context.parser.has_pobj_str("in") or context.parser.has_pobj_str("on")):
+        raise UsageError(f"Usage: {verb_name} <object> in/on {this.name}")
 
 obj = args[0] if args else context.parser.get_dobj()
 

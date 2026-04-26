@@ -318,3 +318,102 @@ def test_open_locked_container_with_key(t_init: Object, t_wizard: Object):
         box.refresh_from_db()
     assert box.is_open()
     assert printed == ["You open the container."]
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_look_in_container_lists_contents(t_init: Object, t_wizard: Object):
+    """`look in <container>` dispatches to the container's look_self and
+    tell_contents rather than falling through to the room view."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        system = lookup(1)
+        box = setup_container(t_wizard)
+        create("tobacco", parents=[system.thing], location=box)
+        parse.interpret(ctx, "look in wooden box")
+    output = "\n".join(str(line) for line in printed)
+    assert "Contents:" in output
+    assert "tobacco" in output
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_look_in_empty_container(t_init: Object, t_wizard: Object):
+    """`look in <empty container>` reports the empty state from tell_contents."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        setup_container(t_wizard)
+        parse.interpret(ctx, "look in wooden box")
+    output = "\n".join(str(line) for line in printed)
+    assert "It is empty." in output
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_get_missing_item_from_open_container(t_init: Object, t_wizard: Object):
+    """`get <missing> from <container>` must report the failure, not return silently."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        setup_container(t_wizard)
+        parse.interpret(ctx, "open wooden box")
+        printed.clear()
+        parse.interpret(ctx, "get gear from wooden box")
+    output = "\n".join(str(line) for line in printed)
+    assert output.strip(), "verb returned no output for missing item"
+    assert "gear" in output and "wooden box" in output
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_take_missing_item_from_open_container(t_init: Object, t_wizard: Object):
+    """`take <missing> from <container>` (the alias the player-basics tutorial
+    uses) must report the failure rather than returning silently."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        setup_container(t_wizard)
+        parse.interpret(ctx, "open wooden box")
+        printed.clear()
+        parse.interpret(ctx, "take gear from wooden box")
+    output = "\n".join(str(line) for line in printed)
+    assert output.strip(), "verb returned no output for missing item via 'take' alias"
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_get_from_closed_container(t_init: Object, t_wizard: Object):
+    """`get <item> from <closed container>` reports closed state."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        setup_container(t_wizard)
+        parse.interpret(ctx, "get gear from wooden box")
+    output = "\n".join(str(line) for line in printed)
+    assert "closed" in output
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_drop_container_from_inventory(t_init: Object, t_wizard: Object):
+    """`drop <container>` works for a $container the player is carrying.
+    The container inherits $thing.drop, so dispatch should find the inherited
+    verb without falling through to 'Huh?'."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        containers = lookup("Generic Container")
+        crate = create("crate", parents=[containers], location=t_wizard)
+        assert crate.location == t_wizard
+        parse.interpret(ctx, "drop crate")
+        crate.refresh_from_db()
+    assert crate.location == t_wizard.location, f"crate did not move to room (still at {crate.location})"
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_put_no_target_reports_usage(t_init: Object, t_wizard: Object):
+    """`put <obj>` with no in/on target must surface a usage error rather
+    than silently moving the object into itself."""
+    from moo.core.exceptions import UsageError
+
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        setup_container(t_wizard)
+        with pytest.raises(UsageError):
+            parse.interpret(ctx, "put wooden box")
