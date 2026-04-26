@@ -73,9 +73,9 @@ def test_look_self_compass_grid_dim_exit(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_look_self_no_compass_in_quiet_mode(t_init: Object, t_wizard: Object):
+def test_look_self_no_compass_in_quiet_mode(t_init: Object, t_wizard: Object, t_wizard_user_pk):
     """look_self() suppresses the compass grid entirely in quiet mode."""
-    user_pk = t_wizard.owner.pk
+    user_pk = t_wizard_user_pk
     _session_settings.setdefault(user_pk, {})["quiet_mode"] = True
     try:
         printed = []
@@ -157,9 +157,9 @@ def test_look_self_description_alongside_compass(t_init: Object, t_wizard: Objec
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_look_self_quiet_mode_no_indent(t_init: Object, t_wizard: Object):
+def test_look_self_quiet_mode_no_indent(t_init: Object, t_wizard: Object, t_wizard_user_pk):
     """look_self() in quiet mode prints the title without leading spaces."""
-    user_pk = t_wizard.owner.pk
+    user_pk = t_wizard_user_pk
     _session_settings.setdefault(user_pk, {})["quiet_mode"] = True
     try:
         printed = []

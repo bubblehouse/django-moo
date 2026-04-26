@@ -203,32 +203,32 @@ def test_edit_no_permission(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_note_at_edit_raw_mode_hints_with_form(t_init: Object, t_wizard: Object):
+def test_note_at_edit_raw_mode_hints_with_form(t_init: Object, t_wizard: Object, t_wizard_user_pk):
     """In raw mode, @edit <note> (no `with`) prints the inline-form hint."""
     from moo.shell import prompt as prompt_module
 
     printed = []
-    prompt_module._session_settings[t_wizard.owner.pk] = {"mode": "raw"}
+    prompt_module._session_settings[t_wizard_user_pk] = {"mode": "raw"}
     try:
         with code.ContextManager(t_wizard, printed.append) as ctx:
             setup_note(t_wizard, text="hello")
             parse.interpret(ctx, "@edit scrap of paper")
     finally:
-        prompt_module._session_settings.pop(t_wizard.owner.pk, None)
+        prompt_module._session_settings.pop(t_wizard_user_pk, None)
     assert any("Raw mode" in str(m) and "with" in str(m) for m in printed)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_note_at_edit_raw_mode_with_form_still_works(t_init: Object, t_wizard: Object):
+def test_note_at_edit_raw_mode_with_form_still_works(t_init: Object, t_wizard: Object, t_wizard_user_pk):
     """The inline `with` form succeeds for notes in raw mode."""
     from moo.shell import prompt as prompt_module
 
-    prompt_module._session_settings[t_wizard.owner.pk] = {"mode": "raw"}
+    prompt_module._session_settings[t_wizard_user_pk] = {"mode": "raw"}
     try:
         with code.ContextManager(t_wizard, lambda _: None) as ctx:
             note = setup_note(t_wizard, text="original")
             parse.interpret(ctx, '@edit scrap of paper with "updated note"')
     finally:
-        prompt_module._session_settings.pop(t_wizard.owner.pk, None)
+        prompt_module._session_settings.pop(t_wizard_user_pk, None)
     assert note.get_property("text") == "updated note"

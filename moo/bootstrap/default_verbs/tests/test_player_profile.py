@@ -205,17 +205,17 @@ def test_gripe_with_syntax_delivers_message(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_gripe_raw_mode_hints_with_form(t_init: Object, t_wizard: Object):
+def test_gripe_raw_mode_hints_with_form(t_init: Object, t_wizard: Object, t_wizard_user_pk):
     """In raw mode, @gripe (no `with`) prints the inline-form hint."""
     from moo.shell import prompt as prompt_module
 
     printed = []
-    prompt_module._session_settings[t_wizard.owner.pk] = {"mode": "raw"}
+    prompt_module._session_settings[t_wizard_user_pk] = {"mode": "raw"}
     try:
         with code.ContextManager(t_wizard, printed.append) as ctx:
             parse.interpret(ctx, "@gripe")
     finally:
-        prompt_module._session_settings.pop(t_wizard.owner.pk, None)
+        prompt_module._session_settings.pop(t_wizard_user_pk, None)
     assert any("Raw mode" in str(m) and "with" in str(m) for m in printed)
 
 

@@ -105,28 +105,28 @@ def test_describe_callback_overwrites_existing_description(t_init: Object, t_wiz
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_describe_raw_mode_hints_as_form(t_init: Object, t_wizard: Object):
+def test_describe_raw_mode_hints_as_form(t_init: Object, t_wizard: Object, t_wizard_user_pk):
     """In raw mode, @describe OBJ (no `as`) prints the inline-form hint and does not open the editor."""
     from moo.shell import prompt as prompt_module
 
     printed = []
-    prompt_module._session_settings[t_wizard.owner.pk] = {"mode": "raw"}
+    prompt_module._session_settings[t_wizard_user_pk] = {"mode": "raw"}
     try:
         with code.ContextManager(t_wizard, printed.append) as ctx:
             setup_obj(t_wizard)
             parse.interpret(ctx, "@describe test box")
     finally:
-        prompt_module._session_settings.pop(t_wizard.owner.pk, None)
+        prompt_module._session_settings.pop(t_wizard_user_pk, None)
     assert any("Raw mode" in str(m) and "as" in str(m) for m in printed)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_describe_raw_mode_as_form_still_works(t_init: Object, t_wizard: Object):
+def test_describe_raw_mode_as_form_still_works(t_init: Object, t_wizard: Object, t_wizard_user_pk):
     """The inline `as` form succeeds in raw mode — the hint is gated on absence of `as`."""
     from moo.shell import prompt as prompt_module
 
-    prompt_module._session_settings[t_wizard.owner.pk] = {"mode": "raw"}
+    prompt_module._session_settings[t_wizard_user_pk] = {"mode": "raw"}
     try:
         with code.ContextManager(t_wizard, lambda _: None) as ctx:
             obj = setup_obj(t_wizard)
@@ -134,4 +134,4 @@ def test_describe_raw_mode_as_form_still_works(t_init: Object, t_wizard: Object)
             obj.refresh_from_db()
             assert obj.get_property("description") == "A shiny box."
     finally:
-        prompt_module._session_settings.pop(t_wizard.owner.pk, None)
+        prompt_module._session_settings.pop(t_wizard_user_pk, None)

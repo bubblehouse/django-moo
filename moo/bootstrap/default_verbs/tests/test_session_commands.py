@@ -59,9 +59,9 @@ def test_prefix_clear(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_prefix_show_when_set(t_init: Object, t_wizard: Object):
+def test_prefix_show_when_set(t_init: Object, t_wizard: Object, t_wizard_user_pk):
     """PREFIX with no args shows the current prefix when one is set."""
-    user_pk = t_wizard.owner.pk
+    user_pk = t_wizard_user_pk
     _set_registry(user_pk, "output_prefix", ">>START<<")
     try:
         printed = []
@@ -74,9 +74,9 @@ def test_prefix_show_when_set(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_prefix_show_when_unset(t_init: Object, t_wizard: Object):
+def test_prefix_show_when_unset(t_init: Object, t_wizard: Object, t_wizard_user_pk):
     """PREFIX with no args reports no prefix when none is set."""
-    user_pk = t_wizard.owner.pk
+    user_pk = t_wizard_user_pk
     _clear_registry(user_pk, "output_prefix")
     printed = []
     with code.ContextManager(t_wizard, printed.append) as ctx:
@@ -113,9 +113,9 @@ def test_suffix_clear(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_suffix_show_when_set(t_init: Object, t_wizard: Object):
+def test_suffix_show_when_set(t_init: Object, t_wizard: Object, t_wizard_user_pk):
     """SUFFIX with no args shows the current suffix when one is set."""
-    user_pk = t_wizard.owner.pk
+    user_pk = t_wizard_user_pk
     _set_registry(user_pk, "output_suffix", ">>END<<")
     try:
         printed = []
@@ -128,9 +128,9 @@ def test_suffix_show_when_set(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_suffix_show_when_unset(t_init: Object, t_wizard: Object):
+def test_suffix_show_when_unset(t_init: Object, t_wizard: Object, t_wizard_user_pk):
     """SUFFIX with no args reports no suffix when none is set."""
-    user_pk = t_wizard.owner.pk
+    user_pk = t_wizard_user_pk
     _clear_registry(user_pk, "output_suffix")
     printed = []
     with code.ContextManager(t_wizard, printed.append) as ctx:
@@ -167,9 +167,9 @@ def test_quiet_disable(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_quiet_show_when_on(t_init: Object, t_wizard: Object):
+def test_quiet_show_when_on(t_init: Object, t_wizard: Object, t_wizard_user_pk):
     """`a11y` (no args) shows quiet on when quiet_mode is set."""
-    user_pk = t_wizard.owner.pk
+    user_pk = t_wizard_user_pk
     _set_registry(user_pk, "quiet_mode", True)
     try:
         printed = []
@@ -184,9 +184,9 @@ def test_quiet_show_when_on(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_quiet_show_when_off(t_init: Object, t_wizard: Object):
+def test_quiet_show_when_off(t_init: Object, t_wizard: Object, t_wizard_user_pk):
     """`a11y` (no args) shows quiet off when quiet_mode is unset."""
-    user_pk = t_wizard.owner.pk
+    user_pk = t_wizard_user_pk
     _set_registry(user_pk, "quiet_mode", False)
     try:
         printed = []
@@ -228,9 +228,9 @@ def test_outputprefix_clear(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_outputprefix_show_when_set(t_init: Object, t_wizard: Object):
+def test_outputprefix_show_when_set(t_init: Object, t_wizard: Object, t_wizard_user_pk):
     """OUTPUTPREFIX with no args shows the current global prefix when one is set."""
-    user_pk = t_wizard.owner.pk
+    user_pk = t_wizard_user_pk
     _set_registry(user_pk, "output_global_prefix", ">>>")
     try:
         printed = []
@@ -243,9 +243,9 @@ def test_outputprefix_show_when_set(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_outputprefix_show_when_unset(t_init: Object, t_wizard: Object):
+def test_outputprefix_show_when_unset(t_init: Object, t_wizard: Object, t_wizard_user_pk):
     """OUTPUTPREFIX with no args reports no global prefix when none is set."""
-    user_pk = t_wizard.owner.pk
+    user_pk = t_wizard_user_pk
     _clear_registry(user_pk, "output_global_prefix")
     printed = []
     with code.ContextManager(t_wizard, printed.append) as ctx:
@@ -282,9 +282,9 @@ def test_outputsuffix_clear(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_outputsuffix_show_when_set(t_init: Object, t_wizard: Object):
+def test_outputsuffix_show_when_set(t_init: Object, t_wizard: Object, t_wizard_user_pk):
     """OUTPUTSUFFIX with no args shows the current global suffix when one is set."""
-    user_pk = t_wizard.owner.pk
+    user_pk = t_wizard_user_pk
     _set_registry(user_pk, "output_global_suffix", "<<<")
     try:
         printed = []
@@ -297,9 +297,9 @@ def test_outputsuffix_show_when_set(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_outputsuffix_show_when_unset(t_init: Object, t_wizard: Object):
+def test_outputsuffix_show_when_unset(t_init: Object, t_wizard: Object, t_wizard_user_pk):
     """OUTPUTSUFFIX with no args reports no global suffix when none is set."""
-    user_pk = t_wizard.owner.pk
+    user_pk = t_wizard_user_pk
     _clear_registry(user_pk, "output_global_suffix")
     printed = []
     with code.ContextManager(t_wizard, printed.append) as ctx:

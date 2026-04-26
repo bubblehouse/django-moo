@@ -408,7 +408,7 @@ def test_parse_command_returns_exit_status_one_on_no_such_verb(t_init, t_wizard)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
-def test_parse_command_omits_error_prefix_when_prefixes_off(t_init, t_wizard):
+def test_parse_command_omits_error_prefix_when_prefixes_off(t_init, t_wizard, t_wizard_user_pk):
     """Without prefixes_mode set, error output does not contain [ERROR] tag."""
     from moo.shell.prompt import _session_settings
 
@@ -418,7 +418,7 @@ def test_parse_command_omits_error_prefix_when_prefixes_off(t_init, t_wizard):
         "from moo.core.exceptions import UserError\nraise UserError('boom')",
         t_wizard,
     )
-    user_pk = t_wizard.owner.pk
+    user_pk = t_wizard_user_pk
     _session_settings.pop(user_pk, None)
     try:
         result, _exit = tasks.parse_command(t_wizard.pk, "test-raise2")
@@ -428,7 +428,7 @@ def test_parse_command_omits_error_prefix_when_prefixes_off(t_init, t_wizard):
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
-def test_parse_command_includes_error_prefix_when_prefixes_on(t_init, t_wizard):
+def test_parse_command_includes_error_prefix_when_prefixes_on(t_init, t_wizard, t_wizard_user_pk):
     """With prefixes_mode=True, error output contains the [ERROR] tag."""
     from moo.shell.prompt import _session_settings
 
@@ -438,7 +438,7 @@ def test_parse_command_includes_error_prefix_when_prefixes_on(t_init, t_wizard):
         "from moo.core.exceptions import UserError\nraise UserError('boom')",
         t_wizard,
     )
-    user_pk = t_wizard.owner.pk
+    user_pk = t_wizard_user_pk
     _session_settings[user_pk] = {"prefixes_mode": True}
     try:
         result, _exit = tasks.parse_command(t_wizard.pk, "test-raise3")

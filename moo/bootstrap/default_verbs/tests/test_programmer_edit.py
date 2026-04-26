@@ -359,13 +359,13 @@ def _write_verb_file(path: pathlib.Path, on: str, verb_name: str, body: str) -> 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_at_edit_verb_raw_mode_hints_with_form(t_init: Object, t_wizard: Object):
+def test_at_edit_verb_raw_mode_hints_with_form(t_init: Object, t_wizard: Object, t_wizard_user_pk):
     """In raw mode, @edit <verb> on <obj> (no `with`) prints the inline-form hint and does not publish an editor event."""
     from moo.shell import prompt as prompt_module
 
     system = lookup(1)
     printed = []
-    prompt_module._session_settings[t_wizard.owner.pk] = {"mode": "raw"}
+    prompt_module._session_settings[t_wizard_user_pk] = {"mode": "raw"}
     try:
         with code.ContextManager(t_wizard, printed.append) as ctx:
             obj = create("widget", parents=[system.root_class], location=t_wizard.location)
@@ -373,38 +373,38 @@ def test_at_edit_verb_raw_mode_hints_with_form(t_init: Object, t_wizard: Object)
             VerbName.objects.create(verb=v, name="myverb")
             parse.interpret(ctx, "@edit myverb on widget")
     finally:
-        prompt_module._session_settings.pop(t_wizard.owner.pk, None)
+        prompt_module._session_settings.pop(t_wizard_user_pk, None)
     assert any("Raw mode" in str(m) and "with" in str(m) for m in printed)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_at_edit_property_raw_mode_hints_with_form(t_init: Object, t_wizard: Object):
+def test_at_edit_property_raw_mode_hints_with_form(t_init: Object, t_wizard: Object, t_wizard_user_pk):
     """In raw mode, @edit property <name> on <obj> (no `with`) prints the property-form hint."""
     from moo.shell import prompt as prompt_module
 
     system = lookup(1)
     printed = []
-    prompt_module._session_settings[t_wizard.owner.pk] = {"mode": "raw"}
+    prompt_module._session_settings[t_wizard_user_pk] = {"mode": "raw"}
     try:
         with code.ContextManager(t_wizard, printed.append) as ctx:
             obj = create("widget", parents=[system.root_class], location=t_wizard.location)
             obj.set_property("myprop", "hello")
             parse.interpret(ctx, "@edit property myprop on widget")
     finally:
-        prompt_module._session_settings.pop(t_wizard.owner.pk, None)
+        prompt_module._session_settings.pop(t_wizard_user_pk, None)
     assert any("Raw mode" in str(m) and "property" in str(m) for m in printed)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_at_edit_verb_raw_mode_with_form_still_works(t_init: Object, t_wizard: Object):
+def test_at_edit_verb_raw_mode_with_form_still_works(t_init: Object, t_wizard: Object, t_wizard_user_pk):
     """The inline `with` form succeeds in raw mode — the hint is gated on absence of `with`."""
     from moo.shell import prompt as prompt_module
 
     system = lookup(1)
     printed = []
-    prompt_module._session_settings[t_wizard.owner.pk] = {"mode": "raw"}
+    prompt_module._session_settings[t_wizard_user_pk] = {"mode": "raw"}
     try:
         with code.ContextManager(t_wizard, printed.append) as ctx:
             obj = create("widget", parents=[system.root_class], location=t_wizard.location)
@@ -412,7 +412,7 @@ def test_at_edit_verb_raw_mode_with_form_still_works(t_init: Object, t_wizard: O
             VerbName.objects.create(verb=v, name="myverb")
             parse.interpret(ctx, '@edit myverb on widget with print("updated")')
     finally:
-        prompt_module._session_settings.pop(t_wizard.owner.pk, None)
+        prompt_module._session_settings.pop(t_wizard_user_pk, None)
     v.refresh_from_db()
     assert "updated" in v.code
     assert not any("Raw mode" in str(m) for m in printed)
@@ -420,12 +420,12 @@ def test_at_edit_verb_raw_mode_with_form_still_works(t_init: Object, t_wizard: O
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_at_edit_rich_mode_still_opens_editor(t_init: Object, t_wizard: Object):
+def test_at_edit_rich_mode_still_opens_editor(t_init: Object, t_wizard: Object, t_wizard_user_pk):
     """In rich mode (default), @edit without `with` still publishes an editor event."""
     from moo.shell import prompt as prompt_module
 
     system = lookup(1)
-    prompt_module._session_settings.pop(t_wizard.owner.pk, None)  # explicit rich (default)
+    prompt_module._session_settings.pop(t_wizard_user_pk, None)  # explicit rich (default)
     with code.ContextManager(t_wizard, lambda _: None) as ctx:
         obj = create("widget", parents=[system.root_class], location=t_wizard.location)
         v = Verb.objects.create(origin=obj, owner=t_wizard, code='print("hello")')

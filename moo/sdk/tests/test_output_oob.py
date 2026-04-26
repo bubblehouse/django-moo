@@ -395,10 +395,10 @@ def test_get_wrap_column_returns_terminal_width_when_property_missing():
     """No ``wrap_column`` property → fall through to the terminal width session setting."""
     player = MagicMock()
     player.get_property.side_effect = NoSuchPropertyError("wrap_column")
-    player.owner.pk = 9001
     prompt_module._session_settings[9001] = {"terminal_width": 132}
-    with patch.object(core_code.ContextManager, "get", side_effect=lambda k: player if k == "player" else None):
-        assert output.get_wrap_column() == 132
+    with _patch_player_lookup(9001):
+        with patch.object(core_code.ContextManager, "get", side_effect=lambda k: player if k == "player" else None):
+            assert output.get_wrap_column() == 132
 
 
 def test_get_wrap_column_honors_explicit_integer_property():

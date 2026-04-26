@@ -209,53 +209,53 @@ def test_at_reply_with_syntax(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_at_send_raw_mode_hints_with_form(t_init: Object, t_wizard: Object):
+def test_at_send_raw_mode_hints_with_form(t_init: Object, t_wizard: Object, t_wizard_user_pk):
     """In raw mode, @send <player> (no `with`) prints the inline-form hint."""
     from moo.shell import prompt as prompt_module
 
     printed = []
-    prompt_module._session_settings[t_wizard.owner.pk] = {"mode": "raw"}
+    prompt_module._session_settings[t_wizard_user_pk] = {"mode": "raw"}
     try:
         with code.ContextManager(t_wizard, printed.append) as ctx:
             parse.interpret(ctx, "@send Player")
     finally:
-        prompt_module._session_settings.pop(t_wizard.owner.pk, None)
+        prompt_module._session_settings.pop(t_wizard_user_pk, None)
     assert any("Raw mode" in str(m) and "with" in str(m) for m in printed)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_at_reply_raw_mode_hints_with_form(t_init: Object, t_wizard: Object):
+def test_at_reply_raw_mode_hints_with_form(t_init: Object, t_wizard: Object, t_wizard_user_pk):
     """In raw mode, @reply <n> (no `with`) prints the inline-form hint."""
     from moo.shell import prompt as prompt_module
 
     player = lookup("Player")
     send_message(player, [t_wizard], "Question", "What do you think?")
     printed = []
-    prompt_module._session_settings[t_wizard.owner.pk] = {"mode": "raw"}
+    prompt_module._session_settings[t_wizard_user_pk] = {"mode": "raw"}
     try:
         with code.ContextManager(t_wizard, printed.append) as ctx:
             parse.interpret(ctx, "@reply 1")
     finally:
-        prompt_module._session_settings.pop(t_wizard.owner.pk, None)
+        prompt_module._session_settings.pop(t_wizard_user_pk, None)
     assert any("Raw mode" in str(m) and "with" in str(m) for m in printed)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
-def test_at_forward_raw_mode_hints_with_form(t_init: Object, t_wizard: Object):
+def test_at_forward_raw_mode_hints_with_form(t_init: Object, t_wizard: Object, t_wizard_user_pk):
     """In raw mode, @forward <n> to <player> (no `with`) prints the inline-form hint."""
     from moo.shell import prompt as prompt_module
 
     player = lookup("Player")
     send_message(player, [t_wizard], "Original", "Original body.")
     printed = []
-    prompt_module._session_settings[t_wizard.owner.pk] = {"mode": "raw"}
+    prompt_module._session_settings[t_wizard_user_pk] = {"mode": "raw"}
     try:
         with code.ContextManager(t_wizard, printed.append) as ctx:
             parse.interpret(ctx, "@forward 1 to Player")
     finally:
-        prompt_module._session_settings.pop(t_wizard.owner.pk, None)
+        prompt_module._session_settings.pop(t_wizard_user_pk, None)
     assert any("Raw mode" in str(m) and "with" in str(m) for m in printed)
 
 

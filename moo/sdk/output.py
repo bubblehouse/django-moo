@@ -119,6 +119,25 @@ def open_input(obj, prompt: str, callback_verb, *args, password: bool = False):
     )
 
 
+def _player_user_pk(obj):
+    """
+    Resolve a player avatar Object to its Django User PK.
+
+    Session settings are keyed by Django User PK in the SSH server's
+    ``_session_settings`` registry and Django cache; SDK callers are given
+    an avatar Object via ``context.player``, so we go through the
+    :class:`Player` model to bridge namespaces.
+    """
+    from ..core.models.auth import Player  # pylint: disable=import-outside-toplevel
+
+    if obj is None:
+        return None
+    player = Player.objects.filter(avatar=obj).select_related("user").first()
+    if player is None or player.user is None:
+        return None
+    return player.user.pk
+
+
 def get_session_setting(key, default=None):
     """
     Get a session-specific output setting for the current player.
@@ -137,11 +156,7 @@ def get_session_setting(key, default=None):
     from django.core.cache import cache
     from ..shell import prompt as prompt_module
 
-    player = context.player
-    if not player:
-        return default
-
-    user_pk = player.owner.pk if player.owner else None
+    user_pk = _player_user_pk(context.player)
     if user_pk is None:
         return default
 
@@ -174,7 +189,7 @@ def set_session_setting(key, value):
     if not player:
         return
 
-    user_pk = player.owner.pk if player.owner else None
+    user_pk = _player_user_pk(player)
     if user_pk is not None:
         cache.set(f"moo:session:{user_pk}:{key}", value, timeout=86400)
 
@@ -248,15 +263,11 @@ def _client_supports_gmcp_package(obj, package: str) -> bool:
     """
     from django.core.cache import cache  # pylint: disable=import-outside-toplevel
 
-    from ..core.models.auth import Player  # pylint: disable=import-outside-toplevel
     from ..shell import prompt as prompt_module  # pylint: disable=import-outside-toplevel
 
-    if obj is None:
+    user_pk = _player_user_pk(obj)
+    if user_pk is None:
         return False
-    player = Player.objects.filter(avatar=obj).select_related("user").first()
-    if player is None or player.user is None:
-        return False
-    user_pk = player.user.pk
     settings = prompt_module._session_settings.get(user_pk, {})  # pylint: disable=protected-access
     iac = settings.get("iac")
     if not iac:
@@ -400,13 +411,11 @@ def _client_supports(obj, capability: str) -> bool:
     """
     from django.core.cache import cache  # pylint: disable=import-outside-toplevel
 
-    from ..core.models.auth import Player  # pylint: disable=import-outside-toplevel
     from ..shell import prompt as prompt_module  # pylint: disable=import-outside-toplevel
 
-    player = Player.objects.filter(avatar=obj).select_related("user").first()
-    if player is None or player.user is None:
+    user_pk = _player_user_pk(obj)
+    if user_pk is None:
         return False
-    user_pk = player.user.pk
     settings = prompt_module._session_settings.get(user_pk, {})  # pylint: disable=protected-access
     iac = settings.get("iac")
     if not iac:

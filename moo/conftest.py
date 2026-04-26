@@ -65,3 +65,15 @@ def t_wizard():
     Test fixture that returns the Wizard account.
     """
     yield Object.objects.get(name="Wizard")
+
+
+@pytest.fixture()
+def t_wizard_user_pk(t_wizard):
+    """
+    Django User PK for the Wizard avatar.
+
+    Session settings (``_session_settings``, ``moo:session:*`` cache keys)
+    are keyed by Django User PK — not Object PK — so tests that pre-populate
+    the registry must use this PK, not ``t_wizard.owner.pk``.
+    """
+    yield Player.objects.filter(avatar=t_wizard).select_related("user").first().user.pk
