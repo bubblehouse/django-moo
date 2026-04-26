@@ -432,3 +432,49 @@ def test_at_edit_rich_mode_still_opens_editor(t_init: Object, t_wizard: Object, 
         VerbName.objects.create(verb=v, name="myverb")
         with pytest.warns(RuntimeWarning):
             parse.interpret(ctx, "@edit myverb on widget")
+
+
+# --- @rmverb ---
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_rmverb_removes_verb(t_init: Object, t_wizard: Object):
+    """@rmverb <verb> on <obj> deletes the verb from the object."""
+    system = lookup(1)
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        obj = create("widget", parents=[system.root_class], location=t_wizard.location)
+        v = Verb.objects.create(origin=obj, owner=t_wizard, code='print("hello")')
+        VerbName.objects.create(verb=v, name="myverb")
+        assert obj.has_verb("myverb")
+        parse.interpret(ctx, "@rmverb myverb on widget")
+    obj.refresh_from_db()
+    assert not obj.has_verb("myverb")
+    assert any("Removed verb myverb" in line for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_rmverb_missing_verb_reports_no_verb(t_init: Object, t_wizard: Object):
+    """@rmverb <verb> on <obj> when the verb does not exist prints a friendly error."""
+    system = lookup(1)
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        create("widget", parents=[system.root_class], location=t_wizard.location)
+        parse.interpret(ctx, "@rmverb missing on widget")
+    assert any("No verb 'missing'" in line for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_rmverb_does_not_delete_inherited_verbs(t_init: Object, t_wizard: Object):
+    """@rmverb only deletes verbs defined directly on the target — not inherited ones."""
+    system = lookup(1)
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        # widget inherits from root_class, which has many verbs (look_self, etc.)
+        create("widget", parents=[system.root_class], location=t_wizard.location)
+        # The verb is inherited, not direct. @rmverb should refuse it.
+        parse.interpret(ctx, "@rmverb look_self on widget")
+    assert any("No verb 'look_self'" in line for line in printed)
