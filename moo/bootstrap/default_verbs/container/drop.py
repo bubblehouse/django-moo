@@ -31,4 +31,4 @@ if not this.is_open():
 obj.moveto(this)
 
 chosen_prep = "in" if "in" in context.parser.prepositions else "on"
-print(f"You placed {obj.name} {chosen_prep} {this.name}")
+print(f"You placed {obj.name} {chosen_prep} {this.name}.")

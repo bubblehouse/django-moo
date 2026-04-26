@@ -138,7 +138,7 @@ def test_put_in_open_container(t_init: Object, t_wizard: Object):
         parse.interpret(ctx, "put tobacco in wooden box")
         tobacco.refresh_from_db()
         assert tobacco.location == box
-        assert printed == ["You placed tobacco in wooden box"]
+        assert printed == ["You placed tobacco in wooden box."]
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -177,7 +177,7 @@ def test_take_from_open_container(t_init: Object, t_wizard: Object):
         parse.interpret(ctx, "get tobacco from wooden box")
         tobacco.refresh_from_db()
         assert tobacco.location == t_wizard
-        assert printed == ["You took tobacco from wooden box"]
+        assert printed == ["You took tobacco from wooden box."]
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)

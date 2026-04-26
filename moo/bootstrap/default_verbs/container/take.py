@@ -37,4 +37,4 @@ if not obj or obj.location != this:
     return
 
 obj.moveto(context.player)
-print(f"You took {name} from {this.title()}")
+print(f"You took {name} from {this.title()}.")
