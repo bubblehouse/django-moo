@@ -153,3 +153,18 @@ def test_recycle_no_args(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, printed.append) as ctx:
         parse.interpret(ctx, "@recycle")
     assert any("What do you want to recycle?" in line for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_recycle_object_in_other_room(t_init: Object, t_wizard: Object, setup_item):
+    """@recycle uses lookup=True so it can recycle objects in rooms the
+    caller isn't standing in."""
+    system = lookup(1)
+    other_room = system.room  # Generic Room, not where the wizard is
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        setup_item(other_room, "remote-widget")
+        # Wizard is not in `other_room` but should still find the widget by name.
+        parse.interpret(ctx, "@recycle remote-widget")
+    with pytest.raises(exceptions.NoSuchObjectError):
+        lookup("remote-widget")

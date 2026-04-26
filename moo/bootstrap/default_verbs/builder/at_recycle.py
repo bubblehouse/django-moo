@@ -14,7 +14,7 @@ if not context.parser.has_dobj_str():
     print("[yellow]What do you want to recycle?[/yellow]")
     return
 
-obj = context.parser.get_dobj()
+obj = context.parser.get_dobj(lookup=True)
 name = obj.title()
 try:
     obj.delete()
