@@ -19,7 +19,13 @@ if not players:
     print("No players are currently connected.")
     return
 
+# Deduplicate by player id — a single player with multiple connections
+# (e.g. one SSH session and one webssh session) should appear once.
+seen = set()
 print("Connected players:")
 for player in players:
+    if player.id in seen:
+        continue
+    seen.add(player.id)
     location = player.location.name if player.location else "nowhere"
     print(f"  {player.name} [{location}]")
