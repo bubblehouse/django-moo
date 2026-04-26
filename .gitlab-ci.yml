@@ -116,7 +116,7 @@ test:core:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   script:
     - uv sync
-    - uv run pytest -n auto moo/core/tests/ moo/shell/tests/ --junitxml=junit-core.xml --cov moo --cov-report term
+    - uv run pytest -n auto moo/core/tests/ moo/shell/tests/ moo/sdk/tests/ --junitxml=junit-core.xml --cov moo --cov-report term
   artifacts:
     when: always
     reports:
