@@ -1,3 +1,24 @@
+## [1.5.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.4.1...v1.5.0) (2026-04-26)
+
+### Features
+
+* **verbs:** add [@rmverb](https://gitlab.com/rmverb) to remove a verb from an object ([44c9891](https://gitlab.com/bubblehouse/django-moo/commit/44c9891a78f688b7e7687e3e6d81d87bf866ce2e))
+
+### Bug Fixes
+
+* **@recycle:** fall back to global lookup so cross-room recycling works ([4ec99ee](https://gitlab.com/bubblehouse/django-moo/commit/4ec99eef6f6b9dfc99f81fac06b3d2069a0c8115))
+* **container:** add trailing period to put/take output ([61a5457](https://gitlab.com/bubblehouse/django-moo/commit/61a5457c46d27be7a81df1cc5ec74a786a9ba496))
+* **moo_ssh:** handle telnet IAC bytes via codec_errors=replace ([e0209a2](https://gitlab.com/bubblehouse/django-moo/commit/e0209a200a15ae8cfd7e469b1945a0473c51bf46))
+* **parser:** get_dobj(lookup=True) prefers local match before global lookup ([2fc4abc](https://gitlab.com/bubblehouse/django-moo/commit/2fc4abc8de76d2727016a11fe55184f1ef03f7d1))
+* **sdk:** bridge avatar to Django User pk in session-setting helpers ([ac59d21](https://gitlab.com/bubblehouse/django-moo/commit/ac59d210597aa479744f61c103d08a69652caec0))
+* **sdk:** dedupe connected_players when Player.avatar is shared ([532059c](https://gitlab.com/bubblehouse/django-moo/commit/532059c7ecbd893fca99225c0633418f0d1fabf8))
+* **shell:** flush connect-time output even when OSC 133 is disabled ([5ec443e](https://gitlab.com/bubblehouse/django-moo/commit/5ec443eb7c2b3134ef75fa79d45f4af8019dd8fd))
+* **verbs:** [@move](https://gitlab.com/move) accepts bare 'here' destination without 'to' ([cf331ed](https://gitlab.com/bubblehouse/django-moo/commit/cf331ed5f1d5b97d325629370e694acd5971351e))
+* **verbs:** clarify builder @create/@rename/[@obvious](https://gitlab.com/obvious) behavior and output ([025851c](https://gitlab.com/bubblehouse/django-moo/commit/025851c5032e88e184c04479ddaf9e2dbd4f16b0))
+* **verbs:** dedupe duplicate connections in [@who](https://gitlab.com/who) output ([305b32a](https://gitlab.com/bubblehouse/django-moo/commit/305b32a15afabef206e612b3e3fc12a60c112161))
+* **verbs:** pronoun and verb-agreement in look_self status messages ([f49a22a](https://gitlab.com/bubblehouse/django-moo/commit/f49a22aab684131f05b470c79f05449c05d186f6))
+* **verbs:** tighten container drop/put/take and look-in dispatch ([4f87cf6](https://gitlab.com/bubblehouse/django-moo/commit/4f87cf6748733cd2da476a9e7d2b5b529bc23560))
+
 ## [1.4.1](https://gitlab.com/bubblehouse/django-moo/compare/v1.4.0...v1.4.1) (2026-04-26)
 
 ### Bug Fixes
