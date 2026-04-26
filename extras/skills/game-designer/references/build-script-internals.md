@@ -155,4 +155,4 @@ MooSSH(
 )
 ```
 
-Connects with `TERM=moo-automation`, which the server detects to disable CPR (Cursor Position Request). CPR previously caused ~2-3s timeout delays per command. `disconnect()` sends `@quit` for a clean server-side disconnect — `QUIT` (legacy) only prints "please use @quit" and does not close the connection.
+Connects with `TERM=xterm-256-basic`, which puts the server in raw mode with IAC subnegotiation enabled. Raw mode's line-oriented shell loop does not issue CPR (Cursor Position Request) queries, eliminating the ~2-3s timeout per command that prompt_toolkit's rich-mode loop incurs. `disconnect()` sends `@quit` for a clean server-side disconnect — `QUIT` (legacy) only prints "please use @quit" and does not close the connection.

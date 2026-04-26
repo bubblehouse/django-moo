@@ -84,10 +84,14 @@ class MooSSH:
 
     def connect(self):
         """Open SSH connection and wait for the MOO session to stabilize."""
-        # Set TERM=moo-automation to signal server to disable CPR (cursor position requests)
-        # This eliminates ~2-3s timeout delays on each command
+        # TERM=xterm-256-basic puts the server in raw mode with IAC negotiation.
+        # Raw mode uses a line-oriented shell loop that does not issue CPR
+        # (cursor position) queries — eliminating the ~2-3s timeout per command
+        # that prompt_toolkit otherwise incurs. The server-emitted IAC handshake
+        # and per-prompt EOR bytes do appear in pexpect output as garbage, but
+        # they don't disturb the PREFIX/SUFFIX delimiter regexes.
         ssh_cmd = (
-            "/bin/sh -c 'TERM=moo-automation ssh -tt "
+            "/bin/sh -c 'TERM=xterm-256-basic ssh -tt "
             "-o StrictHostKeyChecking=no "
             "-o UserKnownHostsFile=/dev/null "
             f"-p {self.port} {self.user}@{self.host}'"

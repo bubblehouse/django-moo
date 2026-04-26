@@ -65,16 +65,16 @@ They communicate through `asyncio.Event` flags, four `asyncio.Queue` instances
 (editor / paginator / input_prompt / disconnect), and a shared
 `_pending_connect_output` string for the startup burst.
 
-## The Three Modes
+## The Two Modes
 
 The session's mode is chosen in `MooPromptToolkitSSHSession.session_started`
 by inspecting the SSH client's `TERM` environment variable:
 
 | TERM contains            | Mode              | Purpose                                   |
 |--------------------------|-------------------|-------------------------------------------|
-| `moo-automation`         | `rich` + `is_automation=True` | machine-driven clients; CPR disabled, prompt shortcuts off |
-| `xterm-256-basic` (exact)| `raw`             | traditional MUD clients; no cursor control, line-based I/O |
-| anything else            | `rich`            | default prompt_toolkit TUI                 |
+| `xterm-256-basic` (exact)| `raw`             | MUD clients and `moo-agent`; line-based I/O, IAC negotiation, no cursor control |
+| any known MUD client name (`mudlet`, `tintin`, `mushclient`, ...) | `rich` + IAC | full TUI plus IAC subnegotiation (GMCP/MSSP/EOR/CHARSET) |
+| anything else            | `rich`            | default prompt_toolkit TUI, no IAC        |
 
 The mode is propagated to `MooPrompt.__init__` and also mirrored into the
 Django cache (`moo:session:<user_pk>:mode`) so out-of-process Celery verbs

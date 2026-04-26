@@ -4,10 +4,14 @@ SSH soak test — simulates N concurrent agent-like SSH clients to stress the sh
 server and trigger the intermittent hang.
 
 Each client:
-  - Connects with password auth and terminal type "moo-automation"
+  - Connects with password auth and terminal type "xterm-256-basic" (raw + IAC)
   - Sends "look" every SEND_INTERVAL seconds
   - On connection loss, logs the timestamp and reconnects after RECONNECT_DELAY seconds
   - Tracks per-agent connect/fail counts
+
+The script does not implement an IAC parser — server-emitted IAC handshake
+bytes flow into stdout as garbage characters. Sufficient for soak testing
+the connection lifecycle, but not for parsing command output.
 
 Usage:
     uv run python extras/tools/ssh_soak_test.py \
@@ -47,12 +51,12 @@ async def run_agent(agent_id: int, host: str, port: int, user: str, password: st
                 username=user,
                 password=password,
                 known_hosts=None,
-                term_type="moo-automation",
+                term_type="xterm-256-basic",
                 request_pty=True,
             ) as conn:
                 stats["connects"] += 1
                 print(f"[{_ts()}] agent-{agent_id} connected (total connects: {stats['connects']})")
-                async with conn.create_process(request_pty=True, term_type="moo-automation") as proc:
+                async with conn.create_process(request_pty=True, term_type="xterm-256-basic") as proc:
                     while not stop.is_set():
                         try:
                             proc.stdin.write("look\n")
