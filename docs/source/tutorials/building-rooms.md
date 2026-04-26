@@ -6,114 +6,110 @@ This tutorial walks you through creating a room, connecting it to the world with
 
 Before you start:
 
-- You have an SSH connection to the server as a player with builder access
+- An SSH connection to the server as a player with builder access
 - You understand the basics covered in {doc}`player-basics` (navigation, `look`, inventory)
 
 To check that you have quota (permission to create objects):
 
 ```
 $ @quota
-Object quota: 9 of 10 remaining.
+Your quota is 803.
 ```
 
-If your quota is 0, ask a wizard to increase it.
+A wizard or builder typically starts with a generous quota. If yours is `0`, ask a wizard to increase it.
 
 ## Step 1: Orient yourself
 
 ```
 $ look
-The Laboratory(#3)
-A cavernous laboratory filled with gadgetry...
-
-Obvious exits: none
+↖ ↑ ↗  The Laboratory
+← ↕ →  A cavernous laboratory filled with gadgetry of every kind, this seems
+↙ ↓ ↘  like a dumping ground for every piece of dusty forgotten equipment a mad
+       scientist might require.
+You see a heavy wooden workbench here.
+Newman, Cliff, and Player are here.
 ```
 
 ```
 $ @rooms
-Rooms owned by YourName:
-  none
+Rooms in the world:
+  #9  Mail Distribution Center
+  #22  The Laboratory
+  #23  The Agency
+  #34  Grand Foyer
+  ...
 ```
 
-No rooms yet. Let's fix that.
+`@rooms` lists every room currently in the world. It's a discovery aid for builders so you can see what's already there before you start creating.
 
 ## Step 2: Create a room
 
-You don't own The Laboratory, so you can't dig exits from it. Instead, create a room object and place it in the void — with no location — then teleport into it.
+The fastest way to add a room *and* wire an exit to it in one go is `@dig`:
 
 ```
-$ @create "The Storeroom" from $room in void
-Created The Storeroom(#22).
+$ @dig northeast to "The Studio"
+Dug an exit northeast to "The Studio" (#897).
 ```
 
-The `in void` clause is required. Without it, the room would be created inside your inventory, and `@move me to` won't teleport you into a room that's contained inside you. Now move yourself into it:
+This creates a new room called The Studio (you own it), then digs a `northeast` exit from your current room to The Studio. The number in parentheses is the new room's database ID.
+
+Walk into your new room:
 
 ```
-$ @move me to "The Storeroom"
-Moved Wizard to The Storeroom.
+$ go northeast
+You leave #22 (The Laboratory).
+You arrive at #897 (The Studio).
+↖ ↑ ↗  The Studio
+←   →  There's not much to see here.
+↙ ↓ ↘
 ```
 
-```
-$ look
-The Storeroom(#22)
-No description set.
-
-Obvious exits: none
-```
-
-You're in your new room. You own it, so you can dig exits from here.
+The compass shows you have one exit (back the way you came); the description is the default placeholder.
 
 ## Step 3: Describe the room
 
+Set a description with `@describe here as "..."`:
+
 ```
-$ @describe here as "A dusty storeroom with shelves of forgotten things lining the walls. A single bulb flickers overhead."
-Description set.
+$ @describe here as "A bright artist's studio with paint-spattered floorboards. Tall windows let in the afternoon light."
+Description set for #897 (The Studio)
 ```
 
-Type `look` to confirm:
+`look` to confirm:
 
 ```
 $ look
-The Storeroom(#22)
-A dusty storeroom with shelves of forgotten things lining the walls. A single bulb
-flickers overhead.
-
-Obvious exits: none
+↖ ↑ ↗  The Studio
+←   →  A bright artist's studio with paint-spattered floorboards. Tall windows
+↙ ↓ ↘  let in the afternoon light.
 ```
 
-`here` is a shorthand that refers to your current room. You can also use the room name or its `#N` ID.
+`here` is shorthand for your current room. You can also pass the room name (`@describe "The Studio" as "..."`) or its `#N` ID.
 
-## Step 4: Wire exits
+## Step 4: Wire the return exit
 
-Now connect the storeroom to The Laboratory. `@dig` creates a new room and exit in one step. `@tunnel` creates an exit to a room that already exists — that's what you want here.
-
-Create a south exit from the storeroom back to The Laboratory:
+`@dig` made a one-way exit (northeast from The Laboratory). To get back, you need an exit going the other way. From inside The Studio:
 
 ```
-$ @tunnel south to "The Laboratory"
-Dug an exit south to "The Laboratory(#3)".
+$ @tunnel southwest to "The Laboratory"
+Tunnelled an exit southwest to "The Laboratory" (#22).
 ```
 
-Now go to The Laboratory and add the north exit pointing back:
+`@tunnel` is the same verb as `@dig`, but instead of creating a new room it wires the exit to a room that already exists (looked up by name). Now you can travel both ways:
 
 ```
-$ @move me to "The Laboratory"
-Moved Wizard to The Laboratory.
+$ go southwest
+You leave #897 (The Studio).
+You arrive at #22 (The Laboratory).
+...
 
-$ @tunnel north to "The Storeroom"
-Dug an exit north to "The Storeroom(#22)".
+$ go northeast
+You leave #22 (The Laboratory).
+You arrive at #897 (The Studio).
+...
 ```
 
-Verify the connection:
-
-```
-$ go north
-The Storeroom(#22)
-A dusty storeroom with shelves...
-
-Obvious exits: south
-```
-
-Both exits are wired. You're back in the storeroom — continue building from here.
+If a direction is already used you'll get `There is already an exit in that direction.` — pick a free one.
 
 ## Step 5: Create an object
 
@@ -126,17 +122,16 @@ Both exits are wired. You're back in the storeroom — continue building from he
 Common parents: `$thing` (a basic object), `$container` (holds items), `$furniture` (something to sit on).
 
 ```
-$ @create "battered wooden crate" from $container
-Created battered wooden crate(#23).
+$ @create "wooden box" from $container
+Created #899 (wooden box) in your inventory.
+Transmuted #899 (wooden box) to #6 (Generic Container).
 ```
 
-The new object appears in your inventory. Type `look` to see it listed under contents:
+The new object lands in your inventory. Drop it so it's part of the room:
 
 ```
-$ look
-The Storeroom(#22)
-...
-Contents: battered wooden crate
+$ drop wooden box
+You drop wooden box.
 ```
 
 ## Step 6: Describe and alias the object
@@ -144,92 +139,91 @@ Contents: battered wooden crate
 Set a description:
 
 ```
-$ @describe crate as "A battered battered wooden crate with iron corner brackets. The lid is loose."
-Description set.
+$ @describe wooden box as "A small wooden box, the lid loose enough to lift."
+Description set for #899 (wooden box)
 ```
 
 Add aliases so players can refer to it by shorter names:
 
 ```
-$ @alias crate as "box"
-Alias added: box.
-
-$ @alias crate as "wooden box"
-Alias added: wooden box.
+$ @alias wooden box as "box"
+Added alias 'box' to #899 (wooden box)
 ```
 
-Now `look at crate`, `look at box`, and `look at wooden box` all work.
+Now `look at box`, `look at wooden box`, and `look at #899` all work. Aliases are case-insensitive and you can add as many as you like.
 
 ## Step 7: Make the object visible
 
-By default, newly created objects are not listed when players `look` at the room — they're `non-obvious`. Make the crate show up:
+By default, newly created objects are not listed when players `look` at the room — they're "non-obvious". Make the box show up:
 
 ```
-$ @obvious crate
-battered wooden crate is now obvious.
+$ @obvious wooden box
+wooden box is now obvious.
 ```
 
-Now `look` shows it:
+Now `look` shows it under "You see ... here.":
 
 ```
 $ look
-The Storeroom(#22)
-A dusty storeroom with shelves...
-
-Contents: battered wooden crate
-Obvious exits: south
+↖ ↑ ↗  The Studio
+←   →  A bright artist's studio with paint-spattered floorboards. Tall windows
+↙ ↓ ↘  let in the afternoon light.
+You see a wooden box here.
 ```
 
 To hide an object again later, use `@nonobvious`.
 
-## Step 8: Put something inside the crate
+## Step 8: Put something inside the box
 
 Create something to put inside it:
 
 ```
 $ @create "brass gear" from $thing
-Created brass gear(#24).
+Created #900 (brass gear) in your inventory.
+Transmuted #900 (brass gear) to #13 (Generic Thing).
 ```
 
-Now drop it into the crate:
+Containers default to *closed* — open the box first:
 
 ```
-$ drop gear in crate
-You put brass gear in crate.
+$ open box
+You open the container.
+```
+
+Now put the gear in:
+
+```
+$ put brass gear in box
+You placed brass gear in wooden box.
 ```
 
 Confirm with:
 
 ```
-$ look in crate
-The crate contains:
-  a brass gear
+$ look in box
+A small wooden box, the lid loose enough to lift.
+Contents:
+  brass gear
 ```
 
 ## Step 9: Check your work
 
 ```
-$ @rooms
-Rooms owned by YourName:
-  The Storeroom(#22)
-```
-
-```
 $ @quota
-Object quota: 4 of 10 remaining.
+Your quota is 795.
 ```
 
-Five objects consumed quota: the storeroom, two exits, the crate, and the brass gear.
+Five objects consumed quota: the studio, two exits (one each way), the box, and the brass gear.
 
 ## What just happened
 
-Every `@`-prefixed command is a verb on your player object or on the system object. `@create` instantiates a child of the named parent class; `in void` places it with no location instead of in your inventory. `@move me to` teleports your avatar to any room you can name. `@tunnel` creates a `$exit` instance pointing to an existing room and wires the source and destination. `@dig` does the same but also creates a new room in one step. `@obvious` sets the `obvious` property on the object to `true`, which the `look` verb reads when assembling the room's contents list.
+Every `@`-prefixed command is a verb on your player object or on a system object. `@dig` instantiates a new room and a new `$exit` pointing at it; `@tunnel` skips room creation and just wires an exit to an existing room. `@create` instantiates a child of the named parent class and drops it in your inventory. `@describe`, `@alias`, and `@obvious` set properties on the object that the `look` verb consults when assembling its output.
 
 None of this required writing code — you're authoring a world by calling built-in verbs.
 
 ## Where to go next
 
-- {doc}`first-verb` — Add a custom Python verb to your crate (e.g. a `search` command that prints what you find)
+- {doc}`first-verb` — Add a custom Python verb to your box (e.g. a `search` command that prints what you find)
 - {doc}`../reference/objects` — Full reference for object classes, parent hierarchies, and the `$container` / `$furniture` / `$thing` distinctions
 - {doc}`../how-to/bootstrapping` — Make your rooms and objects part of a bootstrap dataset that survives a database reset
 - {doc}`../reference/permissions` — Lock your room so only certain players can enter

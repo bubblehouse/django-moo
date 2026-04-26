@@ -15,24 +15,27 @@ To connect, run:
 ssh -p 8022 Wizard@localhost
 ```
 
-You should see a `$` prompt when you're in.
-
 ## Step 1: Orient yourself
 
-Type `look` and press Enter. You should see something like:
+Type `look` and press Enter. You'll see whatever room your wizard starts in — for the default bootstrap, it's The Laboratory:
 
 ```
-The Void
-You are floating in a featureless expanse. There is nothing here.
+↖ ↑ ↗  The Laboratory
+← ↕ →  A cavernous laboratory filled with gadgetry of every kind, this seems
+↙ ↓ ↘  like a dumping ground for every piece of dusty forgotten equipment a mad
+       scientist might require.
+You see a heavy wooden workbench here.
+Newman, Cliff, and Player are here.
 ```
 
 Type `@who` to confirm you're connected as Wizard:
 
 ```
-Wizard (connected)
+Connected players:
+  Wizard [The Laboratory]
 ```
 
-Good. As Wizard you can create and edit verbs anywhere.
+As Wizard you can create and edit verbs anywhere.
 
 ## Step 2: Create and edit a verb
 
@@ -55,6 +58,8 @@ print("Hello, world!")
 ```
 
 Press `Ctrl+S`, then `Y` to confirm the save. The editor closes and you're back at the prompt.
+
+(For scripted use, `@edit verb` also accepts a `with "<code>"` argument that bypasses the editor — useful for automation but harder to read for multi-line code.)
 
 ## Step 3: Test it
 
@@ -79,13 +84,14 @@ Replace the code with:
 
 ```python
 #!moo verb greet --on me --dspec any
-name = parser.get_dobj_str()
+from moo.sdk import context
+name = context.parser.get_dobj_str()
 print(f"Hello, {name}!")
 ```
 
 Save with `Ctrl+S` → `Y`.
 
-The shebang line on the first line registers `--dspec any`, which tells the parser that this verb requires a direct object. When the verb fires, `get_dobj_str()` is guaranteed to return a string — if the player types `greet` with nothing after it, the parser won't dispatch the verb at all.
+The shebang line on the first line registers `--dspec any`, which tells the parser that this verb requires a direct object. When the verb fires, `context.parser.get_dobj_str()` returns whatever the player typed after the verb name. If the player types `greet` with nothing after it, the parser refuses to dispatch the verb at all.
 
 `--on` is required for the shebang to be parsed at all — without it the line is silently ignored and the dspec update won't apply. When editing interactively, `--on` has no other effect: the verb stays on whatever object the `@edit verb ... on <object>` command attached it to.
 
@@ -94,16 +100,20 @@ Test it:
 ```
 $ greet world
 Hello, world!
+```
 
+```
 $ greet
-I don't understand that.
+The verb "greet" requires a direct object.
 ```
 
 The second response comes from the parser itself, not your code, because `--dspec any` prevented dispatch.
 
 ## What just happened
 
-**`parser`** is always available in verb code. `get_dobj_str()` returns the direct object as a plain string — whatever the player typed after the verb name. It raises `NoSuchObjectError` if nothing was typed, so when `--dspec any` is in place you can call it unconditionally. Only catch the exception if you want to provide a custom message or fallback behavior.
+**`context.parser`** is the parser instance for the current command. `get_dobj_str()` returns the direct object as a plain string — whatever the player typed after the verb name. It raises `NoSuchObjectError` if nothing was typed, so when `--dspec any` is in place you can call it unconditionally. Only catch the exception if you want to provide a custom message or fallback behavior.
+
+**`from moo.sdk import context`** brings the per-task context object into your verb scope. It's the standard way verbs access the parser, the player, the caller, and other ambient state. Most non-trivial verbs need it.
 
 **`print()`** sends a line of text to the player who ran the command. For output to other players in the room, use `context.player.location.announce_all_but(context.player, msg)` instead.
 
