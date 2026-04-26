@@ -17,13 +17,24 @@ is printed to the objects in the destination room. No messages are printed if an
 problem is found, it is reported to the player who typed the command.
 """
 
-from moo.sdk import context, lookup
+from moo.sdk import context, lookup, UsageError
 
 parser = context.parser
-obj = parser.get_dobj()
-destination = parser.get_pobj("to", lookup=True)
+if parser.has_pobj_str("to"):
+    obj = parser.get_dobj()
+    destination = parser.get_pobj("to", lookup=True)
+else:
+    # Bare form: "@move <obj> here". Only "here" is accepted without the
+    # "to" preposition — any other trailing token is a usage error so we
+    # don't accidentally swallow what should be part of the dobj name.
+    raw = parser.get_dobj_str()
+    obj_str, _, dest_str = raw.rpartition(" ")
+    if not obj_str or dest_str.strip().lower() != "here":
+        raise UsageError(f"Usage: {verb_name} <object> to <destination>")
+    obj = lookup(obj_str.strip())
+    destination = context.player.location
 if obj.is_player():
-    obj.announce(_.string_utils.pronoun_sub("%D disappears suddenly for parts %i(to)."))
+    obj.announce(f"{obj.title().capitalize()} disappears suddenly for parts {destination.title()}.")
 result = obj.moveto(destination)
 if result is False:
     dobj_str = parser.get_dobj_str()
@@ -42,5 +53,5 @@ if result is False:
             print(f"  {m} — {where}")
     return
 if obj.is_player():
-    destination.announce(_.string_utils.pronoun_sub("%D materializes out of thin air in %i(to)."))
+    destination.announce(f"{obj.title().capitalize()} materializes out of thin air in {destination.title()}.")
 print(f"Moved {obj} to {destination}.")

@@ -98,6 +98,45 @@ def test_move_item_to_location(t_init: Object, t_wizard: Object, setup_item):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_move_item_bare_here(t_init: Object, t_wizard: Object, setup_item):
+    """@move <item> here works without the 'to' preposition. Only the literal
+    word 'here' is accepted in the bare form."""
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        widget = setup_item(t_wizard, "widget")
+        parse.interpret(ctx, "@move widget here")
+        widget.refresh_from_db()
+    assert widget.location == t_wizard.location
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_move_bare_non_here_dest_raises(t_init: Object, t_wizard: Object, setup_item):
+    """The bare form rejects anything other than 'here' as the trailing token,
+    so @move widget kitchen does NOT silently treat 'kitchen' as a destination."""
+    from moo.core.exceptions import UsageError
+
+    system = lookup(1)
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        setup_item(t_wizard, "widget")
+        create("kitchen", parents=[system.room])
+        with pytest.raises(UsageError):
+            parse.interpret(ctx, "@move widget kitchen")
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_move_bare_no_dest_raises(t_init: Object, t_wizard: Object, setup_item):
+    """@move <obj> alone (no 'to', no trailing destination) is a usage error."""
+    from moo.core.exceptions import UsageError
+
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        setup_item(t_wizard, "widget")
+        with pytest.raises(UsageError):
+            parse.interpret(ctx, "@move widget")
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_move_player_teleport(t_init: Object, t_wizard: Object):
     """@move <player> to <location> teleports the player and sends departure/arrival messages."""
     system = lookup(1)
