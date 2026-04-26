@@ -30,11 +30,16 @@ passthrough()
 
 now = datetime.datetime.now(datetime.timezone.utc)
 
+pronoun = this.psc
+is_plural = this.ps == "they"
+to_be = "are" if is_plural else "is"
+to_have = "have" if is_plural else "has"
+look_v = "look" if is_plural else "looks"
 if this not in connected_players():
-    print("He is sleeping.")
+    print(f"{pronoun} {to_be} sleeping.")
 else:
     idle_time = (now - this.get_property("last_connected_time", recurse=False)).total_seconds()
     if idle_time < 60:
-        print("He is awake and looks alert.")
+        print(f"{pronoun} {to_be} awake and {look_v} alert.")
     else:
-        print(f"He is awake, but has been staring off into space for {idle_time} seconds.")
+        print(f"{pronoun} {to_be} awake, but {this.ps} {to_have} been staring off into space for {idle_time} seconds.")
