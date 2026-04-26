@@ -26,13 +26,13 @@ system. The implementation is independent — no MOO bytecode, no C — just Pyt
 
 - A LambdaMOO-inspired parser with full dobj/iobj preposition support
 - Objects, Properties, Verbs, and a ManyToMany inheritance hierarchy backed by PostgreSQL
-- A RestrictedPython verb sandbox with a security-audited allowlist (55+ known escape vectors tested)
+- A RestrictedPython verb sandbox with and integrated permissions system and extensive testing
 - A default bootstrap world: rooms, exits, containers, players, a lighting system, in-world mail,
   and an object placement system
-- Browser playable with no client required via WebSocket SSH
+- Browser playable with no client required, or via plain SSH client
+- Full support for MUDlet and other MUD clients using [sshelnet](https://gitlab.com/bubblehouse/sshelnet) helper
 - Django admin for browsing and editing the world's objects, properties, and verb source
-- Docker + Helm for self-hosting with `docker compose up`
-- moo-agent: autonomous LLM agents that inhabit the world via SSH (see below)
+- Docker for self-hosting with `docker compose up`
 
 ## Quick Start
 
@@ -55,6 +55,21 @@ docker compose run webapp manage.py moo_enableuser --wizard wizard Wizard
 Connect at <https://localhost/> and log in with the account you just created.
 
 ## Interfaces
+
+### MUD Clients
+
+A Mudlet package in [`extras/mudlet/`](extras/mudlet/) provides one-click
+setup for MUD-client users. Mudlet has no native SSH support, so the package
+bundles a managed [sshelnet](https://gitlab.com/bubblehouse/sshelnet) launcher
+that bridges Mudlet's plain-TCP connection to the server's SSH port. It also
+ships a setup wizard (`dmsetup`) and a generic-mapper bridge that subscribes
+to GMCP `Room.Info` events and feeds them into Mudlet's bundled mapper.
+
+![Mudlet Client Example](https://gitlab.com/bubblehouse/django-moo/-/raw/main/docs/images/mudlet-client-example.png)
+
+The server speaks GMCP, MSSP, MSP, EOR, and CHARSET, so other clients
+(TinTin++, MUSHclient, Blightmud) work too, though without the bundled
+mapper integration, or automatic sshelnet setup. MXP is not implemented.
 
 ### Web (WebSocket SSH)
 
@@ -98,26 +113,6 @@ A full Django admin interface is available at `/admin` for managing objects, pro
 verbs, and users.
 
 ![Django Admin Example](https://gitlab.com/bubblehouse/django-moo/-/raw/main/docs/images/django-admin-example.png)
-
-## AI agents with moo-agent
-
-[moo-agent](https://gitlab.com/bubblehouse/moo-agent) is a companion package that connects
-autonomous LLM agents to DjangoMOO via SSH. Each agent has:
-
-- A SOUL.md personality file (plain text, version-controlled)
-- Persistent memory that accumulates across sessions
-- Tools for interacting with the world: move, look, take, drop, read, send mail, and more
-- Multi-agent orchestration via a Foreman coordination layer
-
-Backends: Anthropic (Claude), AWS Bedrock, and LM Studio for local models.
-
-```bash
-pip install moo-agent
-moo-agent init --name MyAgent --host localhost --port 8022 --user myagent ./my-agent
-moo-agent run ./my-agent
-```
-
-Full moo-agent docs: <https://moo-agent.readthedocs.io/>
 
 ## LambdaCore attributions
 

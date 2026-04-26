@@ -1,6 +1,6 @@
 # Accessibility and MUD Client Compatibility
 
-DjangoMOO aims to work for two audiences that most modern codebases forget:
+It's important for text-based games to fully support two particular subsets of the userbase:
 
 - **Screen-reader users who connect via SSH.** A full-screen prompt_toolkit
   TUI with ANSI colour and cursor manipulation is hostile to a screen reader
