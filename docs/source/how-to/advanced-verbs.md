@@ -1,414 +1,271 @@
-# More Verb Patterns
+# Advanced Verb Patterns
 
-## Calling Other Verbs
+Patterns that build on the basics in {doc}`creating-verbs`: calling
+other verbs, parent dispatch with `passthrough()`, helper verbs that
+return values, async and time-budget handling, spatial placement, and
+the rest of the `moo.sdk` toolkit.
 
-Like properties, the default Django ORM doesn't honor inheritance, so there's a few custom methods on Object instances to help out.
+## Calling other verbs
 
-The simplest way to invoke another verb (as a method) from a running verb is with:
-
-```python
-obj.invoke_verb("announce", *args, **kwargs)
-```
-
-or using the getattr override:
+The Django ORM doesn't honour MOO inheritance, so `Object` provides
+helper methods that walk the parent chain:
 
 ```python
-obj.announce(*args, **kwargs)
+obj.invoke_verb("announce", "broadcast text")
+
+# Or via __getattr__:
+obj.announce("broadcast text")
 ```
 
-This works for many convenience functions, but whatever time these functions use will count against the default
-verb timeout of 3 seconds.
+`__getattr__` first looks for a verb by that name, then falls through
+to property lookup. Each call counts against the calling task's 3-second
+time limit.
 
-If you're limited to 3 seconds in a Verb, how do you create longer tasks? The key is to compose your function
-into multiple Verb calls, which you can invoke asynchronously using the `invoke()` function:
+A real verb that demonstrates the pattern is
+`default_verbs/thing/take.py`:
+
+```python
+elif this.moveto(context.player):
+    this.clear_placement()
+    print(this.take_succeeded_msg(title))
+    if msg := this.otake_succeeded_msg(title):
+        this.location.announce(msg)
+```
+
+Three verbs are invoked here without explicit imports:
+
+- `this.moveto(context.player)` runs the `moveto` verb on `this` (or
+  an inherited one from a parent class). It returns a truthy value on
+  success.
+- `this.take_succeeded_msg(title)` is a helper verb that *returns* a
+  formatted string — see "Helper verbs that return values" below.
+- `this.location.announce(msg)` runs the `announce` verb on the room.
+
+## `passthrough()` for parent dispatch
+
+`passthrough` is the MOO equivalent of `super()`. It calls the same
+verb on the next ancestor up the parent chain, so a child can run
+type-specific logic and then defer to the generic behaviour.
+
+`default_verbs/thing/moveto.py` is the reference:
+
+```python
+#!moo verb moveto --on $thing
+
+# pylint: disable=return-outside-function,undefined-variable
+
+where = args[0]
+
+# Clear placement for any objects placed on this one in the current room.
+# Runs before the move so this.location is still the source room.
+if this.location:
+    for placed in list(this.placed_objects.filter(location=this.location).all()):
+        placed.clear_placement()
+
+if where.is_unlocked_for(this):
+    return passthrough(where)
+return False
+```
+
+The thing-specific work — clearing placements of objects sitting on this
+one — runs first, then `passthrough(where)` defers to
+`$root_class.moveto`, which performs the actual database move. If the
+lock check fails, the verb returns `False` without calling the parent.
+
+Pass through any `args`/`kwargs` you received; the parent verb's
+signature has no idea which child invoked it:
+
+```python
+return passthrough(*args, **kwargs)
+```
+
+## Helper verbs that return values
+
+The "return values are discarded" warning in {doc}`creating-verbs`
+applies only to verbs invoked from the command parser. Verbs invoked
+*as methods* — `obj.foo()` — return values normally. Most non-trivial
+default verbs use a layer of helpers that return strings to be
+`print()`ed by the parser-facing verb.
+
+`default_verbs/thing/messages.py` defines eight such helpers in one
+file:
+
+```python
+#!moo verb otake_succeeded_msg otake_failed_msg take_succeeded_msg take_failed_msg odrop_succeeded_msg odrop_failed_msg drop_succeeded_msg drop_failed_msg --on $thing
+
+# pylint: disable=return-outside-function,undefined-variable
+
+prop_value = this.get_property(verb_name)
+
+title = this.title()
+prop_value = prop_value.replace("%T", title.capitalize()).replace("%t", title)
+
+return _.string_utils.pronoun_sub(prop_value)
+```
+
+The shebang lists eight aliases, and the body uses `verb_name` to read
+the matching property. `take.py` then calls
+`this.take_succeeded_msg(title)`, gets a string back, and `print()`s
+it. The format-code substitution and pronoun rewrite are concentrated
+in one place rather than duplicated across `take.py`, `drop.py`, and
+their failure paths.
+
+This is the right shape for any "build a string that another verb will
+display" helper.
+
+## Asynchronous and delayed execution with `invoke()`
+
+`moo.sdk.invoke()` enqueues a verb for later execution as its own
+Celery task. Each invocation gets a fresh 3-second budget.
 
 ```{eval-rst}
-.. py:currentmodule:: moo.core
+.. py:currentmodule:: moo.sdk
 .. autofunction:: invoke
    :no-index:
 ```
 
-Using `invoke()` let's create a bad example of a talking parrot:
+Use cases:
+
+- **Delayed execution** — schedule a verb to run after a delay
+  (`delay=N` seconds).
+- **Periodic execution** — `periodic=True` keeps re-firing on the same
+  interval. Wizard-only.
+- **Cron schedules** — `cron="<expression>"` for time-of-day style
+  triggers. Wizard-only.
+- **Time-aware continuation** — hand off remaining work to a fresh
+  task before the current task's budget runs out (see below).
 
 ```python
-from moo.sdk import context, invoke
-if context.parser is not None:
-    invoke(context.parser.verb, delay=30, periodic=True)
-    return
-for obj in context.caller.location.filter(player__isnull=False):
-    context.writer(obj, "A parrot squawks.")
+from moo.sdk import invoke, context
+
+# Run the same verb again 30 seconds from now.
+invoke(context.parser.verb, delay=30)
 ```
 
-Right now it's just repeating every thirty seconds, but we can make it slightly more intelligent
-by handling our own repeating Verbs:
+For periodic tasks that should also re-use existing verb code, pass a
+callback verb:
 
 ```python
-from moo.sdk import context, invoke
-if context.parser is not None:
-    invoke(context.parser.verb, delay=30, value=0)
-    return
-value = kwargs['value'] + 1
-for obj in context.caller.location.filter(player__isnull=False):
-    context.writer(obj, f"A parrot squawks {value}.")
-invoke(context.parser.verb, delay=30, value=value)
-```
+from moo.sdk import invoke, context
 
-Let's say we didn't want to handle writing ourselves (we shouldn't) and wanted instead
-to re-use the `say` Verb.
-
-```python
-from moo.sdk import context, invoke
 if context.parser is not None:
-    say = context.caller.get_verb('say', recurse=True)
+    say = context.caller.get_verb("say", recurse=True)
     invoke(verb=context.parser.verb, callback=say, delay=30, value=0)
     return
-value = kwargs['value'] + 1
-return f"A parrot squawks {value}."  # return value passed to the 'say' callback
+value = kwargs["value"] + 1
+return f"A parrot squawks {value}."  # passed to the callback verb
 ```
 
-(time-aware-continuation)=
+## Time-aware continuation
 
-## Time-Aware Continuation
+Each verb invocation, including synchronous calls to other verbs, must
+finish within the configured task time limit (3 seconds by default).
+For loops over many objects, check the remaining budget and hand the
+unfinished work to a fresh task before being killed.
 
-`invoke()` gives each verb its own 3-second budget, but what if a single verb needs to do work that could take arbitrarily long — like iterating over hundreds of objects? The answer is to check how much time remains and hand the unfinished work off to a fresh task before the budget runs out.
-
-`context.task_time` returns a `TaskTime` namedtuple (or `None` if no time limit is configured):
-
-```python
-from moo.sdk import context
-
-tt = context.task_time
-# tt.elapsed   — seconds since this task started
-# tt.time_limit — the configured hard limit (e.g. 3.0), or None
-# tt.remaining  — seconds left before the task is killed, or None
-```
-
-Two SDK helpers make this pattern straightforward: `task_time_low()` checks whether the budget is nearly exhausted, and `schedule_continuation()` hands off the remaining work.
+`task_time_low()` returns `True` when the current task is near its
+limit; `schedule_continuation()` re-invokes the verb with the remaining
+work as `args[0]`.
 
 ```python
 from moo.sdk import context, task_time_low, schedule_continuation
+```
 
-def do_process_batch(items):
+Inside the loop, dispatch on `verb_name` so a single file handles both
+the parser entry point and the continuation re-entry:
+
+```python
+if task_time_low():
+    schedule_continuation(items[i:], this.get_verb("my_batch"))
+    return
+```
+
+`default_verbs/programmer/at_reload.py` is the canonical
+implementation. The relevant excerpt:
+
+```python
+#!moo verb @reload reload_batch --on $programmer --dspec any --ispec on:any
+
+def do_reload_batch(verbs):
     count = 0
-    for i, item in enumerate(items):
+    for i, verb in enumerate(verbs):
         if task_time_low():
-            schedule_continuation(items[i:], this.get_verb("my_batch"))
+            schedule_continuation(
+                verbs[i:],
+                this.get_verb("reload_batch"),
+                msg=f"  Time limit approaching; continuing in a new task ({len(verbs) - i} verb(s) remaining)...",
+            )
             return True, count
-        context.player.tell(f"  Processing {item}...")
-        item.do_work()
+        context.player.tell(f"  Reloading {verb}...")
+        verb.reload()
         count += 1
     return False, count
 
-if verb_name == "my_batch":
-    # Continuation mode: args[0] is a list of PKs from a prior batch
-    items = list(MyModel.objects.filter(pk__in=args[0]))
-    continued, count = do_process_batch(items)
+
+if verb_name == "reload_batch":
+    # Continuation entry: args[0] is a list of Verb PKs from the prior task.
+    verbs = list(Verb.objects.filter(pk__in=args[0]))
+    continued, count = do_reload_batch(verbs)
     if not continued:
-        context.player.tell(f"Done. Processed {count} item(s).")
+        context.player.tell(f"Reloaded {count} verb(s).")
 else:
-    # Normal parser path
-    items = list(get_all_items())
-    continued, count = do_process_batch(items)
-    if not continued:
-        context.player.tell(f"Done. Processed {count} item(s).")
-```
-
-`task_time_low(threshold=0.5)` returns `True` when the task has 0.5 seconds or fewer remaining, and `False` when no time limit is configured (such as in tests — no guard needed). `schedule_continuation(remaining_items, verb, msg=None)` extracts the PKs from the remaining items, calls `invoke()`, and notifies the player.
-
-A few other things to keep in mind:
-
-- Use `context.player.tell()` (not `print()`) for progress messages inside the loop. `tell()` is delivered immediately; `print()` buffers until the verb returns.
-- Materialize the queryset to a `list()` before the loop so the DB cursor doesn't stay open across the time check.
-- Dispatch on `verb_name` (the alias used to invoke the verb) rather than inspecting the type of `args[0]`. Defining a separate alias like `my_batch` makes the continuation entry point explicit.
-- Keep the continuation args minimal — just the list of remaining work items. There's no need to pass accumulated counts since progress messages were already delivered via `tell()`.
-- Do not assign to a variable named `verb_name` anywhere in the verb body. `verb_name` is injected by the runtime, and Python's scoping rules mean that any assignment to it anywhere in the function body makes it a local throughout — causing `UnboundLocalError` on the lines before the assignment.
-
-The `@reload` verb in `moo/bootstrap/default_verbs/programmer/at_reload.py` is the reference implementation of this pattern.
-
-## Returning a Value from a Verb
-
-> The MOO program in a verb is just a sequence of statements. Normally, when the verb is called, those statements are simply executed in order and then the integer 0 is returned as the value of the verb-call expression. Using the `return` statement, one can change this behavior.
-
-`return` can be used from anywhere in verb code, not just at the end of a function — this is one of the advantages of how RestrictedPython compiles verbs.
-
-**Important:** `return "some string"` does **not** display anything to a player when the verb is invoked as a command. The return value goes back to whatever called the verb, which is discarded for top-level player commands. To display output, use `print()`. Use a bare `return` to exit early:
-
-```python
-# CORRECT: print the message, then return
-if not args:
-    print(f"Usage: {verb_name} <object_name>")
-    return
-
-# WRONG: the player sees nothing
-if not args:
-    return "Usage: check_object <object_name>"
-```
-
-Returning a value is useful when a verb is designed to be called by other verbs (as a helper method), not by players directly. For example, `$thing.take_succeeded_msg()` returns a formatted string that `take.py` then passes to `print()`.
-
-```python
-#!moo verb check_object --on $room
-
-from moo.sdk import context, NoSuchPropertyError
-
-# Early exit for missing arguments
-if not args:
-    print(f"Usage: {verb_name} <object_name>")
-    return
-
-# Find the object
-obj_name = args[0]
-found_objs = this.contents.filter(name=obj_name)
-
-if not found_objs.exists():
-    print(f"I don't see '{obj_name}' here.")
-    return
-
-# Check permissions
-obj = found_objs.first()
-if not obj.can_caller("read"):
-    print("You don't have permission to examine that.")
-    return
-
-# Display result
-try:
-    desc = obj.get_property("description")
-except NoSuchPropertyError:
-    desc = "(no description)"
-
-print(f"Object: {obj.name}")
-print(f"Description: {desc}")
-```
-
-## Handling Verb Errors
-
-DjangoMOO defines a number of custom exceptions, but there's still a lot of inconsistency where they're used. At this
-time raising any of them from verb code will rollback the transaction as if the verb never executed.
-
-```{eval-rst}
-.. py:currentmodule:: moo.core.exceptions
-.. autoclass:: UsageError
-   :no-index:
-.. autoclass:: UserError
-   :no-index:
-.. autoclass:: AccessError
-   :no-index:
-.. autoclass:: AmbiguousObjectError
-   :no-index:
-.. autoclass:: AmbiguousVerbError
-   :no-index:
-.. autoclass:: ExecutionError
-   :no-index:
-.. autoclass:: NoSuchPrepositionError
-   :no-index:
-.. autoclass:: QuotaError
-   :no-index:
-.. autoclass:: RecursiveError
-   :no-index:
-```
-
-## Additional SDK Functions
-
-Beyond `lookup()`, `create()`, `write()`, and `invoke()`, `moo.sdk` provides several more functions for wizard-owned verbs.
-
-### `open_editor(obj, initial_content, callback_verb, *args, content_type="text")`
-
-Opens a full-screen text editor in the player's SSH terminal. When the player saves and closes the editor, `callback_verb` is called with the saved text as its first argument, followed by any additional `*args`.
-
-```python
-from moo.sdk import context, open_editor
-
-# Open the editor pre-filled with existing text; call obj.save_verb when done
-open_editor(context.player, existing_text, obj.save_verb, content_type="python")
-```
-
-`content_type` controls syntax highlighting: `"text"` (default), `"python"`, or `"json"`.
-
-### `open_paginator(obj, content, content_type="text")`
-
-Opens a full-screen read-only paginator for long text (help pages, listings, etc.).
-
-```python
-from moo.sdk import context, open_paginator
-
-open_paginator(context.player, long_help_text, content_type="text")
-```
-
-### `players()`
-
-Returns all player avatar Objects (connected or not).
-
-```python
-from moo.sdk import players
-
-for p in players():
-    print(p.title())
-```
-
-### `connected_players(within=None)`
-
-Returns player Objects that have been active within the given time window (default: 5 minutes).
-
-```python
-from moo.sdk import connected_players
-from datetime import timedelta
-
-active = connected_players(within=timedelta(minutes=10))
-print(f"{len(active)} player(s) online.")
-```
-
-### `set_task_perms(who)`
-
-Context manager. Temporarily runs the enclosed code with the permissions of `who`. Useful when a wizard-owned verb needs to perform an action as a different user or as the system object.
-
-```python
-from moo.sdk import set_task_perms, lookup
-
-system = lookup(1)
-with set_task_perms(system):
-    obj.set_property("owner", system)  # runs as if owned by the system object
-```
-
-All four functions above are only callable from wizard-owned verbs.
-
-### `owned_objects(player_obj)`
-
-Returns a QuerySet of all Objects owned by `player_obj`, ordered by name.
-
-```python
-from moo.sdk import owned_objects, context
-
-for obj in owned_objects(context.player):
-    print(obj.title())
-```
-
-### `owned_objects_by_pks(pk_list)`
-
-Returns a QuerySet of Objects whose PKs are in `pk_list`, ordered by name. Used in continuation verbs where the remaining PK list was passed as `args[0]` but the original target player is not in scope.
-
-```python
-from moo.sdk import owned_objects_by_pks
-
-items = list(owned_objects_by_pks(args[0]))
-```
-
-### `task_time_low(threshold=0.5)`
-
-Returns `True` if the current task's remaining time is at or below `threshold` seconds. Returns `False` when there is no configured time limit. Intended for the time-aware continuation pattern described above.
-
-```python
-from moo.sdk import task_time_low
-
-if task_time_low():
-    # hand off remaining work
+    # Parser entry: gather the work, kick off the loop.
     ...
 ```
 
-### `schedule_continuation(remaining_items, verb, msg=None)`
+Things to keep in mind:
 
-Schedules a continuation task with the PKs of `remaining_items` and notifies the current player. Pairs with `task_time_low()` to implement time-aware continuation without boilerplate.
+- Use `context.player.tell()` (not `print()`) for progress messages.
+  `tell()` delivers immediately; `print()` buffers until the verb
+  returns, so the player wouldn't see anything until the very end.
+- Materialise the queryset with `list()` before the loop so the
+  database cursor isn't held open across the time check.
+- Define a separate alias (`reload_batch`) for the continuation entry
+  point. Dispatch on `verb_name`, not on `args[0]`'s type.
+- Keep continuation args minimal — the list of remaining work is
+  enough; progress was already delivered via `tell()`.
+- Never assign to a local named `verb_name`. Python scoping makes the
+  whole function treat it as a local, and reads before the assignment
+  raise `UnboundLocalError`. See the gotcha in {doc}`creating-verbs`.
 
-```python
-from moo.sdk import task_time_low, schedule_continuation
+## Returning a value from a verb
 
-for i, item in enumerate(items):
-    if task_time_low():
-        schedule_continuation(items[i:], this.get_verb("my_batch"))
-        return
-    # process item
-```
+`return` may appear at any depth in verb code (not just at function
+end), thanks to RestrictedPython's compilation. Use it for two things:
 
-The optional `msg` argument overrides the default player notification ("Continuing (N remaining)...").
-
-### `server_info()`
-
-Returns a dict with server version and process statistics. Wizard-owned verbs only.
-
-```python
-from moo.sdk import server_info
-
-info = server_info()
-print(f"Version: {info['version']}, PID: {info['pid']}, Memory: {info['memory_mb']} MB")
-```
-
-Keys: `version`, `python`, `pid`, `memory_mb` (may be `None` on platforms where `resource` is unavailable).
-
-### `get_client_mode()`
-
-Returns `"rich"` (default, prompt_toolkit TUI) or `"raw"` (line-based I/O for traditional MUD clients). Verbs that would open a full-screen editor or paginator check this and route to inline forms in raw mode so the user gets usable output on a client that cannot handle the TUI.
+1. **Helper verbs** that build strings or compute state for another
+   verb to consume (see "Helper verbs that return values" above).
+2. **Early exits** in command verbs — bare `return`, no value. The
+   string version is silently discarded:
 
 ```python
-from moo.sdk import get_client_mode, open_editor
+if not args:
+    print(f"Usage: {verb_name} <object_name>")
+    return                                        # exits cleanly
 
-if get_client_mode() == "raw":
-    print("Use: @edit description with \"your text here\"")
-else:
-    open_editor(context.player, existing_text, callback_verb)
+if not args:
+    return f"Usage: {verb_name} <object_name>"   # WRONG — player sees nothing
 ```
 
-See {doc}`accessibility` for the full mode-selection story.
+## Placement verbs
 
-### `get_wrap_column()`
+Objects can be placed in a spatial relationship to another object in
+the same room. Two fields on the Object record the placement:
 
-Returns the effective wrap column for the current player — the value of their `wrap_column` property (or `"auto"` → the session's `terminal_width` setting, falling back to 80). Use this when formatting tabular or wrap-aware output.
+- `placement_prep` — preposition string (`"on"`, `"under"`, `"behind"`,
+  `"before"`, `"beside"`, `"over"`).
+- `placement_target` — the Object it is placed relative to.
 
-```python
-from moo.sdk import get_wrap_column
+`PLACEMENT_PREPS` (from `moo.sdk`) lists every valid preposition.
+`HIDDEN_PLACEMENT_PREPS` is the subset (`"under"`, `"behind"`) whose
+placed items don't appear in the room's contents listing and aren't
+findable by name through the parser.
 
-width = get_wrap_column()
-print("-" * width)
-```
+Placement is cleared automatically when an object is taken, dropped,
+or moved. If the placement target is deleted, both fields go to
+`None`.
 
-### `get_session_setting(key, default=None)` / `set_session_setting(key, value)`
-
-Read and write cross-process session-scoped settings for the current player. The SSH server process is the source of truth; `get_session_setting` checks the in-process `_session_settings` dict first and falls back to the Django cache so Celery workers can still read values. `set_session_setting` writes to the cache and publishes a `session_setting` Kombu event so the SSH server updates its own registry.
-
-```python
-from moo.sdk import get_session_setting, set_session_setting
-
-if get_session_setting("quiet_mode", False):
-    # render a terse version
-    ...
-
-set_session_setting("output_prefix", ">>START<<")
-```
-
-Known keys: `output_prefix`, `output_suffix`, `output_global_prefix`, `output_global_suffix`, `quiet_mode`, `osc133_mode`, `prefixes_mode`, `terminal_width`, `mode`.
-
-### `boot_player(obj)`
-
-Disconnects the given player. Publishes a `disconnect` event on the player's Kombu queue, which the SSH server picks up and closes the channel.
-
-```python
-from moo.sdk import boot_player, lookup
-
-troublemaker = lookup("Guest")
-boot_player(troublemaker)
-```
-
-Only wizards can boot other players; any player can boot themselves.
-
-## Placement Verbs
-
-Objects can be placed in a spatial relationship to another object in the same room using
-the `place` verb (`$thing.place`) as the reference implementation. This section covers
-how to write verbs that read and write placement state.
-
-### How placement works
-
-Two fields on each Object record the placement:
-
-- `placement_prep` — a preposition string (`"on"`, `"under"`, `"behind"`, `"before"`, `"beside"`, `"over"`)
-- `placement_target` — the Object it is placed relative to
-
-`PLACEMENT_PREPS` (from `moo.sdk`) lists all valid prepositions. `HIDDEN_PLACEMENT_PREPS`
-is the subset (`{"under", "behind"}`) whose placed items are invisible to the room contents
-listing and unresolvable by name in the parser.
-
-Placement is cleared automatically when an object is taken, dropped, or moved. If the
-placement target is deleted, both fields go to `None`.
-
-### Using `PLACEMENT_PREPS` in a verb
+### Writing a placement verb
 
 ```python
 #!moo verb place --on $thing --dspec this --ispec on:any --ispec under:any --ispec behind:any --ispec before:any --ispec beside:any --ispec over:any
@@ -433,7 +290,7 @@ try:
         print(f"You can't place things {prep} the {target.title()}.")
         return
 except NoSuchPropertyError:
-    pass  # no restriction — all preps allowed
+    pass
 
 this.set_placement(prep, target)
 print(f"You place {this.title()} {prep} the {target.title()}.")
@@ -444,17 +301,16 @@ context.player.location.announce(
 
 Key points:
 
-- `--ispec` must enumerate each supported preposition explicitly — there is no wildcard form.
-- `PLACEMENT_PREPS` is the canonical list; use it to iterate rather than hard-coding.
-- `set_placement(prep, target)` is atomic — it sets both fields and calls `save()` in one call.
-- `clear_placement()` removes placement without touching any other fields.
+- `--ispec` must enumerate every supported preposition; there is no
+  wildcard form.
+- `set_placement(prep, target)` is atomic: it sets both fields and
+  saves in one call.
+- `clear_placement()` removes placement without touching other fields.
 
-### Reading placement in a verb
+### Reading placement
 
 ```python
-from moo.sdk import context
-
-placement = this.placement  # (prep, target) or None
+placement = this.placement      # (prep, target) or None
 if placement is None:
     print(f"The {this.title()} is not placed anywhere.")
 else:
@@ -464,91 +320,94 @@ else:
 
 ### Restricting surface types
 
-Set the `surface_types` property on a target object to limit which prepositions are valid
-for it. `place` checks this list before calling `set_placement()`.
+Set the `surface_types` property on a target to limit which prepositions
+it accepts:
 
 ```python
-# In a verb or via @eval:
-desk = context.player.location.find("desk").first()
 desk.set_property("surface_types", ["on", "beside"])
 # Now: "place book on desk" succeeds; "place book under desk" fails.
 ```
 
 If `surface_types` is absent, all placement prepositions are accepted.
 
-## Best Practices for Verb Development
+## Common SDK helpers
 
-### 1. Always Check Permissions First
+`moo.sdk` exposes more than the basics covered in
+{doc}`creating-verbs`. The most useful additions for advanced verbs:
+
+| Function | What it does |
+|----------|--------------|
+| `invoke(verb, *, delay=0, periodic=False, cron=None, callback=None, **kwargs)` | Enqueue a verb as a Celery task. |
+| `task_time_low(threshold=0.5)` | True when the current task has at most `threshold` seconds remaining. False when no limit is configured. |
+| `schedule_continuation(remaining_items, verb, msg=None)` | Hand off `remaining_items` to a fresh task; pairs with `task_time_low()`. |
+| `open_editor(player, content, callback_verb, *args, content_type="text")` | Full-screen text editor; calls `callback_verb` with the saved text on save. Wizard-only. |
+| `open_paginator(player, content, content_type="text")` | Full-screen read-only pager. |
+| `players()` | All player Objects. |
+| `connected_players(within=timedelta(minutes=5))` | Player Objects active in the given window. |
+| `set_task_perms(who)` | Context manager that runs the enclosed block as `who`. Wizard-only. |
+| `owned_objects(player_obj)` / `owned_objects_by_pks(pks)` | QuerySets of Objects owned by a player. |
+| `get_client_mode()` | `"rich"` (TUI) or `"raw"` (line-based). Branch on this when offering an editor or paginator. |
+| `get_wrap_column()` | Effective wrap width for the current player. |
+| `get_session_setting(key, default=None)` / `set_session_setting(key, value)` | Cross-process session-scoped key/value store. |
+| `boot_player(obj)` | Disconnects a player. Wizards only (or self). |
+| `server_info()` | Version, PID, and memory stats. Wizard-only. |
+| `send_gmcp(player, module, data)` / `play_sound(player, name, volume=100)` | OOB protocol emit; no-op when the client didn't negotiate the capability. Wizard-only. |
+| `send_message`, `get_mailbox`, `mark_read`, ... | The mail SDK; see the {doc}`accessibility` how-to for context. |
+
+For the full list and signatures, see {doc}`../reference/builtins`.
+
+### Editor callback example
+
+`default_verbs/note/edit.py` opens an editor pre-filled with the
+note's body, and routes the saved text back into a callback verb:
 
 ```python
-from moo.sdk import context
+from moo.sdk import context, open_editor
 
-if not this.can_caller("write"):
-    print("Permission denied.")
+existing = this.get_property("body", default="")
+open_editor(context.player, existing, this.set_body)
+```
+
+`this.set_body` is another verb on the note that takes the saved text
+as its first argument and writes it to the `body` property. The editor
+runs in the SSH process; the callback fires as a fresh Celery task
+once the player saves.
+
+### Mode-aware verbs
+
+When a verb would open a TUI, branch on `get_client_mode()` so MUD
+clients and screen-reader users still get usable output:
+
+```python
+from moo.sdk import get_client_mode, open_editor
+
+if get_client_mode() == "raw":
+    print(f"Use: @edit description with \"your text here\"")
     return
+open_editor(context.player, existing_text, this.set_description)
 ```
 
-### 2. Validate Arguments Early
+See {doc}`accessibility` for the full mode-selection model.
 
-```python
-from moo.sdk import UsageError
+## Verb time limits
 
-if len(args) < 2:
-    raise UsageError(f"Usage: {verb_name} <arg1> <arg2>")
-```
+Each verb invocation, including synchronous calls to other verbs,
+finishes within `CELERY_TASK_TIME_LIMIT` (default 3 seconds) or the
+worker kills it. For longer work:
 
-Or with `print()` if you prefer a softer exit:
+- Compose into multiple verb invocations via `invoke()` — each gets
+  its own 3-second budget.
+- Use the time-aware continuation pattern above for loops over many
+  items.
+- For wall-clock waits ("happen 30 seconds from now"), use
+  `invoke(verb, delay=30)` rather than blocking inside a verb.
 
-```python
-if len(args) < 2:
-    print(f"Usage: {verb_name} <arg1> <arg2>")
-    return
-```
+## Where to go next
 
-### 3. Use the MOO Context
-
-```python
-from moo.sdk import context
-
-# context.caller is the effective caller (usually verb owner)
-# context.player is the player executing the command
-# context.writer sends output to the player
-# context.parser contains parsed command info
-```
-
-### 4. Use `print()` for Player-Visible Output
-
-`return "message"` does not show anything to the player in a command verb. Use `print()` for feedback:
-
-```python
-# CORRECT: player sees this
-if not obj:
-    print("That object doesn't exist.")
-    return
-
-print("Object created successfully.")
-
-# WRONG: return value is silently discarded
-return "Object created successfully."
-```
-
-`return` a value only when you are writing a helper verb designed to be called by other verb code, not by players directly.
-
-### 5. Avoid Subscript Augmented Assignment
-
-RestrictedPython silently fails to compile verbs that use `+=` on a dictionary subscript. The failure produces a `TypeError: exec() arg 1 must be a string, bytes or code object` at runtime, not a clear syntax error.
-
-```python
-# BLOCKED — causes a silent compilation failure
-results["passed"] += 1
-
-# CORRECT — use a plain variable instead
-passed += 1
-failed += 1
-```
-
-If a verb inexplicably does nothing or crashes with a `TypeError` about `exec()`, check for this pattern.
-
-### 6. Respect the Verb Time Limit
-
-Each verb execution (including synchronous calls to other verbs) should complete in less than 3 seconds, or Celery will terminate the task. For verbs that loop over many items, use the time-aware continuation pattern described in [Time-Aware Continuation](#time-aware-continuation) above.
+- {doc}`creating-verbs` — basics: shebang, parser, output, errors,
+  properties.
+- {doc}`../reference/builtins` — full SDK function reference.
+- {doc}`../reference/runtime` — `context` attributes, `task_time`.
+- {doc}`../reference/parser` — verb search order, preposition synonyms.
+- {doc}`../reference/sandbox` — RestrictedPython model and the
+  underscore/format/QuerySet guards.

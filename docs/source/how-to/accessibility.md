@@ -157,27 +157,30 @@ mode-selection logic.
 
 ## Out-of-Band MUD Client Protocols
 
-Raw mode gets a MUD client connected, but text alone is not enough for the
-accessibility tooling blind players have built up over decades — sound
-packs, virtual output buffers, gag filters, speedwalk maps, vitals readouts
-— which key off *structured out-of-band events* emitted alongside the
-human-readable text. django-moo speaks those protocols on top of the SSH
-session itself: IAC byte sequences pass through SSH transparently, and
+django-moo speaks GMCP, MTTS/TTYPE, MSSP, GA/EOR, CHARSET, and MSP over
+the SSH transport. These are the structured out-of-band channels that
+modern MUD clients use for sound packs, virtual output buffers, gag
+filters, speedwalk maps, and vitals readouts. Raw mode gets a MUD
+client connected, but text alone is not enough for the accessibility
+tooling blind players have built up over decades — those tools key off
+the OOB events emitted alongside the human-readable text. IAC byte
+sequences pass through SSH transparently, and
 [sshelnet](https://gitlab.com/bubblehouse/sshelnet) bridges plain-telnet
 clients onto the SSH port for free, so no second listener is needed.
 
 The full MUD-accessibility protocol stack lives in
-[`moo/shell/iac.py`](../../../moo/shell/iac.py) — an IAC subnegotiation
-parser, encoder, and negotiator. It is *not* a general telnet
-implementation: it only speaks the options the MUD-client ecosystem
-actually uses.
+[`moo/shell/iac.py`](https://gitlab.com/bubblehouse/django-moo/-/blob/main/moo/shell/iac.py) —
+an IAC subnegotiation parser, encoder, and negotiator. It is *not* a
+general telnet implementation: it only speaks the options the
+MUD-client ecosystem actually uses.
 
-The IAC plumbing is gated on the client's `TERM` value. To opt in, set
-`TERM=xterm-256-basic` (raw mode) or use a MUD client whose `TERM`
-contains its name (`mudlet`, `tintin`, `mushclient`, `blowtorch`,
-`mudrammer`, `zmud`, `cmud`). Vanilla SSH clients (`xterm-256color`,
-`tmux`, `screen`, etc.) get a regular rich-mode session with no IAC
-bytes on the wire — emitting one would render as garbage.
+The IAC plumbing is gated on the client's `TERM` value. The same raw-mode
+opt-in described above turns IAC on; in addition, any MUD client whose
+`TERM` contains its name (`mudlet`, `tintin`, `mushclient`, `blowtorch`,
+`mudrammer`, `zmud`, `cmud`) is recognised automatically. Vanilla SSH
+clients (`xterm-256color`, `tmux`, `screen`, etc.) get a regular
+rich-mode session with no IAC bytes on the wire — emitting one would
+render as garbage.
 
 ### Tier 1 — the OOB channel
 
@@ -246,10 +249,10 @@ even when most users connect from plain SSH.
   field is absent.
 
 Default verbs emit `Room.Info` from
-[`player/confunc`](../../../moo/bootstrap/default_verbs/player/confunc.py)
+[`player/confunc`](https://gitlab.com/bubblehouse/django-moo/-/blob/main/moo/bootstrap/default_verbs/player/confunc.py)
 on connect and from
-[`exit/move`](../../../moo/bootstrap/default_verbs/exit/move.py) after
-every successful move.
+[`exit/move`](https://gitlab.com/bubblehouse/django-moo/-/blob/main/moo/bootstrap/default_verbs/exit/move.py)
+after every successful move.
 
 ### Mudlet mapper integration
 
@@ -259,7 +262,7 @@ based by design — it reads room info from the `look` output, not from
 GMCP. To wire DjangoMOO's `Room.Info` events into the mapper, install
 two packages from *Settings → Package Manager → Install*:
 
-1. **DjangoMOO** — [`extras/mudlet/djangomoo.mpackage`](../../../extras/mudlet/).
+1. **DjangoMOO** — [`extras/mudlet/djangomoo.mpackage`](https://gitlab.com/bubblehouse/django-moo/-/tree/main/extras/mudlet).
    Bundles the SSH launcher, setup wizard, external-editor handoff, and
    the mapper bridge. The bridge sets `map.prompt.room` /
    `map.prompt.exits` from each `gmcp.Room.Info` and raises `onNewRoom`,
@@ -275,8 +278,9 @@ After both are installed, connect, then run `start mapping <area>` (e.g.
 `start mapping moo`). `map basics` should show ✅ for "room name" and
 "exits", the first room is created from the current `Room.Info`, and
 each subsequent move adds and links a room. The bridge source lives in
-`extras/mudlet/`; rebuild with `extras/mudlet/build.sh` if you change
-it.
+the [`extras/mudlet/`](https://gitlab.com/bubblehouse/django-moo/-/tree/main/extras/mudlet)
+directory of the django-moo repo; rebuild with `extras/mudlet/build.sh`
+if you change it.
 
 Other clients (MUSHclient, TinTin++, ZMUD/CMUD) need their own
 equivalent shim — there is no universal mapping protocol. The
@@ -289,7 +293,9 @@ its mapper state.
 NAWS (window size — prompt_toolkit already reports it), MCCP2/3 compression
 (bandwidth only, no accessibility value), MXP (largely superseded by GMCP),
 MSDP (GMCP's older sibling — most modern blind-user scripts target GMCP),
-named side-windows (split panes). See issue #16 for the reasoning.
+named side-windows (split panes). See
+[issue #16](https://gitlab.com/bubblehouse/django-moo/-/issues/16) for
+the reasoning.
 
 ## Testing Your Setup
 

@@ -58,7 +58,7 @@ Connect at <https://localhost/> and log in with the account you just created.
 
 ### MUD Clients
 
-A Mudlet package in [`extras/mudlet/`](extras/mudlet/) provides one-click
+A Mudlet package in [`extras/mudlet/`](https://gitlab.com/bubblehouse/django-moo/-/tree/main/extras/mudlet) provides one-click
 setup for MUD-client users. Mudlet has no native SSH support, so the package
 bundles a managed [sshelnet](https://gitlab.com/bubblehouse/sshelnet) launcher
 that bridges Mudlet's plain-TCP connection to the server's SSH port. It also

@@ -1,127 +1,167 @@
 # Bootstrapping Reference
 
-While the contents of this guide cover the essential elements of any DjangoMOO environment, to
-actually do anything interesting you need to bootstrap your database with some essential objects.
+A bootstrap is a Python package that populates an empty database with
+the objects, properties, and verbs that make up a DjangoMOO world.
+Without one, a fresh database has no System Object, no Wizard, and
+nothing to log into.
 
-Right now there are two datasets defined, `test` and `default`. The `test` dataset is used in the
-core unit tests. It uses no additional verb files — only the base objects created by `initialize_dataset()`.
+For a step-by-step walkthrough of writing your own dataset, see
+{doc}`../tutorials/custom-world`. For task recipes (sync after edits,
+verb replacement, idempotent updates, debugging), see
+{doc}`../how-to/bootstrapping`.
 
-`default` is a lot more interesting, and is the dataset used when you initialize a new DjangoMOO
-database with:
+## Available datasets
 
-    docker compose run webapp manage.py moo_init
+`default` — the production game world. Loaded with:
 
-## Initialization
+```bash
+docker compose run webapp manage.py moo_init --bootstrap default
+```
 
-Every new environment needs a few things to be at all useable:
+Lives at `moo/bootstrap/default/`. The package contains an orchestrator
+`__init__.py` plus numbered sub-scripts (`000_initialize.py`,
+`010_core_classes.py`, ..., `999_finalize.py`) executed in sorted order.
+Verb sources live in the sibling `moo/bootstrap/default_verbs/` package,
+organised by root-class name.
 
-* Object #1 is created as the "System Object"
-  * Must define a verb `set_default_permissions` that gets run for every new object
-* Must have an object named "container class" that defines the `enter` verb
-* Must have an object named "Wizard" that is the admin account for the dataset
-* All these objects should be owned by Wizard
+`test` — a minimal dataset used by the pytest `t_init` fixture in
+`moo/conftest.py`. It is *not* loadable via `moo_init`. It exists as a
+flat module (`moo/bootstrap/test.py`) and creates only what the unit
+tests need to exercise the verb execution engine.
 
-These steps are handled by `moo.bootstrap.initialize_dataset()`:
+## What initialization gives you
+
+`bootstrap.initialize_dataset(name)` is the entry point every bootstrap
+package calls first. It is idempotent and produces:
+
+- A `Repository` row (`slug=name`, `prefix=moo/bootstrap/<name>_verbs`)
+  used by `load_verbs` to locate verb sources.
+- The full set of `Permission` rows defined by
+  `settings.DEFAULT_PERMISSIONS`.
+- The lexer's preposition table (`Pattern.initializePrepositions`).
+- The **System Object** (`pk=1`, `name="System Object"`).
+- Three LambdaMOO-style sentinel objects with the lowest possible PKs:
+  `nothing` (#2), `ambiguous_match` (#3), `failed_match` (#4).
+- A **Wizard** Object with a stub `accept` verb returning `True`.
+- A Django `User` named `wizard` and a `Player` row linking the user to
+  the Wizard Object with `wizard=True`.
+- Wizard ownership of the System Object, the sentinels, and itself.
+
+What it does *not* do — and what your bootstrap package is responsible
+for — is create root classes (Room, Thing, Player, etc.), starting
+rooms, exits, or any verbs beyond Wizard's stub `accept`. The default
+permission application that runs on every new object is handled
+natively by `moo.core.utils.apply_default_permissions`; no
+`set_default_permissions` verb on the System Object is required.
+
+## Orchestrator pattern
+
+Every loadable bootstrap is a Python package whose `__init__.py`:
+
+1. Calls `bootstrap.initialize_dataset(name)`.
+2. Builds a `_namespace` dict containing every name the sub-scripts
+   need (`bootstrap`, `lookup`, `wizard`, `sys`, etc.).
+3. Discovers numbered `.py` files in the package via
+   `importlib.resources.files(__package__).iterdir()`.
+4. Runs each script via `exec(compile(...), _namespace)` inside a
+   `code.ContextManager(wizard, log.info)` block so that ownership and
+   permissions track to the Wizard player.
+5. Either calls `bootstrap.load_verbs` directly at the end, or defers
+   that to a `999_finalize.py` script.
+
+`moo/bootstrap/default/__init__.py` is the canonical example.
+
+## Function reference
 
 ```{eval-rst}
 .. py:currentmodule:: moo.bootstrap
 .. autofunction:: initialize_dataset
    :no-index:
-```
-
-Once all the objects are created and necessary properties created, the `moo.bootstrap.load_verbs()` function can load all the verb code
-
-```{eval-rst}
-.. autofunction:: load_verbs
-   :no-index:
-```
-
-## Idempotent Bootstrap Helpers
-
-These helpers make bootstrap files safe to re-run against an already-initialized
-database (as used by `moo_init --sync`).
-
-```{eval-rst}
 .. autofunction:: get_or_create_object
+   :no-index:
+.. autofunction:: load_verbs
    :no-index:
 .. autofunction:: load_verb_source
    :no-index:
+.. autofunction:: parse_shebang
+   :no-index:
 ```
 
-`get_or_create_object` returns a `(object, created)` tuple. It only attaches
-`parents` on first creation to avoid duplicate relationship errors. Calling it
-on an existing database is a no-op for the object itself.
+`get_or_create_object` returns a `(object, created)` tuple. It only
+attaches `parents` on first creation to avoid duplicate-relationship
+errors. Calling it on an existing database is a no-op for the object
+itself, which makes top-level use safe under `moo_init --sync`.
 
-`load_verb_source` parses a `#!moo verb` shebang from a single file and calls
-`obj.add_verb()`. Pass `replace=True` to overwrite the verb source in place;
-the default skips files whose verbs already exist.
+`load_verb_source` parses a `#!moo verb` shebang from a single file and
+calls `obj.add_verb()`. Pass `replace=True` to overwrite the verb source
+in place; the default skips files whose verbs already exist.
 
-## Bootstrap File Organization
+`load_verbs` walks a Python package recursively, calling
+`load_verb_source` for every `.py` file with a shebang. The directory
+structure inside the package is purely organisational — only the
+`--on` line in each shebang determines where the verb attaches.
 
-The bootstrap system is organized into several files:
+`parse_shebang` is the same parser used by both `load_verb_source` and
+`@edit verb`. It returns `(names, on, dspec, ispec)` or `None` if the
+first line is not a `#!moo verb` shebang. Useful when you need to
+extract verb metadata from user-supplied source.
 
-* `default.py`: Creates the production game world with rooms, players, and other game objects
-* `test.py`: Creates a minimal test dataset used by pytest; uses no additional verb files
-* `default_verbs/`: Directory containing verb files for the `default` dataset only
+## Verb files in bootstrap
 
-## Verb Files in Bootstrap
-
-Bootstrap verb files follow a specific format with a shebang line that defines metadata:
-
-```python
-#!moo verb verb_name --on $object_reference
-```
-
-The shebang line specifies:
-
-* Verb name(s) - the name(s) by which the verb can be invoked
-* `--on` - the object to attach the verb to (uses `$property` syntax to reference system object properties)
-* Optional flags like `--dspec` and `--ispec` for direct/indirect object specifiers
-
-After the shebang line, the verb code follows (without a function wrapper - RestrictedPython adds that).
-
-### Example Bootstrap Verb
+Every verb file begins with a shebang:
 
 ```python
 #!moo verb accept --on $room
-
-# pylint: disable=return-outside-function,undefined-variable
-
-"""
-Accept an object being moved into this verb's location.
-"""
-
-return True
 ```
 
-## Running Bootstrap in Development
+The shebang is parsed by `parse_shebang` and supplies `--on` (the
+target object), the verb name(s), and optional `--dspec`/`--ispec`
+flags. After the shebang, the verb body follows without a function
+wrapper — RestrictedPython adds one at compile time.
+
+For the full shebang grammar and verb authoring patterns, see
+{doc}`../how-to/creating-verbs`.
+
+## Running bootstrap in development
+
+Initialize a fresh database:
 
 ```bash
-# Initialize the database with bootstrap data
-python manage.py moo_init
-
-# Reset the database (caution: deletes everything!)
-python manage.py migrate zero
-python manage.py migrate
-python manage.py moo_init
-
-# Test bootstrap in Django shell
-python manage.py shell
->>> from moo.sdk import lookup
->>> root = lookup("root")
->>> root.name
-'Root Class'
+docker compose run webapp manage.py migrate
+docker compose run webapp manage.py moo_init --bootstrap default
 ```
 
-### Syncing an Existing Database
+Sync an existing database to pick up new verbs and objects without
+resetting it:
 
-When new objects or verbs are added to a built-in dataset, run `moo_init --sync`
-to apply them without resetting the database:
+```bash
+docker compose run webapp manage.py moo_init --bootstrap default --sync
+```
 
-    docker compose run webapp manage.py moo_init --sync
+Reset and re-bootstrap (destroys all data):
 
-`--sync` checks the dataset exists first (raises `RuntimeError` otherwise), then
-re-runs the bootstrap file with `load_verbs(..., replace=True)` so updated verb
-source overwrites existing Verb records.
+```bash
+docker compose run webapp manage.py migrate zero
+docker compose run webapp manage.py migrate
+docker compose run webapp manage.py moo_init --bootstrap default
+```
 
-For the step-by-step guide to creating your own bootstrap dataset, see {doc}`../how-to/bootstrapping`.
+Inspect the bootstrapped state from the Django shell:
+
+```bash
+docker compose run webapp manage.py shell
+```
+
+```python
+>>> from moo.sdk import lookup
+>>> sys = lookup(1)
+>>> sys.name
+'System Object'
+>>> sys.root_class.name
+'Root Class'
+>>> lookup("Wizard").is_wizard()
+True
+```
+
+`lookup()` accepts an object PK, an exact `name`, or any of an
+object's aliases. It raises `NoSuchObjectError` if nothing matches.
