@@ -170,7 +170,7 @@ brass key
 polishing cloth
 ```
 
-Or just `i` for short. To put something on the floor, `drop <name>`:
+Or just `inv` for short. To put something on the floor, `drop <name>`:
 
 ```
 $ drop brass key

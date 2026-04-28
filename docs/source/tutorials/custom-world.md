@@ -1,177 +1,444 @@
 # Building a Persistent World from Scratch
 
-This tutorial walks you through creating a custom bootstrap dataset — a Python file that defines your game world's objects, rooms, and verbs and can be loaded into a fresh database with a single command. By the end you'll have a working tavern with a barrel container, a bartender NPC, and a custom verb, all loaded from code.
+> **Most readers do not need this tutorial.** A from-scratch world means
+> writing your own root class hierarchy, your own `look`/`take`/`drop`/
+> `go`/`say` equivalents, and your own connection callbacks. None of the
+> helpers in `default_verbs/` apply — every command vocabulary is
+> something you define. Expect this to take days, not hours.
+>
+> If what you actually want is to add rooms, items, or themed areas to
+> the existing MOO, extend the `default` dataset by adding numbered
+> scripts under `moo/bootstrap/default/`. The reasonable use cases for
+> this tutorial are narrow: implementing a different game engine on top
+> of the MOO substrate (e.g., a Zork-style adventure interpreter), or a
+> non-MOO theme that should not share any state with the standard player
+> commands.
+
+This tutorial walks through building a standalone bootstrap dataset as a
+Python package. After you're done, somebody can install your package and
+run `moo_init --bootstrap mygame` to bring up your world from an empty
+database.
 
 ## Prerequisites
 
 Before you start:
 
+- Familiarity with {doc}`first-verb` and {doc}`testing-verbs`
 - A working development environment (see {doc}`../how-to/development`)
-- Familiarity with Django management commands (`manage.py`)
-- The first-verb tutorial ({doc}`first-verb`) — so you understand the shebang syntax
+- Comfort reading existing django-moo source. You will want
+  `moo/bootstrap/default/` open in another window for reference.
 
-## What a bootstrap file is
+## What you're building
 
-A bootstrap file is a plain Python script that runs inside the Django environment. When `manage.py moo_init` runs it, the script creates objects in the database using the `moo.bootstrap` and `moo.sdk` helpers. Every built-in dataset (`default`, `minimal`) is a bootstrap file — yours will be a peer to those.
+A new top-level package — call it `mygame` — that contains:
 
-## Step 1: Create the bootstrap file
+- An orchestrator `__init__.py` that initializes the dataset and runs
+  numbered sub-scripts in order.
+- Numbered sub-scripts that create your root classes, rooms, and other
+  objects.
+- A sibling `mygame_verbs/` package containing one verb file per
+  command, organized by root class.
+- A minimal `pyproject.toml` so the package can be installed.
 
-Create `moo/bootstrap/my_game.py`:
+Layout:
+
+```text
+mygame/
+├── __init__.py            orchestrator
+├── 010_classes.py         root classes (your equivalents of Room/Thing/Player)
+├── 020_rooms.py           starting rooms
+├── 030_exits.py           exits between rooms
+└── 999_finalize.py        permission grants and verb loading
+mygame_verbs/
+├── room/
+│   └── look.py
+├── thing/
+└── player/
+pyproject.toml
+```
+
+The `mygame_verbs/<class>/` convention mirrors `default_verbs/`. Each
+subdirectory holds verbs whose `--on` references that root class.
+`bootstrap.load_verbs` walks the tree recursively, so the directory
+structure is purely organizational — only the `--on` line in each verb's
+shebang determines where the verb is attached.
+
+## A note on packaging
+
+Today, `moo_init` only discovers bootstrap packages that are siblings of
+`moo/bootstrap/default/`. There is no `pip install`-and-go path for an
+out-of-tree package yet. The practical workflow is:
+
+1. Develop your package in-tree by placing it under
+   `moo/bootstrap/mygame/` and `moo/bootstrap/mygame_verbs/`.
+2. Add `"mygame"` to the `builtin_templates` list in
+   `moo/core/management/commands/moo_init.py`.
+
+The directory structure and code shown below are identical to what an
+out-of-tree pip-installable package will eventually need. The closing
+section of this tutorial sketches the future shape; for now, the
+tutorial itself shows the in-tree variant.
+
+## Step 1: Create the package skeleton
+
+From the django-moo repo root:
+
+```bash
+mkdir -p moo/bootstrap/mygame
+mkdir -p moo/bootstrap/mygame_verbs/room
+mkdir -p moo/bootstrap/mygame_verbs/thing
+mkdir -p moo/bootstrap/mygame_verbs/player
+mkdir -p moo/bootstrap/mygame_verbs/tests
+touch moo/bootstrap/mygame_verbs/__init__.py
+```
+
+Each verb subdirectory will hold one `.py` file per verb. You don't need
+an `__init__.py` inside the subdirectories — `load_verbs` walks them as
+filesystem trees, not as Python packages.
+
+## Step 2: Write the orchestrator
+
+Create `moo/bootstrap/mygame/__init__.py`:
 
 ```python
+import importlib.resources
 import logging
+
 from moo import bootstrap
-from moo.core import code
-from moo.core.lookup import lookup
+from moo.core import code, lookup
+from moo.core.models import Object
 
 log = logging.getLogger(__name__)
-
-repo = bootstrap.initialize_dataset("my_game")
+_repo = bootstrap.initialize_dataset("mygame")
 wizard = lookup("Wizard")
+sys = Object.objects.get(pk=1)
+
+_namespace = {
+    "log": log,
+    "bootstrap": bootstrap,
+    "lookup": lookup,
+    "wizard": wizard,
+    "sys": sys,
+    "repo": _repo,
+}
+
+_pkg = importlib.resources.files("moo.bootstrap") / "mygame"
+_scripts = sorted(
+    (f for f in _pkg.iterdir() if f.name.endswith(".py") and f.name[0].isdigit()),
+    key=lambda f: f.name,
+)
 
 with code.ContextManager(wizard, log.info):
-    sys = lookup(1)
+    for _script in _scripts:
+        exec(  # pylint: disable=exec-used
+            compile(_script.read_text(encoding="utf8"), _script.name, "exec"),
+            _namespace,
+        )
 ```
 
-`initialize_dataset("my_game")` creates the System Object, Wizard user, and required sentinel objects. It is idempotent — safe to run twice. `code.ContextManager(wizard, log.info)` establishes the `wizard` player as the current context for all subsequent operations, so ownership defaults to Wizard.
+What this does:
 
-## Step 2: Create the base classes
+- `bootstrap.initialize_dataset("mygame")` creates the `Repository` row,
+  the System Object (`#1`), and the Wizard player. It is idempotent — a
+  second call returns the existing repo.
+- `_namespace` is the variable scope every numbered sub-script runs
+  inside. Anything you put here is available as a bare name to those
+  scripts. `lint` will complain about "undefined-variable" inside
+  sub-scripts; that's expected, and a `# pylint: disable=undefined-variable`
+  comment at the top of each numbered file is conventional.
+- `importlib.resources.files(...).iterdir()` finds every numbered `.py`
+  file in the package and runs them in sorted name order — so file
+  prefixes (`010_`, `020_`) determine load order.
+- `code.ContextManager(wizard, log.info)` makes the bootstrap run as the
+  Wizard player, so any objects created inherit Wizard ownership. The
+  second argument is the writer callback — log lines from `print()` go
+  through `log.info`.
 
-Before you can make rooms and things, you need to register the system properties that point to the parent classes:
+This pattern is taken directly from `moo/bootstrap/default/__init__.py`.
+Read that file alongside this one — your orchestrator should look very
+similar.
+
+## Step 3: Define your root classes
+
+Create `moo/bootstrap/mygame/010_classes.py`:
 
 ```python
-    from moo.core.models import Object
+# pylint: disable=undefined-variable
+root, _ = bootstrap.get_or_create_object("MyGame Root", unique_name=True)
+sys.set_property("root_class", root)
+root.set_property("description", "")
 
-    root, _ = bootstrap.get_or_create_object("Root Class", unique_name=True)
-    root.add_verb("accept", code="return True")
-    sys.set_property("root_class", root)
+room, _ = bootstrap.get_or_create_object("MyGame Room", unique_name=True, parents=[root])
+sys.set_property("room", room)
+room.set_property("description", "An empty space.")
 
-    rooms, _ = bootstrap.get_or_create_object("Generic Room", unique_name=True, parents=[root])
-    sys.set_property("room", rooms)
+thing, _ = bootstrap.get_or_create_object("MyGame Thing", unique_name=True, parents=[root])
+sys.set_property("thing", thing)
 
-    things, _ = bootstrap.get_or_create_object("Generic Thing", unique_name=True, parents=[root])
-    sys.set_property("thing", things)
-
-    player, _ = bootstrap.get_or_create_object("Generic Player", unique_name=True, parents=[root])
-    sys.set_property("player", player)
+player, _ = bootstrap.get_or_create_object("MyGame Player", unique_name=True, parents=[root])
+sys.set_property("player", player)
 ```
 
-`get_or_create_object` returns a `(object, created)` tuple. On subsequent runs it finds the existing object and returns `created=False`, so the `add_verb` and `set_property` calls on `root` and `rooms` are safe to call idempotently too (they update in place).
+Two things matter here:
 
-**Do not use raw `create()` at the top level of a bootstrap file.** `create()` always inserts a new row and will raise `IntegrityError` on a second run. Use `get_or_create_object` for every top-level object.
+- `bootstrap.get_or_create_object` is the idempotent equivalent of
+  `Object.objects.create()`. Calling it twice returns the existing
+  object the second time. **Never use `create()` at the top level of a
+  bootstrap script** — `moo_init --sync` would raise `IntegrityError` on
+  the second run.
+- `sys.set_property("room", room)` registers the class on the System
+  Object so verbs can reference it as `$room` in their shebang. The same
+  goes for `$thing`, `$player`, `$root_class`. Without these
+  registrations, `--on $room` won't resolve when `load_verbs` runs.
 
-## Step 3: Create the starting room
+You are deliberately *not* parenting on `Generic Room` or any other
+class from `default`. This is a fresh world.
 
-```python
-    tavern, tavern_created = bootstrap.get_or_create_object(
-        "The Rusty Flagon",
-        unique_name=True,
-        parents=[rooms],
-    )
-    if tavern_created:
-        tavern.set_property("description",
-            "A low-ceilinged tavern filled with the smell of sawdust and stale ale. "
-            "Scarred wooden tables line the walls.")
-    sys.set_property("player_start", tavern.pk)
-```
+## Step 4: Create the starting rooms
 
-`sys.set_property("player_start", tavern.pk)` makes this room the spawn point for new players (and the destination of `home` for players who have not set a custom home).
-
-## Step 4: Add a container
+Create `moo/bootstrap/mygame/020_rooms.py`:
 
 ```python
-    containers, _ = bootstrap.get_or_create_object("Generic Container", unique_name=True)
-    containers.add_verb("accept", code="return True")
-    sys.set_property("container", containers)
+# pylint: disable=undefined-variable
+_rooms = {}
 
-    barrel, _ = bootstrap.get_or_create_object(
-        "oak barrel",
-        unique_name=True,
-        parents=[containers],
-        location=tavern,
-    )
-    if barrel.get_property("description", default=None) is None:
-        barrel.set_property("description", "A broad oak barrel. The lid is sealed with wax.")
-```
-
-## Step 5: Create a verb file
-
-Create the directory `moo/bootstrap/my_game_verbs/thing/` and the file `moo/bootstrap/my_game_verbs/thing/inspect.py`:
-
-```python
-#!moo verb inspect --on $thing --dspec this
-from moo.sdk import context
-print(f"You inspect {this.name} closely.")
-context.player.location.announce_all_but(
-    context.player,
-    f"{context.player.name} inspects {this.name}."
+start, _ = bootstrap.get_or_create_object(
+    "Starting Square",
+    unique_name=True,
+    parents=[lookup("MyGame Room")],
 )
+start.set_property("description",
+    "A flat stone square at the centre of an empty plain. "
+    "Doors of carved wood face you in three directions.")
+_rooms["start"] = start
+sys.set_property("player_start", start)
+
+north_hall, _ = bootstrap.get_or_create_object(
+    "North Hall",
+    unique_name=True,
+    parents=[lookup("MyGame Room")],
+)
+north_hall.set_property("description",
+    "A long stone hall lit by sputtering torches.")
+_rooms["north_hall"] = north_hall
 ```
 
-The shebang registers this verb on `$thing` (the `Generic Thing` class). `--dspec this` means the verb only fires when the direct object resolves to the object the verb is on — so `inspect barrel` dispatches to the barrel's `inspect` verb.
+`sys.set_property("player_start", room)` makes that room the spawn point
+for new players and the destination of `home` for players without a
+custom home.
 
-## Step 6: Load verbs from the directory
+The `_rooms` dict is local to this script — variables defined in one
+sub-script aren't visible to the next. To pass references forward (so
+the exit script can reference rooms), stash them on a class or on the
+namespace dict. The simplest approach is to look them up by name in the
+next script with `lookup("Starting Square")`.
 
-Back in `my_game.py`, add after the barrel creation:
+## Step 5: Wire the exits
+
+Create `moo/bootstrap/mygame/030_exits.py`. This step is intentionally
+sketchy — every game's exit model is different. The pattern below
+mirrors `default`'s, where exits are first-class Objects with a `dest`
+property. You may want something simpler.
 
 ```python
-    bootstrap.load_verbs(repo, "moo/bootstrap/my_game_verbs")
+# pylint: disable=undefined-variable
+exit_class, _ = bootstrap.get_or_create_object(
+    "MyGame Exit",
+    unique_name=True,
+    parents=[lookup("MyGame Root")],
+)
+sys.set_property("exit", exit_class)
+
+start = lookup("Starting Square")
+north_hall = lookup("North Hall")
+
+exit_north, _ = bootstrap.get_or_create_object(
+    "north",
+    parents=[exit_class],
+    location=start,
+)
+exit_north.set_property("dest", north_hall)
+
+exit_south, _ = bootstrap.get_or_create_object(
+    "south",
+    parents=[exit_class],
+    location=north_hall,
+)
+exit_south.set_property("dest", start)
 ```
 
-`load_verbs` scans the directory recursively for `.py` files with shebang lines, parses the shebang to find the target object and dispatch parameters, and calls `add_verb`. The `repo` argument links each verb to your dataset's repository record so `@reload` can find it.
+You'll need to write a `go` verb (later) that consults `dest` and moves
+the player. None of `default`'s `exit/move.py` applies here — you're
+defining the contract yourself.
 
-## Step 7: Register your dataset and run it
+## Step 6: Add a verb
 
-Open `moo/core/management/commands/moo_init.py` and add `"my_game"` to `builtin_templates`:
+Create `moo/bootstrap/mygame_verbs/room/look.py`:
 
 ```python
-builtin_templates = ["minimal", "default", "my_game"]
+#!moo verb look --on $room --dspec none
+from moo.sdk import context, NoSuchPropertyError
+
+try:
+    desc = this.get_property("description")
+except NoSuchPropertyError:
+    desc = "There's nothing remarkable to see."
+
+print(this.name)
+print(desc)
+
+contents = list(this.contents.exclude(pk=context.player.pk))
+if contents:
+    names = ", ".join(obj.name for obj in contents)
+    print(f"Here: {names}")
 ```
 
-Now run the bootstrap:
+The shebang says: this is a verb named `look` that lives on whatever
+object is registered as `_.room` (your `MyGame Room` class), and it
+takes no direct object. Every room you create inherits this verb because
+each room is parented on `MyGame Room`.
 
-```bash
-docker compose run webapp manage.py moo_init --bootstrap my_game
+This is a complete, working `look` verb — but it is *yours*. There is no
+inherited `look` from `default`. The same applies to every command you
+want players to type: `take`, `drop`, `go`, `say`, `inventory`, and so
+on. Each is one file under `mygame_verbs/<class>/`. See {doc}`first-verb`
+for the verb-authoring basics.
+
+## Step 7: Finalize and load verbs
+
+Create `moo/bootstrap/mygame/999_finalize.py`:
+
+```python
+# pylint: disable=undefined-variable
+bootstrap.load_verbs(repo, "moo.bootstrap.mygame_verbs", replace=True)
 ```
 
-Connect and verify:
+`load_verbs` walks the verb package recursively, parses each shebang,
+resolves the `--on` target, and creates or updates the corresponding
+`Verb` row. `replace=True` means `moo_init --sync` will overwrite verb
+source in place rather than skipping files whose verbs already exist.
+
+Putting `load_verbs` in `999_finalize.py` (rather than directly in
+`__init__.py` after the script loop) matches the `default` package's
+convention and keeps the orchestrator focused on running scripts.
+
+## Step 8: Register the dataset
+
+Edit `moo/core/management/commands/moo_init.py` and append `"mygame"` to
+the `builtin_templates` list near the top of the file:
+
+```python
+builtin_templates = ["default", "mygame"]
+```
+
+Today this whitelist is the only way to make a custom dataset selectable
+via `--bootstrap`. Removing the whitelist in favour of filesystem
+discovery is a separate follow-up; until that lands, this manual step is
+required.
+
+## Step 9: Run the bootstrap
 
 ```bash
+docker compose run webapp manage.py migrate
+docker compose run webapp manage.py moo_init --bootstrap mygame
+```
+
+`moo_init` runs your orchestrator, which runs each numbered script in
+order, then loads the verbs. If anything goes wrong it rolls back the
+entire transaction — you can fix the bug and re-run.
+
+Once it succeeds:
+
+```bash
+docker compose run webapp manage.py createsuperuser --username wizard
+docker compose run webapp manage.py moo_enableuser --wizard wizard Wizard
 ssh -p 8022 Wizard@localhost
 ```
 
-```
-The Rusty Flagon(#N)
-A low-ceilinged tavern filled with the smell of sawdust and stale ale...
+Type `look` and you should see your starting room.
 
-Contents: oak barrel
-Obvious exits: none
-```
+## Step 10: Iterate
 
-Try the verb:
-
-```
-$ inspect barrel
-You inspect oak barrel closely.
-```
-
-## Step 8: Iterate with `--sync`
-
-When you edit a verb file, you don't need to reset the database. Run:
+When you change a verb file, run:
 
 ```bash
-docker compose run webapp manage.py moo_init --bootstrap my_game --sync
+docker compose run webapp manage.py moo_init --bootstrap mygame --sync
 ```
 
-`--sync` re-runs the bootstrap file against the existing database. `get_or_create_object` skips objects that already exist. `load_verbs` internally passes `replace=True`, so existing verbs are overwritten with the updated source.
+`--sync` re-runs your bootstrap against the existing database without
+resetting it. `get_or_create_object` skips objects that already exist;
+`load_verbs(..., replace=True)` updates verb source in place.
 
-## What just happened
+## Step 11: Test it
 
-`moo_init` wraps your bootstrap file in a database transaction and calls `load_python()` to execute it. `initialize_dataset` ensures the System Object and Wizard exist. `get_or_create_object` is the idempotent equivalent of `create()` — it runs `Object.objects.get_or_create()` under the hood. `load_verbs` walks the verb directory, parses each shebang, looks up the `--on` object via the system property, and calls `add_verb(replace=True)` so sync pushes updates without needing a DB reset.
+Tests for your dataset live under `mygame_verbs/tests/`. Use the
+`t_init` fixture with your dataset name:
 
-## Where to go next
+```python
+import pytest
+from moo.core import code, parse
+from moo.sdk import lookup
+from moo.core.models import Object
 
-- {doc}`../reference/bootstrapping` — Full function reference: `initialize_dataset`, `get_or_create_object`, `load_verbs`, `load_verb_source`, and `parse_shebang`
-- {doc}`../how-to/bootstrapping` — Advanced patterns: property inheritance flags, ACL setup, multi-file organisation
-- {doc}`testing-verbs` — Write pytest tests for your bootstrap verbs
-- {doc}`../reference/permissions` — Set up `allow()` and `@lock` so players can only access certain rooms
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["mygame"], indirect=True)
+def test_starting_room_has_description(t_init: Object, t_wizard: Object):
+    start = lookup("Starting Square")
+    assert "stone square" in start.get_property("description")
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["mygame"], indirect=True)
+def test_look_prints_description(t_init: Object, t_wizard: Object):
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, "look")
+    assert any("stone square" in line for line in printed)
+```
+
+The `t_init` fixture in `moo/conftest.py` accepts any in-tree bootstrap
+name; passing `["mygame"]` causes it to bootstrap your dataset before
+the test runs.
+
+Run the suite with:
+
+```bash
+uv run pytest -n auto moo/bootstrap/mygame_verbs/tests/
+```
+
+## Where to look for more
+
+- `moo/bootstrap/default/` — the canonical real-world bootstrap package.
+  Read `__init__.py` for the orchestrator pattern, `000_initialize.py`
+  through `999_finalize.py` for concrete examples of class definition,
+  room creation, player setup, and finalization.
+- `moo/bootstrap/default_verbs/<class>/` — verb files organised by
+  root-class name. Even though your world doesn't reuse the verbs, the
+  directory layout, shebang conventions, and SDK usage are all worth
+  copying.
+- {doc}`../reference/bootstrapping` — function reference for
+  `initialize_dataset`, `get_or_create_object`, `load_verbs`,
+  `load_verb_source`, and `parse_shebang`.
+- {doc}`../how-to/bootstrapping` — additional bootstrap patterns:
+  property inheritance flags, ACL setup, multi-file organisation.
+
+## Out-of-tree packaging (future direction)
+
+The pattern shown above keeps your bootstrap inside django-moo's tree
+because that's what `moo_init` supports today. The package shape —
+orchestrator, numbered scripts, sibling verb directory — is identical to
+what a pip-installable out-of-tree package would need. When entry-point
+discovery lands, the change will be straightforward:
+
+- Move `mygame/` and `mygame_verbs/` out of `moo/bootstrap/` into their
+  own repository.
+- Add an entry-point row to your `pyproject.toml` along the lines of
+  `[project.entry-points."moo.bootstrap"]` declaring the bootstrap
+  package.
+- `moo_init --bootstrap mygame` then resolves the package via
+  `importlib.metadata.entry_points` instead of the in-tree filesystem
+  scan, and the whitelist in `moo_init.py` goes away.
+
+Until that infrastructure ships, the in-tree path described in this
+tutorial is the supported route.

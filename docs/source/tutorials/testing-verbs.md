@@ -77,7 +77,7 @@ def test_greet_prints_to_caller(t_init: Object, t_wizard: Object):
 
 ## Step 4: Capture `tell()` and `write()` output
 
-`tell()` and `write()` send output to a specific player object. In production, those players have live SSH connections. In tests, the connection is absent, so `write()` raises a `ConnectionError` which pytest captures as a `RuntimeWarning`.
+`tell()` and `write()` target a specific player. There's no live SSH connection in tests, so `write()` raises `ConnectionError` — pytest surfaces it as a `RuntimeWarning`.
 
 The `greet` verb calls `announce_all_but()`, which calls `tell()` on every player in the room except the caller. To capture those messages, wrap the `parse.interpret` call in `pytest.warns`:
 
@@ -191,6 +191,18 @@ def test_give_to_player(t_init: Object, t_wizard: Object, setup_item):
 ```
 
 `setup_item(location, name)` creates a `$thing` child at the given location. The `name` argument defaults to `"red ball"`.
+
+## Step 9: Run the tests
+
+```bash
+uv run pytest -n auto moo/bootstrap/default_verbs/tests/test_greet.py
+```
+
+`-n auto` runs tests in parallel using all available cores. To run a single test, append `::test_name`:
+
+```bash
+uv run pytest -n auto moo/bootstrap/default_verbs/tests/test_greet.py::test_greet_prints_to_caller
+```
 
 ## What just happened
 

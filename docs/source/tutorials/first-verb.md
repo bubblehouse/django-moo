@@ -51,11 +51,14 @@ This creates a new verb named `greet` on the Wizard object and opens the built-i
 [Ctrl+S] Save  [Ctrl+C/Q] Cancel
 ```
 
-Type this as the verb body:
+Type this as the verb code:
 
 ```python
+#!moo verb greet --on Wizard
 print("Hello, world!")
 ```
+
+The first line is a *shebang* — it tells DjangoMOO this is a verb named `greet` attached to the `Wizard` object. Every verb starts with one. We'll add more flags to it in Step 4.
 
 Press `Ctrl+S`, then `Y` to confirm the save. The editor closes and you're back at the prompt.
 
@@ -83,7 +86,7 @@ Let's update `greet` to accept a name. Open the editor again:
 Replace the code with:
 
 ```python
-#!moo verb greet --on me --dspec any
+#!moo verb greet --on Wizard --dspec any
 from moo.sdk import context
 name = context.parser.get_dobj_str()
 print(f"Hello, {name}!")
@@ -91,9 +94,9 @@ print(f"Hello, {name}!")
 
 Save with `Ctrl+S` → `Y`.
 
-The shebang line on the first line registers `--dspec any`, which tells the parser that this verb requires a direct object. When the verb fires, `context.parser.get_dobj_str()` returns whatever the player typed after the verb name. If the player types `greet` with nothing after it, the parser refuses to dispatch the verb at all.
+We've added `--dspec any` to the shebang. That tells the parser this verb requires a direct object. When the verb fires, `context.parser.get_dobj_str()` returns whatever the player typed after the verb name. If the player types `greet` with nothing after it, the parser refuses to dispatch the verb at all.
 
-`--on` is required for the shebang to be parsed at all — without it the line is silently ignored and the dspec update won't apply. When editing interactively, `--on` has no other effect: the verb stays on whatever object the `@edit verb ... on <object>` command attached it to.
+`--on` accepts a few forms: a player name (`Wizard`), an object ID (`#5`), or a system property (`$thing`, `$room`). When editing interactively, the verb stays on whatever object the `@edit verb ... on <object>` command attached it to.
 
 Test it:
 
@@ -117,13 +120,13 @@ The second response comes from the parser itself, not your code, because `--dspe
 
 **`print()`** sends a line of text to the player who ran the command. For output to other players in the room, use `context.player.location.announce_all_but(context.player, msg)` instead.
 
-**`return "some message"`** does not display anything. A bare `return` exits the verb early; the string value is silently discarded. Always use `print()` for player-visible output.
+**Return values from player-typed commands are discarded.** Whatever this verb returns when invoked via the parser goes nowhere — use `print()` for player-visible output. Verbs called from other verb code can and do return values; that's how a lot of the standard library works.
 
-**The shebang line** is how verb dispatch properties are set. `--on` names the object the verb lives on (required for the shebang to parse — without it the whole line is silently ignored). When editing interactively, the verb stays wherever `@edit verb ... on <object>` put it; `--on` in the shebang doesn't move it. `--dspec any` means a direct object must be present. `--dspec either` makes it optional. Omitting `--dspec` (or `--dspec none`) means the verb only matches when no direct object is given. See {doc}`../how-to/creating-verbs` for the full shebang syntax including `--ispec` for indirect objects.
+**The shebang line** is how verb dispatch properties are set. `--on` names the object the verb lives on. When editing interactively, the verb stays wherever `@edit verb ... on <object>` put it; `--on` in the shebang doesn't move it. `--dspec any` means a direct object must be present. `--dspec either` makes it optional. Omitting `--dspec` (or `--dspec none`) means the verb only matches when no direct object is given. See {doc}`../how-to/creating-verbs` for the full shebang syntax including `--ispec` for indirect objects.
 
 ## Step 5: Make it permanent (optional)
 
-Verbs created with `@edit verb` live in the database and survive server restarts, but not a full database reset (`moo_init`). If you want this verb to be part of your bootstrap dataset, add a verb file in `default_verbs/`. See {doc}`../reference/bootstrapping` for how that works.
+Verbs created with `@edit verb` live in the database and survive server restarts, but it won't be part of other deployments using the `default` dataset. If you want this verb to be part of your bootstrap dataset, add a verb file in `default_verbs/`. See {doc}`../reference/bootstrapping` for how that works.
 
 ## Where to go next
 

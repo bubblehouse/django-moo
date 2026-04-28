@@ -6,7 +6,7 @@ This tutorial walks you through creating a room, connecting it to the world with
 
 Before you start:
 
-- An SSH connection to the server as a player with builder access
+- An connection to the server as a player with builder access
 - You understand the basics covered in {doc}`player-basics` (navigation, `look`, inventory)
 
 To check that you have quota (permission to create objects):
