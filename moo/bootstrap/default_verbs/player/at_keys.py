@@ -1,4 +1,4 @@
-#!moo verb @keys --on $builder
+#!moo verb @keys --on $player
 
 # pylint: disable=return-outside-function,undefined-variable
 
