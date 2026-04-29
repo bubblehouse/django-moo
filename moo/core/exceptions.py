@@ -5,10 +5,11 @@ A variety of error classes
 
 class UserError(Exception):
     """
-    This is the superclass for all Errors that may be generated which
-    should be reported to the user who "caused" them. At construction,
-    additional information can be supplied that can be presented to the
-    user if they are a privileged user.
+    Superclass for any error that should be displayed to the player who
+    triggered it. The task runner catches every ``UserError`` raised by
+    a verb and renders it as a bold red line; verbs do not need to
+    ``try/except`` around calls that may raise these. Subclasses
+    customize the default message rendered to the player.
     """
 
     def __init__(self, message, data=None):
@@ -27,17 +28,19 @@ class UserError(Exception):
 
 class UsageError(UserError):
     """
-    This exception is available as a convenience to verbs that
-    wish to print an error message and exit (rolling back any changes).
+    Raise when the player invoked a verb with bad syntax or missing
+    arguments. The constructor takes the message string verbatim — that
+    string is what the player sees. ``raise UsageError(f"Usage: {verb_name} <target>")``
+    is the conventional pattern.
     """
 
 
 class AmbiguousObjectError(UserError):
     """
-    When this class is raised, it means that at some point a single
-    object was expected, but multiple ones were found instead.
-    When printed to the user, this shows a list of matching items,
-    along with their unique IDs, so the user can choose the correct one.
+    Raised when a name resolves to more than one object. Default
+    message: ``When you say, "<name>", do you mean <obj1>, <obj2>, or
+    <obj3>?`` — the matching objects are listed by name and ``#id`` so
+    the player can disambiguate.
     """
 
     def __init__(self, name, matches, message=None):
@@ -60,11 +63,9 @@ class AmbiguousObjectError(UserError):
 
 class AmbiguousVerbError(UserError):
     """
-    When this class is raised, it means that when searching for a verb,
-    multiple possibilities were encountered. There are some uncertainties
-    about whether this should be presented to the user or not, since there
-    is little they can do about it, unless they are wizardly.
-    When printed to the user, this shows a list of objects with matching verbs.
+    Raised when verb dispatch finds more than one matching verb at the
+    same object. Default message: ``More than one object defines
+    "<name>": <obj1>, <obj2>, and <obj3>.``
     """
 
     def __init__(self, name, matches):
@@ -84,7 +85,11 @@ class AmbiguousVerbError(UserError):
 
 class AccessError(PermissionError):
     """
-    A more specific kind of PermissionError.
+    Subclass of Python's ``PermissionError`` raised by model-layer
+    permission checks (``Object.save()``, ``Verb.__call__()``, etc.)
+    when the caller lacks the required permission. Default message:
+    ``<accessor> is not allowed to '<action>' on <subject>``. The task
+    runner catches ``PermissionError`` automatically.
     """
 
     def __init__(self, accessor, access_str, subject):
@@ -106,14 +111,17 @@ class RecursiveError(UserError):
 
 class QuotaError(UserError):
     """
-    Raised if the user tries to create objects he does not have enough quota for.
+    Raised when ``@create`` is invoked by a player whose object quota is
+    exhausted. Default message: ``You don't have enough quota to create
+    that.``
     """
 
 
 class NoSuchPrepositionError(UserError):
     """
-    Raised by the parser when the programmer attempts to retreive the object
-    for a preposition that was not used in the sentence.
+    Raised by parser methods like :meth:`Parser.get_pobj_str` when the
+    requested preposition was not present in the player's command.
+    Default message: ``I don't understand you.``
     """
 
     def __init__(self, prep):
@@ -122,9 +130,9 @@ class NoSuchPrepositionError(UserError):
 
 class NoSuchObjectError(UserError):
     """
-    Most often raised by the parser when a verb requests an object that is not
-    there. If the verb is written correctly, means the user tried to manipulate
-    a non-existant object (a typo, or other misteak).
+    Raised when a name does not resolve to any object in scope —
+    typically by :meth:`Parser.get_dobj` or :func:`moo.sdk.lookup`.
+    Default message: ``There is no '<name>' here.``
     """
 
     def __init__(self, name):
@@ -133,7 +141,8 @@ class NoSuchObjectError(UserError):
 
 class NoSuchVerbError(UserError):
     """
-    Raised by the parser when it cannot find a verb for a sentence.
+    Raised by the parser when no verb on any candidate object matches
+    the typed command. Default message: ``I don't know how to do that.``
     """
 
     def __init__(self, name):
@@ -142,7 +151,9 @@ class NoSuchVerbError(UserError):
 
 class NoSuchPropertyError(UserError):
     """
-    Raised by the system when it cannot find a needed property.
+    Raised by :meth:`Object.get_property` when the named property does
+    not exist on the object or any of its ancestors. Default message:
+    ``There is no '<name>' property defined.``
     """
 
     def __init__(self, name, origin=None):

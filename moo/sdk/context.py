@@ -39,13 +39,31 @@ class _Context:
     def __setattr__(self, name, value):
         raise AttributeError("context attributes are read-only")
 
-    caller = descriptor("caller")  # Code runs with the permission of this object
-    player = descriptor("player")  # This object that originally invoked this session, defaults to original caller
-    writer = descriptor("writer")  # A callable that will print to the player's console
+    #: The Object whose verb code is currently executing. Shifts as
+    #: verbs invoke other verbs. Permission checks evaluate against
+    #: this, not :attr:`player`.
+    caller = descriptor("caller")
+    #: The Object that originated the command. Stays anchored to the
+    #: session initiator across nested verb calls. Use this for "who is
+    #: acting" logic.
+    player = descriptor("player")
+    #: Callable that ``print()`` ends up calling. Sends a single string
+    #: to the originating player's connection.
+    writer = descriptor("writer")
+    #: The :class:`Parser` for the current command. ``None`` when a
+    #: Celery task re-invokes a verb without an active player command
+    #: (e.g. scheduled :func:`invoke` calls).
     parser = descriptor("parser")
-    task_id = descriptor("task_id")  # The current task ID
-    task_time = descriptor("task_time")  # TaskTime(elapsed, time_limit, remaining) for the current task
-    caller_stack = descriptor("caller_stack")  # A stack of callers, with the current caller at the end
+    #: The Celery task ID for the current execution.
+    task_id = descriptor("task_id")
+    #: ``TaskTime(elapsed, time_limit, remaining)`` namedtuple in
+    #: seconds. ``None`` when no time limit is configured. Used for
+    #: time-aware continuation.
+    task_time = descriptor("task_time")
+    #: Stack of caller frames accumulated as verbs invoke sub-verbs.
+    #: The returned list is a copy; mutating it does not affect the
+    #: live stack.
+    caller_stack = descriptor("caller_stack")
 
 
 context = _Context()

@@ -40,23 +40,33 @@ class PrepositionSpecifier(models.Model):
 
 
 class Verb(models.Model, AccessibleMixin):
-    #: The Python code for this Verb
+    #: The Python source code for this Verb.
     code = models.TextField(blank=True, null=True)
-    #: Optional Git repo this code is from
+    #: The :class:`Repository` row identifying the dataset this verb's
+    #: source came from. Populated by ``load_verbs``; ``None`` for verbs
+    #: created in-database via ``@edit``.
     repo = models.ForeignKey("Repository", related_name="+", blank=True, null=True, on_delete=models.SET_NULL)
-    #: Optional name of the code file within the repo
+    #: Absolute filesystem path to the verb source file. ``@reload`` uses
+    #: this to re-read the file. ``None`` for in-database verbs.
     filename = models.CharField(max_length=255, blank=True, null=True)
-    #: Optional Git ref of the code file within the repo
+    #: Git ref of the verb source. Reserved for future Git-backed verb
+    #: sources; not yet wired into the bootstrap loader.
     ref = models.CharField(max_length=255, blank=True, null=True)
-    #: The owner of this Verb. Changes require `entrust` permission.
+    #: The Object whose permissions this verb runs with. Becomes
+    #: ``context.caller`` while the verb is executing. Changes require
+    #: ``entrust`` permission.
     owner = models.ForeignKey("Object", related_name="+", blank=True, null=True, on_delete=models.SET_NULL)
-    #: The object on which this Verb is defined
+    #: The Object the verb is attached to. Becomes ``this`` inside the
+    #: verb body.
     origin = models.ForeignKey("Object", related_name="verbs", on_delete=models.CASCADE)
-    #: If the Verb can be called with a direct obect
+    #: Direct object specifier. One of ``this``, ``any``, ``none``, or
+    #: ``either`` — controls how the parser matches the verb against a
+    #: typed direct object.
     direct_object = models.CharField(
         max_length=255, choices=settings.OBJECT_SPECIFIER_CHOICES, db_index=True, default="none", db_default="none"
     )
-    #: If the Verb can be called with an indirect obect
+    #: Indirect object specifiers — one entry per accepted preposition,
+    #: each with its own ``this``/``any``/``none`` rule.
     indirect_objects = models.ManyToManyField(PrepositionSpecifier, related_name="+", blank=True)
 
     do_not_call_in_templates = True

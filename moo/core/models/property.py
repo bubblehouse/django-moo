@@ -16,17 +16,26 @@ class Property(models.Model, AccessibleMixin):
             models.Index(fields=["origin", "name"], name="property_origin_name_idx"),
         ]
 
-    #: Name of the Property
+    #: Name of the Property. Unique per ``origin``.
     name = models.CharField(max_length=255, db_index=True)
-    #: Value of the Property
+    #: Serialised value of the Property. ``Object.get_property()`` returns
+    #: the deserialised Python value; read this field directly only when
+    #: you need the raw moojson representation.
     value = models.TextField(blank=True, null=True)
-    #: Type of the Property
+    #: One of ``string``, ``python``, or ``dynamic``. Controls how
+    #: ``value`` is decoded.
     type = models.CharField(max_length=255, choices=[(x, x) for x in ("string", "python", "dynamic")])
-    #: The owner of this Property. Changes require `entrust` permission.
+    #: The Object that owns this Property row. Changes require ``entrust``
+    #: permission.
     owner = models.ForeignKey("Object", related_name="+", null=True, on_delete=models.SET_NULL)
-    #: The object on which this Property is defined
+    #: The Object the Property is defined on. Inheritance copies the
+    #: Property to descendants when they're created.
     origin = models.ForeignKey("Object", related_name="properties", on_delete=models.CASCADE)
-    #: If True, this Property’s owner will be reassigned on child instances
+    #: If ``True``, descendants keep the parent's ``owner`` when they
+    #: inherit the Property. If ``False`` (the default), each descendant's
+    #: row is owned by the descendant's owner. See
+    #: :doc:`/reference/properties` for the LambdaMOO ``c``-bit equivalent
+    #: and when to use it.
     inherit_owner = models.BooleanField(default=False)
 
     __original_inherit_owner = None

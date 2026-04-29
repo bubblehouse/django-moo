@@ -404,15 +404,22 @@ class Object(models.Model, AccessibleMixin):
         replace: bool = False,
     ):
         """
-        Defines a new :class:`.Verb` on the given object.
+        Create or replace a :class:`.Verb` on this object.
 
-        :param names: a list of names for the new verb
-        :param code: the Python code for the new Verb
-        :param owner: the owner of the Verb being created
-        :param repo: optional, the Git repo this code is from
-        :param filename: optional, the name of the code file within the repo
-        :param direct_object: a direct object specifier for the verb
-        :param indirect_objects: a list of indirect object specifiers for the verb
+        :param names: one or more names/aliases for the verb (passed as
+            positional args, e.g. ``add_verb("@reload", "reload_batch", ...)``)
+        :param code: the Python source for the verb body
+        :param owner: the owner of the Verb row. Ignored when a
+            ``ContextManager`` is active — the originating player wins.
+        :param repo: optional :class:`Repository` row identifying the
+            dataset this verb's source came from
+        :param filename: optional absolute path to the source file on
+            disk; used by ``@reload`` to re-read the file
+        :param direct_object: ``this`` / ``any`` / ``none`` / ``either``
+        :param indirect_objects: dict mapping preposition → specifier
+            (each specifier is ``this`` / ``any`` / ``none``)
+        :param replace: if ``True`` and a verb with a matching name or
+            filename already exists, overwrite it in place
         """
         self.can_caller("write", self)
         owner = ContextManager.get("player") or ContextManager.get("caller") or owner or self
@@ -682,12 +689,15 @@ class Object(models.Model, AccessibleMixin):
 
     def set_property(self, name, value, inherit_owner=False, owner=None):
         """
-        Defines a new :class:`.Property` on the given object.
+        Create or update a :class:`.Property` on this object.
 
-        :param names: a list of names for the new Property
-        :param value: the value for the new Property
-        :param inherit_owner: if True, this property's owner will be reassigned on child instances
-        :param owner: the owner of the Property being created
+        :param name: the property name (unique per object)
+        :param value: the property value; serialised via moojson
+        :param inherit_owner: if ``True``, descendants keep this property's
+            ``owner`` when they inherit it. If ``False`` (the default),
+            descendants rebase ownership to the descendant's own owner.
+        :param owner: the owner of the Property row. Ignored when a
+            ``ContextManager`` is active — the originating player wins.
         """
         from .. import moojson
 
@@ -1111,9 +1121,17 @@ class AncestorCache(models.Model):
             models.Index(fields=["ancestor"], name="ancestorcache_ancestor_idx"),
         ]
 
+    #: The descendant Object — the row says "this object inherits from
+    #: ``ancestor`` at ``depth`` hops".
     descendant = models.ForeignKey(Object, related_name="ancestor_cache", on_delete=models.CASCADE)
+    #: The ancestor Object reachable from ``descendant``.
     ancestor = models.ForeignKey(Object, related_name="ancestor_descendants", on_delete=models.CASCADE)
+    #: Number of hops from ``descendant`` to ``ancestor``. ``depth=1``
+    #: is a direct parent, ``depth=2`` is a grandparent, and so on.
     depth = models.IntegerField()
+    #: ``Relationship.weight`` of the depth-1 link leading to this
+    #: ancestor. Higher weight wins when multiple inheritance paths
+    #: reach the same ancestor.
     path_weight = models.IntegerField()
 
 
