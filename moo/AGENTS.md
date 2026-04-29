@@ -38,9 +38,9 @@ The `moo` package is organized as a Django project with the following main compo
 
 **Key Components**:
 
-- `default.py`: Creates the production game world with rooms, players, and other game objects
-- `test.py`: Creates a minimal test dataset used by pytest
-- `default_verbs/`: Directory containing verb files for the default dataset
+- `default/`: Bootstrap package with the production game world. `__init__.py` is the orchestrator; numbered scripts (`010_core_classes.py`, `020_utility_objects.py`, ...) run in sorted order
+- `test.py`: Flat module providing the minimal test dataset used by the pytest `t_init` fixture
+- `default_verbs/`: Verb sources for the default dataset, organised by root-class name (`player/`, `room/`, `thing/`, ...)
 
 ### `/moo/shell` - SSH Server & Terminal Interface
 
@@ -76,7 +76,6 @@ The `moo` package is organized as a Django project with the following main compo
 - `DEFAULT_PERMISSIONS`: Core permission strings for the ACL system
 - `PREPOSITIONS`: MOO preposition definitions
 - `MOO_ATTRIB_CACHE_TTL`: TTL in seconds for the Redis cross-session verb/property cache (default 120). Set to 0 in `test.py` to prevent stale entries from poisoning tests when PKs are reused after sequence resets.
-- `MOO_BATCH_VERB_DISPATCH`: When `True`, the parser issues two bulk queries against `AncestorCache` instead of sequential per-object `_lookup_verb()` calls (experimental, default `False`). Requires migration 0025.
 
 ## Development Guidelines for `moo` Package
 
@@ -220,7 +219,7 @@ def test_drop_from_inventory(t_init: Object, t_wizard: Object):
 
         widget.refresh_from_db()
         assert widget.location == lab
-        assert not printed
+        assert printed == ["You drop widget."]
 ```
 
 Verbs can also be called as Python methods inside `code.ContextManager`, bypassing the parser — useful for testing helpers and message verbs:
@@ -229,7 +228,7 @@ Verbs can also be called as Python methods inside `code.ContextManager`, bypassi
 with code.ContextManager(t_wizard, _writer):
     system = lookup(1)
     widget = create("widget", parents=[system.thing], location=t_wizard)
-    assert widget.drop_succeeded_msg() == f"You drop {widget}."
+    assert widget.drop_succeeded_msg() == f"You drop {widget.title()}."
 ```
 
 For commands that send connection-level notifications (movement, `say`), wrap with `pytest.warns`:
@@ -256,10 +255,10 @@ assert "You leave" in str(warnings.list[0].message)
 uv run pytest -n auto
 
 # Run specific test file
-uv run pytest -n auto moo/core/tests/test_invoke_verb.py
+uv run pytest -n auto moo/core/tests/test_code.py
 
 # Run specific test function
-uv run pytest -n auto moo/core/tests/test_invoke_verb.py::test_successful_verb_execution
+uv run pytest -n auto moo/core/tests/test_code.py::test_trivial_printing
 
 # Run with verbose output
 uv run pytest -n auto -vv

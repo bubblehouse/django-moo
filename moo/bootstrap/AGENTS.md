@@ -8,9 +8,9 @@ The bootstrap system initializes the game database with default game objects, cl
 
 ### Files
 
-- `default.py`: Creates the `default` game world with rooms, players, and other game entities
-- `test.py`: Creates the `test` dataset used by pytest
-- `default_verbs/`: Directory of verb files that are installed on `default` game objects
+- `default/`: Bootstrap package for the `default` game world. `__init__.py` orchestrates numbered scripts (`010_core_classes.py`, `020_utility_objects.py`, ...) executed in sorted order
+- `test.py`: Flat module providing the `test` dataset used by core pytest tests
+- `default_verbs/`: Verb files installed on `default` game objects, organised by root-class name
 
 ### Datasets
 
@@ -23,8 +23,8 @@ The default dataset bootstraps four player classes, each inheriting from the pre
 
 | Class         | Location             | Verbs they own                                                       |
 |---------------|----------------------|----------------------------------------------------------------------|
-| `$player`     | `default_verbs/player/`     | Everyday commands (`say`, `look`, `tell`, `inventory`, `@password`, PREFIX/SUFFIX, `a11y`, `WRAP`) |
-| `$builder`    | `default_verbs/builder/`    | World-building commands (`@create`, `@dig`, `@describe`, `@alias`, `@add_key`, `@burrow`) |
+| `$player`     | `default_verbs/player/`     | Everyday commands (`say`, `look`, `tell`, `inventory`, `@password`, `@keys`, `@add-key`, `@remove-key`, PREFIX/SUFFIX, `a11y`, `WRAP`) |
+| `$builder`    | `default_verbs/builder/`    | World-building commands (`@create`, `@dig`, `@describe`, `@alias`, `@burrow`) |
 | `$programmer` | `default_verbs/programmer/` | Verb authoring (`@edit`, `@eval`, `@reload`)                         |
 | `$wizard`     | `default_verbs/wizard/`     | Administrative (`@version` and whatever else requires full rights)   |
 
@@ -149,16 +149,18 @@ Access is limited to (from settings):
 - `re` - Regular expressions
 - `datetime` - Date and time utilities
 - `time` - Time utilities
+- `random` - Pseudo-random number generation
+
+Wizard-only modules (`WIZARD_ALLOWED_MODULES`): `moo.bootstrap`, `moo.core.models`, `moo.core.models.{object,verb,property}`.
 
 **`ALLOWED_BUILTINS`**:
 
-- `dict` - Dictionary creation
-- `enumerate` - Enumerate iterables
-- `getattr` - Get attributes
-- `hasattr` - Check attributes
-- `list` - List creation
-- `set` - Set creation
-- `sorted` - Sort iterables
+- `all`, `any` - Boolean reductions
+- `dict`, `list`, `set` - Container constructors
+- `enumerate`, `sorted` - Iteration helpers
+- `getattr`, `hasattr` - Wrapped to reject underscore names
+- `max`, `min`, `sum` - Numeric reductions
+- `PermissionError` - Exception class for ACL refusals
 
 ### Important Restrictions
 
@@ -235,21 +237,36 @@ for obj in context.caller.location.contents.all():
 
 ### Early Return Pattern
 
-One advantage of RestrictedPython is that `return` can be used anywhere:
+One advantage of RestrictedPython is that `return` can be used anywhere
+in the verb body, not just at function end. For player-typed commands
+remember that the return value is discarded — use `print()` for player
+output and a bare `return` to exit early:
 
 ```python
-#!moo verb check_permission --on $player
+#!moo verb @lookup --on $programmer --dspec any
 
-"""Check if caller has permission."""
-if not this.can_read():
-    return "Permission denied."
+# pylint: disable=return-outside-function,undefined-variable
 
-# Multiple possible returns
-if not args:
-    return "Syntax: check_permission <object>"
+from moo.sdk import context
 
-return "Permission okay."
+if not context.parser.has_dobj_str():
+    print(f"Usage: {verb_name} <name>")
+    return
+
+name = context.parser.get_dobj_str()
+matches = list(this.find(name))
+if not matches:
+    print(f"No object named {name!r}.")
+    return
+
+for obj in matches:
+    print(f"  {obj}")
 ```
+
+Helper verbs invoked as methods (`obj.foo()` from another verb) do
+have their return values consumed normally — that's how
+`$thing.take_succeeded_msg()` builds the formatted string that
+`take.py` prints.
 
 ## Working with the MOO Context
 
@@ -367,8 +384,8 @@ with code.ContextManager(t_wizard, _writer):
     widget = create("widget", parents=[system.thing], location=t_wizard)
 
     # Equivalent to the MOO expression widget:drop_succeeded_msg()
-    assert widget.drop_succeeded_msg() == f"You drop {widget}."
-    assert widget.drop_failed_msg() == f"You can't seem to drop {widget} here."
+    assert widget.drop_succeeded_msg() == f"You drop {widget.title()}."
+    assert widget.drop_failed_msg() == f"You can't seem to drop {widget.title()} here."
 ```
 
 To test that a lock prevents a `moveto`, set a `key` property on the destination. The expression `["!", id]` blocks the object whose id matches:
@@ -400,12 +417,18 @@ Verbs in `default_verbs/` are loaded by `bootstrap.load_verbs()` at the end of `
 
 ## Best Practices for Verb Development
 
-### 1. Check Permissions Early
+### 1. Just Attempt the Operation
 
-```python
-if not this.can_caller("write"):
-    return "Permission denied."
-```
+The permission system fires automatically at the model layer. Verbs should attempt
+the operation and let `AccessError` propagate — the task runner catches
+`PermissionError` and shows the player a clean red message. Do not write
+`if not obj.can_caller("write"): print("Permission denied.")` ahead of `obj.save()`;
+the model-layer guard about to fire produces a better message than a hand-rolled one.
+
+`can_caller(perm)` is for *output shaping* (e.g. an `examine` verb that hides an
+"edit this" hint from non-owners), not for guarding writes. Use `is_wizard()` or
+`owns()` for role/ownership branching, e.g. when a verb wants to take a different
+action based on who's calling.
 
 ### 2. Validate Arguments
 

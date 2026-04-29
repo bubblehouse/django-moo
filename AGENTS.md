@@ -55,8 +55,8 @@ This document provides essential context for AI models interacting with the Djan
     * `/moo/core/models`: Django ORM models defining the game object hierarchy, properties, verbs, permissions, and ACLs
     * `/moo/core/management/commands`: Django management commands (moo_init, moo_enableuser, etc.)
     * `/moo/core/tests`: Unit and integration tests using pytest
-  * `/moo/bootstrap`: Dataset initialization system with `default.py` (game world data) and `test.py` (for testing)
-    * `/moo/bootstrap/default_verbs`: Pre-written verb code installed on `default` game objects only; `default_verbs/tests/` contains pytest integration tests for those verbs
+  * `/moo/bootstrap`: Dataset initialization system. `default/` is a package whose `__init__.py` orchestrates numbered scripts (`010_core_classes.py`, `020_utility_objects.py`, ...) executed in sorted order. `test.py` is a flat module providing the minimal test dataset.
+    * `/moo/bootstrap/default_verbs`: Verb sources for `default`, organised by root-class name (`player/`, `room/`, `thing/`, `programmer/`, ...). `default_verbs/tests/` contains pytest integration tests for those verbs.
     * Bootstrap helpers `get_or_create_object`, `load_verb_source`, and `load_verbs` (in `moo/bootstrap/__init__.py`) are idempotent — use them instead of `Object.objects.create()` in any bootstrap file intended to support `moo_init --sync`
   * `/moo/shell`: SSH server implementation and interactive prompt system
   * `/moo/settings`: Django configuration modules (base.py, dev.py, test.py, local.py)
@@ -233,7 +233,7 @@ usable.
     * Core tests in `moo/core/tests/` operate on the `test` dataset
     * Bootstrap-related tests in `moo/bootstrap/default_verbs/tests/`
     * Test data defined in `moo/bootstrap/test.py`
-    * Game data defined in `moo/bootstrap/default.py`
+    * Game data defined in the `moo/bootstrap/default/` package (orchestrator + numbered scripts)
   * **Running Tests**:
 
     ```bash
