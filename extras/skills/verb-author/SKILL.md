@@ -203,12 +203,12 @@ room.announce_all_but(obj, msg)          # all occupants except obj
 
 ## SDK Functions for Privileged Operations
 
-When a verb needs to access restricted functionality (compilation, wizard-only modules, etc.), create a function in `moo/sdk.py` rather than trying to import from `moo.core.*` in verb code.
+When a verb needs to access restricted functionality (compilation, wizard-only modules, etc.), create a function in the appropriate `moo/sdk/*.py` submodule (`output.py`, `objects.py`, `tasks.py`, `admin.py`, `mail.py`, `password.py`, `ssh_keys.py`) and re-export it from `moo/sdk/__init__.py`. Do not try to import from `moo.core.*` in verb code.
 
 **Pattern for SDK functions:**
 
 ```python
-# In moo/sdk.py
+# In moo/sdk/<submodule>.py
 def privileged_operation(args):
     """Does something that requires restricted access."""
     from moo.core import restricted_module  # Import at function level
@@ -520,7 +520,7 @@ Rules:
 - **`--dspec any` is required for verbs that need a dobj:** Without it, the verb won't match commands with direct objects. The verb will never be invoked if a dobj is typed.
 - **`get_dobj()` vs `get_dobj(lookup=True)`:** By default, `get_dobj()` only searches the player's inventory and current room. Use `lookup=True` for global lookups (e.g., `@alias #45 as "thing"` needs global lookup to work with object IDs).
 - **`eval` is a reserved name:** Can't name SDK functions or variables `eval` — RestrictedPython blocks it. Use alternatives like `moo_eval`.
-- **Can't import from `moo.core.*` in verb code:** These modules aren't in `ALLOWED_MODULES`. Create SDK functions in `moo/sdk.py` for privileged operations instead.
+- **Can't import from `moo.core.*` in verb code:** These modules aren't in `ALLOWED_MODULES`. Create SDK functions in the appropriate `moo/sdk/*.py` submodule and re-export from `moo/sdk/__init__.py` for privileged operations instead.
 - **Exception handling limitations:** Can't use `e.__class__.__name__` or `type(e)` in verb error handlers. Use `str(e)` or just stringify: `print(f"Error: {e}")`.
 - **`verb_name` shadowing causes `UnboundLocalError`:** `verb_name` is injected into the verb's local scope. If you assign to a variable named `verb_name` *anywhere* in the verb body (even after the first read), Python treats it as a local for the entire function — including lines before the assignment. Any read of `verb_name` before that assignment raises `UnboundLocalError`. Use a different name (e.g. `the_verb_name`, `current_verb`) for any local variable that would shadow it.
 

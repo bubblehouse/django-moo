@@ -53,15 +53,15 @@ Scan the layers for common drift types. Work through this checklist:
 
 **Return value behavior** — `return "..."` from a verb does not print to the player. All three layers should state this clearly with an example.
 
-**Parser behavior** — preposition synonym groups, verb search order, `--dspec`/`--ispec` nuances. Sphinx guide `10_parser.md` and `11_creating_verbs.md` are most likely to be stale.
+**Parser behavior** — preposition synonym groups, verb search order, `--dspec`/`--ispec` nuances. The Sphinx homes are `docs/source/reference/parser.md` (lookup-style content) and `docs/source/explanation/parser.md` (the conceptual story); both are most likely to drift after parser changes.
 
-**SDK functions** — new functions added to `moo/sdk.py` (e.g. `open_editor`, `open_paginator`, `players()`, `connected_players()`, `set_task_perms()`) need entries in `12_more_verbs.md` and the `verb-author` skill's `references/sdk.md`.
+**SDK functions** — new functions added to any `moo/sdk/*.py` submodule (`output.py`, `objects.py`, `tasks.py`, `admin.py`, `mail.py`, `ssh_keys.py`, `password.py`) need entries in `docs/source/reference/builtins.md` (the canonical reference, organised by group) and a one-line mention in `docs/source/how-to/advanced-verbs.md` "Common SDK helpers" if verb authors will reach for it. Also update the `verb-author` skill's `references/sdk.md`.
 
 **New verb patterns** — any new verb added to `moo/bootstrap/default_verbs/` that introduces a pattern not already documented (property access, object creation, permission checks).
 
-**Sandbox restrictions** — new `ALLOWED_MODULES`, new `BLOCKED_IMPORTS`, or new guard mechanisms belong in `09_sandbox_security.md` and the `sandbox-auditor` skill.
+**Sandbox restrictions** — new `ALLOWED_MODULES`, new `BLOCKED_IMPORTS`, or new guard mechanisms belong in `docs/source/reference/sandbox.md` (the enforcement detail) and the `sandbox-auditor` skill.
 
-**New object classes** — `$furniture`, `$container`, `$note` additions need coverage in `game-designer` skill and potentially `04_objects.md`.
+**New object classes** — `$furniture`, `$container`, `$note` additions need coverage in the `game-designer` skill and potentially `docs/source/reference/objects.md`.
 
 **Skill README files** — each skill directory has a `README.md` targeting human developers (not AI agents). When a skill's capabilities change — new reference files added, trigger phrases updated, workflow phases added or renamed — update the relevant `README.md` alongside the `SKILL.md`. Also update `extras/skills/README.md` if new skills are added or removed.
 
@@ -110,7 +110,7 @@ Memory files capture ephemeral investigations. If a memory file contains a stabl
 For each change, make one commit per destination layer:
 
 ```
-docs: update 11_creating_verbs.md with correct output mechanism names
+docs: update how-to/creating-verbs.md with correct output mechanism names
 docs: update verb-author skill with $furniture pattern
 ```
 

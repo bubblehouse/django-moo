@@ -10,17 +10,17 @@ This skill guides an agent through a systematic audit pass of the RestrictedPyth
 
 ## Context
 
-The sandbox has gone through 16 audit passes with 50 vectors sealed across 630 tests. Each pass follows the same cycle: identify a candidate attack surface, write a test that demonstrates the escape (or confirms it is blocked), then seal the hole if it is open.
+The sandbox has gone through 21+ audit passes. Each pass follows the same cycle: identify a candidate attack surface, write a test that demonstrates the escape (or confirms it is blocked), then seal the hole if it is open.
 
-See [audit-history.md](references/audit-history.md) for a complete record of all sealed holes and future areas. The six major attack categories, with full attack paths and guard mechanisms, are in [attack-categories.md](references/attack-categories.md).
+See [audit-history.md](references/audit-history.md) for a complete record of all sealed holes and future areas — that file is the source of truth for pass count, vectors sealed, and per-pass focus. The six major attack categories, with full attack paths and guard mechanisms, are in [attack-categories.md](references/attack-categories.md).
 
 ## Before You Start
 
 1. Read [audit-history.md](references/audit-history.md) — understand what has been sealed, what gaps are documented, and what is flagged for future work.
 2. Read `moo/core/code.py` — `get_restricted_environment()`, `safe_getattr`, `get_protected_attribute`, `_write_`, `_getitem_`, `INSPECT_ATTRIBUTES` checks, QuerySet guard, `str.format` guard.
 3. Read `moo/settings/base.py` — `ALLOWED_BUILTINS`, `ALLOWED_MODULES`, `WIZARD_ALLOWED_MODULES`, `BLOCKED_IMPORTS`.
-4. Read `moo/sdk.py` — the public verb API.
-5. Scan the existing tests in `moo/core/tests/test_security_*.py` to understand what is already covered.
+4. Read `moo/sdk/__init__.py` — the public verb API (and the underscore aliases `_ContextManager`, `_contextmanager`, `_log` that block dangerous-name imports).
+5. Scan the existing tests in `moo/core/tests/test_security_*.py` to understand what is already covered (split across `test_security_{builtins,context,imports,sandbox,queryset,random}.py` and the per-model `test_security_model_{acl,object,property,verb,mail}.py`).
 
 Run the baseline before making any changes:
 
@@ -82,7 +82,7 @@ Seal in the narrowest possible scope, in this order of preference:
 1. **`moo/core/code.py`** — add a check to `safe_getattr`, `get_protected_attribute`, `_write_`, or `_getitem_`.
 2. **`moo/settings/base.py`** — add to `BLOCKED_IMPORTS` or remove from `ALLOWED_BUILTINS` / `ALLOWED_MODULES`.
 3. **Model `save()`/`delete()` methods** — add `can_caller()` checks in `moo/core/models/`.
-4. **`moo/sdk.py`** — rename an exported name with an underscore prefix.
+4. **`moo/sdk/__init__.py`** — rename an exported name with an underscore prefix (the `_ContextManager`/`_contextmanager`/`_log` aliases are the canonical examples).
 
 Do not add a broad block that would break legitimate verb code. Always add a "still works" regression test alongside the block test.
 

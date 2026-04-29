@@ -132,7 +132,7 @@ Python docstrings must use RST format: `:param x:`, `:type x:`, `:return:`, `:rt
 | What does Sphinx say about architecture? | `Read docs/source/explanation/architecture.md` |
 | What does verb-author skill say about the parser API? | `Read extras/skills/verb-author/references/parser-api.md` |
 | What does AGENTS.md say about test patterns? | `Read moo/AGENTS.md` |
-| What got added to the SDK recently? | `git log --oneline -- moo/sdk.py` |
+| What got added to the SDK recently? | `git log --oneline -- moo/sdk/` |
 | What verbs were added recently? | `git log --oneline -- moo/bootstrap/default_verbs/` |
 | What autonomous agents exist and what do they do? | `Read extras/agents/README.md`, then each agent's `README.md` |
 | How does a specific Tradesman work? | `Read extras/agents/<name>/README.md` and `extras/agents/<name>/SOUL.md` |
@@ -168,6 +168,10 @@ Python docstrings must use RST format: `:param x:`, `:type x:`, `:return:`, `:rt
 
 **What agent READMEs do NOT cover:**
 
-- Full moo-agent CLI reference (that lives in `docs/source/how-to/moo-agent.md`)
-- SOUL architecture internals (covered in the Sphinx how-to)
 - Game-designer command syntax (covered in `extras/skills/game-designer/references/`)
+- Sandbox audit history (covered in `extras/skills/sandbox-auditor/references/`)
+
+Note: per project policy, public Sphinx documentation does not reference
+moo-agent or related autonomous-agent tooling. Anything agent-specific
+lives in `extras/agents/` and `extras/skills/`, not under
+`docs/source/`.

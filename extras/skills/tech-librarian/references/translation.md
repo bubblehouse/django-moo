@@ -4,24 +4,25 @@
 
 Before porting anything to Sphinx, decide which Diátaxis category the content fits. Content in the wrong category is the most common structural problem — gotchas end up as reference entries, conceptual explanations get buried in how-to guides.
 
-| Category | Purpose | Hallmark | Sphinx guide files |
-|----------|---------|---------|-------------------|
-| **Tutorial** | Learning by doing | Linear narrative, guided outcome | `01_introduction.md` |
-| **How-to** | Solving a specific task | Goal-first, steps, no theory | `11_creating_verbs.md`, `12_more_verbs.md` |
-| **Explanation** | Understanding a concept | "Why", trade-offs, context | `02_architecture.md`, `10_parser.md` |
-| **Reference** | Lookup while working | Exhaustive, accurate, no narrative | `08_verbs.md`, `14_builtins.md`, `09_sandbox_security.md` |
+| Category | Purpose | Hallmark | Sphinx home |
+|----------|---------|---------|-------------|
+| **Tutorial** | Learning by doing | Linear narrative, guided outcome | `tutorials/player-basics.md`, `tutorials/first-verb.md` |
+| **How-to** | Solving a specific task | Goal-first, steps, no theory | `how-to/creating-verbs.md`, `how-to/advanced-verbs.md` |
+| **Explanation** | Understanding a concept | "Why", trade-offs, context | `explanation/architecture.md`, `explanation/parser.md` |
+| **Reference** | Lookup while working | Exhaustive, accurate, no narrative | `reference/verbs.md`, `reference/builtins.md`, `reference/sandbox.md` |
 
 **Quick classification for common skill content types:**
 
 | Content type | Diátaxis category | Likely destination |
 |---|---|---|
-| API name correction (`get_pobj_str` not `get_pobj_string`) | Reference | `08_verbs.md` or `12_more_verbs.md` |
-| Gotcha with explanation (`return "..."` not printing) | How-to or Reference | `11_creating_verbs.md` |
-| New SDK function | Reference | `12_more_verbs.md` |
-| Parser behavior (verb search order) | Explanation + Reference | `10_parser.md` |
-| Sandbox restriction (new blocked import) | Reference | `09_sandbox_security.md` |
-| New object class (`$furniture`) | Reference | `04_objects.md` |
-| New workflow (YAML build process) | How-to | `15_development.md` or `16_bootstrapping.md` |
+| API name correction (`get_pobj_str` not `get_pobj_string`) | Reference | `reference/parser.md` (autosource if possible) |
+| Gotcha with explanation (`return "..."` not printing) | How-to | `how-to/creating-verbs.md` |
+| New SDK function | Reference | `reference/builtins.md` (autofunction) plus a one-liner in `how-to/advanced-verbs.md` |
+| Parser behavior (verb search order) | Explanation + Reference | `explanation/parser.md` (concept) and `reference/parser.md` (lookup) |
+| Sandbox restriction (new blocked import) | Reference | `reference/sandbox.md` (autodata if a settings constant) |
+| New object class (`$furniture`) | Reference | `reference/objects.md` |
+| New workflow (YAML build process) | How-to | `how-to/development.md` or `how-to/bootstrapping.md` |
+| Permission semantics | Reference + How-to | `reference/permissions.md` (where each permission is enforced) and `how-to/permissions.md` (when to attempt vs. check) |
 
 ---
 
@@ -104,13 +105,13 @@ These facts have a history of being correct in one layer but missing or wrong in
 
 | Fact | Common gap |
 |------|------------|
-| `print()` output is buffered until Celery completes, arrives after PREFIX/SUFFIX | Missing from Sphinx entirely; in AGENTS.md and memory |
-| `return "..."` does not display to player | In verb-author skill; often missing from Sphinx `11_creating_verbs.md` |
-| `obj.parents.all()` required for iteration | In AGENTS.md; sometimes omitted from Sphinx object model section |
-| `get_pobj_str` not `get_pobj_string` | In AGENTS.md corrections; may be stale in verb-author `parser-api.md` |
-| `has_pobj_str` not `has_pobj_string` | Same |
-| `--dspec either` for optional dobj | In verb-author skill; sometimes missing from `08_verbs.md` |
-| `context.player` vs `this` when dspec is set | In AGENTS.md; needs a clear explanation in Sphinx parser section |
-| `lookup()` raises `NoSuchObjectError`, never returns `None` | In AGENTS.md; often absent from Sphinx |
-| f-string / `str.format` sandbox distinction | In memory; may need a Sphinx callout in `09_sandbox_security.md` |
-| `line_editor=False` required for asyncssh + prompt_toolkit | In memory `editor-cursor-bug.md`; belongs in `17_connection_control.md` |
+| `print()` output is buffered until Celery completes, arrives after PREFIX/SUFFIX | In AGENTS.md and memory; verify still present in `how-to/creating-verbs.md` |
+| `return "..."` does not display to player | In verb-author skill; check `how-to/creating-verbs.md` and `how-to/advanced-verbs.md` |
+| `obj.parents.all()` required for iteration | In AGENTS.md; check `reference/objects.md` |
+| `get_pobj_str` not `get_pobj_string` | Now sourced from `Parser.get_pobj_str` docstring via automethod; verify nothing references the wrong name |
+| `--dspec either` for optional dobj | Should be in `reference/verbs.md` dispatch metadata |
+| `context.player` vs `this` when dspec is set | In `reference/parser.md` "Last match wins" and `how-to/permissions.md` caller-vs-player section |
+| `lookup()` raises `NoSuchObjectError`, never returns `None` | Sourced from `moo.sdk.lookup` docstring via autofunction in `reference/builtins.md` |
+| f-string / `str.format` sandbox distinction | `reference/sandbox.md` "`str.format` and `str.format_map`" |
+| `line_editor=False` required for asyncssh + prompt_toolkit | `explanation/shell-internals.md` AsyncSSH Server section |
+| Permissions just-attempt-it model (don't pre-check `can_caller`) | `how-to/permissions.md`; matching guidance in moo/bootstrap/AGENTS.md "Just Attempt the Operation" |

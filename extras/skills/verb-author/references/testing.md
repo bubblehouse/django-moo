@@ -46,7 +46,7 @@ def test_my_verb(t_init: Object, t_wizard: Object):
 
 Both fixtures come from `moo/conftest.py`:
 
-- **`t_init`** — bootstraps `default.py` and yields the system object (#1). Must be requested via `@pytest.mark.parametrize("t_init", ["default"], indirect=True)`.
+- **`t_init`** — bootstraps the `default/` package and yields the system object (#1). Must be requested via `@pytest.mark.parametrize("t_init", ["default"], indirect=True)`.
 - **`t_wizard`** — returns the Wizard player Object. Wizard starts in The Laboratory.
 
 The `t_wizard` fixture is available in all bootstrap tests without extra parametrize calls.
