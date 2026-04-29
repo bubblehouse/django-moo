@@ -84,10 +84,9 @@ def test_shortcut_handler_cursor_at_end_when_no_percent():
 
 
 def test_generate_prompt_is_stable_marker():
-    """
-    generate_prompt() returns a single stable ``>>> `` marker. Per-room
-    state belongs in GMCP Room.Info so MUD-client mappers and screen
-    readers can rely on a constant prompt pattern.
+    """The prompt is a single stable marker. Per-room state belongs in
+    GMCP Room.Info so MUD-client mappers and screen readers can rely on
+    a constant prompt pattern.
     """
     location = MagicMock()
     location.name = "The Laboratory"

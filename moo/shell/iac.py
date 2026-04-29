@@ -8,8 +8,9 @@ that connect via `sshelnet <https://gitlab.com/bubblehouse/sshelnet>`_ get
 raw 0xFF-prefixed IAC sequences passed through transparently.
 
 Scope: just the IAC framing layer plus the MUD-accessibility protocols
-listed in :issue:`16`. We do not implement the wider telnet spec
-(NAWS, ECHO, SGA, line-mode, etc.).
+listed in `issue #16
+<https://gitlab.com/bubblehouse/django-moo/-/issues/16>`_. We do not
+implement the wider telnet spec (NAWS, ECHO, SGA, line-mode, etc.).
 
 Byte plumbing
 -------------
@@ -99,16 +100,15 @@ class IacParser:
     """
     Byte-feed state machine for IAC sequences.
 
-    Feed raw bytes via :meth:`feed`; get back a list of events and the
-    residual non-IAC bytes (which should be decoded as UTF-8 by the caller).
-    Partial frames across ``feed`` calls are buffered internally.
+    Feed raw bytes via the ``feed`` method; get back a list of events
+    and the residual non-IAC bytes (which should be decoded as UTF-8 by
+    the caller). Partial frames across feed calls are buffered
+    internally.
 
-    Events:
-
-    - ``("cmd", cmd, opt)`` — IAC WILL/WONT/DO/DONT <opt>
-    - ``("sb", opt, payload_bytes)`` — IAC SB <opt> <payload> IAC SE
-    - ``("ga",)`` — IAC GA
-    - ``("eor",)`` — IAC EOR
+    Each event is a tuple. ``("cmd", cmd, opt)`` represents an IAC
+    WILL/WONT/DO/DONT command. ``("sb", opt, payload_bytes)`` is a
+    subnegotiation. ``("ga",)`` and ``("eor",)`` are the GA and EOR
+    end-of-prompt markers.
     """
 
     _NORMAL = 0
@@ -126,7 +126,7 @@ class IacParser:
 
     def feed(self, data: bytes) -> tuple[list[tuple], bytes]:
         """
-        Feed raw bytes; return ``(events, residual)``.
+        Feed raw bytes; return a tuple of (events, residual).
 
         ``residual`` is the portion of ``data`` that was not part of any
         IAC sequence — the caller should decode and forward it to the
@@ -234,7 +234,7 @@ def encode_eor() -> bytes:
 
 def encode_gmcp(module: str, data) -> bytes:
     """
-    Encode a GMCP frame: ``IAC SB GMCP "<module> <json>" IAC SE``.
+    Encode a GMCP subnegotiation frame for the given module name and data.
 
     Per the GMCP spec the payload is the module name, a space, and the
     JSON-encoded value. Empty-value messages omit the JSON.
@@ -247,7 +247,7 @@ def encode_gmcp(module: str, data) -> bytes:
 
 
 def parse_gmcp(payload: bytes) -> tuple[str, object]:
-    """Inverse of :func:`encode_gmcp` — returns ``(module, data_or_None)``."""
+    """Inverse of encode_gmcp — returns the (module, data_or_None) tuple from a GMCP frame payload."""
     text = payload.decode("utf-8", errors="replace")
     space = text.find(" ")
     if space == -1:
@@ -276,7 +276,7 @@ def parse_ttype_is(payload: bytes) -> str:
 
 def parse_mtts_bitfield(value: str) -> int:
     """
-    Parse a third-stage MTTS response (``MTTS <integer bitfield>``).
+    Parse a third-stage MTTS response — the integer bitfield following the MTTS prefix.
     Returns 0 if the value does not match the MTTS format.
     """
     if not value.startswith("MTTS "):
@@ -301,7 +301,7 @@ def is_known_mud_client(ttype_name: str) -> bool:
 
 def encode_mssp(values: dict[str, str | list[str]]) -> bytes:
     """
-    Encode an MSSP response: ``IAC SB MSSP VAR name VAL value ... IAC SE``.
+    Encode an MSSP response with the supplied name/value pairs.
 
     Multi-valued entries repeat the ``VAL`` tag.
     """
@@ -343,7 +343,7 @@ def encode_charset_rejected() -> bytes:
 
 def msp_sound_marker(name: str, volume: int = 100, priority: int = 10) -> str:
     """
-    Return an inline MSP ``!!SOUND(...)`` marker.
+    Return an inline MSP sound marker for the given filename.
 
     Emitted as part of the text stream when MSP is negotiated; clients that
     have not negotiated MSP will render it literally, which is why the SDK
@@ -364,13 +364,13 @@ class IacNegotiator:
     Per-session capability state and outbound command queue.
 
     The SSH server instantiates one of these per connection. It feeds
-    parsed IAC events in via :meth:`handle`, which returns a list of bytes
-    objects to send back on the channel (responses, subnegotiation
-    requests).
+    parsed IAC events in via the ``handle`` method, which returns a list
+    of bytes objects to send back on the channel (responses,
+    subnegotiation requests).
 
-    Capability flags are exposed on ``self.capabilities`` for the shell
-    layer to mirror into ``_session_settings[...]["iac"]`` so verbs in
-    Celery can branch on them.
+    Capability flags are exposed on the ``capabilities`` attribute for
+    the shell layer to mirror into the per-session settings registry so
+    verbs in Celery can branch on them.
     """
 
     # Options we're willing to enable on our side (WILL). SGA is intentionally

@@ -127,6 +127,7 @@ class MooPrompt:
         "location": "#00aa55",
     }
 
+    #: prompt-toolkit Style derived from the prompt palette.
     style = Style.from_dict(_PROMPT_PALETTE)
 
     def __init__(self, user, session=None, mode: str = MODE_RICH):
@@ -829,9 +830,11 @@ class MooPrompt:
     @sync_to_async
     def generate_prompt(self):
         """
-        Build the prompt message tuple — a stable ``>>> `` marker. Stable
-        prompts make MUD-client mappers and screen readers happy; per-room
-        details belong in GMCP ``Room.Info`` (and the room description).
+        Build the prompt message tuple as a stable marker.
+
+        Stable prompts make MUD-client mappers and screen readers happy;
+        per-room details belong in GMCP Room.Info events (and the room
+        description), not in the prompt string.
         """
         return [("class:pound", ">>> ")]
 
@@ -1063,8 +1066,10 @@ class MooPrompt:
 
     def writer(self, s, is_error=False):
         """
-        Render a Rich markup string to the terminal. Quiet mode strips colour;
-        ``_RawAnsi`` values bypass Rich so OSC sequences survive intact.
+        Render a Rich markup string to the terminal.
+
+        Quiet mode strips colour; raw-ansi marker values bypass Rich so
+        OSC sequences survive intact.
 
         :param s: Rich markup string, or ``_RawAnsi`` for OSC passthrough
         :param is_error: reserved for future use; currently unused

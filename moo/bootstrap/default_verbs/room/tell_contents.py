@@ -44,6 +44,7 @@ Also, if the `dark` property of a room is set to a non-zero value, then no conte
 As usual, this verb can be overridden to provide special effects.
 
 Placement-aware display:
+
 - Objects placed with a visible preposition (on, before, beside, over) are grouped under their surface.
   They appear in the surface grouping only if obvious=True.
 - Objects placed with a hidden preposition (under, behind) are never shown in this listing.
