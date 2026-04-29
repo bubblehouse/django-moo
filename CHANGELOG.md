@@ -1,3 +1,10 @@
+## [1.5.2](https://gitlab.com/bubblehouse/django-moo/compare/v1.5.1...v1.5.2) (2026-04-29)
+
+### Bug Fixes
+
+* **shell:** clean up docstrings to silence Sphinx autosummary warnings ([819d1cd](https://gitlab.com/bubblehouse/django-moo/commit/819d1cd037759085f0241cfb4d1305b5369e4466))
+* **verbs:** restore SSH key management verbs to $player ([599d03a](https://gitlab.com/bubblehouse/django-moo/commit/599d03aa40818e2853076f8cddeb93e43e7ba9c0))
+
 ## [1.5.1](https://gitlab.com/bubblehouse/django-moo/compare/v1.5.0...v1.5.1) (2026-04-26)
 
 ### Bug Fixes
