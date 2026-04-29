@@ -132,19 +132,24 @@ docker compose run webapp manage.py moo_init --bootstrap default
 ```
 
 Sync an existing database to pick up new verbs and objects without
-resetting it:
+resetting it. This is the right tool for almost every iteration cycle:
 
 ```bash
 docker compose run webapp manage.py moo_init --bootstrap default --sync
 ```
 
-Reset and re-bootstrap (destroys all data):
+If you need a true reset (destroys all data), tear down and recreate
+the postgres container rather than running `migrate zero`:
 
 ```bash
-docker compose run webapp manage.py migrate zero
+docker compose down -v
+docker compose up -d
 docker compose run webapp manage.py migrate
 docker compose run webapp manage.py moo_init --bootstrap default
 ```
+
+`-v` drops the postgres volume so the next `up` starts from an empty
+database.
 
 Inspect the bootstrapped state from the Django shell:
 

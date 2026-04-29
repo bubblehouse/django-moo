@@ -46,23 +46,20 @@ This installs all dependencies including development tools like PyLint, pytest, 
 
 ### Django Management Commands
 
-Essential management commands for development:
+Essential management commands for development. All examples use
+`docker compose run webapp manage.py`; if you're working inside a Dev
+Container or have activated the project venv, the bare `manage.py
+<command>` form works equivalently.
 
 ```bash
 # Migrate database to latest schema
-python manage.py migrate
-
-# Create a Django superuser
-python manage.py createsuperuser --username yourname
-
-# Connect a Django user to a MOO player/wizard
-python manage.py moo_enableuser --wizard yourname YourWizardName
+docker compose run webapp manage.py migrate
 
 # Initialize the game world with bootstrap data
-python manage.py moo_init
+docker compose run webapp manage.py moo_init
 
 # Access Django interactive shell for debugging
-python manage.py shell
+docker compose run webapp manage.py shell
 ```
 
 ### Creating Player Accounts
@@ -72,16 +69,16 @@ There are three ways to create a player account:
 **`moo_createuser`** — creates a Django user and a linked MOO avatar in one command. Use this for agents, test accounts, or any regular player created from the CLI:
 
 ```bash
-python manage.py moo_createuser yourname YourAvatar --password secret
+docker compose run webapp manage.py moo_createuser yourname YourAvatar --password secret
 ```
 
 Omit `--password` to be prompted. Add `--wizard` to grant in-game wizard privileges.
 
-**Wizard account** — the initial wizard account requires a Django superuser so the admin interface is accessible:
+**Wizard account** — the initial wizard account is a two-step flow because the admin interface needs a Django superuser:
 
 ```bash
-python manage.py createsuperuser --username yourname
-python manage.py moo_enableuser --wizard yourname YourWizardName
+docker compose run webapp manage.py createsuperuser --username yourname
+docker compose run webapp manage.py moo_enableuser --wizard yourname YourWizardName
 ```
 
 **Web registration** — regular players can sign up through the web interface at `/accounts/signup/`. The form creates a Django user and a linked MOO avatar in one step. Email verification is required by default (`ACCOUNT_EMAIL_VERIFICATION = "mandatory"`).
@@ -113,10 +110,10 @@ mode using the launch job on the "Run and Debug" tab.
 uv run pytest -n auto --cov
 
 # Run a specific test file
-uv run pytest -n auto moo/core/tests/test_invoke_verb.py
+uv run pytest -n auto moo/core/tests/test_code.py
 
 # Run a specific test function
-uv run pytest -n auto moo/core/tests/test_invoke_verb.py::test_successful_verb_execution
+uv run pytest -n auto moo/core/tests/test_code.py::test_trivial_printing
 
 # Run with verbose output and stop on first failure
 uv run pytest -vv -x
@@ -127,13 +124,15 @@ uv run pytest --pdb
 
 ### Test Organization
 
-* **Core bootstrap data**: Defined in `moo/bootstrap/test.py`, used by the Core tests
-* **Core tests**: `moo/core/tests/` - Tests for models, permissions, verb execution engine
-* **Default bootstrap data**: Defined in `moo/bootstrap/default.py`, used to create playable databases
-* **Default verb sources**: `moo/bootstrap/default_verbs/` - MOO verb definitions for the `default` dataset only
-* **Default tests**: `moo/bootstrap/default_verbs/tests/` - Tests for the default objects and their verbs
+| Path | What it holds |
+|------|---------------|
+| `moo/bootstrap/test.py` | Minimal bootstrap data used by core unit tests via the `t_init` fixture |
+| `moo/bootstrap/default/` | Production-shape bootstrap package (orchestrator + numbered scripts) used to populate playable databases |
+| `moo/bootstrap/default_verbs/` | Verb sources for the `default` dataset, organised by root-class name |
+| `moo/core/tests/` | Unit tests for models, permissions, the verb execution engine |
+| `moo/bootstrap/default_verbs/tests/` | Integration tests for default verbs against a fully bootstrapped world |
 
-Shared pytest fixtures live in `moo/conftest.py` and provide a pre-seeded game world for integration tests.
+Shared pytest fixtures live in `moo/conftest.py` (notably `t_init` and `t_wizard`).
 
 ### Writing Tests
 
@@ -223,7 +222,7 @@ with code.ContextManager(t_wizard, _writer):
     widget = create("widget", parents=[system.thing], location=t_wizard)
 
     # Call the verb directly — equivalent to the MOO expression widget:drop_succeeded_msg()
-    assert widget.drop_succeeded_msg() == f"You drop {widget}."
+    assert widget.drop_succeeded_msg() == f"You drop {widget.title()}."
 
     # Test moveto without the drop command
     lab = t_wizard.location
@@ -268,31 +267,51 @@ uv run ruff format moo
 
 ### Debugging Objects in Django Shell
 
-```python
-python manage.py shell
+```bash
+docker compose run webapp manage.py shell
+```
 
->>> from moo.sdk import lookup, create
->>> obj = lookup("root")
->>> obj.name
+```python
+>>> from moo.sdk import lookup
+>>> sys = lookup(1)
+>>> sys.root_class.name
 'Root Class'
->>> obj.properties.all()
+>>> sys.root_class.properties.all()
 <QuerySet [...]>
->>> obj.verbs.all()
+>>> sys.root_class.verbs.all()
 <QuerySet [...]>
 ```
 
-### Resetting the Database
+### Picking up bootstrap changes
+
+For most iteration, you don't need to reset anything. After editing a
+verb file or adding objects to a numbered bootstrap script, run:
 
 ```bash
-# Migrate back to initial state
-python manage.py migrate zero
-
-# Re-run migrations
-python manage.py migrate
-
-# Bootstrap with default game world
-python manage.py moo_init
+docker compose run webapp manage.py moo_init --bootstrap default --sync
 ```
+
+`--sync` re-runs the bootstrap against the existing database.
+`get_or_create_object` skips already-existing objects and
+`load_verbs(replace=True)` overwrites verb source in place.
+
+### Truly resetting the database
+
+When you actually need to start over (a corrupt schema, an in-progress
+migration that can't roll forward, an experimental dataset you want
+to throw away), recreate the postgres container rather than running
+`migrate zero`:
+
+```bash
+docker compose down -v
+docker compose up -d
+docker compose run webapp manage.py migrate
+docker compose run webapp manage.py moo_init
+```
+
+`-v` drops the postgres volume so the next `up` starts from an empty
+database. You'll need to re-run `createsuperuser` / `moo_enableuser`
+afterwards.
 
 ## Performance Profiling
 
@@ -313,10 +332,18 @@ Documentation is generated from source code docstrings using Sphinx:
 ```bash
 # Build documentation locally
 cd docs
-make html
+uv run make html
 
 # View the built documentation
 open build/html/index.html
+```
+
+If autosummary fails to import a moved or removed verb file, wipe the
+generated stub directory and rebuild:
+
+```bash
+rm -rf docs/source/generated
+cd docs && uv run make clean && uv run make html
 ```
 
 Always include docstrings on:

@@ -333,28 +333,24 @@ If `surface_types` is absent, all placement prepositions are accepted.
 ## Common SDK helpers
 
 `moo.sdk` exposes more than the basics covered in
-{doc}`creating-verbs`. The most useful additions for advanced verbs:
+{doc}`creating-verbs`. The functions you'll reach for most often
+beyond `lookup`/`create`/`write`:
 
-| Function | What it does |
-|----------|--------------|
-| `invoke(verb, *, delay=0, periodic=False, cron=None, callback=None, **kwargs)` | Enqueue a verb as a Celery task. |
-| `task_time_low(threshold=0.5)` | True when the current task has at most `threshold` seconds remaining. False when no limit is configured. |
-| `schedule_continuation(remaining_items, verb, msg=None)` | Hand off `remaining_items` to a fresh task; pairs with `task_time_low()`. |
-| `open_editor(player, content, callback_verb, *args, content_type="text")` | Full-screen text editor; calls `callback_verb` with the saved text on save. Wizard-only. |
-| `open_paginator(player, content, content_type="text")` | Full-screen read-only pager. |
-| `players()` | All player Objects. |
-| `connected_players(within=timedelta(minutes=5))` | Player Objects active in the given window. |
-| `set_task_perms(who)` | Context manager that runs the enclosed block as `who`. Wizard-only. |
-| `owned_objects(player_obj)` / `owned_objects_by_pks(pks)` | QuerySets of Objects owned by a player. |
-| `get_client_mode()` | `"rich"` (TUI) or `"raw"` (line-based). Branch on this when offering an editor or paginator. |
-| `get_wrap_column()` | Effective wrap width for the current player. |
-| `get_session_setting(key, default=None)` / `set_session_setting(key, value)` | Cross-process session-scoped key/value store. |
-| `boot_player(obj)` | Disconnects a player. Wizards only (or self). |
-| `server_info()` | Version, PID, and memory stats. Wizard-only. |
-| `send_gmcp(player, module, data)` / `play_sound(player, name, volume=100)` | OOB protocol emit; no-op when the client didn't negotiate the capability. Wizard-only. |
-| `send_message`, `get_mailbox`, `mark_read`, ... | The mail SDK; see the {doc}`accessibility` how-to for context. |
+- **Tasks**: `invoke`, `task_time_low`, `schedule_continuation`,
+  `set_task_perms`.
+- **Full-screen UIs**: `open_editor`, `open_paginator`.
+- **Players**: `players`, `connected_players`, `owned_objects`,
+  `owned_objects_by_pks`.
+- **Client capabilities**: `get_client_mode`, `get_wrap_column`,
+  `get_session_setting`, `set_session_setting`.
+- **Out-of-band protocols**: `send_gmcp`, `play_sound`,
+  `room_info_payload` — see {doc}`accessibility` for the protocol
+  story.
+- **Admin**: `boot_player`, `server_info`.
+- **Mail**: `send_message`, `get_mailbox`, `count_unread`, etc.
 
-For the full list and signatures, see {doc}`../reference/builtins`.
+For the full inventory with signatures and arguments, see
+{doc}`../reference/builtins`.
 
 ### Editor callback example
 

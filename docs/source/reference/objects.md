@@ -1,24 +1,33 @@
 # Objects in the DjangoMOO Database
 
-This is another good opportunity to quote Pavel Curtis:
+`Object` is a Django model representing every entity in the world:
+rooms, players, items, exits, and the system object itself. Each
+Object has a primary key (the LambdaMOO-style `#N` identifier), a name,
+an owner, optional parents and a location, and arbitrary properties
+and verbs.
 
-> Objects are, in a sense, the whole point of the MOO programming language. They are used to represent objects in the virtual reality, like people, rooms, exits, and other concrete things. Because of this, MOO makes a bigger deal out of creating objects than it does for other kinds of value, like integers.
->
-> Numbers always exist, in a sense; you have only to write them down in order to operate on them. With objects, it is different. The object with number '#958' does not exist just because you write down its number. An explicit operation, the `create()` function described later, is required to bring an object into existence. Symmetrically, once created, objects continue to exist until they are explicitly destroyed by the `recycle()` function (also described later).
->
-> The identifying number associated with an object is unique to that object. It was assigned when the object was created and will never be reused, even if the object is destroyed. Thus, if we create an object and it is assigned the number `#1076`, the next object to be created will be assigned `#1077`, even if `#1076` is destroyed in the meantime.
+This page covers the model's intrinsic attributes, public methods,
+and placement API. For the conceptual model of how parent inheritance
+feeds into verb and property lookup, see {doc}`caching`.
 
-Objects in DjangoMOO are all custom subclasses of the Django Model class, so the "identifying number" is just the primary key of the object. Also, unlike LambdaMOO objects, there's a `save()` function that needs to be called when a change is made to the intrinsic properties of an object.
+## Identity and lifecycle
 
-## Fundamental Object Attributes
+Object PKs are assigned at creation and never reused. A new Object
+exists in the database only after `create()` (or `Object.objects.create()`
+from non-sandbox code). `@recycle` removes an Object — its PK will not be
+reused.
 
-There are several fundamental attributes to every object, defined by `moo.core.models.Object`:
+`obj.save()` is required after changing intrinsic fields (`name`,
+`unique_name`, `obvious`, `owner`). `set_property()` saves its own
+row; you do not need to call `save()` after it.
+
+## Fundamental attributes
 
 ```{eval-rst}
 .. py:currentmodule:: moo.core.models
 .. autoattribute:: Object.pk
 
-    The unique identifying number of this Object
+    The unique identifying number of this Object.
 
 .. autoattribute:: Object.name
    :no-index:
@@ -34,15 +43,16 @@ There are several fundamental attributes to every object, defined by `moo.core.m
    :no-index:
 .. autoattribute:: Object.aliases
 
-    :class:`Alias` instances can be created to give additional names for an instance.
+    :class:`Alias` instances giving this object additional names.
 
 .. autoattribute:: Object.contents
 
-    This is the :class:`ReverseManyToOneDescriptor` of the `location` field above
+    QuerySet of objects whose ``location`` is this object — i.e. what's
+    inside this room or this container.
 
 .. autoattribute:: Object.children
 
-    This is the :class:`ReverseManyToOneDescriptor` of the `parent` field above
+    QuerySet of objects that have this object as a parent.
 
 .. autoattribute:: Object.placement_prep
    :no-index:
@@ -50,34 +60,98 @@ There are several fundamental attributes to every object, defined by `moo.core.m
    :no-index:
 ```
 
+## Inheritance
+
+Objects can have multiple parents. Property and verb lookup walks the
+parent chain in depth-then-weight order, materialised through the
+`AncestorCache` denormalised table for cheap dispatch. See
+{doc}`caching` for the lookup architecture and the relationship-weight
+semantics.
+
+## Methods
+
+### Identity and traversal
+
+```{eval-rst}
+.. py:currentmodule:: moo.core.models
+.. automethod:: Object.find
+.. automethod:: Object.contains
+.. automethod:: Object.is_a
+.. automethod:: Object.is_named
+```
+
+### Hierarchy
+
+```{eval-rst}
+.. automethod:: Object.get_ancestors
+.. automethod:: Object.get_descendents
+.. automethod:: Object.get_contents
+.. automethod:: Object.remove_parent
+```
+
+### Verbs
+
+```{eval-rst}
+.. automethod:: Object.add_verb
+.. automethod:: Object.invoke_verb
+.. automethod:: Object.get_verb
+.. automethod:: Object.has_verb
+```
+
+### Properties
+
+```{eval-rst}
+.. automethod:: Object.set_property
+.. automethod:: Object.get_property
+.. automethod:: Object.has_property
+.. automethod:: Object.get_property_objects
+```
+
+### Roles and permissions
+
+```{eval-rst}
+.. automethod:: Object.is_player
+.. automethod:: Object.is_wizard
+.. automethod:: Object.is_connected
+.. automethod:: Object.owns
+.. automethod:: Object.is_allowed
+```
+
+`can_caller(permission)` is also available on every Object (inherited
+from `AccessibleMixin`); it answers "would the current
+`context.caller` succeed in performing `<permission>` on this object?"
+without actually performing the operation. See
+{doc}`../how-to/permissions` for when to reach for it (and when not
+to — most verb code should just attempt the operation and let
+`AccessError` propagate).
+
 ## Placement
 
-Objects can be placed in a spatial relationship to another object in the same room.
-Placement is stored as two fields on the object: `placement_prep` (a preposition string
-like `"on"` or `"under"`) and `placement_target` (the object it is placed relative to).
+Objects can be placed in a spatial relationship to another object in
+the same room. Placement is stored as two fields:
 
-The supported prepositions are defined by `PLACEMENT_PREPS` in `settings.py`:
+- `placement_prep` — a preposition string (`"on"`, `"under"`,
+  `"behind"`, `"before"`, `"beside"`, `"over"`).
+- `placement_target` — the Object the placement is relative to.
 
-```
-on, under, behind, before, beside, over
-```
+The full set of valid prepositions is `PLACEMENT_PREPS`, and the
+hidden subset (`"under"`, `"behind"`) is `HIDDEN_PLACEMENT_PREPS`.
+Both are importable from `moo.sdk`. Hidden-placement objects are
+invisible in the room contents listing and unfindable by name through
+the parser; they can only be revealed by `look under <target>` or
+`look behind <target>`.
 
-Of these, `under` and `behind` are *hidden* placements (defined by `HIDDEN_PLACEMENT_PREPS`):
-objects placed with those prepositions are invisible in the room contents listing and
-unfindable by name through the parser. They can only be revealed by `look under <target>`
-or `look behind <target>`.
-
-The remaining prepositions (`on`, `before`, `beside`, `over`) are *visible* placements.
-Obvious visible-placed objects appear grouped under their surface in the room contents:
+Visible placements (`on`, `before`, `beside`, `over`) appear grouped
+under their surface in the room contents:
 
 ```
 On the desk: a coffee cup.
 ```
 
-Placement is cleared automatically when an object is taken, dropped, or moved.
-If the placement target is deleted, `SET_NULL` clears the `placement_target` FK and
-the `placed_objects.update(placement_prep=None)` hook in `Object.delete()` clears the
-dangling `placement_prep` on all placed children.
+Placement is cleared automatically when an object is taken, dropped,
+or moved. If the placement target is deleted, the database `SET_NULL`
+clears the `placement_target` FK and `Object.delete()` clears the
+dangling `placement_prep` on every placed child.
 
 ### Placement API
 
@@ -89,23 +163,28 @@ dangling `placement_prep` on all placed children.
 .. automethod:: Object.is_hidden_placement
 .. autoattribute:: Object.placement
 
-    Read-only property. Returns ``(prep, target)`` tuple, or ``None`` if not placed.
+    Read-only property. Returns ``(prep, target)`` tuple, or ``None``
+    if not placed.
 ```
 
-The `surface_types` property on the target object restricts which prepositions are
-valid. If not set, any placement preposition is accepted:
+### Restricting valid placements
+
+Set the `surface_types` property on a target to limit which
+prepositions it accepts:
 
 ```python
-# In a verb or @eval:
-desk = lookup("writing desk")
 desk.set_property("surface_types", ["on", "beside"])
+# "place book on desk" succeeds; "place book under desk" fails.
 ```
 
-A bigger change to the DjangoMOO architecture starts to emerge here, around how permissions are specified.
+If `surface_types` is absent, all placement prepositions are accepted.
 
-* Player information is kept in a separate table, and `Player.avatar` is set to the Object the player controls.
-* This Player instance also includes a reference to the Django `user` object and the `wizard` `Boolean` field.
+## Players and avatars
 
-> The parent/child hierarchy is used for classifying objects into general classes and then sharing behavior among all members of that class. For example, the LambdaCore database contains an object representing a sort of "generic" room. All other rooms are descendants (i.e., children or children's children, or ...) of that one. The generic room defines those pieces of behavior that are common to all rooms; other rooms specialize that behavior for their own purposes. The notion of classes and specialization is the very essence of what is meant by object-oriented programming.
+A `Player` row links a Django `User` to its avatar Object via
+`Player.avatar`. The Player record also carries the `wizard` boolean
+that gates `is_wizard()` checks. The user-facing player is the avatar
+Object — `Player` itself is plumbing for authentication and role.
 
-The main change to this mechanism in DjangoMOO is support for multiple inheritance, i.e., objects can now have multiple parents.
+To find an avatar from a username, query the `Player` model from
+non-sandbox code, or call `lookup("<player name>")` from verb code.

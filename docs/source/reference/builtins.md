@@ -1,24 +1,85 @@
-# Built-in Functions
+# SDK Functions
+
+Every name listed here is exported from `moo.sdk` and importable in
+verb code (`from moo.sdk import lookup, create, ...`). For methods
+defined on the `Object` model and accessible as `obj.<name>(...)`,
+see {doc}`objects`. For `Property` and `Verb` field reference, see
+{doc}`properties` and {doc}`verbs`.
+
+## Object lifecycle and lookup
 
 ```{eval-rst}
 .. py:currentmodule:: moo.sdk
-.. autofunction:: moo.sdk.connected_players
+.. autofunction:: moo.sdk.lookup
    :no-index:
 .. autofunction:: moo.sdk.create
    :no-index:
+.. autofunction:: moo.sdk.players
+   :no-index:
+.. autofunction:: moo.sdk.connected_players
+   :no-index:
+.. autofunction:: moo.sdk.owned_objects
+   :no-index:
+.. autofunction:: moo.sdk.owned_objects_by_pks
+   :no-index:
+```
+
+## Tasks and continuations
+
+```{eval-rst}
 .. autofunction:: moo.sdk.invoke
    :no-index:
-.. autofunction:: moo.sdk.lookup
+.. autofunction:: moo.sdk.task_time_low
+   :no-index:
+.. autofunction:: moo.sdk.schedule_continuation
+   :no-index:
+.. autofunction:: moo.sdk.set_task_perms
+   :no-index:
+.. autofunction:: moo.sdk.moo_eval
+   :no-index:
+```
+
+## Output and full-screen UIs
+
+```{eval-rst}
+.. autofunction:: moo.sdk.write
    :no-index:
 .. autofunction:: moo.sdk.open_editor
    :no-index:
 .. autofunction:: moo.sdk.open_paginator
    :no-index:
-.. autofunction:: moo.sdk.players
+```
+
+## Session settings and client capabilities
+
+```{eval-rst}
+.. autofunction:: moo.sdk.get_client_mode
    :no-index:
-.. autofunction:: moo.sdk.set_task_perms
+.. autofunction:: moo.sdk.get_wrap_column
    :no-index:
-.. autofunction:: moo.sdk.write
+.. autofunction:: moo.sdk.get_session_setting
+   :no-index:
+.. autofunction:: moo.sdk.set_session_setting
+   :no-index:
+```
+
+## Out-of-band MUD-client protocols
+
+```{eval-rst}
+.. autofunction:: moo.sdk.send_gmcp
+   :no-index:
+.. autofunction:: moo.sdk.play_sound
+   :no-index:
+.. autofunction:: moo.sdk.room_info_payload
+   :no-index:
+```
+
+## Server administration
+
+```{eval-rst}
+.. autofunction:: moo.sdk.boot_player
+   :no-index:
+.. autofunction:: moo.sdk.server_info
    :no-index:
 ```
 
@@ -41,85 +102,5 @@
 .. autofunction:: moo.sdk.count_unread
    :no-index:
 .. autofunction:: moo.sdk.get_mail_stats
-   :no-index:
-```
-
-## Object Attributes
-
-```{eval-rst}
-.. py:currentmodule:: moo.core.models
-.. autoattribute:: Object.name
-   :no-index:
-.. autoattribute:: Object.unique_name
-   :no-index:
-.. autoattribute:: Object.obvious
-   :no-index:
-.. autoattribute:: Object.owner
-   :no-index:
-.. autoattribute:: Object.parents
-   :no-index:
-.. autoattribute:: Object.location
-   :no-index:
-```
-
-## Object Methods
-
-```{eval-rst}
-.. py:currentmodule:: moo.core.models
-.. automethod:: Object.find()
-.. automethod:: Object.contains()
-.. automethod:: Object.get_contents()
-.. automethod:: Object.get_ancestors()
-.. automethod:: Object.get_descendents()
-.. automethod:: Object.is_a()
-.. automethod:: Object.is_named()
-.. automethod:: Object.add_verb()
-.. automethod:: Object.invoke_verb()
-.. automethod:: Object.get_verb()
-.. automethod:: Object.has_verb()
-.. automethod:: Object.set_property()
-.. automethod:: Object.get_property()
-.. automethod:: Object.get_property_objects()
-.. automethod:: Object.has_property()
-.. automethod:: Object.is_allowed()
-.. automethod:: Object.is_player()
-.. automethod:: Object.is_wizard()
-.. automethod:: Object.is_connected()
-.. automethod:: Object.owns()
-```
-
-## Property Attributes
-
-```{eval-rst}
-.. py:currentmodule:: moo.core.models
-.. autoattribute:: Property.name
-   :no-index:
-.. autoattribute:: Property.value
-   :no-index:
-.. autoattribute:: Property.type
-   :no-index:
-.. autoattribute:: Property.owner
-   :no-index:
-.. autoattribute:: Property.origin
-   :no-index:
-.. autoattribute:: Property.inherit_owner
-   :no-index:
-```
-
-## Verb Attributes
-
-```{eval-rst}
-.. py:currentmodule:: moo.core.models
-.. autoattribute:: Verb.code
-   :no-index:
-.. autoattribute:: Verb.repo
-   :no-index:
-.. autoattribute:: Verb.filename
-   :no-index:
-.. autoattribute:: Verb.ref
-   :no-index:
-.. autoattribute:: Verb.owner
-   :no-index:
-.. autoattribute:: Verb.origin
    :no-index:
 ```

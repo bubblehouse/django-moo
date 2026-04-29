@@ -1,6 +1,8 @@
 # How Command Parsing Works
 
-The DjangoMOO server has a fairly robust parser for handling the commands that a player enters. In particular, it can follow any imperative command that takes one of the following forms:
+The DjangoMOO server has a fairly robust parser for handling the
+commands a player types. It can interpret any imperative command of
+the forms:
 
     verb
     verb direct-object
@@ -8,55 +10,99 @@ The DjangoMOO server has a fairly robust parser for handling the commands that a
     verb direct-object preposition object-of-the-preposition
     verb preposition object-of-the-preposition
 
-and many other, basically anything of the pseudo-BNF form:
+and combinations thereof. The pseudo-BNF:
 
     <verb>[[[<dobj spec> ]<direct-object> ]+[<prep> [<pobj spec> ]<object-of-the-preposition>]*]
 
-Some valid commands include:
+Concrete examples:
 
     look
     take phil's book
     take the yellow bird
     put yellow bird in my cuckoo clock with great care
 
-You might notice this adds a few capabilities that do not exist in the LambdaMOO parser:
+DjangoMOO's parser adds a few capabilities over the LambdaMOO original:
 
-* **object references can be prefixed with a specifier** - This can either be an article like `the` or a detail that helps the parser find the object, like `my` or a possessive string.
-* **multiple prepositions may be used in one command** - A verb is able to parse out any of the prepositions used in a particular invocation, and raise sensible errors without additional handling.
-* **intelligent tokenization** - more on this below
+- **Object specifiers.** Object references can be prefixed with an
+  article (`the`), a possessive marker (`my`), or another player's
+  possessive form (`Bill's`). The parser uses the specifier to
+  narrow the search scope before matching the name.
+- **Multiple prepositions per command.** A single command can carry
+  several preposition phrases — the example
+  `put yellow bird in my cuckoo clock with great care` uses both
+  `in` and `with`. Verbs can read each preposition's argument
+  independently via `context.parser.get_pobj_str("in")` /
+  `get_pobj_str("with")`, and a missing preposition raises a clean
+  `NoSuchPrepositionError` without manual handling.
+- **Intelligent tokenisation.** The lexer splits the command around
+  known prepositions *before* word-splitting on spaces, so a
+  preposition appearing inside a quoted string (`"bag of holding"`)
+  doesn't accidentally split the argument. Quote-stripping and
+  preposition recognition happen in the same pass.
 
-This area of DjangoMOO was most inspired by the parser in Twisted Reality, the MUD-like game created by Glyph and co a million years ago.
+This area was most influenced by the parser in Twisted Reality, the
+MUD-like game Glyph and friends built a million years ago.
 
 ## Lexer
 
-The first step of the command parser is the lexical analysis. We start with an intelligent tokenization process that splits the command around any known prepositions.
+The first phase is lexical analysis. The `Pattern` class in
+`moo/core/parse.py` runs a regex-based tokenisation pass that:
 
-Once again quoting the [LambdaMOO Programmer's Manual](https://www.hayseed.net/MOO/manuals/ProgrammersManual.html):
+1. Splits the command into words on whitespace.
+2. Honours double-quoted spans so multi-word names stay intact.
+3. Identifies preposition tokens from `settings.PREPOSITIONS` and
+   uses them to delimit direct-object and indirect-object phrases.
 
-> The server next breaks up the command into words. In the simplest case, the command is broken into words at every run of space characters; for example, the command `foo bar baz` would be broken into the words `foo`, `bar`, and `baz`. To force the server to include spaces in a "word", all or part of a word can be enclosed in double-quotes. For example, the command
+Quoting from the [LambdaMOO Programmer's Manual](https://www.hayseed.net/MOO/manuals/ProgrammersManual.html):
+
+> The server next breaks up the command into words. In the simplest
+> case, the command is broken into words at every run of space
+> characters; for example, the command `foo bar baz` would be
+> broken into the words `foo`, `bar`, and `baz`. To force the
+> server to include spaces in a "word", all or part of a word can
+> be enclosed in double-quotes. For example, the command
 >
 > `foo "bar mumble" baz" "fr"otz" bl"o"rt`
 >
-> is broken into the words `foo`, `bar mumble`, `baz frotz`, and `blort`. Finally, to include a double-quote or a backslash in a word, they can be preceded by a backslash, just like in MOO strings.
+> is broken into the words `foo`, `bar mumble`, `baz frotz`, and
+> `blort`. Finally, to include a double-quote or a backslash in a
+> word, they can be preceded by a backslash, just like in MOO
+> strings.
 
-In the DjangoMOO parser it's not usually necessary to quote the names of objects with spaces in their names. The only exception is if an object contains a defined preposition, e.g., my favorite "bag of holding".
+In DjangoMOO it's not usually necessary to quote object names that
+contain spaces — the parser uses preposition boundaries to delimit
+phrases, so `take wooden box` works without quotes. The exception
+is when an object's name contains a *preposition word* (`my favorite
+"bag of holding"`) — there, quoting is required to keep the
+preposition from being treated as a phrase boundary.
 
-Once created with a command string, a Lexer object has the following instance attributes:
+The `Lexer` instance gets passed to a `Parser` along with a
+reference to the calling user (the "caller"). For the full Lexer
+attribute reference, see {doc}`../reference/parser`.
 
-* `command` - the full, unparsed command string
-* `dobj_str` - the direct object string, if applicable
-* `dobj_spec_str` - any specifier used for the direct object ("my", "the", possessives)
-* `words` - the direct object string, if applicable
-* `prepositions` - a map of `preposition => [spec_str, obj_str, obj]`; note the `obj` reference is `None` at this phase
+## `$do_command` hook
 
-The `Lexer` instance gets passed to the Parser object along with a reference to the calling user (the "caller").
+Before the built-in parser runs, `interpret()` checks whether the
+System Object (`#1`) defines a verb named `do_command`. If it does,
+that verb is called with the tokenised command words as positional
+`args`. The raw command line is accessible inside the verb as
+`context.parser.command`.
 
-## $do_command Hook
+If `do_command` returns a truthy value, the command is considered
+fully handled and normal dispatch is skipped entirely. If it returns
+a falsy value (or the verb does not exist), parsing continues
+normally.
 
-Before the built-in parser runs, `interpret()` checks whether the system object (#1) defines a verb named `do_command`. If it does, that verb is called with the tokenised command words as positional `args`. The raw command line is accessible inside the verb as `context.parser.command`.
+This is the standard LambdaMOO `$do_command` extension point —
+useful for command logging, rate limiting, or routing commands to a
+custom handler before the parser inspects them.
 
-If `do_command` returns a truthy value, the command is considered fully handled and normal dispatch is skipped entirely. If it returns a falsy value (or the verb does not exist), parsing continues normally.
+## See also
 
-This is the standard LambdaMOO `$do_command` extension point — it is useful for command logging, rate limiting, or routing commands to a custom handler before the parser inspects them.
-
-For the full reference — object resolution order, preposition synonym table, verb search order, and dispatch rules — see {doc}`../reference/parser`.
+- {doc}`../reference/parser` — full reference: parser methods,
+  preposition synonym groups, object-resolution rules, verb search
+  order, and the last-match-wins dispatch rule.
+- {doc}`../reference/verbs` — verb name asterisk grammar (`foo*bar`)
+  and dispatch metadata.
+- {doc}`../how-to/creating-verbs` — practical patterns for reading
+  parser output from verb code.

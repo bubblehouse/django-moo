@@ -49,9 +49,9 @@ tasks without hitting the database.
 
 ### Configuration
 
-```python
-# settings/base.py
-MOO_ATTRIB_CACHE_TTL = 120  # seconds; set to 0 to disable
+```{eval-rst}
+.. autodata:: moo.settings.base.MOO_ATTRIB_CACHE_TTL
+   :no-value:
 ```
 
 Set `MOO_ATTRIB_CACHE_TTL = 0` in test environments (see `settings/test.py`). The in-process
@@ -94,13 +94,13 @@ both verb and property inheritance lookups.
 
 ### Schema
 
+```{eval-rst}
+.. py:currentmodule:: moo.core.models.object
+.. autoattribute:: AncestorCache.descendant
+.. autoattribute:: AncestorCache.ancestor
+.. autoattribute:: AncestorCache.depth
+.. autoattribute:: AncestorCache.path_weight
 ```
-AncestorCache(descendant_id, ancestor_id, depth, path_weight)
-```
-
-- `depth` — number of hops from descendant to ancestor (1 = direct parent)
-- `path_weight` — the `Relationship.weight` of the depth-1 link leading to this ancestor;
-  higher weight means higher priority when multiple inheritance paths reach the same ancestor
 
 Indexed on `(descendant, depth, path_weight)` and `(ancestor)`.
 
@@ -122,6 +122,11 @@ Verb.objects.filter(
 This is a single indexed JOIN rather than a recursive walk, which is significantly cheaper at
 dispatch time.
 
+`Parser.get_verb()` uses the same table to dispatch verbs in a single batch:
+`_batch_get_verb()` issues two bulk queries against `AncestorCache` (one for direct verbs, one
+for inherited) and a third query to fetch the winning `Verb` objects, replacing the older
+sequential per-object loop with three round-trips total.
+
 ### Maintenance
 
 The table is kept consistent by the `relationship_changed()` signal, which fires on
@@ -132,25 +137,8 @@ uses a recursive CTE (via `django-cte`) to compute the correct depths and weight
 To rebuild the entire table after a bulk import or data migration:
 
 ```bash
-python manage.py rebuild_ancestor_cache
+docker compose run webapp manage.py rebuild_ancestor_cache
 ```
-
----
-
-## Batch verb dispatch (experimental)
-
-When `MOO_BATCH_VERB_DISPATCH = True`, the parser replaces the sequential per-object
-`_lookup_verb()` loop with a single `_batch_get_verb()` call that issues two bulk queries against
-`AncestorCache` — one for direct verbs, one for inherited — then fetches the winning `Verb`
-objects in a third query. This reduces typical dispatch from 5–10 round-trips to 3.
-
-```python
-# settings/base.py
-MOO_BATCH_VERB_DISPATCH = False  # requires AncestorCache to be populated (migration 0025)
-```
-
-This flag is off by default while the implementation is being validated against the sequential
-path.
 
 ---
 

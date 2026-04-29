@@ -9,17 +9,25 @@ For accessibility-focused settings (screen-reader markers, textual severity pref
 `PREFIX` and `SUFFIX` wrap each command's output in marker strings. An automation client sets unique markers, sends commands, and detects the end of each response by watching for the suffix rather than relying on timeouts or prompt detection.
 
 ```
-PREFIX >>MOO-START<<
-SUFFIX >>MOO-END<<
-look
+>>> PREFIX >>MOO-START<<
+Output prefix set to: >>MOO-START<<
+>>> SUFFIX >>MOO-END<<
+>>MOO-START<<
+Output suffix set to: >>MOO-END<<
+>>> look
 ```
 
 Output:
 
 ```
 >>MOO-START<<
-The Laboratory(#3)
-You see nothing special.
+The Laboratory
+A cavernous laboratory filled with gadgetry of every kind,
+this seems like a dumping ground for every piece of dusty forgotten
+equipment a mad scientist might require.
+
+You see a heavy wooden workbench here.
+Newman, Cliff, and Player are here.
 >>MOO-END<<
 ```
 
@@ -41,31 +49,39 @@ Both markers are session-specific and are cleared when the player disconnects.
 `OUTPUTPREFIX` and `OUTPUTSUFFIX` wrap *all* output sent to the client — including asynchronous messages from other players (via `tell()`) — not just responses to commands. They complement `PREFIX`/`SUFFIX`, which only frame command output.
 
 ```
-OUTPUTPREFIX >>>
-OUTPUTSUFFIX <<<
-look
->>>
-The Laboratory(#3)
-You see nothing special.
-<<<
+>>> OUTPUTPREFIX ===
+Global output prefix set to: ===
+>>> OUTPUTSUFFIX ===
+===
+Global output suffix set to: ===
+>>> look
+===
+The Laboratory
+A cavernous laboratory filled with gadgetry of every kind,
+this seems like a dumping ground for every piece of dusty forgotten
+equipment a mad scientist might require.
+
+You see a heavy wooden workbench here.
+Newman, Cliff, and Player are here.
+===
 ```
 
 If both layers are active, the global markers are outermost:
 
 ```
->>>           ← OUTPUTPREFIX
+===           ← OUTPUTPREFIX
 >>START<<     ← PREFIX (if set)
 ...output...
 >>END<<       ← SUFFIX (if set)
-<<<           ← OUTPUTSUFFIX
+===           ← OUTPUTSUFFIX
 ```
 
 An async `tell()` from another player will also be wrapped:
 
 ```
->>>
+===
 Wizard pages: "hello"
-<<<
+===
 ```
 
 **Syntax**:
@@ -98,11 +114,16 @@ This is especially useful in automation scripts: sending `.flush` before each co
 Clean plain-text output — no ANSI colour, bare `$` prompt — is controlled by the `a11y` verb:
 
 ```
-a11y quiet on
-look
-The Laboratory(#3)
-You see nothing special.
-$
+>>> a11y quiet on
+quiet on
+>>> look
+The Laboratory
+A cavernous laboratory filled with gadgetry of every kind,
+    this seems like a dumping ground for every piece of dusty forgotten
+    equipment a mad scientist might require.
+
+You see a heavy wooden workbench here.
+Newman, Cliff, and Player are here.
 ```
 
 See {doc}`accessibility` for the full `a11y` verb reference. The earlier
@@ -142,23 +163,28 @@ changes via `moveto()`. They are not limited to players.
 These fire when a player's SSH session starts or ends. The call order follows
 the original LambdaMOO convention.
 
+In all four tables below, `context.player` is the player whose session is
+starting or ending. `this` is the object the verb is dispatched on.
+
 **On connect** (`player.confunc` → `player.location.confunc`):
 
-| Verb | `this` | `context.player` | Default behavior |
-|------|--------|-----------------|-----------------|
-| `$player.confunc` | the player | same | no-op stub |
-| `$room.confunc` | the player's room | the player | calls `look_self`, announces "has connected" |
+| Verb | `this` | Default behavior |
+|------|--------|------------------|
+| `$player.confunc` | the player | moves player to their `home` (or `_.player_start`) if they have no location, prints unread mail count, sends GMCP `Char.Name` and `Room.Info` events |
+| `$room.confunc` | the player's room | calls `look_self`, announces "has connected" |
 
 **On disconnect** (`player.location.disfunc` → `player.disfunc`):
 
-| Verb | `this` | `context.player` | Default behavior |
-|------|--------|-----------------|-----------------|
-| `$room.disfunc` | the player's room | the player | moves player home, announces "has disconnected" |
-| `$player.disfunc` | the player | same | no-op stub |
+| Verb | `this` | Default behavior |
+|------|--------|------------------|
+| `$room.disfunc` | the player's room | moves player home (if not already there), announces "has disconnected" |
+| `$player.disfunc` | the player | no-op stub |
 
-`$player.confunc` and `$player.disfunc` are intentional no-ops on the base
-class — override them on a player subclass to add login/logout behavior such
-as checking mail or notifying friends.
+`$player.disfunc` is an intentional no-op on the base class — override it
+on a player subclass to add logout behavior such as notifying friends.
+`$player.confunc` already does the standard login chores listed above; if
+you override it on a subclass, call `passthrough()` first (or replicate
+those chores) so mail counts and GMCP events still fire.
 
 The connect callbacks run as Celery tasks, but the SSH session waits for them
 to complete before showing the first prompt. This means `look_self` output

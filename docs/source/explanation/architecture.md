@@ -1,61 +1,189 @@
 # Architecture
 
-## Goals
+DjangoMOO's overarching goals are similar to LambdaMOO's — a
+persistent, multi-user, programmable text world — but the
+implementation is independent and the architectural choices are
+modern:
 
-While DjangoMOO's overarching goals are fairly similar to that of LambdaMOO's,
-the details of how it's been implemented are substantially different:
+- **100% Python.** Both the runtime and the in-game programming
+  language are Python; no MOO bytecode interpreter, no DSL.
+- **Django-backed.** The ORM, admin, auth, and migration tooling do
+  what would otherwise be hand-rolled.
+- **Celery-backed.** Verb execution, scheduled tasks, and command
+  parsing all run as Celery tasks, with standard back-pressure and
+  retry semantics. Many deployment targets are supported.
+- **Sandboxed.** Verb code runs inside Zope's RestrictedPython,
+  inside a Celery worker process, inside a Django atomic
+  transaction, with a hard time limit on every invocation.
 
-* 100% Python – both the implementation and the internal game language are Python, which drives many other design details
-* Django-backed – uses as many native Django features to reduce complexity and make the codebase easier to work on.
-* Celery-backed – uses a standard backend task queue with numerous deployment options
+The result is a system that's highly available (any component can
+be replicated), horizontally and vertically scalable, and easy to
+develop on (standard Django/Celery conventions throughout). Docker
+Compose handles local dev; the same images run in Kubernetes via
+the Helm chart in `extras/helm/`.
 
-Although this does require a number of "moving pieces", they're easily launched by the included Docker Compose file, and should be similarly easy to deploy in a full-time production scenario. The end result is a deployment that is:
+## Antioch — django-moo's predecessor
 
-* Highly available – able to withstand failure of duplicate components
-* Highly scalable – all the components of the stack are easily scaled, either horizontally or vertically
-* Easy to develop on – common conventions are used as much as possible
+A lot of the architecture decisions and proofs of concept for
+django-moo come from lessons learned building
+[antioch](https://github.com/philchristensen/antioch), which started
+in 1999–2000 — long before Django, modern web frameworks, or robust
+async tooling existed. Antioch's hand-rolled equivalents of those
+layers became more painful to maintain over time, and led to a few
+operating principles for django-moo:
 
-A final goal is for the software to be cheap to deploy, but that has several variables not worth getting into here.
+- For a niche project, lean on third-party libraries wherever they
+  reduce surface area.
+- Don't try to compete with modern graphical games; the constraints
+  of text are a storytelling feature, not a limitation.
+- Plan for testability from day one.
 
-### antioch, a predecessor to django-moo
+## Components
 
-A lot of the architecture decisions and proofs of concepts for `django-moo` come from lessons learned building [antioch](https://github.com/philchristensen/antioch).
+```
+        ┌───────────────────────────────────────────────────────────┐
+        │  Web (uWSGI)                                              │
+        │  - Django admin (wizard ops)                              │
+        │  - WebSSH (browser terminal)                              │
+        │  - django-allauth registration flow                       │
+        └─────────────────────────┬─────────────────────────────────┘
+                                  │
+        ┌─────────────────────────┴─────────────────────────────────┐
+        │  PostgreSQL                                               │
+        │  - canonical state (Object, Verb, Property, ACL, Player)  │
+        │  - migrations, admin tables                               │
+        └─────────────────────────┬─────────────────────────────────┘
+                                  │
+        ┌─────────────────────────┴─────────────────────────────────┐
+        │  Redis                                                    │
+        │  - Tier-2 cross-session cache (verb/property lookups)     │
+        │  - Django session storage                                 │
+        │  - Celery broker (task queue)                             │
+        │  - Kombu exchanges (async tells, OOB events)              │
+        └─────────────────────────┬─────────────────────────────────┘
+                                  │
+        ┌─────────────────────────┴─────────────────────────────────┐
+        │  Celery workers                                           │
+        │  - parse_command / parse_code / invoke_verb               │
+        │  - RestrictedPython sandbox + atomic txn + time limit     │
+        └─────────────────────────┬─────────────────────────────────┘
+                                  │
+        ┌─────────────────────────┴─────────────────────────────────┐
+        │  AsyncSSH server (port 8022)                              │
+        │  - prompt-toolkit TUI (rich mode)                         │
+        │  - line-based output (raw mode for MUD clients)           │
+        │  - IAC subnegotiation (GMCP/MTTS/MSSP/EOR/CHARSET/MSP)    │
+        └───────────────────────────────────────────────────────────┘
+```
 
-The original goals for antioch were to add on to the MOO concept in a way that allowed for a fully graphical UI. These goals also predated Django and other helpful frameworks; as antioch's inception was in 1999-2000, many of these tools didn't exist or were in their infancy. Although over time antioch began to modernize, there was a lot of custom code that would be better replaced by standard libraries.
+## Front-end
 
-This led to a series of "revelations" that guide `django-moo` development today:
+The primary interface is SSH — connect with any client to port 8022,
+authenticate by password or registered SSH key (see
+{doc}`../how-to/ssh-key-management`), and you get a prompt-toolkit
+TUI driven by `moo/shell/prompt.py`. For users who can't or don't
+want to install an SSH client, WebSSH at port 443 provides a
+browser terminal that bridges to the same SSH listener.
 
-* As a niche project, any third-party library that can reduce development overhead is worth it.
-* As a gaming-adjacent project, it's impossible to complete with modern graphical games, so don't prioritize that.
-* The graphical limitations of the Telnet era of MOO were actually a storytelling benefit.
-* For something of this size, ease of testing needs to be planned for from the beginning.
+The web port also serves the Django admin (for wizard-level
+operations) and a registration flow built on
+[django-allauth](https://allauth.org/). The signup form collects
+standard credentials plus the MOO-specific fields (character name,
+gender, optional description) and creates a `Player` row linking
+the Django user to a freshly-created avatar Object. Templates live
+under `moo/shell/templates/`.
 
-## Overview
+For full client/protocol details (rich vs. raw mode, OSC 133, the
+two coroutines, the Kombu bus), see {doc}`shell-internals`.
 
-### Front-end
+## Back-end
 
-The primary front-end interface uses SSH to create a prompt-driven TUI. The web port serves three things: the Django admin for wizard-level management, a browser-based SSH terminal (WebSSH), and a registration flow for new players.
+A Django management command launches the SSH server (`moo_shell`),
+which uses AsyncSSH to accept connections and dispatch each session
+to a `MooPromptToolkitSSHSession`. The session embeds a
+`prompt-toolkit` `Application` for the rich TUI; the in-app Python
+REPL for wizards is `ptpython`-flavoured.
 
-#### Player Registration
+The web app is served by uWSGI (`extras/uwsgi/uwsgi.ini`), which
+also serves Django static files and routes registration / admin
+requests.
 
-New players register through a web form powered by [django-allauth](https://allauth.org/). The registration form collects the standard allauth credentials (username, email, password) plus MOO-specific fields: character name, gender, and an optional description. On successful submission, a MOO `Object` avatar is created and linked to the Django user account via a `Player` record.
+## Workers and execution
 
-The form is defined in `moo/shell/forms.py` (`SignupForm`). The view in `moo/shell/views.py` (`SignupView`) overrides allauth's default behaviour so that an already-authenticated user who clicks "Sign Up" is silently logged out before the new registration proceeds, rather than being redirected away.
+Every command and verb invocation is a Celery task. This gives:
 
-Template overrides live in `moo/shell/templates/`. A shared `base.html` provides the Bootstrap styles used by the terminal page and all allauth pages. `allauth/layouts/base.html` is overridden so every page in the authentication flow (login, logout, email verification, password reset) inherits the same look without per-page template copies.
+- **Process isolation** — a memory race or runaway loop in a worker
+  cannot affect other concurrent invocations. Workers can be
+  bounded by the OS.
+- **Atomic transactions** — every task body runs inside
+  `transaction.atomic()`. Uncaught exceptions roll back the entire
+  task's database changes.
+- **Hard time limit** — read from the `CELERY_TASK_TIME_LIMIT`
+  environment variable in `moo/celeryconfig.py` (default `3`
+  seconds). When the limit elapses, Celery terminates the worker.
+  Synchronous calls to other verbs share the budget; the time-aware
+  continuation pattern in {doc}`../how-to/advanced-verbs` hands work
+  off to a fresh task before the limit hits.
+- **Sandbox** — Zope's RestrictedPython compiles verb source under
+  guards for attribute access, item access, builtins, and imports.
+  See {doc}`sandbox` for the model and {doc}`../reference/sandbox`
+  for the full enforcement detail.
 
-### Back-end
+In development, a Celery Beat scheduler runs in-process to drive
+periodic tasks. Production typically separates beat into its own
+deployment.
 
-Apart from a uWSGI-hosted web application, a Django management command is used to launch the SSH server. This uses AsyncSSH to provide a custom shell interface using `prompt-toolkit` and `ptprompt-python`.
+## Storage
 
-### Workers
+Game state lives in three tiers:
 
-Celery workers run each verb execution inside a subprocess. This also restricts memory usage and limits the maximum verb runtime (currently 3 seconds), while making it easy to scale the execution capacity of the MOO server.
+- **PostgreSQL** is the source of truth — Objects, Verbs,
+  Properties, ACLs, Players, Mail rows, ancestry cache.
+- **Redis** holds session storage, the Celery task queue, the
+  per-session Kombu queues for async tells and OOB events, and the
+  Tier-2 attribute cache for verb/property lookups (verb dispatch
+  hits PostgreSQL only on a cache miss).
+- An in-process **session cache** inside each `ContextManager` scope
+  is the Tier-1 hot path; repeat reads of the same property within
+  one command are free.
 
-Celery workers can be launched with the same image as the other components, and under normal development usage will also launch a "Celery Beat" scheduler within the worker.
+The full architecture, including the `AncestorCache` denormalised
+table that replaces recursive CTEs, is documented in
+{doc}`../reference/caching`.
 
-### Execution Environment
+## Out-of-band protocols
 
-The verb execution tasks all start with a Django `atomic()` block, so any system exceptions will cause a rollback. This also takes care of any data conflicts between verbs.
+For MUD-client compatibility, django-moo speaks GMCP, MTTS/TTYPE,
+MSSP, GA/EOR, CHARSET, and MSP over the SSH transport. IAC byte
+sequences pass through SSH transparently; the IAC parser/encoder/
+negotiator lives in `moo/shell/iac.py`. The
+[sshelnet](https://gitlab.com/bubblehouse/sshelnet) bridge translates
+plain telnet to SSH for clients that lack native SSH support, so no
+second listener is needed.
 
-The primary task execution environment uses Zope's `RestrictedPython` library to create a restricted coding environment where only selected imports are allowed, and access to `_` variables is restricted.
+The full protocol stack and which capabilities verb code can emit
+(via `moo.sdk.send_gmcp`, `moo.sdk.play_sound`, etc.) are documented
+in {doc}`../how-to/accessibility`.
+
+## Where things live
+
+| Module | Responsibility |
+|--------|----------------|
+| `moo.core.models` | Django models (Object, Verb, Property, ACL, Player, Mail). |
+| `moo.core.code` | RestrictedPython compilation, `ContextManager`, sandbox guards. |
+| `moo.core.parse` | Lexer + Parser; verb dispatch. |
+| `moo.core.tasks` | Celery task definitions (`parse_command`, `parse_code`, `invoke_verb`). |
+| `moo.shell` | AsyncSSH server, prompt-toolkit shell, Kombu consumer, IAC layer. |
+| `moo.bootstrap` | Dataset initialisation; `default/` package and verb files. |
+| `moo.sdk` | Public verb-author API — exclusive import target for verb code. |
+| `moo.settings` | Django settings split (`base.py`, `dev.py`, `local.py`, `test.py`). |
+| `extras/helm` | Kubernetes deployment chart. |
+| `extras/mudlet` | Mudlet client package (mapper bridge, SSH launcher). |
+
+## See also
+
+- {doc}`shell-internals` — the SSH session lifecycle, the two
+  coroutines, OSC 133, IAC negotiation in detail.
+- {doc}`parser` — the command-parser model.
+- {doc}`sandbox` — why the sandbox exists and how it's structured.
+- {doc}`introduction` — Diátaxis-style intro to the docs as a whole.

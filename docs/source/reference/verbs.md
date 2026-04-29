@@ -1,49 +1,32 @@
 # Verbs on Objects
 
-> The final kind of piece making up an object is verbs. A verb is a named MOO program that is associated with a particular object. Most verbs implement commands that a player might type; for example, in the LambdaCore database, there is a verb on all objects representing containers that implements commands of the form `put object in container`. It is also possible for MOO programs to invoke the verbs defined on objects. Some verbs, in fact, are designed to be used only from inside MOO code; they do not correspond to any particular player command at all. Thus, verbs in MOO are like the 'procedures' or 'methods' found in some other programming languages.
->
-> As with properties, every verb has an owner and a set of permission bits. The owner of a verb can change its program, its permission bits, and its argument specifiers (discussed below). Only a wizard can change the owner of a verb. The owner of a verb also determines the permissions with which that verb runs; that is, the program in a verb can do whatever operations the owner of that verb is allowed to do and no others. Thus, for example, a verb owned by a wizard must be written very carefully, since wizards are allowed to do just about anything.
+A **verb** is a named MOO program attached to an Object. Most verbs
+implement player commands — `look`, `take`, `drop`, `say` — but verbs
+can also be invoked as methods from other verb code (`obj.title()`,
+`this.moveto(...)`). Verb authoring as a craft is covered in
+{doc}`../tutorials/first-verb` and {doc}`../how-to/creating-verbs`;
+this page is the reference for the `Verb` model and its dispatch
+metadata.
 
-Just like properties, verb instances are largely normal Django ORM objects:
+## Identity and lifecycle
 
-    from moo.sdk import context
+Each `Verb` row has an `origin` (the Object the verb is attached to),
+one or more `Name` aliases, source code, and optional dispatch metadata
+(`direct_object`, `indirect_objects`). A verb is deleted when its
+origin object is destroyed.
 
-    obj = context.caller
-    for verb in obj.verbs.all():
-        print("* " + ", ".join([n.name for n in verb.names.all()]))
+At dispatch time, the parser searches caller → inventory → location →
+dobj → pobj for a matching verb on each object, with last match
+winning. See {doc}`parser` for the full search order and
+verb-resolution rules.
 
-This wouldn't work for verbs inherited from parents, so `Object` defines a number of helper methods, including `get_verb()`:
-
-    from moo.sdk import context
-
-    obj = context.caller
-    title = obj.get_verb('title')
-    print(title())
-
-`Object` also supports `__getattr__` for direct verb access:
-
-    from moo.sdk import context
-
-    obj = context.caller
-    print(obj.title())
-
-To add a new Verb to an object, users must have the `develop` permission on that object (owners and wizards get this by default). Verbs support the following permissions for any given object or object group:
-
-* `anything` - do anything with a verb
-* `read` - read the essential attributes of verb
-* `write` - modify the essential attributes of a verb
-* `entrust` - can change the owner of a verb
-* `grant` - can set permissions on a verb
-* `execute` - can run a verb
-
-Verbs also have some attributes of their own:
+## Verb attributes
 
 ```{eval-rst}
 .. py:currentmodule:: moo.core.models
 .. autoattribute:: Verb.pk
-   :no-index:
 
-    The unique identifying number of this Verb
+    The unique identifying number of this Verb.
 
 .. autoattribute:: Verb.code
    :no-index:
@@ -57,33 +40,114 @@ Verbs also have some attributes of their own:
    :no-index:
 .. autoattribute:: Verb.origin
    :no-index:
+.. autoattribute:: Verb.direct_object
+   :no-index:
+.. autoattribute:: Verb.indirect_objects
+   :no-index:
 ```
 
-## Error Handling in Verbs
+`direct_object` is one of `this`, `any`, `none`, or `either`.
+`indirect_objects` is a ManyToMany of `(preposition, specifier)`
+pairs. Both are populated from the verb file's shebang at load time.
 
-When a verb raises an exception, the task runner (`moo.core.tasks.parse_command`) determines what the player sees:
+## Verb names
 
-* **`UserError` and subclasses** — the exception message is displayed to the player as a bold red line. This includes `NoSuchObjectError`, `NoSuchVerbError`, `NoSuchPropertyError`, `UsageError`, `QuotaError`, and others from `moo.core.exceptions`. Verbs should raise these rather than printing error strings manually.
-* **Any other exception** — regular players see `"An error occurred while executing the command."`; wizards see the full traceback.
+A single Verb row may have multiple `Name` aliases stored as separate
+rows. The shebang `#!moo verb @reload reload_batch` creates one
+`Verb` with two `Name`s, so any of `@reload` or `reload_batch` will
+match. `verb_name` inside the verb body holds the specific alias the
+caller used.
 
-Because errors propagate automatically, verbs are free to call parser methods like `get_dobj()` without defensive wrapping. If the named object doesn't exist, `NoSuchObjectError` bubbles up and the player sees `"There is no 'X' here."` without any extra code in the verb.
+Names support a single asterisk for prefix matching:
 
-> In addition to an owner and some permission bits, every verb has three 'argument specifiers', one each for the direct object, the preposition, and the indirect object. The direct and indirect specifiers are each drawn from this set: `this`, `any`, or `none`. The preposition specifier is `none`, `any`, or one of the items in this list:
->
-> * `with/using`
-> * `at/to`
-> * `in front of`
-> * `in/inside/into`
-> * `on top of/on/onto/upon`
-> * `out of/from inside/from`
-> * `over`
-> * `through`
-> * `under/underneath/beneath`
-> * `behind`
-> * `beside`
-> * `for/about`
-> * `is`
-> * `as`
-> * `off/off of`
->
-> The argument specifiers are used in the process of parsing commands, described in the next chapter.
+| Pattern | Matches |
+|---------|---------|
+| `foo` | `foo` only (exact match). |
+| `foo*bar` | `foo`, `foob`, `fooba`, `foobar` (any prefix of `foobar` at least as long as `foo`). |
+| `foo*` | Any string starting with `foo` — `foo`, `food`, `foobar`. |
+| `*` | Anything. |
+
+The asterisk itself is not part of the matched string.
+
+## Dispatch metadata
+
+Argument-specifier semantics:
+
+| `direct_object` | Effect |
+|-----------------|--------|
+| `none` (default) | Verb fires only when the command has no direct object. |
+| `any` | A direct object must be present; any string is accepted. |
+| `this` | Verb fires only when the parsed direct object resolves to `origin`. |
+| `either` | Direct object is optional. `this` is set correctly when one is given. |
+
+`indirect_objects` is a list of preposition/specifier pairs. The
+preposition canonical forms (`with`, `at`, `in`, `on top of`, etc.)
+and their synonym groups live in `settings.PREPOSITIONS`; see
+{doc}`parser` for the full table. Each specifier is `none`, `any`,
+or `this` (matching the `direct_object` semantics above).
+
+For the shebang grammar that populates these fields, see
+{doc}`../how-to/creating-verbs`.
+
+## Permissions
+
+| Permission | Effect |
+|------------|--------|
+| `read` | Read the verb's source code and metadata |
+| `write` | Modify the verb's source, dispatch metadata, or names |
+| `execute` | Invoke the verb |
+| `entrust` | Change the verb's owner |
+| `grant` | Set permissions on the verb |
+| `anything` | Wildcard — all of the above |
+
+These checks fire automatically:
+
+- `Verb.save()` on a new row checks `write` on the `origin` Object.
+  On an update it checks `write` on the verb itself, plus `entrust`
+  if the owner is changing.
+- `Verb.delete()` checks `write` on the verb.
+- `Verb.__call__()` checks `execute` on the verb when there's an
+  active session. `passthrough()` passes `_bypass_execute_check=True`
+  internally so a parent verb call doesn't pay the check twice.
+
+`add_verb()` requires `develop` permission on the target object —
+that's the gate for adding a new verb to an object you don't own.
+
+Verb code does not need to check permissions before invoking another
+verb or modifying a property; the model layer raises `AccessError`
+on failure and the task runner shows it as a clean error to the
+player. See {doc}`../how-to/permissions`.
+
+## Error handling
+
+When a verb raises an exception:
+
+- **`UserError` and subclasses** (including `NoSuchObjectError`,
+  `NoSuchVerbError`, `NoSuchPropertyError`, `UsageError`,
+  `QuotaError`) — the exception's message is shown to the player as
+  a bold red line. Verbs should raise these rather than printing
+  errors manually.
+- **`PermissionError` (including `AccessError`)** — same UX as
+  `UserError`; the message is the model-layer guard's "X is not
+  allowed to 'Y' on Z" string.
+- **Any other exception** — regular players see
+  `"An error occurred while executing the command."`; wizards see
+  the full traceback.
+
+Because errors propagate cleanly, parser methods like `get_dobj()`
+can be called without defensive wrapping. If the named object
+doesn't exist, `NoSuchObjectError` bubbles up and the player sees
+`"There is no 'X' here."` automatically. Catch only when you want
+a different message or alternative behaviour.
+
+## See also
+
+- {doc}`../tutorials/first-verb` — write your first verb.
+- {doc}`../how-to/creating-verbs` — shebang grammar, parser
+  methods, output mechanisms, error handling.
+- {doc}`../how-to/advanced-verbs` — calling other verbs,
+  `passthrough()`, time-aware continuation.
+- {doc}`parser` — verb search order, preposition synonym groups,
+  the verb-name asterisk grammar.
+- {doc}`builtins` — `Object.add_verb()`, `Object.get_verb()`,
+  `Object.invoke_verb()` signatures.

@@ -1,30 +1,87 @@
-# MOO Permissions Reference
+# Permissions Reference
 
-At this point, the LambdaMOO Programmer's guide goes into details about object permissions, which is one of the areas that has been improved in DjangoMOO. Let's dive into the permissions structure as defined in DjangoMOO.
+DjangoMOO replaces LambdaMOO's UNIX-style `R/W/X` bits with a
+customisable list of named permissions. The full list is declared in
+`settings.DEFAULT_PERMISSIONS` and pre-created as `Permission` rows by
+`bootstrap.initialize_dataset()`.
 
-Instead of the UNIX-like `R/W/X` bits on each object, DjangoMOO defines a customizable list of permission names in `DEFAULT_PERMISSIONS`, which defaults to this list:
+## Permission names
 
-* `anything` - a special permission that acts as a wildcard
-* `read` - can read the essential attributes of an object, verb or property
-* `write` - can modify the essential attributes of an object, verb or property
-* `entrust` - can change the owner of an object
-* `grant` - can set permissions on an object
-* `execute` - can call a verb on an object
-* `move` - can move an object
-* `transmute` - can change the parents of an object
-* `derive` - can change the children of an object
-* `develop` - can modify the verbs of an object
+| Permission | Effect |
+|------------|--------|
+| `anything` | Wildcard — grants every other permission. |
+| `read` | Read essential attributes (an object's contents and verb/property names; a property's value; a verb's source). |
+| `write` | Modify essential attributes; add or delete properties on an object. |
+| `execute` | Invoke a verb. |
+| `move` | Change an object's `location` via `moveto()`. |
+| `transmute` | Add this object as a child of another (gives this object a new parent). |
+| `derive` | Add a new child to this object (parents need this on themselves before children can `transmute` to them). |
+| `entrust` | Change an object's, property's, or verb's `owner`. |
+| `grant` | Set or modify ACL rows on an object. Implicitly held by wizards and the object's owner. |
 
-The `read` bit controls whether or not the subject can obtain a list of the properties or verbs in the object. Symmetrically, the `write` bit controls whether or not the subject can add or delete properties on this object. The `grant` permission for this object is only granted to wizards or the owner of the object.
+`grant`, `entrust`, `transmute`, and `derive` only ever apply to
+wizards or the owner of the object — they're escalated permissions
+that protect the permission system itself.
 
-The `transmute` bit specifies whether or not the subject can create new objects with this one as the parent, while the parent needs a corresponding `derive` bit that allows new children to be added. The `derive` and `transmute` bit can only be set by a wizard or by the owner of the object.
+## Permission groups
 
-## Permission Groups
+ACL rows match against three group names. Resolution checks the
+caller's role and falls through:
 
-The 3 existing object groups the permission structure is currently aware of are:
+| Group | Matches |
+|-------|---------|
+| `owners` | The object's `owner` field. |
+| `wizards` | Players whose `Player.wizard` is `True`. |
+| `everyone` | Anyone else who passes the earlier groups. |
 
-* `owners` - The owner of the object (typically set via the `owner` field)
-* `wizards` - Special administrative users (typically marked with `wizard=True`)
-* `everyone` - All other users
+A grant to `everyone` applies to all callers; `wizards` and `owners`
+narrow the audience.
 
-For code patterns on checking and setting permissions, see {doc}`../how-to/permissions`.
+## Where each permission is enforced
+
+Permissions fire automatically at the model layer. Verb code does not
+need to check first; an `AccessError` propagates and the player sees a
+clean error. (See {doc}`../how-to/permissions` for the just-attempt-it
+pattern.)
+
+| Operation | Permission | Object the check is against |
+|-----------|------------|-----------------------------|
+| `Object.delete()` | `write` | the object |
+| `Object.set_property(name, value)` | `write` | the object |
+| `Object.add_verb(...)` | `write` | the object |
+| `Object.moveto(target)` | `move` | the moving object |
+| `Object.parents.add(parent)` | `transmute` + `derive` | child needs `transmute`; parent needs `derive` |
+| `Object.find(name)` | `read` | the object being searched |
+| `Property.save()` (new row) | `write` | the origin object |
+| `Property.save()` (update) | `write` (+ `entrust` if `owner` changes) | the property |
+| `Property.delete()` | `write` | the property |
+| `Verb.save()` (new row) | `write` | the origin object |
+| `Verb.save()` (update) | `write` (+ `entrust` if `owner` changes) | the verb |
+| `Verb.delete()` | `write` | the verb |
+| `Verb.__call__()` | `execute` | the verb |
+| Reading `obj.acl` from verb code | `grant` | the object |
+| Reading `Property.value` directly | `read` | the property |
+
+## Default permissions on new objects
+
+When an Object, Verb, or Property is created,
+`apply_default_permissions` (in `moo/core/utils.py`) inserts three ACL
+rows automatically:
+
+- `wizards` are allowed `anything`.
+- `owners` are allowed `anything`.
+- `everyone` is allowed `read` (objects, properties) or `execute`
+  (verbs).
+
+This runs natively rather than via a verb. Custom datasets can add
+further grants in their bootstrap finalize script — see
+{doc}`../how-to/permissions` for the canonical `derive` grant from
+`default/999_finalize.py`.
+
+## See also
+
+- {doc}`../how-to/permissions` — caller-vs-player, `set_task_perms`,
+  `is_wizard`/`owns` patterns, and granting in bootstrap vs. verb
+  code.
+- {doc}`sandbox` — the model-layer enforcement details, attribute
+  guards, and the `Property.value` read check.

@@ -139,43 +139,35 @@ Linters will complain about undefined references for `this`,
 ## The `context` object
 
 `from moo.sdk import context` brings the per-task context proxy into
-scope. Most non-trivial verbs need it.
+scope. Most non-trivial verbs need it. The two attributes you'll
+reach for most:
 
-| Attribute | Description |
-|-----------|-------------|
-| `context.player` | The Object that originated the command. Stays anchored to the session initiator across nested verb calls. |
-| `context.caller` | The object whose verb code is currently executing. Shifts as verbs invoke other verbs. |
-| `context.parser` | The `Parser` for the current command. Provides `get_dobj()`, `get_dobj_str()`, etc. (See below.) |
-| `context.writer` | The callable that prints to the player's connection. `print()` ends up calling this. |
-| `context.task_id` | The Celery task ID for the current execution. |
-| `context.task_time` | A `TaskTime` namedtuple (`elapsed`, `time_limit`, `remaining`). Used for handing off long-running work — see {doc}`advanced-verbs`. |
-| `context.caller_stack` | Stack of caller frames as verbs invoke sub-verbs. Useful for permission auditing. |
+- `context.player` — the Object that originated the command. Stays
+  anchored to the session initiator across nested verb calls. Use
+  this for "who is acting" logic.
+- `context.parser` — the parsed command. See "Parser methods" below.
 
-`context.player` and `context.caller` are the same object at the start
-of a command. They diverge once a verb on one object invokes a verb on
-another — the new verb's `context.caller` is the new executor while
-`context.player` stays the original session.
+`context.caller` shifts as verbs invoke other verbs (it tracks the
+verb's owner for permission checks); `context.player` does not. They
+are the same object at the start of a command.
+
+For the full attribute list (`writer`, `task_id`, `task_time`,
+`caller_stack`), see {doc}`../reference/runtime`.
 
 ## Parser methods
 
-When a verb is dispatched from a command, `context.parser` exposes the
-parsed pieces:
+When a verb is dispatched from a command, `context.parser` exposes
+methods to read the parsed arguments. The headline calls are
+`get_dobj()` / `get_dobj_str()` for the direct object and
+`get_pobj(prep)` / `get_pobj_str(prep)` for indirect objects, with
+`has_*` predicates for each.
 
-| Method | Returns | Notes |
-|--------|---------|-------|
-| `get_dobj()` | Direct object as **Object** | Raises `NoSuchObjectError` if the dobj string isn't a real object in scope. |
-| `get_dobj(lookup=True)` | Direct object as **Object**, by global name lookup | Use when the object isn't in the local area but needs to be addressed by name. |
-| `get_dobj_str()` | Direct object as **string** | Safe for plain text arguments (names, messages). |
-| `has_dobj()` / `has_dobj_str()` | bool | Whether the dobj resolved / whether a dobj string was given. |
-| `get_pobj(prep)` | Indirect object as **Object** | Raises `NoSuchObjectError`, `NoSuchPrepositionError`. |
-| `get_pobj(prep, lookup=True)` | Indirect object as **Object**, by global name | Same as `get_dobj(lookup=True)`. |
-| `get_pobj_str(prep)` | Indirect object as **string** | Raises `NoSuchPrepositionError` if the preposition isn't in the command. |
-| `has_pobj(prep)` / `has_pobj_str(prep)` | bool | |
+Use `get_*_str()` when the argument is plain text (a message, a name
+to create). Use `get_*()` when you expect the argument to refer to an
+existing game object — and let the exception propagate if it doesn't.
 
-Use `get_dobj_str()` / `get_pobj_str()` when the argument is plain text
-(a message, a name to create). Use `get_dobj()` / `get_pobj()` when you
-expect the argument to refer to an existing game object — and let the
-exception propagate if it doesn't.
+For the full method reference and exception behaviour, see
+{doc}`../reference/parser`.
 
 ## Sending output to players
 
@@ -262,15 +254,31 @@ When a `UserError` propagates out of a verb, the task runner
 the player as a bold red line. No `try/except` boilerplate is needed
 just to report errors.
 
-The common exceptions, all importable from `moo.sdk`:
+The common exceptions are all importable from `moo.sdk`:
 
-| Exception | Default message |
-|-----------|----------------|
-| `NoSuchObjectError(name)` | `"There is no '<name>' here."` |
-| `NoSuchVerbError(name)` | `"I don't know how to do that."` |
-| `NoSuchPropertyError(name)` | `"There is no '<name>' property defined."` |
-| `AmbiguousObjectError(name, matches)` | `"When you say '<name>', do you mean ...?"` |
-| `UsageError(message)` | The message string |
+```{eval-rst}
+.. py:currentmodule:: moo.core.exceptions
+.. autoexception:: UserError
+   :no-index:
+.. autoexception:: UsageError
+   :no-index:
+.. autoexception:: NoSuchObjectError
+   :no-index:
+.. autoexception:: NoSuchVerbError
+   :no-index:
+.. autoexception:: NoSuchPropertyError
+   :no-index:
+.. autoexception:: AmbiguousObjectError
+   :no-index:
+.. autoexception:: AmbiguousVerbError
+   :no-index:
+.. autoexception:: NoSuchPrepositionError
+   :no-index:
+.. autoexception:: QuotaError
+   :no-index:
+.. autoexception:: AccessError
+   :no-index:
+```
 
 Letting `get_dobj()` raise `NoSuchObjectError` is the right pattern when
 the argument must resolve to a real object — the player sees the

@@ -1,55 +1,95 @@
 # Properties on Objects
 
-While there's been lots of syntactic sugar added to reduce this kind of boilerplate, it's notable that DjangoMOO instances are largely normal Django ORM objects:
+Properties are typed key-value rows attached to an Object. Children
+inherit every property defined on their parents — owners follow the
+child by default, or stay pinned to the parent if `inherit_owner=True`.
 
-    from moo.sdk import context
+For function reference (signatures of `set_property`, `get_property`,
+etc.) see {doc}`builtins`. For the lookup architecture and caching
+behaviour, see {doc}`caching`.
 
-    obj = context.caller.location
-    description = obj.properties.filter(name="description")
-    if description.exists():
-        print(description[0].value)
+## Reading a property
 
-It's usually better to make use of the various helper methods, e.g.:
+The canonical pattern is `try/except`:
 
-    from moo.sdk import context
+```python
+from moo.sdk import NoSuchPropertyError
 
-    obj = context.caller.location
-    if obj.has_property('description'):
-        print(obj.get_property('description'))
+try:
+    description = obj.get_property("description")
+except NoSuchPropertyError:
+    description = "You see nothing special."
+```
 
-`Object` has a number of helper methods for using properties, so you don't necessarily have to use the `Property` class directly. For example, it supports `__getattr__` for direct property access:
+`get_property()` walks the inheritance chain and deserialises the
+value. It honours the three-tier cache (per-session dict → Redis →
+database with `AncestorCache` join), so repeat reads inside a single
+command are free.
 
-    from moo.sdk import context
+**Don't pair `has_property()` with `get_property()`.** That makes two
+queries for the same data. The `try/except` form does one.
 
-    obj = context.caller.location
-    if obj.has_property('description'):
-        print(obj.description)
+`obj.<name>` via `__getattr__` also resolves to a property if no verb
+matches first, but the verb miss is one extra database hit. Use
+`get_property("name")` when you know it's a property.
 
-The only caveat here is that __getattr__ will first search for the named verb, and only if no verb by that name is found will it search the properties. More on verbs in the next section...
+To get the underlying `Property` ORM instance instead of the
+deserialised value (e.g. to read its owner or permissions), pass
+`original=True`:
 
-> First, an object has a property corresponding to every property in its parent object. To use the jargon of object-oriented programming, this is a kind of inheritance. If some object has a property named `foo`, then so will all of its children and thus its children's children, and so on.
->
-> Second, an object may have a new property defined only on itself and its descendants. For example, an object representing a rock might have properties indicating its weight, chemical composition, and/or pointiness, depending upon the uses to which the rock was to be put in the virtual reality.
->
-> Every defined property (as opposed to those that are built-in) has an owner and a set of permissions for non-owners. The owner of the property can get and set the property's value and can change the non-owner permissions. Only a wizard can change the owner of a property.
->
-> The initial owner of a property is the player who added it; this is usually, but not always, the player who owns the object to which the property was added. This is because properties can only be added by the object owner or a wizard, unless the object is  writable, which is rare. Thus, the owner of an object may not necessarily be the owner of every (or even any) property on that object.
+```python
+prop = obj.get_property("description", original=True)
+prop.owner       # Player who owns this property row
+prop.inherit_owner
+```
 
-To add a new Property to an object, users must have the `write` permission on that object (owners and wizards get this by default). Properties support the following permissions for any given object or object group:
+## Writing a property
 
-* `anything` - do anything with a property
-* `read` - read the property value
-* `write` - modify the property value
-* `entrust` - can change the owner of a property
-* `grant` - can set permissions on a property
+```python
+obj.set_property("description", "A dark, cold room.")
+```
 
-Every property has the following attributes:
+`set_property` saves its own row — you do not need to call
+`obj.save()` afterwards. To create a property where children should
+keep the parent's ownership rather than rebasing to each child's
+owner, pass `inherit_owner=True`:
+
+```python
+obj.set_property("ps", "they", inherit_owner=True)
+```
+
+See "Inheritance" below for what that flag actually changes.
+
+## Permissions
+
+Adding a new property to an object requires `write` permission on the
+**object**. Updating an existing property requires `write` on the
+**property** itself. Changing a property's owner requires `entrust`.
+Deleting a property requires `write`.
+
+Like every model-layer permission check, these fire automatically in
+`Property.save()` and `Property.delete()` — verb code does not need
+to check first. If the caller lacks the permission, `AccessError`
+propagates and the player sees a clean error message. See
+{doc}`../how-to/permissions`.
+
+The named permissions a property recognises:
+
+| Permission | Effect |
+|------------|--------|
+| `read` | Read the property value |
+| `write` | Modify the property value |
+| `entrust` | Change the owner of the property |
+| `grant` | Set permissions on the property |
+| `anything` | Wildcard — all of the above |
+
+## Property attributes
 
 ```{eval-rst}
 .. py:currentmodule:: moo.core.models
 .. autoattribute:: Property.pk
 
-    The unique identifying number of this Property
+    The unique identifying number of this Property.
 
 .. autoattribute:: Property.name
    :no-index:
@@ -65,24 +105,31 @@ Every property has the following attributes:
    :no-index:
 ```
 
-## Property Inheritance
+## Inheritance and `inherit_owner`
 
-This section is complicated enough to call out in a separate heading. In LambdaMOO, there was a third permission bit `c` ... that wasn't really a permission bit.
+When a child object reads a property defined on a parent, the child
+gets its own row with the parent's value copied in. By default, the
+child's owner becomes the *property's* owner on the child — so any
+verb running as the child's owner can modify the property.
 
-> Recall that every object has all of the properties that its parent does and perhaps some more. Ordinarily, when a child object inherits a property from its parent, the owner of the child becomes the owner of that property. This is because the `c` permission bit is "on" by default. If the `c` bit is not on, then the inherited property has the same owner in the child as it does in the parent.
->
-> As an example of where this can be useful, the LambdaCore database ensures that every player has a `password` property containing the encrypted version of the player's connection password. For security reasons, we don't want other players to be able to see even the encrypted version of the password, so we turn off the `r` permission bit. To ensure that the password is only set in a consistent way (i.e., to the encrypted version of a player's password), we don't want to let anyone but a wizard change the property. Thus, in the parent object for all players, we made a wizard the owner of the password property and set the permissions to the empty string, "". That is, non-owners cannot read or write the property and, because the `c` bit is not set, the wizard who owns the property on the parent class also owns it on all of the descendants of that class.
+`inherit_owner=True` reverses that: the child's row keeps the
+parent's owner. This matters when a parent verb (running as the
+parent's owner) needs to mutate the property on every descendant.
+Without `inherit_owner=True`, the verb loses write access on every
+descendant whose owner is a different player.
 
-... we don't actually have this specific problem because passwords are kept externally from the game code ...
-
-> Another, perhaps more down-to-earth example arose when a character named Ford started building objects he called "radios" and another character, yduJ, wanted to own one. Ford kindly made the generic radio object fertile, allowing yduJ to create a child object of it, her own radio. Radios had a property called `channel` that identified something corresponding to the frequency to which the radio was tuned. Ford had written nice programs on radios (verbs, discussed below) for turning the channel selector on the front of the radio, which would make a corresponding change in the value of the `channel` property. However, whenever anyone tried to turn the channel selector on yduJ's radio, they got a permissions error. The problem concerned the ownership of the `channel` property.
->
-> As I explain later, programs run with the permissions of their author. So, in this case, Ford's nice verb for setting the channel ran with his permissions. But, since the `channel` property in the generic radio had the `c` permission bit set, the `channel` property on yduJ's radio was owned by her. Ford didn't have permission to change it! The fix was simple. Ford changed the permissions on the `channel` property of the generic radio to be just `r`, without the `c` bit, and yduJ made a new radio. This time, when yduJ's radio inherited the `channel` property, yduJ did not inherit ownership of it; Ford remained the owner. Now the radio worked properly, because Ford's verb had permission to change the channel.
->
-
-DjangoMOO properties support an `inherit_owner` attribute that works the same way as LambdaMOO's `c` bit. When `inherit_owner=True`, children will inherit the property with the owner unchanged. Here's some pseudocode that creates a default room class that adds a fixed description to all its children, and ensures those children's owner cannot modify it:
+The classic example: a `Generic Player` defines pronoun properties
+(`ps`, `po`, `pp`, ...) that the `gender_utils` verb (owned by
+Wizard) updates when a player runs `@gender male`. With
+`inherit_owner=True` on those properties, every player's pronoun
+properties are still owned by Wizard, and the wizard verb can change
+them. Without it, each player would own their own pronoun rows and
+the wizard verb would hit `AccessError`.
 
 ```python
-room = create('empty room')
-room.set_property("description", "There's not much to see here.", inherit_owner=True)
+# In a bootstrap script:
+player_class.set_property("ps", "they", inherit_owner=True)
 ```
+
+For the LambdaMOO origin of this design (the `c` permission bit), see
+the LambdaMOO Programmer's Manual.

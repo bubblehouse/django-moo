@@ -72,7 +72,7 @@ by inspecting the SSH client's `TERM` environment variable:
 
 | TERM contains            | Mode              | Purpose                                   |
 |--------------------------|-------------------|-------------------------------------------|
-| `xterm-256-basic` (exact)| `raw`             | MUD clients and `moo-agent`; line-based I/O, IAC negotiation, no cursor control |
+| `xterm-256-basic` (exact)| `raw`             | MUD clients; line-based I/O, IAC negotiation, no cursor control |
 | any known MUD client name (`mudlet`, `tintin`, `mushclient`, ...) | `rich` + IAC | full TUI plus IAC subnegotiation (GMCP/MSSP/EOR/CHARSET) |
 | anything else            | `rich`            | default prompt_toolkit TUI, no IAC        |
 
@@ -98,15 +98,6 @@ the traditional MUD experience.
 Escape sequences (anything starting with `\x1b`) are discarded by the raw
 reader on purpose. MUD clients do their own line editing and history; the
 server-side reader is a plain byte buffer.
-
-### Automation mode
-
-A variant of rich mode where interactive shortcuts (`"` → `say "%"`, etc.) are
-suppressed and CPR (cursor position report) queries are disabled. Used by
-`MooSSH` in `extras/skills/game-designer/tools/moo_ssh.py` and by the agent
-runtime. Editor TUIs are rejected with an error that points at the inline
-`@edit … with "…"` form; paginator events are inlined directly rather than
-queued for a TUI.
 
 ## The Kombu Message Bus
 
@@ -146,7 +137,7 @@ Three kinds of things arrive on the queue:
 
 `session_setting` events update `_session_settings[user_pk]` in-place.
 Everything else is routed by `_route_event` to its matching asyncio queue
-(or, for `paginator` in raw / automation mode, inlined directly).
+(or, for `paginator` in raw mode, inlined directly).
 
 ## Startup Choreography
 
@@ -156,7 +147,7 @@ right place, with the right colour, below any `look_self` burst from
 
 1. Wipe stale `_session_settings[user_pk]` (previous connection on the same
    account might have left `a11y quiet` / `PREFIX` state behind) and re-stamp
-   `mode` / `automation`.
+   `mode`.
 2. Mirror `mode` into the Django cache so Celery workers see it.
 3. Set `moo:connected:<user_pk>` so `is_connected()` returns `True` by the
    time the room's confunc fires.
@@ -277,7 +268,7 @@ callback shell runs outside the verb sandbox.
 
 `_session_settings` is a process-local dict keyed by Django user PK.
 Everything the shell cares about per-session lives there: `mode`,
-`automation`, `quiet_mode`, `output_prefix`, `output_suffix`,
+`quiet_mode`, `output_prefix`, `output_suffix`,
 `output_global_prefix`, `output_global_suffix`, `color_system`,
 `terminal_width`, `osc133_mode`, `prefixes_mode`.
 
