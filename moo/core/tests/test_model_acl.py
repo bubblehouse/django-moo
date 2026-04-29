@@ -121,10 +121,10 @@ def test_is_allowed_group_wizards(t_init, t_wizard):
     Player.objects.filter(avatar=t_wizard).update(wizard=True)
     with _ctx(t_wizard):
         obj = create("wiz obj")
-        obj.allow("wizards", "develop")
+        obj.allow("wizards", "transmute")
     player = Object.objects.create(name="player")
-    assert t_wizard.is_allowed("develop", obj)
-    assert not player.is_allowed("develop", obj)
+    assert t_wizard.is_allowed("transmute", obj)
+    assert not player.is_allowed("transmute", obj)
 
 
 # ---------------------------------------------------------------------------
@@ -196,7 +196,6 @@ def test_regular_user_can_read_a_thing(t_init: Object, t_wizard: Object):
     assert not user.is_allowed("move", thing)
     assert not user.is_allowed("transmute", thing)
     assert not user.is_allowed("derive", thing)
-    assert not user.is_allowed("develop", thing)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -209,7 +208,6 @@ def test_regular_user_who_owns_a_thing(t_init: Object, t_wizard: Object):
     assert user.is_allowed("move", thing)
     assert user.is_allowed("transmute", thing)
     assert user.is_allowed("derive", thing)
-    assert user.is_allowed("develop", thing)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -222,7 +220,6 @@ def test_everyone_can_read_a_thing(t_init: Object, t_wizard: Object):
     assert not jim.is_allowed("move", thing)
     assert not jim.is_allowed("transmute", thing)
     assert not jim.is_allowed("derive", thing)
-    assert not jim.is_allowed("develop", thing)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -236,7 +233,6 @@ def test_wizard_can_do_most_things(t_init: Object, t_wizard: Object):
     assert t_wizard.is_allowed("move", thing)
     assert t_wizard.is_allowed("transmute", thing)
     assert t_wizard.is_allowed("derive", thing)
-    assert t_wizard.is_allowed("develop", thing)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)

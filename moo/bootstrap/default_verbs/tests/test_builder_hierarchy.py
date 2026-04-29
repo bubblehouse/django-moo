@@ -67,9 +67,6 @@ def test_builder_verbs_on_builder_not_player(t_init: Object, t_wizard: Object):
         "@obvious",
         "@nonobvious",
         "@move",
-        "@add-key",
-        "@remove-key",
-        "@keys",
         "@eject",
         "@set",
         "@divine",
@@ -83,6 +80,10 @@ def test_builder_verbs_on_builder_not_player(t_init: Object, t_wizard: Object):
         assert builder.get_verb(name, recurse=False) is not None, f"{name} missing directly on $builder"
         with pytest.raises(NoSuchVerbError):
             player.get_verb(name, recurse=False)
+
+    # SSH key verbs are on $player so any connected player can manage their keys
+    for name in ("@keys", "@add-key", "@remove-key"):
+        assert player.get_verb(name, recurse=False) is not None, f"{name} missing directly on $player"
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
