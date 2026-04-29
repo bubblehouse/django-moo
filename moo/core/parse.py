@@ -150,6 +150,22 @@ class Lexer:
     sentence. This may be of use to verb code, as well.
     """
 
+    #: The full, unparsed command string the player typed.
+    command: str
+    #: The tokenised words from the command, preserving quoted spans.
+    words: list[str]
+    #: The direct-object substring, or ``None`` if the command had no
+    #: direct object.
+    dobj_str: str | None
+    #: Any specifier on the direct object (``my``, ``the``, a possessive
+    #: like ``Bill's``). Empty string if no specifier was used; ``None``
+    #: if there was no direct object at all.
+    dobj_spec_str: str | None
+    #: Dict mapping each preposition that appeared in the command to a
+    #: list of ``[spec_str, obj_str, obj]`` triples. ``obj`` is ``None``
+    #: at the lexer phase; the parser fills it in during dispatch.
+    prepositions: dict
+
     def __init__(self, command):
         self.command = command
 
@@ -232,6 +248,30 @@ class Parser:  # pylint: disable=too-many-instance-attributes
     The parser instance is created by the avatar. A new instance is created
     for each command invocation.
     """
+
+    #: The :class:`Object` that issued the command (the player who typed it).
+    caller: object
+    #: The full, unparsed command string. Inherited from the lexer.
+    command: str
+    #: The tokenised words from the command. Inherited from the lexer.
+    words: list[str]
+    #: The direct-object substring. Inherited from the lexer.
+    dobj_str: str | None
+    #: Direct-object specifier. Inherited from the lexer.
+    dobj_spec_str: str | None
+    #: The resolved direct object as an :class:`Object`, or ``None`` if
+    #: it could not be resolved or no direct object was given.
+    dobj: object
+    #: Dict mapping each preposition that appeared to ``[spec_str,
+    #: obj_str, obj]`` triples. After parsing, ``obj`` is the resolved
+    #: :class:`Object` (or ``None`` if it could not be resolved).
+    prepositions: dict
+    #: The :class:`Verb` selected by dispatch, set after :meth:`get_verb`
+    #: runs.
+    verb: object
+    #: The Object the verb was matched on (last-match-wins; see
+    #: :doc:`/reference/parser`).
+    this: object
 
     def __init__(self, lexer, caller):
         """
@@ -373,20 +413,10 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             return self.verb
 
         search_order_list = self.get_search_order()
-
-        if getattr(settings, "MOO_BATCH_VERB_DISPATCH", False):
-            winner_this, winner_verb = self._batch_get_verb(search_order_list)
-            if winner_this is not None:
-                self.this = winner_this
-                self.verb = winner_verb
-        else:
-            for obj in search_order_list:
-                try:
-                    if verb := obj.parse_verb(self):
-                        self.this = obj
-                        self.verb = verb
-                except NoSuchVerbError:
-                    continue
+        winner_this, winner_verb = self._batch_get_verb(search_order_list)
+        if winner_this is not None:
+            self.this = winner_this
+            self.verb = winner_verb
 
         if not self.this:
             raise NoSuchVerbError(self.words[0])
@@ -500,13 +530,16 @@ class Parser:  # pylint: disable=too-many-instance-attributes
 
     def get_dobj(self, lookup=False):
         """
-        Get the direct object for this parser. If there was no
-        direct object found, raise a NoSuchObjectError.
+        Return the direct object as an :class:`Object`. Use this when
+        the argument refers to an existing game object.
 
-        With ``lookup=True`` and no local match, fall back to a global
-        ``lookup()`` by name. Local matches always take precedence — this
-        prevents `@obvious crate` from resolving to a faraway "wooden crate"
-        when the player has their own newly-made crate in the room.
+        :param lookup: if ``True``, fall back to a global
+            :func:`moo.sdk.lookup` by name when no local match is found.
+            Local matches always take precedence — this prevents
+            ``@obvious crate`` from resolving to a faraway "wooden crate"
+            when the player has their own crate in the room.
+        :raises NoSuchObjectError: if the direct object string didn't
+            resolve to a real object.
         """
         if self.dobj:
             return self.dobj
@@ -518,10 +551,17 @@ class Parser:  # pylint: disable=too-many-instance-attributes
 
     def get_pobj(self, prep, lookup=False):
         """
-        Get the object for the given preposition. If there was no object found,
-        raise a NoSuchObjectError; if the preposition was not found, raise a
-        NoSuchPrepositionError. Synonym prepositions (e.g. "using" for "with")
-        are resolved to their canonical form automatically.
+        Return the indirect object for ``prep`` as an :class:`Object`.
+        Synonym prepositions (e.g. ``using`` for ``with``) are resolved
+        to their canonical form automatically.
+
+        :param prep: the preposition (canonical form or any synonym).
+        :param lookup: if ``True``, fall back to a global
+            :func:`moo.sdk.lookup` by name when no local match is found.
+        :raises NoSuchObjectError: if the indirect object string didn't
+            resolve to a real object.
+        :raises NoSuchPrepositionError: if ``prep`` was not present in
+            the command.
         """
         prep = Pattern.PREP_CANONICAL.get(prep, prep)
         if prep not in self.prepositions:
@@ -542,8 +582,11 @@ class Parser:  # pylint: disable=too-many-instance-attributes
 
     def get_dobj_str(self):
         """
-        Get the direct object **string** for this parser. If there was no
-        direct object **string** found, raise a NoSuchObjectError
+        Return the direct object as a raw string. Use this when the
+        argument is plain text (a message, a name to create, a code
+        snippet) rather than a reference to an existing game object.
+
+        :raises NoSuchObjectError: if no direct object string was given.
         """
         if not (self.dobj_str):
             raise NoSuchObjectError("direct object")
@@ -551,10 +594,16 @@ class Parser:  # pylint: disable=too-many-instance-attributes
 
     def get_pobj_str(self, prep, return_list=False):
         """
-        Get the object **string** for the given preposition. If there was no
-        object **string** found, raise a NoSuchObjectError; if the preposition
-        was not found, raise a NoSuchPrepositionError. Synonym prepositions are
-        resolved to their canonical form automatically.
+        Return the indirect object for ``prep`` as a raw string. Use this
+        when the argument is plain text rather than an object reference.
+
+        :param prep: the preposition (canonical form or any synonym).
+        :param return_list: if ``True`` and multiple matches were given,
+            return all of them as a list. Default returns the first.
+        :raises NoSuchObjectError: if no indirect object string was
+            given for this preposition.
+        :raises NoSuchPrepositionError: if ``prep`` was not present in
+            the command.
         """
         prep = Pattern.PREP_CANONICAL.get(prep, prep)
         if prep not in self.prepositions:
@@ -574,10 +623,16 @@ class Parser:  # pylint: disable=too-many-instance-attributes
 
     def get_pobj_spec_str(self, prep, return_list=False):
         """
-        Get the object **specifier** for the given preposition. If there was no
-        object **specifier** found, return the empty string; if the preposition
-        was not found, raise a NoSuchPrepositionError. Synonym prepositions are
-        resolved to their canonical form automatically.
+        Return the specifier (``my``, ``the``, possessive form) used
+        with the indirect object for ``prep``. Useful when a verb wants
+        to behave differently for ``my X`` vs. plain ``X``. Returns the
+        empty string if no specifier was given.
+
+        :param prep: the preposition (canonical form or any synonym).
+        :param return_list: if ``True`` and multiple matches were given,
+            return all specifiers as a list.
+        :raises NoSuchPrepositionError: if ``prep`` was not present in
+            the command.
         """
         prep = Pattern.PREP_CANONICAL.get(prep, prep)
         if prep not in self.prepositions:
@@ -594,13 +649,15 @@ class Parser:  # pylint: disable=too-many-instance-attributes
 
     def has_dobj(self, lookup=False):
         """
-        Was a direct object found?
+        Return ``True`` if the parser resolved a direct object to a
+        real :class:`Object`.
         """
         return self.dobj is not None
 
     def has_pobj(self, prep):
         """
-        Was an object for this preposition found? Synonym prepositions are
+        Return ``True`` if the parser resolved an indirect object for
+        ``prep`` to a real :class:`Object`. Synonym prepositions are
         resolved to their canonical form automatically.
         """
         prep = Pattern.PREP_CANONICAL.get(prep, prep)
@@ -613,14 +670,17 @@ class Parser:  # pylint: disable=too-many-instance-attributes
 
     def has_dobj_str(self):
         """
-        Was a direct object string found?
+        Return ``True`` if a direct object string was given on the
+        command line, regardless of whether it resolved to an object.
         """
         return self.dobj_str is not None
 
     def has_pobj_str(self, prep):
         """
-        Was a object string for this preposition found? Synonym prepositions are
-        resolved to their canonical form automatically.
+        Return ``True`` if an indirect object string was given for
+        ``prep``, regardless of whether it resolved to an object.
+        Synonym prepositions are resolved to their canonical form
+        automatically.
         """
         prep = Pattern.PREP_CANONICAL.get(prep, prep)
         if prep not in self.prepositions:

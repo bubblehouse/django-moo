@@ -35,8 +35,6 @@ DEFAULT_PERMISSIONS = (
     "move",
     "transmute",
     "derive",
-    "develop",
-    "administer",
 )
 
 ALLOWED_MODULES = (
@@ -48,15 +46,14 @@ ALLOWED_MODULES = (
     "random",
 )
 
+#: ``moo.sdk`` submodule names that must not be importable by verb code.
+#: The ``context`` submodule is intentionally absent — its name is shadowed
+#: in ``__init__.py`` by the exported ``_Context()`` singleton, so
+#: ``from moo.sdk import context`` already returns the singleton, not the
+#: module. Other dangerous names (``ContextManager``, ``contextmanager``,
+#: ``log``) are protected by underscore aliases inside the sdk package rather
+#: than appearing here.
 BLOCKED_IMPORTS = {
-    # moo.sdk internal names are protected by underscore aliases in the sdk package
-    # rather than explicit blocklist entries: ContextManager → _ContextManager (pass 7),
-    # contextmanager → _contextmanager (pass 15), log → _log (pass 15).
-    #
-    # moo.sdk submodule names that must not be importable by verb code.  The
-    # `context` submodule is intentionally absent: its name is shadowed in
-    # __init__.py by the exported _Context() singleton, so
-    # `from moo.sdk import context` already returns the singleton, not the module.
     "moo.sdk": {"objects", "output", "tasks", "ssh_keys", "admin", "mail", "password"},
 }
 
@@ -144,12 +141,6 @@ OPPOSITE_DIRECTIONS = {
 }
 
 PREPOSITION_SPECIFIER_CHOICES = (("any", "any"), ("none", "none"))
-
-# When True, Parser.get_verb() issues a single batch query against AncestorCache
-# instead of one _lookup_verb() call per search-order object.
-# Requires AncestorCache to be migrated and populated (migration 0025).
-# Set to False to fall back to the sequential dispatch path.
-MOO_BATCH_VERB_DISPATCH = False
 
 # TTL in seconds for cross-session attribute (verb/property) lookup caching.
 # Set to 0 to disable (e.g. in test environments where the cache backend is

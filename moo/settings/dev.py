@@ -47,7 +47,6 @@ DATABASES = {
         "CONN_MAX_AGE": 60,
     }
 }
-MOO_BATCH_VERB_DISPATCH = True
 
 REDIS_HOSTNAME = os.environ.get("REDIS_HOSTNAME", "redis")
 CACHES = {
