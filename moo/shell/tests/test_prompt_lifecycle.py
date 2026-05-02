@@ -38,6 +38,7 @@ def _make_prompt_user(name, location=None):
     avatar.name = name
     avatar.location = location
     user = MagicMock()
+    user.pk = 1  # int so f-string cache keys don't contain '<MagicMock ...>'
     user.player.avatar = avatar
     return user, avatar
 
@@ -46,6 +47,7 @@ def _make_handle_command_mocks():
     """Return (prompt, avatar, parse_task_mock) with patched parse_command and ContextManager."""
     user, avatar = _make_prompt_user("Wizard")
     prompt = MooPrompt(user)
+    prompt._get_avatar = lambda: avatar
     parse_result = MagicMock()
     parse_result.get.return_value = ([], 0)
     parse_result.id = "test-task-id"
@@ -254,8 +256,9 @@ def test_handle_command_reads_events_from_cache():
 
 def test_fire_confunc_returns_task_results():
     """_fire_confunc() returns one AsyncResult per dispatched task."""
-    user, _ = _make_avatar(has_confunc=True, has_location_confunc=True)
+    user, avatar = _make_avatar(has_confunc=True, has_location_confunc=True)
     prompt = MooPrompt(user)
+    prompt._get_avatar = lambda: avatar
     task_result = MagicMock()
     with patch("moo.shell.prompt.tasks.invoke_verb") as mock_task:
         mock_task.delay.return_value = task_result
@@ -266,8 +269,9 @@ def test_fire_confunc_returns_task_results():
 
 def test_fire_confunc_skips_missing_verbs():
     """_fire_confunc() returns an empty list when the player has no confunc verbs."""
-    user, _ = _make_avatar(has_confunc=False, has_location_confunc=False)
+    user, avatar = _make_avatar(has_confunc=False, has_location_confunc=False)
     prompt = MooPrompt(user)
+    prompt._get_avatar = lambda: avatar
     with patch("moo.shell.prompt.tasks.invoke_verb") as mock_task:
         results = asyncio.run(prompt._fire_confunc())
     assert results == []

@@ -69,6 +69,16 @@ DJANGO_SETTINGS_MODULE = "moo.settings.test"
 python_files = ["tests/*.py"]
 addopts = "--spec --ds=moo.settings.test"
 spec_test_format = "{result} {docstring_summary}"
+filterwarnings = [
+    # tell()/write() emit a RuntimeWarning when no live SSH connection exists.
+    # That is always the case in unit tests; treating it as expected lets the
+    # noisy default verb tests stay terse. Tests that explicitly assert on
+    # warning content still use ``pytest.warns(RuntimeWarning)`` and see them.
+    "ignore:ConnectionError\\(.*\\):RuntimeWarning",
+    # AncestorCache prefetches from a post_migrate signal that fires before
+    # apps.ready is set in the test runner. Cosmetic only.
+    "ignore:Accessing the database during app initialization is discouraged.*:RuntimeWarning",
+]
 
 [tool.mypy]
 ignore_missing_imports = true

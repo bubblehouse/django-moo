@@ -38,14 +38,39 @@ def mock_player_connected(monkeypatch):
     monkeypatch.setattr(Object, "is_connected", lambda self: True)
 
 
+@pytest.fixture(autouse=True)
+def _reset_site_context():
+    """Drop any leaked site/contextvar/Site-cache state between tests.
+
+    ``ContextVar`` and ``Site.objects`` caches are process-level — a test
+    that sets ``ContextManager.set_site(siteX)`` or holds a reference to a
+    rolled-back Site row would otherwise leak into the next test's setup.
+    """
+    from django.contrib.sites.models import Site
+
+    from moo.core.code import ContextManager
+
+    ContextManager.set_site(None)
+    Site.objects.clear_cache()
+    yield
+    ContextManager.set_site(None)
+    Site.objects.clear_cache()
+
+
 @pytest.fixture()
 def t_init(request):
     """
     Test fixture that pre-seeds a basic bootstrapped environment.
     """
+    from django.contrib.sites.models import Site
+
     from moo.core.moojson import clear_nothing_cache
 
     clear_nothing_cache()
+    # Django caches the per-process Site lookup; tests that create or roll
+    # back Site rows can leave a stale instance in that cache and trigger
+    # FK violations when a later test tries to use it.
+    Site.objects.clear_cache()
     name = request.param if hasattr(request, "param") else "test"
     log.debug(f"t_init: {name}")
     Repository.objects.create(slug=name, prefix=f"moo/bootstrap/{name}_verbs", url=settings.DEFAULT_GIT_REPO_URL)
@@ -77,3 +102,54 @@ def t_wizard_user_pk(t_wizard):
     the registry must use this PK, not ``t_wizard.owner.pk``.
     """
     yield Player.objects.filter(avatar=t_wizard).select_related("user").first().user.pk
+
+
+@pytest.fixture()
+def t_two_sites():
+    """
+    Bootstrap two independent universes (Site 1 + a second Site) and yield
+    ``(site1, site2)``. Uses the ``test`` dataset on each site so the basic
+    System/Wizard/sentinel objects exist.  Tests that need ``$root_class``,
+    ``$player``, etc. should depend on a full bootstrap fixture instead.
+    """
+    from django.contrib.sites.models import Site
+
+    from moo.bootstrap import initialize_dataset
+    from moo.core.code import ContextManager
+    from moo.core.moojson import clear_nothing_cache
+
+    clear_nothing_cache()
+    site1, _ = Site.objects.get_or_create(pk=1, defaults={"domain": "site1.test", "name": "site1"})
+    site2 = Site.objects.create(domain="site2.test", name="site2")
+    initialize_dataset("test", site=site1)
+    initialize_dataset("test", site=site2)
+    # Reset to no site so each test can pick its own context.
+    ContextManager.set_site(None)
+    yield site1, site2
+    clear_nothing_cache()
+
+
+@pytest.fixture()
+def t_two_sites_default():
+    """
+    Like ``t_two_sites`` but loads the full ``default`` bootstrap on each site
+    so the system-property graph (``$root_class``, ``$player``, etc.) is
+    populated. Slower; use only when the test actually probes those properties.
+    """
+    from django.contrib.sites.models import Site
+
+    from moo.core.code import ContextManager
+    from moo.core.moojson import clear_nothing_cache
+
+    clear_nothing_cache()
+    site1, _ = Site.objects.get_or_create(pk=1, defaults={"domain": "site1.test", "name": "site1"})
+    site2 = Site.objects.create(domain="site2.test", name="site2")
+    pkg = importlib.resources.files("moo.bootstrap")
+    pkg_init = pkg / "default" / "__init__.py"
+    for site in (site1, site2):
+        ContextManager.set_site(site)
+        with importlib.resources.as_file(pkg_init) as path:
+            load_python(path)
+    ContextManager.set_site(None)
+    yield site1, site2
+    clear_nothing_cache()
