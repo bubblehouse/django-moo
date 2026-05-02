@@ -446,39 +446,43 @@ class SSHServer(PromptToolkitSSHServer):
 
     def _resolve_site(self):
         """Resolve the connection hostname to a Django Site record."""
-        from django.conf import settings
         from django.contrib.sites.models import Site
 
-        try:
-            conn = getattr(self, "_conn", None)
-            if conn is not None:
-                hostname = conn.get_extra_info("server_host")
-                if hostname:
-                    self.site = Site.objects.filter(domain=hostname).first()
-                    if self.site:
-                        return
-        except Exception:  # pylint: disable=broad-except
-            pass
-        # Fall back to default site
-        self.site = Site.objects.get(pk=getattr(settings, "SITE_ID", 1))
+        from moo.core.managers import get_default_site
 
-    def _auto_provision_superuser(self):
-        """Auto-create a wizard avatar+Player for superusers connecting to a new site."""
-        from moo.core.models.auth import Player
+        conn = getattr(self, "_conn", None)
+        if conn is not None:
+            hostname = conn.get_extra_info("server_host")
+            if hostname:
+                self.site = Site.objects.filter(domain=hostname).first()
+                if self.site:
+                    return
+                log.warning("SSH connection to unknown hostname %s — falling back to default site", hostname)
+        self.site = get_default_site()
+
+    def _auto_provision_universal_wizard(self):
+        """Provision a wizard avatar+Player for a UniversalWizard user on a new site."""
+        from moo.core.models.auth import Player, UniversalWizard
         from moo.core.models.object import Object
 
-        if not (self.user and self.user.is_superuser and self.site):
+        if not (self.user and self.site):
             return
-        # Check if player record already exists for this site
+        if not UniversalWizard.objects.filter(user=self.user).exists():
+            return
+        # Idempotent: a Player for this (user, site) already exists.
         if Player.objects.filter(user=self.user, site=self.site).exists():
             return
-        # Create a wizard avatar for this universe
-        avatar_name = f"{self.user.username.title()} (Universal)"
-        avatar, _ = Object.global_objects.get_or_create(
-            name=avatar_name,
+        # Avatar lookup must include unique_name=True so a non-unique object
+        # with the same name cannot be hijacked. The owner is set to itself
+        # post-create so the wizard owns their own avatar.
+        avatar, created = Object.global_objects.get_or_create(
+            name=self.user.username,
+            unique_name=True,
             site=self.site,
-            defaults={"unique_name": True},
         )
+        if created:
+            avatar.owner = avatar
+            avatar.save()
         Player.objects.create(user=self.user, avatar=avatar, wizard=True, site=self.site)
 
     @sync_to_async
@@ -496,7 +500,7 @@ class SSHServer(PromptToolkitSSHServer):
         if user.check_password(password):
             self.user = user  # pylint: disable=attribute-defined-outside-init
             self._resolve_site()
-            self._auto_provision_superuser()
+            self._auto_provision_universal_wizard()
             return True
         return False
 
@@ -520,7 +524,7 @@ class SSHServer(PromptToolkitSSHServer):
             if user_pem == server_pem:
                 self.user = user_key.user  # pylint: disable=attribute-defined-outside-init
                 self._resolve_site()
-                self._auto_provision_superuser()
+                self._auto_provision_universal_wizard()
                 return True
         return False
 
