@@ -301,6 +301,7 @@ _CONTEXT_VARS: dict[str, contextvars.ContextVar] = {
     # published event type so the shell can read what events to expect.
     # Default None means "not tracking" — most sessions don't need this.
     "published_events": contextvars.ContextVar("published_events", default=None),
+    "site": contextvars.ContextVar("site", default=None),
 }
 
 
@@ -335,6 +336,14 @@ class ContextManager:
         if name in _CONTEXT_VARS:
             return _CONTEXT_VARS[name].get()
         raise NotImplementedError(f"Unknown ContextManager variable: {name}")
+
+    @classmethod
+    def get_site(cls):
+        return _CONTEXT_VARS["site"].get()
+
+    @classmethod
+    def set_site(cls, site):
+        _CONTEXT_VARS["site"].set(site)
 
     @classmethod
     def get_perm_cache(cls) -> dict | None:
@@ -387,6 +396,7 @@ class ContextManager:
         player: Any = None,
         connection: Any = None,
         track_events: bool = False,
+        site: Any = None,
     ) -> None:
         self._tokens: dict = {}
         self._initial_values: dict = {
@@ -406,6 +416,7 @@ class ContextManager:
             "verb_lookup_cache": {},
             "prop_lookup_cache": {},
             "published_events": [] if track_events else None,
+            "site": site,
         }
 
     def set_parser(self, parser):

@@ -26,6 +26,7 @@ class Command(BaseCommand):
 
         if password is None:
             import getpass
+
             password = getpass.getpass(f"Password for {username}: ")
 
         user = User.objects.create_user(username=username, password=password)
@@ -40,7 +41,9 @@ class Command(BaseCommand):
 
         Player.objects.create(user=user, avatar=avatar_obj, wizard=wizard)
 
-        self.stdout.write(self.style.SUCCESS(
-            f"Created user '{username}' with MOO avatar '{avatar}' (#{avatar_obj.pk})"
-            + (" [wizard]" if wizard else "")
-        ))
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Created user '{username}' with MOO avatar '{avatar}' (#{avatar_obj.pk})"
+                + (" [wizard]" if wizard else "")
+            )
+        )

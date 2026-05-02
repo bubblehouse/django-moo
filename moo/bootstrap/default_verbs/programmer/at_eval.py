@@ -32,6 +32,6 @@ with set_task_perms(context.player):
         # Print the result (REPL-like behavior)
         if result is not None:
             print(repr(result))
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         # Just stringify - will include exception type automatically
         print(f"Error: {e}")

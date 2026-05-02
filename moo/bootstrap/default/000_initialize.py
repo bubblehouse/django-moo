@@ -1,5 +1,5 @@
 # pylint: disable=undefined-variable
-sys = lookup(1)
+sys = lookup("System Object")
 
 # LambdaMOO special sentinel references (mirrors $nothing, $ambiguous_match, $failed_match)
 sys.set_property("nothing", lookup("nothing"))

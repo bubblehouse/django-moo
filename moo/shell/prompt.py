@@ -79,6 +79,7 @@ async def embed(
     user: models.User,
     session=None,
     mode: str = MODE_RICH,
+    site=None,
 ) -> None:
     """
     Start the interactive MOO shell for the given user.
@@ -90,8 +91,13 @@ async def embed(
     :param user: the authenticated Django user whose avatar is the active player
     :param session: the asyncssh session; its ``_chan`` drives raw-mode I/O
     :param mode: ``"rich"`` (default) or ``"raw"``
+    :param site: the Django Site for this connection (used to scope universe context)
     """
-    repl = MooPrompt(user, session=session, mode=mode)
+    from moo.core.code import ContextManager
+
+    if site is not None:
+        ContextManager.set_site(site)
+    repl = MooPrompt(user, session=session, mode=mode, site=site)
     repl_tasks = [asyncio.ensure_future(f()) for f in (repl.process_commands, repl.process_messages)]
     try:
         await asyncio.wait(repl_tasks, return_when=asyncio.FIRST_COMPLETED)
@@ -130,14 +136,16 @@ class MooPrompt:
     #: prompt-toolkit Style derived from the prompt palette.
     style = Style.from_dict(_PROMPT_PALETTE)
 
-    def __init__(self, user, session=None, mode: str = MODE_RICH):
+    def __init__(self, user, session=None, mode: str = MODE_RICH, site=None):
         """
         :param user: the authenticated Django user whose avatar is the active player
         :param session: the asyncssh session; used by raw mode to reach ``_chan``
         :param mode: ``"rich"`` (prompt_toolkit) or ``"raw"`` (line I/O)
+        :param site: the Django Site for this connection
         """
         self.user = user
         self.mode = mode
+        self.site = site
         self._chan = getattr(session, "_chan", None) if session is not None else None
         self._iac_enabled = bool(getattr(session, "iac_enabled", False)) if session is not None else False
         self.is_exiting = False

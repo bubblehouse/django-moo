@@ -38,8 +38,9 @@ def parse_command(self, caller_id: int, line: str) -> tuple[list[Any], int]:
     output: list[Any] = []
     exit_status = 0
     task_id = self.request.id
-    caller = Object.objects.get(pk=caller_id)
-    with code.ContextManager(caller, output.append, task_id=task_id, track_events=True) as ctx:
+    caller = Object.global_objects.get(pk=caller_id)
+    site = caller.site if caller.site_id else None
+    with code.ContextManager(caller, output.append, task_id=task_id, track_events=True, site=site) as ctx:
         prefix = "[ERROR] " if get_session_setting("prefixes_mode", False) else ""
         with transaction.atomic():
             try:
@@ -78,8 +79,9 @@ def parse_code(self, caller_id: int, source: str, runtype: str = "exec") -> tupl
     """
     output: list[Any] = []
     task_id = self.request.id
-    caller = Object.objects.get(pk=caller_id)
-    with code.ContextManager(caller, output.append, task_id=task_id):
+    caller = Object.global_objects.get(pk=caller_id)
+    site = caller.site if caller.site_id else None
+    with code.ContextManager(caller, output.append, task_id=task_id, site=site):
         with transaction.atomic():
             result = code.interpret(source, "__main__", runtype=runtype)
     return output, result
@@ -111,9 +113,9 @@ def invoke_verb(
 
     task_id = self.request.id
     with transaction.atomic():
-        caller = Object.objects.get(pk=caller_id)
-        player = Object.objects.get(pk=player_id) if player_id else None
-        this = Object.objects.get(pk=this_id)
+        caller = Object.global_objects.get(pk=caller_id)
+        player = Object.global_objects.get(pk=player_id) if player_id else None
+        this = Object.global_objects.get(pk=this_id)
         verb_obj = this.get_verb(verb_name)
         if player:
 
@@ -128,7 +130,8 @@ def invoke_verb(
             writer = background_log.info
         from moo.sdk import get_session_setting
 
-        with code.ContextManager(caller, writer, task_id=task_id, player=player):
+        site = caller.site if caller.site_id else None
+        with code.ContextManager(caller, writer, task_id=task_id, player=player, site=site):
             prefix = "[ERROR] " if get_session_setting("prefixes_mode", False) else ""
             try:
                 result = verb_obj(*args, _bypass_execute_check=True, **kwargs)

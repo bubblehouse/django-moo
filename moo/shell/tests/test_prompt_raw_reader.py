@@ -106,4 +106,4 @@ def test_read_line_raw_does_not_echo_input_back_to_channel():
     ]
     _run_reader(prompt, _FakeInput(batches))
     # _chan_write should never have been called from inside _read_line_raw.
-    prompt._chan.write.assert_not_called()
+    prompt._chan.write.assert_not_called()  # pylint: disable=no-member

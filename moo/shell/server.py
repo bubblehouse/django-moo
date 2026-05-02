@@ -87,6 +87,7 @@ class MooPromptToolkitSSHSession(PromptToolkitSSHSession):
     """
 
     user = None  # set by MooSSHServer.session_requested() before the session starts
+    site = None  # set by MooSSHServer.session_requested() before the session starts
     mode: str = "rich"
     iac_enabled: bool = False  # set to True in connection_made when TERM looks like a MUD client
 
@@ -365,7 +366,7 @@ async def interact(ssh_session: PromptToolkitSSHSession) -> None:
         mode,
     )
     try:
-        await embed(session.user, session=session, mode=mode)
+        await embed(session.user, session=session, mode=mode, site=getattr(session, "site", None))
     finally:
         _active_sessions.discard(username)
         log.info("disconnect user=%s active=%d fds=%d", username, len(_active_sessions), _fd_count())
@@ -428,6 +429,9 @@ class SSHServer(PromptToolkitSSHServer):
     Create an SSH server for client access.
     """
 
+    user = None
+    site = None
+
     def begin_auth(self, _: str) -> bool:
         """
         Allow user login.
@@ -439,6 +443,43 @@ class SSHServer(PromptToolkitSSHServer):
         Allow password authentication.
         """
         return True
+
+    def _resolve_site(self):
+        """Resolve the connection hostname to a Django Site record."""
+        from django.conf import settings
+        from django.contrib.sites.models import Site
+
+        try:
+            conn = getattr(self, "_conn", None)
+            if conn is not None:
+                hostname = conn.get_extra_info("server_host")
+                if hostname:
+                    self.site = Site.objects.filter(domain=hostname).first()
+                    if self.site:
+                        return
+        except Exception:  # pylint: disable=broad-except
+            pass
+        # Fall back to default site
+        self.site = Site.objects.get(pk=getattr(settings, "SITE_ID", 1))
+
+    def _auto_provision_superuser(self):
+        """Auto-create a wizard avatar+Player for superusers connecting to a new site."""
+        from moo.core.models.auth import Player
+        from moo.core.models.object import Object
+
+        if not (self.user and self.user.is_superuser and self.site):
+            return
+        # Check if player record already exists for this site
+        if Player.objects.filter(user=self.user, site=self.site).exists():
+            return
+        # Create a wizard avatar for this universe
+        avatar_name = f"{self.user.username.title()} (Universal)"
+        avatar, _ = Object.global_objects.get_or_create(
+            name=avatar_name,
+            site=self.site,
+            defaults={"unique_name": True},
+        )
+        Player.objects.create(user=self.user, avatar=avatar, wizard=True, site=self.site)
 
     @sync_to_async
     def validate_password(self, username: str, password: str) -> bool:
@@ -454,6 +495,8 @@ class SSHServer(PromptToolkitSSHServer):
             return False
         if user.check_password(password):
             self.user = user  # pylint: disable=attribute-defined-outside-init
+            self._resolve_site()
+            self._auto_provision_superuser()
             return True
         return False
 
@@ -476,6 +519,8 @@ class SSHServer(PromptToolkitSSHServer):
             server_pem = key.export_public_key().decode("utf8")
             if user_pem == server_pem:
                 self.user = user_key.user  # pylint: disable=attribute-defined-outside-init
+                self._resolve_site()
+                self._auto_provision_superuser()
                 return True
         return False
 
@@ -485,4 +530,5 @@ class SSHServer(PromptToolkitSSHServer):
         """
         session = MooPromptToolkitSSHSession(self.interact, enable_cpr=self.enable_cpr)
         session.user = self.user
+        session.site = getattr(self, "site", None)
         return session

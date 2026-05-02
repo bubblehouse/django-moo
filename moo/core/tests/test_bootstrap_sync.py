@@ -20,7 +20,7 @@ from moo.core.models import Object, Permission, Repository, Verb
 def test_get_or_create_object_creates_on_first_call(t_init, t_wizard):
     """First call creates the object and returns created=True."""
     with code.ContextManager(t_wizard, None):
-        obj, created = bootstrap.get_or_create_object("Test Widget", unique_name=True)
+        _, created = bootstrap.get_or_create_object("Test Widget", unique_name=True)
     assert created is True
     assert Object.objects.filter(name="Test Widget", unique_name=True).count() == 1
 
@@ -45,7 +45,7 @@ def test_get_or_create_object_adds_parents_only_on_creation(t_init, t_wizard):
     assert child.parents.filter(pk=parent.pk).exists()
     # Second call should not raise IntegrityError despite unique_together on Relationship
     with code.ContextManager(t_wizard, None):
-        child2, created = bootstrap.get_or_create_object("Child Class", unique_name=True, parents=[parent])
+        _, created = bootstrap.get_or_create_object("Child Class", unique_name=True, parents=[parent])
     assert created is False
     assert child.parents.filter(pk=parent.pk).count() == 1
 

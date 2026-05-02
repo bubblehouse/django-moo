@@ -197,7 +197,7 @@ def test_read_for_topic_shows_only_that_topic(t_init: Object, t_wizard: Object):
     """read book for <topic> shows only entries under that topic."""
     printed = []
     with code.ContextManager(t_wizard, printed.append) as ctx:
-        book = setup_book(t_wizard)
+        setup_book(t_wizard)
         parse.interpret(ctx, 'write in "test book" under tradesmen with "#9: Kitchen done."')
         parse.interpret(ctx, 'write in "test book" under inspectors with "#22: Checked."')
         printed.clear()
@@ -213,7 +213,7 @@ def test_read_for_topic_from_room(t_init: Object, t_wizard: Object):
     """read book for <topic> from #9 shows the full entry for that room under the topic."""
     printed = []
     with code.ContextManager(t_wizard, printed.append) as ctx:
-        book = setup_book(t_wizard)
+        setup_book(t_wizard)
         parse.interpret(ctx, 'write in "test book" under tradesmen with "#9: Needs coffee maker."')
         printed.clear()
         parse.interpret(ctx, 'read "test book" under tradesmen from "#9"')

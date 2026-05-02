@@ -20,5 +20,6 @@ def test_opposite_directions_round_trip():
 
 def test_sdk_exports_directions():
     from moo.sdk import DIRECTIONS, OPPOSITE_DIRECTIONS
+
     assert DIRECTIONS == settings.DIRECTIONS
     assert OPPOSITE_DIRECTIONS == settings.OPPOSITE_DIRECTIONS
