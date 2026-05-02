@@ -39,11 +39,12 @@ class Command(BaseCommand):
         from django.contrib.sites.models import Site
 
         from moo.core.code import ContextManager
+        from moo.core.managers import get_default_site
 
         if hostname:
             site, _ = Site.objects.get_or_create(domain=hostname, defaults={"name": hostname})
         else:
-            site = Site.objects.get(pk=getattr(settings, "SITE_ID", 1))
+            site = get_default_site()
         ContextManager.set_site(site)
 
         with transaction.atomic():

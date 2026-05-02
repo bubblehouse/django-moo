@@ -90,15 +90,14 @@ def get_or_create_object(name, unique_name=False, parents=None, owner=None, loca
     :return: A ``(object, created)`` tuple.
     :rtype: tuple[Object, bool]
     """
-    from django.contrib.sites.models import Site
-
     from moo.core.code import ContextManager
+    from moo.core.managers import get_default_site
     from moo.core.models import Object
 
     if site is None:
         site = ContextManager.get_site()
     if site is None:
-        site = Site.objects.get(pk=getattr(settings, "SITE_ID", 1))
+        site = get_default_site()
     if owner is None:
         owner = ContextManager.get("caller") or ContextManager.get("player")
     obj, created = Object.global_objects.get_or_create(
@@ -131,14 +130,15 @@ def initialize_dataset(dataset="default", site=None):
     :return: The repository object for the dataset.
     :rtype: Repository
     """
-    from django.contrib.sites.models import Site
-
     from moo.core import models
     from moo.core.code import ContextManager
+    from moo.core.managers import get_default_site
     from moo.core.parse import Pattern
 
     if site is None:
-        site = Site.objects.get(pk=getattr(settings, "SITE_ID", 1))
+        site = ContextManager.get_site()
+    if site is None:
+        site = get_default_site()
     ContextManager.set_site(site)
 
     for name in settings.DEFAULT_PERMISSIONS:

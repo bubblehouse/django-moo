@@ -18,7 +18,7 @@ from django_cte import CTE, with_cte
 
 from moo import bootstrap
 from .. import exceptions, invoke, utils
-from ..managers import SiteManager
+from ..managers import SiteManager, get_default_site
 from ..exceptions import NoSuchVerbError, NoSuchPropertyError
 from ..code import ContextManager
 from .acl import Access, AccessibleMixin, Permission, _get_permission_id
@@ -234,10 +234,7 @@ class Object(models.Model, AccessibleMixin):
         """
         Check if this object is a wizard player avatar.
         """
-        p = Player.objects.filter(avatar=self).select_related("user").first()
-        if p is None:
-            return False
-        return p.wizard or bool(p.user and p.user.is_superuser)
+        return Player.objects.filter(avatar=self, wizard=True).exists()
 
     def is_connected(self) -> bool:
         """
@@ -940,18 +937,24 @@ class Object(models.Model, AccessibleMixin):
             caller = ContextManager.get("caller")
             if caller and self.owner != caller:
                 raise PermissionError("Can't change owner at creation time.")
-            # Inherit site from the active context — falls back to the caller's site,
-            # then to the configured default Site so single-universe deployments still work.
+            # Inherit site from the active context — falls back to the caller's
+            # site_id (avoids a 2-query __getattr__ lookup for caller.site),
+            # then to the configured default Site so single-universe deployments
+            # still work without explicit site= kwargs.
+            # pylint: disable=access-member-before-definition,attribute-defined-outside-init
             if self.site_id is None:
                 site = ContextManager.get_site()
-                if site is None and caller is not None:
-                    site = getattr(caller, "site", None)
-                if site is None:
-                    try:
-                        site = Site.objects.get(pk=getattr(settings, "SITE_ID", 1))
-                    except Site.DoesNotExist:
-                        site = None
-                self.site = site
+                if site is not None:
+                    self.site = site
+                else:
+                    caller_site_id = getattr(caller, "site_id", None) if caller is not None else None
+                    if caller_site_id is not None:
+                        self.site_id = caller_site_id
+                    else:
+                        try:
+                            self.site = get_default_site()
+                        except Site.DoesNotExist:
+                            self.site = None
         # Recursion Check: must run BEFORE super().save() so the loop never reaches the DB;
         # a new object (unsaved) cannot yet contain anything, so skip it there.
         if not unsaved and self.location and self.contains(self.location):

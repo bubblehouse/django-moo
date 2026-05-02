@@ -24,12 +24,13 @@ class Command(BaseCommand):
 
     def handle(self, username, avatar, wizard=False, hostname=None, **kwargs):  # pylint: disable=arguments-differ
         from django.contrib.sites.models import Site
-        from django.conf import settings as django_settings
+
+        from moo.core.managers import get_default_site
 
         if hostname:
             site, _ = Site.objects.get_or_create(domain=hostname, defaults={"name": hostname})
         else:
-            site = Site.objects.get(pk=getattr(django_settings, "SITE_ID", 1))
+            site = get_default_site()
 
         avatar_obj = Object.global_objects.get(name=avatar, unique_name=True, site=site)
         user = User.objects.get(username=username)

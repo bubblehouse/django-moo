@@ -5,6 +5,20 @@ from django.conf import settings
 from django.db import migrations, models
 
 
+def _backfill_site(apps, schema_editor):
+    # Existing rows from a pre-multi-universe deployment land with site=NULL,
+    # which the SiteManager would filter out at runtime (default site=1) and
+    # make the whole DB look empty. Backfill every existing Object/Player to
+    # the configured default Site before the unique-per-site constraint lands.
+    Site = apps.get_model("sites", "Site")
+    Object = apps.get_model("core", "Object")
+    Player = apps.get_model("core", "Player")
+    site_id = getattr(settings, "SITE_ID", 1)
+    Site.objects.get_or_create(pk=site_id, defaults={"domain": "example.com", "name": "example.com"})
+    Object.objects.filter(site__isnull=True).update(site_id=site_id)
+    Player.objects.filter(site__isnull=True).update(site_id=site_id)
+
+
 class Migration(migrations.Migration):
     dependencies = [
         ("core", "0029_object_placement_prep_object_placement_target"),
@@ -34,6 +48,7 @@ class Migration(migrations.Migration):
                 null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL
             ),
         ),
+        migrations.RunPython(_backfill_site, reverse_code=migrations.RunPython.noop),
         migrations.AlterUniqueTogether(
             name="player",
             unique_together={("user", "site")},

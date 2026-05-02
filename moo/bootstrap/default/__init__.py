@@ -33,6 +33,6 @@ _scripts = sorted(
     key=lambda f: f.name,
 )
 
-with code.ContextManager(wizard, log.info):
+with code.ContextManager(wizard, log.info, site=wizard.site):
     for _script in _scripts:
         exec(compile(_script.read_text(encoding="utf8"), _script.name, "exec"), _namespace)  # pylint: disable=exec-used
