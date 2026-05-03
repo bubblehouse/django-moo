@@ -1,3 +1,21 @@
+## [1.6.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.5.2...v1.6.0) (2026-05-03)
+
+### Features
+
+* **bootstrap/zork1:** import Zork 1 as a generated dataset ([ab038ea](https://gitlab.com/bubblehouse/django-moo/commit/ab038ea54a6aecfc47d966e1a2693d4d4746afe8))
+* **bootstrap:** nested-verbs layout, orchestrator split, stale-verb pruning, default dataset content ([eb85eac](https://gitlab.com/bubblehouse/django-moo/commit/eb85eac8425a7eccc5957f1c9b22c3fc70dc350d))
+* **core:** multi-universe support via Django Sites ([e94fb35](https://gitlab.com/bubblehouse/django-moo/commit/e94fb352fcaaff4300997c424603608a95ee93ab)), closes [#18](https://gitlab.com/bubblehouse/django-moo/issues/18)
+* **parser:** turnfunc hook, get_iobj/has_iobj, sandbox print kwargs and player_verb separation ([f7c1987](https://gitlab.com/bubblehouse/django-moo/commit/f7c19875b8c1ddfb5de22c530384a9ae7483b826))
+* **shell:** route SSH connections to a Site via username suffix and compact disconnect log ([0e838e0](https://gitlab.com/bubblehouse/django-moo/commit/0e838e055d11d5d20a5be987c1c8447edc656824))
+* **zil:** ZIL-to-MOO importer with substrate parser, translator, generator, and zork1 smoke test ([b95e607](https://gitlab.com/bubblehouse/django-moo/commit/b95e6073289c72e912b089329f340c5984ffa5f9)), closes [#20](https://gitlab.com/bubblehouse/django-moo/issues/20)
+
+### Bug Fixes
+
+* **bootstrap/zork1:** route translated GETP through safe getp() helper ([67cc859](https://gitlab.com/bubblehouse/django-moo/commit/67cc8591d84d58e06825dabc4738d5db6fc08e1c))
+* broken test ([3dbba1f](https://gitlab.com/bubblehouse/django-moo/commit/3dbba1fdeedc4418e0fe5c75383a5a302d08ecf5))
+* **commands:** align moo_save_state/moo_reset roots with actual zork1 class names ([2c39e08](https://gitlab.com/bubblehouse/django-moo/commit/2c39e080be375e9b158f84c4202fa0605cf34897))
+* **zil_import:** zstate_get fallback, list-arg pick, and getp helper for missing properties ([05696b0](https://gitlab.com/bubblehouse/django-moo/commit/05696b08077d2a1d05dbb745847dbef7abb16953))
+
 ## [1.5.2](https://gitlab.com/bubblehouse/django-moo/compare/v1.5.1...v1.5.2) (2026-04-29)
 
 ### Bug Fixes
