@@ -362,7 +362,7 @@ print(len(verbs) >= 0)
         g = code.get_default_globals()
         g.update(code.get_restricted_environment("__main__", w))
         code.r_exec(src, {}, g)
-    assert printed == [True]
+    assert printed == ["True"]
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)

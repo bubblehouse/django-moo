@@ -60,13 +60,13 @@ def test_getattr_normal_names_still_work():
 def test_hasattr_underscore_returns_false():
     """hasattr(obj, '__class__') must return False, not True."""
     printed = exec_verb("print(hasattr('hello', '__class__'))")
-    assert printed == [False]
+    assert printed == ["False"]
 
 
 def test_hasattr_normal_names_still_work():
     """hasattr on a normal name must still work."""
     printed = exec_verb("print(hasattr('hello', 'upper'))")
-    assert printed == [True]
+    assert printed == ["True"]
 
 
 # ---------------------------------------------------------------------------
@@ -155,9 +155,9 @@ def test_callable_builtin_accessible_but_harmless():
     to call anything — it is a read-only probe.
     """
     printed = exec_verb("print(callable(print))")
-    assert printed == [True]
+    assert printed == ["True"]
     printed = exec_verb("print(callable('hello'))")
-    assert printed == [False]
+    assert printed == ["False"]
 
 
 def test_isinstance_accessible_but_cannot_probe_dunder_classes():
@@ -168,7 +168,7 @@ def test_isinstance_accessible_but_cannot_probe_dunder_classes():
     hierarchy.  'object' is not in the sandbox, so issubclass(str, object) raises NameError.
     """
     printed = exec_verb("print(isinstance('hi', str))")
-    assert printed == [True]
+    assert printed == ["True"]
     raises_in_verb("issubclass(str, object)", NameError)
 
 
@@ -256,19 +256,19 @@ def test_safe_hasattr_does_not_leak_gi_frame():
     name in that set, matching safe_getattr's behaviour.
     """
     printed = exec_verb("gen = (x for x in [1])\nprint(hasattr(gen, 'gi_frame'))")
-    assert printed == [False]
+    assert printed == ["False"]
 
 
 def test_safe_hasattr_does_not_leak_gi_code():
     """safe_hasattr returns False for 'gi_code' (in INSPECT_ATTRIBUTES)."""
     printed = exec_verb("gen = (x for x in [1])\nprint(hasattr(gen, 'gi_code'))")
-    assert printed == [False]
+    assert printed == ["False"]
 
 
 def test_safe_hasattr_does_not_leak_f_locals():
     """safe_hasattr returns False for 'f_locals' (in INSPECT_ATTRIBUTES)."""
     printed = exec_verb("gen = (x for x in [1])\nprint(hasattr(gen, 'f_locals'))")
-    assert printed == [False]
+    assert printed == ["False"]
 
 
 # ---------------------------------------------------------------------------
@@ -300,7 +300,7 @@ def test_attribute_error_obj_returns_object_verb_already_had():
         "    print(e.obj is x)\n"
         "    print(e.name)\n"
     )
-    assert printed == [True, "nonexistent_attr"]
+    assert printed == ["True", "nonexistent_attr"]
 
 
 @pytest.mark.skipif(sys.version_info < (3, 12), reason="AttributeError.obj added in Python 3.12")
@@ -317,7 +317,7 @@ def test_attribute_error_obj_is_none_for_guard_raised_errors():
     printed = exec_verb(
         "try:\n    getattr('hello', '__class__')\nexcept AttributeError as e:\n    print(e.obj is None)\n"  # pylint: disable=implicit-str-concat
     )
-    assert printed == [True]
+    assert printed == ["True"]
 
 
 # ---------------------------------------------------------------------------
@@ -328,7 +328,7 @@ def test_attribute_error_obj_is_none_for_guard_raised_errors():
 def test_sorted_returns_plain_list():
     """sorted() returns a plain list — no new attack surface over list literals."""
     printed = exec_verb("print(sorted([3, 1, 2]))")
-    assert printed == [[1, 2, 3]]
+    assert printed == ["[1, 2, 3]"]
 
 
 def test_enumerate_iteration_safe():
@@ -340,7 +340,7 @@ def test_enumerate_iteration_safe():
     printed = exec_verb(
         "pairs = []\nfor i, v in enumerate(['a', 'b']):\n    pairs.append((i, v))\nprint(pairs)\n"  # pylint: disable=implicit-str-concat
     )
-    assert printed == [[(0, "a"), (1, "b")]]
+    assert printed == ["[(0, 'a'), (1, 'b')]"]
 
 
 def test_enumerate_next_dunder_blocked():
@@ -360,4 +360,4 @@ def test_set_operations_safe():
     printed = exec_verb(
         "s = set([1, 2, 3])\ns.add(4)\nprint(sorted(list(s)))\n"  # pylint: disable=implicit-str-concat
     )
-    assert printed == [[1, 2, 3, 4]]
+    assert printed == ["[1, 2, 3, 4]"]

@@ -41,7 +41,7 @@ if counter < 10:
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", RuntimeWarning)
                 verb()
-    assert printed == [1]
+    assert printed == ["1"]
     counter = 1
     for line in caplog.text.split("\n"):
         # Celery just loves emitting this when using the in-memory test broker, so ignore it

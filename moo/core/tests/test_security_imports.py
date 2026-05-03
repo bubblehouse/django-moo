@@ -233,7 +233,7 @@ def test_re_match_object_attributes_are_safe():
     printed = exec_verb(
         "import re\nm = re.match(r'hello', 'hello world')\nprint(m.group())\nprint(m.string)\nprint(m.pos)\n"
     )
-    assert printed == ["hello", "hello world", 0]
+    assert printed == ["hello", "hello world", "0"]
 
 
 def test_re_pattern_object_attributes_are_safe():
@@ -243,7 +243,7 @@ def test_re_pattern_object_attributes_are_safe():
     printed = exec_verb(
         "import re\np = re.compile(r'\\d+')\nprint(p.pattern)\nprint(p.flags > 0)\n"  # pylint: disable=implicit-str-concat
     )
-    assert printed == [r"\d+", True]
+    assert printed == [r"\d+", "True"]
 
 
 # ---------------------------------------------------------------------------
@@ -263,7 +263,7 @@ def test_hashlib_hash_object_attributes_are_safe():
     printed = exec_verb(
         "import hashlib\nh = hashlib.md5(b'test')\nprint(isinstance(h.hexdigest(), str))\nprint(h.digest_size)\n"
     )
-    assert printed == [True, 16]
+    assert printed == ["True", "16"]
 
 
 # ---------------------------------------------------------------------------
@@ -287,7 +287,7 @@ def test_datetime_instances_are_safe():
         "s = now.strftime('%Y')\n"
         "print(isinstance(s, str))\n"
     )
-    assert printed == [True, True]
+    assert printed == ["True", "True"]
 
 
 def test_datetime_timedelta_is_safe():
@@ -297,7 +297,7 @@ def test_datetime_timedelta_is_safe():
     printed = exec_verb(
         "import datetime\ntd = datetime.timedelta(days=1)\nprint(td.days)\nprint(td.seconds)\n"  # pylint: disable=implicit-str-concat
     )
-    assert printed == [1, 0]
+    assert printed == ["1", "0"]
 
 
 # ---------------------------------------------------------------------------
@@ -317,4 +317,4 @@ def test_time_struct_time_is_safe():
     printed = exec_verb(
         "import time\nt = time.gmtime(0)\nprint(t.tm_year)\nprint(isinstance(time.time(), float))\n"  # pylint: disable=implicit-str-concat
     )
-    assert printed == [1970, True]
+    assert printed == ["1970", "True"]

@@ -42,7 +42,7 @@ def test_getitem_underscore_key_blocked():
 def test_getitem_normal_keys_still_work():
     """Normal (non-underscore) key reads must continue to work."""
     printed = exec_verb("d = dict(a=1)\nprint(d['a'])")
-    assert printed == [1]
+    assert printed == ["1"]
 
 
 # ---------------------------------------------------------------------------
@@ -100,7 +100,7 @@ def test_str_normal_methods_still_work():
     printed = exec_verb("print('hello'.upper())")
     assert printed == ["HELLO"]
     printed = exec_verb("print('a,b'.split(','))")
-    assert printed == [["a", "b"]]
+    assert printed == ["['a', 'b']"]
 
 
 def test_str_replace_still_works():

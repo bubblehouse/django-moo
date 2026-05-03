@@ -71,7 +71,7 @@ def test_printing_imported_caller(t_init: Object, t_wizard: Object):
         globals.update(code.get_restricted_environment("__main__", writer))
         src = "from moo.sdk import context\nprint(context.caller)"
         code.r_exec(src, {}, globals)
-        assert printed == [t_wizard]
+        assert printed == [str(t_wizard)]
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -153,49 +153,29 @@ for frame in context.caller_stack:
         # Stack is fully unwound after all verbs return
         assert context.caller_stack == []
 
-        # The 5 frames were captured in order by verb 5
-        assert printed == [
-            dict(
-                caller=t_wizard,
-                origin=player,
-                player=t_wizard,
-                previous_caller=t_wizard,
-                this=player,
-                verb_name="test-caller-chain-1",
-            ),
-            dict(
-                caller=player,
-                origin=player,
-                player=t_wizard,
-                previous_caller=t_wizard,
-                this=player,
-                verb_name="test-caller-chain-2",
-            ),
-            dict(
-                caller=p3,
-                origin=player,
-                player=t_wizard,
-                previous_caller=player,
-                this=player,
-                verb_name="test-caller-chain-3",
-            ),
-            dict(
-                caller=p4,
-                origin=player,
-                player=t_wizard,
-                previous_caller=p3,
-                this=player,
-                verb_name="test-caller-chain-4",
-            ),
-            dict(
-                caller=p5,
-                origin=player,
-                player=t_wizard,
-                previous_caller=p4,
-                this=player,
-                verb_name="test-caller-chain-5",
-            ),
+        # The 5 frames were captured in order by verb 5.
+        # ``print()`` stringifies arguments in the sandbox, so each captured
+        # entry is the str() of the frame dict.  Key order matches the dict
+        # built by ``ContextManager.override_caller`` (this/verb_name/caller/
+        # origin/player/previous_caller).
+        def _frame(this, verb_name, caller, origin, player, previous_caller):
+            return {
+                "this": this,
+                "verb_name": verb_name,
+                "caller": caller,
+                "origin": origin,
+                "player": player,
+                "previous_caller": previous_caller,
+            }
+
+        expected = [
+            _frame(player, "test-caller-chain-1", t_wizard, player, t_wizard, t_wizard),
+            _frame(player, "test-caller-chain-2", player, player, t_wizard, t_wizard),
+            _frame(player, "test-caller-chain-3", p3, player, t_wizard, player),
+            _frame(player, "test-caller-chain-4", p4, player, t_wizard, p3),
+            _frame(player, "test-caller-chain-5", p5, player, t_wizard, p4),
         ]
+        assert printed == [str(d) for d in expected]
 
 
 # ---------------------------------------------------------------------------
@@ -404,10 +384,12 @@ def test_get_restricted_environment_exact_keys():
         "__package__",
         "__doc__",
         "verb_name",
+        "player_verb",
     }
     assert set(env.keys()) == expected
     assert env["__name__"] == "test_verb"
     assert env["verb_name"] == "test_verb"
+    assert env["player_verb"] == "test_verb"
 
 
 def test_print_and_print_factory_both_present():
