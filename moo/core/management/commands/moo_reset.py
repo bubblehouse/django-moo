@@ -6,7 +6,7 @@ Reset the game world for a bootstrap to a fixture snapshot:
 2. Clear ``zstate_*`` properties on Player avatars on the active site.
 
 The clear is scoped to **player avatars only** so bootstrap-level ``zstate_*``
-data on world objects (e.g. ZIL ``<LTABLE>`` content on ``$zork_sdk``) survives
+data on world objects (e.g. ZIL ``<LTABLE>`` content on ``$zil_sdk``) survives
 the reset; otherwise reset would force a follow-up ``moo_init --sync`` to
 re-create those tables.
 
@@ -111,7 +111,7 @@ def _clear_player_zstate(site) -> int:
     Delete ``zstate_*`` properties on Player avatars for the given site.
 
     Bootstrap-level ``zstate_*`` properties on world objects (ZIL tables on
-    ``$zork_sdk``, etc.) are intentionally untouched — they are static data
+    ``$zil_sdk``, etc.) are intentionally untouched — they are static data
     seeded by ``moo_init`` and would otherwise need a follow-up
     ``moo_init --sync`` to recover.
     """

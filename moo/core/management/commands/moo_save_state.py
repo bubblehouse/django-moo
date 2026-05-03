@@ -7,7 +7,7 @@ the world to a clean state.
 
 Per-player ``zstate_*`` properties are excluded from the snapshot — those
 accumulate during play and are cleared on reset, not restored. Bootstrap-level
-``zstate_*`` (e.g. ZIL tables on ``$zork_sdk``) are kept.
+``zstate_*`` (e.g. ZIL tables on ``$zil_sdk``) are kept.
 
 The serialized rows have ``site_id`` stripped so the fixture is portable; the
 current site is re-applied on load by ``moo_reset``.
@@ -72,20 +72,22 @@ class Command(BaseCommand):
 
         # Find the root class objects for this bootstrap on the active site.
         # global_objects bypasses the SiteManager filter so we are explicit
-        # about which universe we're snapshotting.
+        # about which universe we're snapshotting.  ``Zork Root`` is the
+        # parent of every translated room/thing/container/actor/exit, so
+        # walking its descendants captures the world.  ``ZIL SDK`` carries
+        # the table data and isn't a Zork Root descendant — it's added
+        # separately as a snapshot root.
+        root_names = ("Zork Root", "ZIL SDK")
         try:
-            zork_room = Object.global_objects.get(name="Zork Room", site=site)
-            zork_thing = Object.global_objects.get(name="Zork Thing", site=site)
-            zork_container = Object.global_objects.get(name="Zork Container", site=site)
-            zork_sdk = Object.global_objects.get(name="Zork SDK", site=site)
+            roots = [Object.global_objects.get(name=n, site=site) for n in root_names]
         except Object.DoesNotExist as exc:
             raise CommandError(
                 f"Bootstrap root objects not found on site {site.domain!r} — "
                 f"run moo_init --hostname {site.domain} --bootstrap {bootstrap} first.\nMissing: {exc}"
             ) from exc
 
-        # Collect all descendant objects of the zork root classes on this site.
-        root_pks = {zork_room.pk, zork_thing.pk, zork_container.pk, zork_sdk.pk}
+        # Collect all descendant objects of the bootstrap roots on this site.
+        root_pks = {r.pk for r in roots}
         world_objects = _collect_descendants(root_pks, site)
         world_pks = {obj.pk for obj in world_objects}
 
