@@ -894,7 +894,9 @@ class ZilTranslator:
         if head_upper == "GETP":
             obj = _as_object(self._translate_expr(node[1])) if len(node) > 1 else "None"
             prop = self._translate_prop_name(node[2]) if len(node) > 2 else '"unknown"'
-            return f"{obj}.get_property({prop})"
+            # ZIL ``<GETP obj prop>`` returns 0 for missing properties; use the
+            # SDK helper so verb code never raises NoSuchPropertyError.
+            return f"_.zil_sdk.getp({obj}, {prop})"
         if head_upper == "PUTP":
             obj = _as_object(self._translate_expr(node[1])) if len(node) > 1 else "None"
             prop = self._translate_prop_name(node[2]) if len(node) > 2 else '"unknown"'

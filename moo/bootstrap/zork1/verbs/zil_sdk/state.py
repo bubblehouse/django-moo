@@ -11,6 +11,10 @@ table_put:  args[0] = list, args[1] = index, args[2] = value (in-place)
 zstate_* persists per-player so multiple players have independent game
 state.  table_* are pure list operations on the value passed in — ZIL's
 ``<GET TABLE I>`` / ``<PUT TABLE I VAL>`` primitives.
+
+zstate_get falls back to ``this`` (the ZIL SDK object) when the player
+has no per-player value for that key — that's where bootstrap-level
+constants like the message tables (YUKS, JUMPLOSS, …) live.
 """
 
 import re
@@ -51,4 +55,7 @@ else:
     try:
         return context.player.get_property(key)
     except NoSuchPropertyError:
-        return None
+        try:
+            return this.get_property(key)
+        except NoSuchPropertyError:
+            return None
