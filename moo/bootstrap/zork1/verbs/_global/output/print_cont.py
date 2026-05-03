@@ -38,14 +38,14 @@ else:
         elif (
             not _.zil_sdk.flag(y, "invisible")
             and not _.zil_sdk.flag(y, "touchbit")
-            and (str_v := y.get_property("first_description"))
+            and (str_v := _.zil_sdk.getp(y, "first_description"))
         ):
             if not _.zil_sdk.flag(y, "obvious"):
                 print(str_v)
                 shit = None
             if (
                 _.zork_thing.invoke_verb("see-inside?", y)
-                and not y.location.get_property("descfcn")
+                and not _.zil_sdk.getp(y.location, "descfcn")
                 and y.contents.first()
             ):
                 if _.zork_thing.invoke_verb("print-cont", y, v_p, 0):
@@ -65,7 +65,7 @@ while True:
         not _.zil_sdk.flag(y, "invisible")
         and inv_p
         or _.zil_sdk.flag(y, "touchbit")
-        or not y.get_property("first_description")
+        or not _.zil_sdk.getp(y, "first_description")
     ):
         if not _.zil_sdk.flag(y, "obvious"):
             if v_1st_p:

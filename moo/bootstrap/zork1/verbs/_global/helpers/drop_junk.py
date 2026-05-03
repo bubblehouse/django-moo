@@ -19,7 +19,7 @@ while True:
     n = _.zil_sdk.next_sibling(x)
     if x in (_.get_property("stiletto"), _.get_property("large_bag")):
         pass
-    elif x.get_property("tvalue") == 0 and random.randint(1, 100) <= 30:
+    elif _.zil_sdk.getp(x, "tvalue") == 0 and random.randint(1, 100) <= 30:
         _.zil_sdk.set_flag(x, "invisible", False)
         _.zil_sdk.move(x, rm)
         if not flg and rm == context.player.location:

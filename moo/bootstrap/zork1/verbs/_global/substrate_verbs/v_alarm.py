@@ -5,7 +5,7 @@ from moo.sdk import context
 # ZIL routine: V-ALARM
 
 if _.zil_sdk.flag(context.parser.get_dobj(), "actorbit"):
-    if context.parser.get_dobj().get_property("strength") < 0:
+    if _.zil_sdk.getp(context.parser.get_dobj(), "strength") < 0:
         print("The " + _.zil_sdk.desc(context.parser.get_dobj()) + " is rudely awakened.")
         # ZIL: <AWAKEN ...>
         return _.zork_thing.invoke_verb("awaken", context.parser.get_dobj())

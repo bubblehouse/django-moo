@@ -6,10 +6,10 @@
 # aux: S
 
 o = args[0] if len(args) > 0 else None
-s = o.get_property("strength")
+s = _.zil_sdk.getp(o, "strength")
 
 if s < 0:
     o.set_property("strength", 0 - s)
     # ZIL: <APPLY ...>
-    apply(o.get_property("action"), _.zil_sdk.zstate_get("F-CONSCIOUS"))
+    apply(_.zil_sdk.getp(o, "action"), _.zil_sdk.zstate_get("F-CONSCIOUS"))
 return True

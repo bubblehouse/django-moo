@@ -7,4 +7,4 @@ from moo.sdk import context
 if not _.zil_sdk.flag(context.parser.get_dobj(), "readable"):
     return print("How does one read a " + _.zil_sdk.desc(context.parser.get_dobj()) + "?")
 else:
-    return print(context.parser.get_dobj().get_property("text"))
+    return print(_.zil_sdk.getp(context.parser.get_dobj(), "text"))

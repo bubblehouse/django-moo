@@ -13,7 +13,7 @@ f = o.contents.first()
 while True:
     if not f:
         return score
-    score = score + f.get_property("tvalue")
+    score = score + _.zil_sdk.getp(f, "tvalue")
     if f.contents.first():
         # ZIL: <OTVAL-FROB ...>
         _.zork_thing.invoke_verb("otval-frob", f)

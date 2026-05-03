@@ -10,5 +10,5 @@ av = None
 print("You are now in the " + _.zil_sdk.desc(context.parser.get_dobj()) + ".")
 _.zil_sdk.move(context.player, context.parser.get_dobj())
 # ZIL: <APPLY ...>
-apply(context.parser.get_dobj().get_property("action"), "M-ENTER")
+apply(_.zil_sdk.getp(context.parser.get_dobj(), "action"), "M-ENTER")
 return True

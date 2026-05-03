@@ -18,4 +18,4 @@ if cont := obj.contents.first():
             wt = wt + _.zork_thing.invoke_verb("weight", cont)
         if not (cont := _.zil_sdk.next_sibling(cont)):
             break
-return wt + obj.get_property("size")
+return wt + _.zil_sdk.getp(obj, "size")

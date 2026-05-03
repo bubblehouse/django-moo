@@ -4,8 +4,8 @@
 from moo.sdk import context
 # ZIL routine: V-EXAMINE
 
-if context.parser.get_dobj().get_property("text"):
-    return print(context.parser.get_dobj().get_property("text"))
+if _.zil_sdk.getp(context.parser.get_dobj(), "text"):
+    return print(_.zil_sdk.getp(context.parser.get_dobj(), "text"))
 elif _.zil_sdk.flag(context.parser.get_dobj(), "contbit") or _.zil_sdk.flag(context.parser.get_dobj(), "is_door"):
     # ZIL: <V-LOOK-INSIDE ...>
     return _.zork_thing.invoke_verb("v-look-inside")

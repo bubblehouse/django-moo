@@ -8,7 +8,10 @@ from moo.sdk import context
 f = None
 str_v = None
 
-if _.zil_sdk.flag(context.parser.get_dobj(), "contbit") and not context.parser.get_dobj().get_property("capacity") == 0:
+if (
+    _.zil_sdk.flag(context.parser.get_dobj(), "contbit")
+    and not _.zil_sdk.getp(context.parser.get_dobj(), "capacity") == 0
+):
     if _.zil_sdk.flag(context.parser.get_dobj(), "open"):
         return print("It is already open.")
     else:
@@ -20,7 +23,7 @@ if _.zil_sdk.flag(context.parser.get_dobj(), "contbit") and not context.parser.g
             (f := context.parser.get_dobj().contents.first())
             and not _.zil_sdk.next_sibling(f)
             and not _.zil_sdk.flag(f, "touchbit")
-            and (str_v := f.get_property("first_description"))
+            and (str_v := _.zil_sdk.getp(f, "first_description"))
         ):
             print("The " + _.zil_sdk.desc(context.parser.get_dobj()) + " opens.")
             return print(str_v)

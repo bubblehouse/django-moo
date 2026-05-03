@@ -5,7 +5,7 @@
 # aux: MS, WD, RS
 
 ms = _.zork_thing.invoke_verb("fight-strength")
-wd = context.player.get_property("strength")
+wd = _.zil_sdk.getp(context.player, "strength")
 rs = ms + wd
 
 _.zil_sdk.zstate_get("#DECL")

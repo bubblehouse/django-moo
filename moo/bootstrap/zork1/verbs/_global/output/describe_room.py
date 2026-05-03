@@ -45,14 +45,14 @@ if cond(
     ["ELSE", ["OR", ".LOOK?", ["NOT", "SUPER-BRIEF"]]],
 ):
     av = context.player.location
-    if v_p and apply(context.player.location.get_property("action"), "M-LOOK"):
+    if v_p and apply(_.zil_sdk.getp(context.player.location, "action"), "M-LOOK"):
         return True
-    elif v_p and (str_v := context.player.location.get_property("description")):
+    elif v_p and (str_v := _.zil_sdk.getp(context.player.location, "description")):
         print(str_v)
     else:
         # ZIL: <APPLY ...>
-        apply(context.player.location.get_property("action"), "M-FLASH")
+        apply(_.zil_sdk.getp(context.player.location, "action"), "M-FLASH")
     if not context.player.location == av and _.zil_sdk.flag(av, "vehicle"):
         # ZIL: <APPLY ...>
-        apply(av.get_property("action"), "M-LOOK")
+        apply(_.zil_sdk.getp(av, "action"), "M-LOOK")
 return True

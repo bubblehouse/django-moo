@@ -13,6 +13,6 @@ s = _.zil_sdk.zstate_get("STRENGTH-MIN") + _.zil_sdk.score_update(
     score_max(_.zil_sdk.zstate_get("STRENGTH-MAX") - _.zil_sdk.zstate_get("STRENGTH-MIN"))
 )
 if adjust_p:
-    return s + context.player.get_property("strength")
+    return s + _.zil_sdk.getp(context.player, "strength")
 else:
     return s

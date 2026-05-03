@@ -23,7 +23,7 @@ while True:
     if not f:
         break
     n = _.zil_sdk.next_sibling(f)
-    if f.get_property("tvalue") > 0:
+    if _.zil_sdk.getp(f, "tvalue") > 0:
         while True:
             if not r:
                 r = _.zil_sdk.zstate_get("ROOMS").contents.first()

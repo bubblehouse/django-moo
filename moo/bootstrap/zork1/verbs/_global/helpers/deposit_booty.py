@@ -18,7 +18,7 @@ while True:
     n = _.zil_sdk.next_sibling(x)
     if x in (_.get_property("stiletto"), _.get_property("large_bag")):
         pass
-    elif x.get_property("tvalue") > 0:
+    elif _.zil_sdk.getp(x, "tvalue") > 0:
         _.zil_sdk.move(x, rm)
         flg = True
         if x == _.get_property("egg"):

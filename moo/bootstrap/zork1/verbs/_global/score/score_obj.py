@@ -8,7 +8,7 @@
 obj = args[0] if len(args) > 0 else None
 temp = None
 
-if (temp := obj.get_property("value")) > 0:
+if (temp := _.zil_sdk.getp(obj, "value")) > 0:
     # ZIL: <SCORE-UPD ...>
     _.zork_thing.invoke_verb("score-upd", temp)
     return obj.set_property("value", 0)

@@ -10,7 +10,7 @@ v = args[0] if len(args) > 0 else None
 vs = None
 ps = None
 
-vs = v.get_property("strength")
+vs = _.zil_sdk.getp(v, "strength")
 ps = vs - _.zork_thing.invoke_verb("fight-strength")
 if ps > 3:
     return random.randint(1, 100) <= 90

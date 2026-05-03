@@ -4,7 +4,7 @@
 # ZIL routine: BAD-EGG
 
 if _.get_property("canary").location == _.get_property("egg"):
-    print(" " + _.get_property("broken_canary").get_property("first_description"), end="")
+    print(" " + _.zil_sdk.getp(_.get_property("broken_canary"), "first_description"), end="")
 else:
     _.zil_sdk.remove(_.get_property("broken_canary"))
 _.zil_sdk.move(_.get_property("broken_egg"), _.get_property("egg").location)

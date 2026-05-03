@@ -13,13 +13,13 @@ str_v = None
 av = None
 
 _.zil_sdk.zstate_set("DESC-OBJECT", obj)
-if level == 0 and apply(obj.get_property("descfcn"), "M-OBJDESC"):
+if level == 0 and apply(_.zil_sdk.getp(obj, "descfcn"), "M-OBJDESC"):
     return True
 elif (
     level == 0
     and not _.zil_sdk.flag(obj, "touchbit")
-    and (str_v := obj.get_property("first_description"))
-    or (str_v := obj.get_property("description"))
+    and (str_v := _.zil_sdk.getp(obj, "first_description"))
+    or (str_v := _.zil_sdk.getp(obj, "description"))
 ):
     return print(str_v, end="")
 elif level == 0:

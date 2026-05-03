@@ -29,7 +29,7 @@ elif context.parser.get_dobj().location == context.parser.get_iobj():
     )
 elif _.zork_thing.invoke_verb("weight", context.parser.get_iobj()) + _.zork_thing.invoke_verb(
     "weight", context.parser.get_dobj()
-) - context.parser.get_iobj().get_property("size") > context.parser.get_iobj().get_property("capacity"):
+) - _.zil_sdk.getp(context.parser.get_iobj(), "size") > _.zil_sdk.getp(context.parser.get_iobj(), "capacity"):
     return print("There's no room.")
 elif not _.zork_thing.invoke_verb("held?", context.parser.get_dobj()) and _.zil_sdk.flag(
     context.parser.get_dobj(), "trytakebit"

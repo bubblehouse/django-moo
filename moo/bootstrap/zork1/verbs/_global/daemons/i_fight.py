@@ -26,7 +26,7 @@ while True:
     ).location == context.player.location and not _.zil_sdk.flag(o, "invisible"):
         if o == lookup("thief") and _.zil_sdk.zstate_get("THIEF-ENGROSSED"):
             _.zil_sdk.zstate_set("THIEF-ENGROSSED", None)
-        elif o.get_property("strength") < 0:
+        elif _.zil_sdk.getp(o, "strength") < 0:
             p = _.zil_sdk.table_get(oo, _.zil_sdk.zstate_get("V-PROB"))
             if not p == 0 and random.randint(1, 100) <= p:
                 # ZIL: <PUT ...>
@@ -36,12 +36,12 @@ while True:
             else:
                 # ZIL: <PUT ...>
                 _.zil_sdk.table_put(oo, _.zil_sdk.zstate_get("V-PROB"), p + 25)
-        elif _.zil_sdk.flag(o, "hostile") or apply(o.get_property("action"), _.zil_sdk.zstate_get("F-FIRST?")):
+        elif _.zil_sdk.flag(o, "hostile") or apply(_.zil_sdk.getp(o, "action"), _.zil_sdk.zstate_get("F-FIRST?")):
             fight_p = True
     else:
         if _.zil_sdk.flag(o, "hostile"):
             # ZIL: <APPLY ...>
-            apply(o.get_property("action"), _.zil_sdk.zstate_get("F-BUSY?"))
+            apply(_.zil_sdk.getp(o, "action"), _.zil_sdk.zstate_get("F-BUSY?"))
         if o == lookup("thief"):
             _.zil_sdk.zstate_set("THIEF-ENGROSSED", None)
         _.zil_sdk.set_flag(context.player, "staggered", False)

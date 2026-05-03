@@ -18,7 +18,7 @@ ohere = None
 olit = _.zil_sdk.zstate_get("LIT")
 ohere = context.player.location
 if _.zil_sdk.flag(wloc, "vehicle"):
-    av = wloc.get_property("vtype")
+    av = _.zil_sdk.getp(wloc, "vtype")
 if not lb and not av:
     # ZIL: <NO-GO-TELL ...>
     _.zork_thing.invoke_verb("no-go-tell", av, wloc)
@@ -38,7 +38,7 @@ elif (
     _.zork_thing.invoke_verb("no-go-tell", av, wloc)
     return False
 elif _.zil_sdk.flag(rm, "rmungbit"):
-    print(rm.get_property("description"))
+    print(_.zil_sdk.getp(rm, "description"))
     return False
 else:
     if (
@@ -80,7 +80,7 @@ else:
         print("You have moved into a dark place.")
         _.zil_sdk.zstate_set("P-CONT", None)
     # ZIL: <APPLY ...>
-    apply(context.player.location.get_property("action"), "M-ENTER")
+    apply(_.zil_sdk.getp(context.player.location, "action"), "M-ENTER")
     # ZIL: <SCORE-OBJ ...>
     _.zork_thing.invoke_verb("score-obj", rm)
     if not context.player.location == rm:

@@ -31,7 +31,7 @@ elif (
     return _.zil_sdk.walk(_.zil_sdk.zstate_get("P?DOWN"))
 elif player_verb in ["tie-up"] and _.get_property("rope") == context.parser.get_iobj():
     if _.zil_sdk.flag(context.parser.get_dobj(), "actorbit"):
-        if context.parser.get_dobj().get_property("strength") < 0:
+        if _.zil_sdk.getp(context.parser.get_dobj(), "strength") < 0:
             print("Your attempt to tie up the " + _.zil_sdk.desc(context.parser.get_dobj()) + " awakens him.", end="")
             # ZIL: <AWAKEN ...>
             return _.zork_thing.invoke_verb("awaken", context.parser.get_dobj())

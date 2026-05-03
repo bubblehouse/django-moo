@@ -15,7 +15,7 @@ if player_verb in ["tell"]:
     print("The thief is a strong, silent type.")
     return _.zil_sdk.zstate_set("P-CONT", None)
 elif not mode:
-    if player_verb in ["hello", "hi"] and lookup("thief").get_property("description") == _.zil_sdk.zstate_get(
+    if player_verb in ["hello", "hi"] and _.zil_sdk.getp(lookup("thief"), "description") == _.zil_sdk.zstate_get(
         "ROBBER-U-DESC"
     ):
         return print(
@@ -56,15 +56,15 @@ elif not mode:
         and not context.parser.get_dobj() == lookup("thief")
         and context.parser.get_iobj() == lookup("thief")
     ):
-        if lookup("thief").get_property("strength") < 0:
-            lookup("thief").set_property("strength", -lookup("thief").get_property("strength"))
+        if _.zil_sdk.getp(lookup("thief"), "strength") < 0:
+            lookup("thief").set_property("strength", -_.zil_sdk.getp(lookup("thief"), "strength"))
             _.zil_sdk.queue("i-thief", 0)
             # ZIL: <RECOVER-STILETTO ...>
             _.zork_thing.invoke_verb("recover-stiletto")
             lookup("thief").set_property("description", _.zil_sdk.zstate_get("ROBBER-C-DESC"))
             return print("Your proposed victim suddenly recovers consciousness.")
         _.zil_sdk.move(context.parser.get_dobj(), lookup("thief"))
-        if context.parser.get_dobj().get_property("tvalue") > 0:
+        if _.zil_sdk.getp(context.parser.get_dobj(), "tvalue") > 0:
             _.zil_sdk.zstate_set("THIEF-ENGROSSED", True)
             return print(
                 "The thief is taken aback by your unexpected generosity, but accepts\nthe "

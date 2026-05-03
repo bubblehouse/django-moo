@@ -11,7 +11,7 @@ villain = _.zil_sdk.table_get(oo, _.zil_sdk.zstate_get("V-VILLAIN"))
 od = None
 tmp = None
 
-od = villain.get_property("strength")
+od = _.zil_sdk.getp(villain, "strength")
 if not od < 0:
     if villain == lookup("thief") and _.zil_sdk.zstate_get("THIEF-ENGROSSED"):
         if od > 2:

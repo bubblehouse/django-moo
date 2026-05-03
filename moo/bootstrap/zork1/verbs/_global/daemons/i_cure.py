@@ -5,7 +5,7 @@ from moo.sdk import context
 # ZIL routine: I-CURE
 # aux: S
 
-s = context.player.get_property("strength")
+s = _.zil_sdk.getp(context.player, "strength")
 
 if s > 0:
     s = 0

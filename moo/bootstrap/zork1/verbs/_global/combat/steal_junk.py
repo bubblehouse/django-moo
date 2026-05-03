@@ -17,7 +17,7 @@ while True:
         return False
     n = _.zil_sdk.next_sibling(x)
     if (
-        x.get_property("tvalue") == 0
+        _.zil_sdk.getp(x, "tvalue") == 0
         and _.zil_sdk.flag(x, "takeable")
         and not _.zil_sdk.flag(x, "sacred")
         and not _.zil_sdk.flag(x, "invisible")

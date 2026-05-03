@@ -6,7 +6,7 @@ from moo.sdk import context
 # aux: DEM, G, NG, P, T, L
 
 dem = _.zork_thing.invoke_verb("int", _.zork_thing.invoke_verb("i-sword"))
-g = _.get_property("sword").get_property("tvalue")
+g = _.zil_sdk.getp(_.get_property("sword"), "tvalue")
 ng = 0
 p = None
 t = None

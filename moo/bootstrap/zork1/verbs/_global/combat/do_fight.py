@@ -24,7 +24,7 @@ while True:
         o = _.zil_sdk.table_get(oo, _.zil_sdk.zstate_get("V-VILLAIN"))
         if not _.zil_sdk.flag(o, "hostile"):
             pass
-        elif apply(o.get_property("action"), _.zil_sdk.zstate_get("F-BUSY?")):
+        elif apply(_.zil_sdk.getp(o, "action"), _.zil_sdk.zstate_get("F-BUSY?")):
             pass
         elif not (res := _.zork_thing.invoke_verb("villain-blow", oo, out)):
             res = None

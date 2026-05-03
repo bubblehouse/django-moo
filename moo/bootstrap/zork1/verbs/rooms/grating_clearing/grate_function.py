@@ -50,7 +50,7 @@ elif player_verb in ["open", "close", "shut"]:
     else:
         return print("The grating is locked.")
 elif player_verb in ["put", "place", "insert"] and context.parser.get_iobj() == _.get_property("grate"):
-    if context.parser.get_dobj().get_property("size") > 20:
+    if _.zil_sdk.getp(context.parser.get_dobj(), "size") > 20:
         return print("It won't fit through the grating.")
     else:
         _.zil_sdk.move(context.parser.get_dobj(), _.get_property("grating_room"))

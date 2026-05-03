@@ -71,7 +71,7 @@ elif mode == _.zil_sdk.zstate_get("F-FIRST?"):
         return True
 elif not mode:
     if player_verb in ["examine", "x", "describe", "what"]:
-        return print(lookup("troll").get_property("description"))
+        return print(_.zil_sdk.getp(lookup("troll"), "description"))
     elif (
         player_verb in ["throw", "toss", "give"]
         and context.parser.get_dobj()
@@ -112,7 +112,7 @@ elif not mode:
                 )
                 _.zil_sdk.remove(lookup("troll"))
                 # ZIL: <APPLY ...>
-                apply(lookup("troll").get_property("action"), _.zil_sdk.zstate_get("F-DEAD"))
+                apply(_.zil_sdk.getp(lookup("troll"), "action"), _.zil_sdk.zstate_get("F-DEAD"))
                 return _.zil_sdk.zstate_set("TROLL-FLAG", True)
             elif context.parser.get_dobj() in (_.get_property("knife"), _.get_property("sword"), _.get_property("axe")):
                 _.zil_sdk.move(context.parser.get_dobj(), context.player.location)

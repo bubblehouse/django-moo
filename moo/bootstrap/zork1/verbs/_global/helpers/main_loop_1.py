@@ -155,7 +155,7 @@ if _.zil_sdk.zstate_set("P-WON", _.zork_thing.invoke_verb("parser")):
                 if v == _.zil_sdk.zstate_get("M-FATAL"):
                     break
     if not v == _.zil_sdk.zstate_get("M-FATAL"):
-        v = apply(context.player.location.get_property("action"), "M-END")
+        v = apply(_.zil_sdk.getp(context.player.location, "action"), "M-END")
     if v == _.zil_sdk.zstate_get("M-FATAL"):
         return _.zil_sdk.zstate_set("P-CONT", None)
 else:

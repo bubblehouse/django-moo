@@ -36,7 +36,7 @@ elif obj or not _.zil_sdk.flag(context.parser.get_dobj(), "takeable"):
             "SCOL-ACTIVE"
         ) and context.parser.get_dobj() == _.zil_sdk.table_get((m := get_wall(context.player.location)), 1):
             _.zil_sdk.zstate_set("SCOL-ROOM", _.zil_sdk.table_get(m, 2))
-            _.zil_sdk.zstate_set("PRSO", context.parser.get_dobj().get_property("size"))
+            _.zil_sdk.zstate_set("PRSO", _.zil_sdk.getp(context.parser.get_dobj(), "size"))
             if obj:
                 # ZIL: <SCOL-OBJ ...>
                 scol_obj(obj, 0, _.zil_sdk.zstate_get("DEPOSITORY"))

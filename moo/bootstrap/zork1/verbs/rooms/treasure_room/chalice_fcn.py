@@ -10,7 +10,7 @@ if player_verb in ["take", "get", "pick"]:
         and lookup("thief").location == _.get_property("treasure_room")
         and _.zil_sdk.flag(lookup("thief"), "hostile")
         and not _.zil_sdk.flag(lookup("thief"), "invisible")
-        and not lookup("thief").get_property("description") == _.zil_sdk.zstate_get("ROBBER-U-DESC")
+        and not _.zil_sdk.getp(lookup("thief"), "description") == _.zil_sdk.zstate_get("ROBBER-U-DESC")
     ):
         return print("You'd be stabbed in the back first.")
 elif player_verb in ["put", "place", "insert"] and context.parser.get_iobj() == _.get_property("chalice"):

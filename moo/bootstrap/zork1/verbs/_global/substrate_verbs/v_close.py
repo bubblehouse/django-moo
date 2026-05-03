@@ -10,7 +10,7 @@ if not _.zil_sdk.flag(context.parser.get_dobj(), "contbit") and not _.zil_sdk.fl
     return print("You must tell me how to do that to a " + _.zil_sdk.desc(context.parser.get_dobj()) + ".")
 elif (
     not _.zil_sdk.flag(context.parser.get_dobj(), "surfacebit")
-    and not context.parser.get_dobj().get_property("capacity") == 0
+    and not _.zil_sdk.getp(context.parser.get_dobj(), "capacity") == 0
 ):
     if _.zil_sdk.flag(context.parser.get_dobj(), "open"):
         _.zil_sdk.set_flag(context.parser.get_dobj(), "open", False)

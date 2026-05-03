@@ -10,7 +10,7 @@ g = None
 if player_verb in ["take", "get", "pick"] and context.player == _.get_property("adventurer"):
     return _.zil_sdk.queue("i-sword", -1)
 elif player_verb in ["examine", "x", "describe", "what"]:
-    if (g := _.get_property("sword").get_property("tvalue")) == 1:
+    if (g := _.zil_sdk.getp(_.get_property("sword"), "tvalue")) == 1:
         return print("Your sword is glowing with a faint blue glow.")
     elif g == 2:
         return print("Your sword is glowing very brightly.")

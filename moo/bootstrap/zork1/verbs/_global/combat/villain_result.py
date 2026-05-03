@@ -18,11 +18,11 @@ if def_v == 0:
     )
     _.zil_sdk.remove(villain)
     # ZIL: <APPLY ...>
-    apply(villain.get_property("action"), _.zil_sdk.zstate_get("F-DEAD"))
+    apply(_.zil_sdk.getp(villain, "action"), _.zil_sdk.zstate_get("F-DEAD"))
     return res
 elif res == _.zil_sdk.zstate_get("UNCONSCIOUS"):
     # ZIL: <APPLY ...>
-    apply(villain.get_property("action"), _.zil_sdk.zstate_get("F-UNCONSCIOUS"))
+    apply(_.zil_sdk.getp(villain, "action"), _.zil_sdk.zstate_get("F-UNCONSCIOUS"))
     return res
 else:
     return res

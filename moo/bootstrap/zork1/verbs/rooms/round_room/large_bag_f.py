@@ -5,7 +5,7 @@ from moo.sdk import context, lookup
 # ZIL routine: LARGE-BAG-F
 
 if player_verb in ["take", "get", "pick"]:
-    if lookup("thief").get_property("description") == _.zil_sdk.zstate_get("ROBBER-U-DESC"):
+    if _.zil_sdk.getp(lookup("thief"), "description") == _.zil_sdk.zstate_get("ROBBER-U-DESC"):
         return print("Sadly for you, the robber collapsed on top of the bag. Trying to take\nit would wake him.")
     else:
         return print("The bag will be taken over his dead body.")

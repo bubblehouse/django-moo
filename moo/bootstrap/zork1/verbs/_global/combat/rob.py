@@ -22,7 +22,7 @@ while True:
     if (
         not _.zil_sdk.flag(x, "invisible")
         and not _.zil_sdk.flag(x, "sacred")
-        and x.get_property("tvalue") > 0
+        and _.zil_sdk.getp(x, "tvalue") > 0
         and not prob
         or random.randint(1, 100) <= prob
     ):
