@@ -184,12 +184,12 @@ def test_repository_fields_stored(t_init, t_wizard):
     repo = Repository.objects.create(
         slug="myrepo",
         url="https://example.com/repo",
-        prefix="moo/bootstrap/myrepo_verbs",
+        prefix="moo/bootstrap/myrepo/verbs",
     )
     repo.refresh_from_db()
     assert repo.slug == "myrepo"
     assert repo.url == "https://example.com/repo"
-    assert repo.prefix == "moo/bootstrap/myrepo_verbs"
+    assert repo.prefix == "moo/bootstrap/myrepo/verbs"
 
 
 # ---------------------------------------------------------------------------

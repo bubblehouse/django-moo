@@ -9,7 +9,7 @@ Usage:
     @rmverb <verb-name> on <object>
 
 The caller must own the verb (or be a wizard). Filesystem-backed verbs
-loaded from a `default_verbs/` file can be removed; they will reappear on
+loaded from a `default/verbs/` file can be removed; they will reappear on
 the next `moo_init --sync` if the file is still present.
 """
 

@@ -1,5 +1,5 @@
 """
-Shared test helpers for default_verbs tests.
+Shared test helpers for default verb tests.
 """
 
 import warnings
