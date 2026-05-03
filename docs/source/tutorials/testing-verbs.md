@@ -12,7 +12,7 @@ Before you start:
 
 ## The verb we're testing
 
-We'll test a `greet` verb on `$thing`. Save this as `moo/bootstrap/default_verbs/thing/greet.py`:
+We'll test a `greet` verb on `$thing`. Save this as `moo/bootstrap/default/verbs/thing/greet.py`:
 
 ```python
 #!moo verb greet --on $thing --dspec this
@@ -28,7 +28,7 @@ This verb:
 
 ## Step 1: Create the test file
 
-Create `moo/bootstrap/default_verbs/tests/test_greet.py`:
+Create `moo/bootstrap/default/tests/test_greet.py`:
 
 ```python
 import pytest
@@ -174,7 +174,7 @@ def test_moveto_blocked_by_lock(t_init: Object, t_wizard: Object):
 
 ## Step 8: Using the `setup_item` fixture
 
-The `setup_item` fixture from `moo/bootstrap/default_verbs/tests/conftest.py` creates a `$thing` in any location, reducing boilerplate:
+The `setup_item` fixture from `moo/bootstrap/default/tests/conftest.py` creates a `$thing` in any location, reducing boilerplate:
 
 ```python
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -195,13 +195,13 @@ def test_give_to_player(t_init: Object, t_wizard: Object, setup_item):
 ## Step 9: Run the tests
 
 ```bash
-uv run pytest -n auto moo/bootstrap/default_verbs/tests/test_greet.py
+uv run pytest -n auto moo/bootstrap/default/tests/test_greet.py
 ```
 
 `-n auto` runs tests in parallel using all available cores. To run a single test, append `::test_name`:
 
 ```bash
-uv run pytest -n auto moo/bootstrap/default_verbs/tests/test_greet.py::test_greet_prints_to_caller
+uv run pytest -n auto moo/bootstrap/default/tests/test_greet.py::test_greet_prints_to_caller
 ```
 
 ## What just happened

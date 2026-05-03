@@ -1,5 +1,5 @@
 """
-Sphinx extension that makes verb files in moo.bootstrap.default_verbs importable.
+Sphinx extension that makes verb files in moo.bootstrap.default.verbs importable.
 
 Verb files use module-level ``return`` statements and bare injected variables
 (``args``, ``this``, etc.) that are valid in the sandbox but cause SyntaxError
@@ -17,7 +17,7 @@ import importlib.abc
 import importlib.machinery
 from pathlib import Path
 
-VERB_PACKAGE = "moo.bootstrap.default_verbs"
+VERB_PACKAGE = "moo.bootstrap.default.verbs"
 SHEBANG_PREFIX = "#!moo verb"
 
 

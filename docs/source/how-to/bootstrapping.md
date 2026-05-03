@@ -7,7 +7,7 @@ and arguments), see {doc}`../reference/bootstrapping`.
 
 ## Sync verbs after editing source files
 
-When you've edited a `.py` file under `<dataset>_verbs/` and want the
+When you've edited a `.py` file under `<dataset>/verbs/` and want the
 running database to pick up the change without resetting:
 
 ```bash
@@ -25,7 +25,7 @@ script that creates them will pick up the difference on the next
 
 ## Add a verb to an existing dataset
 
-Drop a new `.py` file under `<dataset>_verbs/<class>/` with a shebang
+Drop a new `.py` file under `<dataset>/verbs/<class>/` with a shebang
 and the verb body:
 
 ```python
@@ -75,13 +75,13 @@ def test_starting_room_loads(t_init: Object, t_wizard: Object):
     assert start is not None
 ```
 
-Place tests under `<dataset>_verbs/tests/` (e.g.
-`moo/bootstrap/mygame_verbs/tests/test_world.py`).
+Place tests under `<dataset>/tests/` (e.g.
+`moo/bootstrap/mygame/tests/test_world.py`).
 
 Run with:
 
 ```bash
-uv run pytest -n auto moo/bootstrap/mygame_verbs/tests/
+uv run pytest -n auto moo/bootstrap/mygame/tests/
 ```
 
 ## Make a property inherit ownership
@@ -150,7 +150,7 @@ duplicate semantics) belong inside the gate.
 If you need to move a verb from one class to another:
 
 1. Edit the verb file's shebang to point at the new class.
-2. Move the file into `<dataset>_verbs/<new_class>/`.
+2. Move the file into `<dataset>/verbs/<new_class>/`.
 3. Run `--sync` to create the verb on the new class.
 4. Add a one-shot deletion in your finalize script to remove the orphan
    on the old class:
@@ -167,6 +167,42 @@ If you need to move a verb from one class to another:
 
 `moo/bootstrap/default/999_finalize.py` contains a real example of this
 cleanup pattern (the `_moved_from_player` block).
+
+## Snapshot and reset world state
+
+For game datasets where players accumulate state over time (treasures
+moved, doors opened, score, turn counters), the `moo_save_state` and
+`moo_reset` management commands let you capture a known-good world and
+restore to it without re-bootstrapping from scratch.
+
+Capture a snapshot of the current world to a fixture:
+
+```bash
+docker compose run webapp manage.py moo_save_state \
+    --bootstrap zork1 --output zork1_world.json
+```
+
+The snapshot serializes object rows, properties, verb names, and aliases
+for the active site. Per-player `zstate_*` properties (per-player game
+progress) are excluded; bootstrap-level `zstate_*` data on world objects
+(for example, ZIL `<LTABLE>` content on `$zork_sdk`) is included so the
+restored world is fully playable. The fixture is portable — `site_id` is
+stripped on save and re-applied on load.
+
+Restore to that snapshot:
+
+```bash
+docker compose run webapp manage.py moo_reset --bootstrap zork1
+```
+
+`moo_reset` loads the most recent fixture for the dataset (or pass
+`--fixture path` for a specific one), then clears `zstate_*` properties
+on **player avatars only** so per-player game state goes back to zero
+without disturbing the bootstrap-level state. Player accounts and
+non-zstate player properties are preserved.
+
+Both commands accept `--hostname` to scope to a specific Site in
+multi-universe deployments; without it they use the default site.
 
 ## Debug a failing bootstrap
 

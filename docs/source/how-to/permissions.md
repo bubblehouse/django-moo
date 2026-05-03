@@ -73,7 +73,7 @@ should be owned by the player, not by the verb's wizard owner.
 `set_task_perms(who)` is a context manager that swaps `context.caller`
 for the duration of a block.
 
-`default_verbs/builder/at_create.py` shows the pattern:
+`default/verbs/builder/at_create.py` shows the pattern:
 
 ```python
 from moo.sdk import context, create, set_task_perms
@@ -107,7 +107,7 @@ execute as the player, so:
 `set_task_perms` raises `UserError` for non-wizards. Only wizard-
 owned verbs can use it.
 
-A second example is `default_verbs/programmer/at_eval.py`, which
+A second example is `default/verbs/programmer/at_eval.py`, which
 evaluates user-supplied code with `set_task_perms(context.player)` so
 the snippet runs with the player's permissions rather than the
 wizard owner's — closing the obvious privilege-escalation hole.
@@ -120,7 +120,7 @@ the right behaviour differs for wizards vs. owners vs. everyone else.
 Use `is_wizard()` and `owns()` for these. They check role and
 ownership directly, not ACL bits.
 
-`default_verbs/programmer/at_reload.py` uses both:
+`default/verbs/programmer/at_reload.py` uses both:
 
 ```python
 target = context.parser.get_pobj("on", lookup=True)
@@ -222,7 +222,7 @@ inserted automatically by `apply_default_permissions` in
 
 This runs natively, not via a verb, so verb authors never need to
 think about it. (There is a `set_default_permissions` verb file in
-`default_verbs/`, but it exists as documentation; the executable
+`default/verbs/`, but it exists as documentation; the executable
 path is the native function.)
 
 ## Where to read more

@@ -1,6 +1,6 @@
 ---
 name: verb-author
-description: Write and review DjangoMOO verb files. Use when asked to create, modify, or debug verbs in moo/bootstrap/default_verbs/ or for any task involving the `#!moo` shebang syntax, RestrictedPython verb execution, the moo.sdk API, or verb testing.
+description: Write and review DjangoMOO verb files. Use when asked to create, modify, or debug verbs in moo/bootstrap/default/verbs/ or for any task involving the `#!moo` shebang syntax, RestrictedPython verb execution, the moo.sdk API, or verb testing.
 ---
 
 # Verb Author
@@ -163,8 +163,10 @@ obj.aliases.all()                        # QuerySet of ObjectAlias instances
 obj.aliases.filter(alias="name").exists() # check if alias exists
 
 # Verb dispatch
-obj.invoke_verb(name, *args)
+obj.invoke_verb(name, *args)             # works for any verb name, including hyphens
 obj.has_verb(name)
+# obj.foo_bar(...)                       # attribute-style only for valid Python identifiers
+# obj.invoke_verb("foo-bar", ...)        # use invoke_verb for hyphenated/non-Python names
 
 # Room broadcast
 room.announce(msg)                       # all occupants except caller
@@ -506,7 +508,7 @@ Rules:
 - Use `context.player.tell()` inside the loop, not `print()`. `tell()` writes immediately; `print()` buffers until the verb returns.
 - Materialize querysets to `list()` before the loop so the DB cursor doesn't span the time check.
 - Helper function names must not start with `_` — RestrictedPython blocks underscore-prefixed names.
-- Reference implementation: `moo/bootstrap/default_verbs/programmer/at_reload.py`.
+- Reference implementation: `moo/bootstrap/default/verbs/programmer/at_reload.py`.
 
 ## Pitfalls
 
@@ -523,6 +525,42 @@ Rules:
 - **Can't import from `moo.core.*` in verb code:** These modules aren't in `ALLOWED_MODULES`. Create SDK functions in the appropriate `moo/sdk/*.py` submodule and re-export from `moo/sdk/__init__.py` for privileged operations instead.
 - **Exception handling limitations:** Can't use `e.__class__.__name__` or `type(e)` in verb error handlers. Use `str(e)` or just stringify: `print(f"Error: {e}")`.
 - **`verb_name` shadowing causes `UnboundLocalError`:** `verb_name` is injected into the verb's local scope. If you assign to a variable named `verb_name` *anywhere* in the verb body (even after the first read), Python treats it as a local for the entire function — including lines before the assignment. Any read of `verb_name` before that assignment raises `UnboundLocalError`. Use a different name (e.g. `the_verb_name`, `current_verb`) for any local variable that would shadow it.
+- **Hyphenated verb names need `invoke_verb`:** A verb declared `#!moo verb foo-bar --on $thing` is dispatchable via `obj.invoke_verb("foo-bar", *args)` but not `obj.foo_bar(*args)` — Python attribute access only resolves to the verb when the verb name is a valid Python identifier. Either keep verb names underscore-only or call them through `invoke_verb` from other verbs.
+- **Parser dispatch (`parse.interpret`) requires the default LambdaCore verbs.** The parser calls `caller.set_parser(...)` and consults `do_command` on the system object — both ship in the `default` bootstrap. Datasets that don't pull `default` in cannot be tested with `parse.interpret`; call `obj.invoke_verb(...)` directly from the test instead.
+- **Pre-declare locals that branch-bind.** When a verb assigns to a variable inside one branch of an `if/elif/else` and reads it later, pylint and the runtime will both flag uses-before-assignment. Set `var = None` (or a sensible default) at the top of the verb so every path has a binding.
+
+## Patterns When Generating Verbs Programmatically
+
+These notes apply when emitting verb files from another tool (transpilers,
+scaffolders, code generators); they don't change anything for hand-authored
+verbs.
+
+- **Translate identifiers, don't echo them.** Atoms from the source language
+  may contain characters Python disallows (`-`, `?`, `!`). Map `-` → `_`,
+  predicate suffix `?` → `_p`, and reject leading digits. Suffix names that
+  collide with Python keywords (`def`, `class`, `if`) or shadow common
+  builtins (`set`, `list`, `dict`) so the generated body still calls
+  `set()` etc. unambiguously.
+- **Inline annotations break nested expressions.** Comments survive at the
+  end of a complete statement but not inside an expression that may later
+  be embedded in `if`, `and`, or function arguments. Emit `# ZIL:`-style
+  trail comments on their own line before/after the statement, not inside
+  the expression text.
+- **Atoms used with attribute access need `lookup()`.** Source-language
+  references like `THIEF` are usually object names. The translator must
+  emit `lookup("thief")` when the atom appears as the operand of
+  `.location`, `.set_property`, etc. — bare quoted atoms are str literals
+  and `str.location` does not exist.
+- **Implicit returns must become explicit.** Languages where the last
+  expression of a block is the return value need explicit `return` in
+  Python; otherwise pylint flags the trailing comparison/arithmetic as
+  expression-not-assigned.
+- **Skip empty event-handler clauses.** Don't register a verb file whose
+  body is only `pass` — it adds dispatch cost and clutter without changing
+  behaviour.
+- **Pre-declare aux/local variables.** Emit `var = None` at the top of the
+  body for every variable a branch can bind, so static analysis sees a
+  consistent binding.
 
 ## Further Reference
 

@@ -3,16 +3,24 @@
 > **Most readers do not need this tutorial.** A from-scratch world means
 > writing your own root class hierarchy, your own `look`/`take`/`drop`/
 > `go`/`say` equivalents, and your own connection callbacks. None of the
-> helpers in `default_verbs/` apply — every command vocabulary is
+> helpers in `default/verbs/` apply — every command vocabulary is
 > something you define. Expect this to take days, not hours.
 >
 > If what you actually want is to add rooms, items, or themed areas to
 > the existing MOO, extend the `default` dataset by adding numbered
 > scripts under `moo/bootstrap/default/`. The reasonable use cases for
 > this tutorial are narrow: implementing a different game engine on top
-> of the MOO substrate (e.g., a Zork-style adventure interpreter), or a
-> non-MOO theme that should not share any state with the standard player
-> commands.
+> of the MOO substrate, or a non-MOO theme that should not share any
+> state with the standard player commands.
+>
+> A working precedent for the latter ships with the project: the
+> `zork1` dataset (`moo/bootstrap/zork1/`) is a complete from-scratch
+> bootstrap that defines its own root classes (`Zork Room`,
+> `Zork Thing`, `Zork Container`, `Zork Actor`), its own verbs
+> (`take`, `drop`, `examine`, etc., none of them inherited from
+> `default`), and its own runtime helpers via a `$zork_sdk` system
+> object. The package shape is exactly what this tutorial walks you
+> through.
 
 This tutorial walks through building a standalone bootstrap dataset as a
 Python package. After you're done, somebody can install your package and
@@ -36,7 +44,7 @@ A new top-level package — call it `mygame` — that contains:
   numbered sub-scripts in order.
 - Numbered sub-scripts that create your root classes, rooms, and other
   objects.
-- A sibling `mygame_verbs/` package containing one verb file per
+- A sibling `mygame/verbs/` package containing one verb file per
   command, organized by root class.
 - A minimal `pyproject.toml` so the package can be installed.
 
@@ -49,7 +57,7 @@ mygame/
 ├── 020_rooms.py           starting rooms
 ├── 030_exits.py           exits between rooms
 └── 999_finalize.py        permission grants and verb loading
-mygame_verbs/
+mygame/verbs/
 ├── room/
 │   └── look.py
 ├── thing/
@@ -57,7 +65,7 @@ mygame_verbs/
 pyproject.toml
 ```
 
-The `mygame_verbs/<class>/` convention mirrors `default_verbs/`. Each
+The `mygame/verbs/<class>/` convention mirrors `default/verbs/`. Each
 subdirectory holds verbs whose `--on` references that root class.
 `bootstrap.load_verbs` walks the tree recursively, so the directory
 structure is purely organizational — only the `--on` line in each verb's
@@ -70,7 +78,7 @@ Today, `moo_init` only discovers bootstrap packages that are siblings of
 out-of-tree package yet. The practical workflow is:
 
 1. Develop your package in-tree by placing it under
-   `moo/bootstrap/mygame/` and `moo/bootstrap/mygame_verbs/`.
+   `moo/bootstrap/mygame/` and `moo/bootstrap/mygame/`.
 2. Add `"mygame"` to the `builtin_templates` list in
    `moo/core/management/commands/moo_init.py`.
 
@@ -84,12 +92,12 @@ tutorial itself shows the in-tree variant.
 From the django-moo repo root:
 
 ```bash
-mkdir -p moo/bootstrap/mygame
-mkdir -p moo/bootstrap/mygame_verbs/room
-mkdir -p moo/bootstrap/mygame_verbs/thing
-mkdir -p moo/bootstrap/mygame_verbs/player
-mkdir -p moo/bootstrap/mygame_verbs/tests
-touch moo/bootstrap/mygame_verbs/__init__.py
+mkdir -p moo/bootstrap/mygame/verbs/room
+mkdir -p moo/bootstrap/mygame/verbs/thing
+mkdir -p moo/bootstrap/mygame/verbs/player
+mkdir -p moo/bootstrap/mygame/tests
+touch moo/bootstrap/mygame/__init__.py
+touch moo/bootstrap/mygame/verbs/__init__.py
 ```
 
 Each verb subdirectory will hold one `.py` file per verb. You don't need
@@ -98,7 +106,9 @@ filesystem trees, not as Python packages.
 
 ## Step 2: Write the orchestrator
 
-Create `moo/bootstrap/mygame/__init__.py`:
+Create `moo/bootstrap/mygame/bootstrap.py` (the package's `__init__.py`
+is intentionally empty so test discovery doesn't run the bootstrap as a
+side effect of importing it):
 
 ```python
 import importlib.resources
@@ -154,7 +164,7 @@ What this does:
   second argument is the writer callback — log lines from `print()` go
   through `log.info`.
 
-This pattern is taken directly from `moo/bootstrap/default/__init__.py`.
+This pattern is taken directly from `moo/bootstrap/default/bootstrap.py`.
 Read that file alongside this one — your orchestrator should look very
 similar.
 
@@ -273,7 +283,7 @@ defining the contract yourself.
 
 ## Step 6: Add a verb
 
-Create `moo/bootstrap/mygame_verbs/room/look.py`:
+Create `moo/bootstrap/mygame/room/look.py`:
 
 ```python
 #!moo verb look --on $room --dspec none
@@ -301,7 +311,7 @@ each room is parented on `MyGame Room`.
 This is a complete, working `look` verb — but it is *yours*. There is no
 inherited `look` from `default`. The same applies to every command you
 want players to type: `take`, `drop`, `go`, `say`, `inventory`, and so
-on. Each is one file under `mygame_verbs/<class>/`. See {doc}`first-verb`
+on. Each is one file under `mygame/verbs/<class>/`. See {doc}`first-verb`
 for the verb-authoring basics.
 
 ## Step 7: Finalize and load verbs
@@ -310,7 +320,7 @@ Create `moo/bootstrap/mygame/999_finalize.py`:
 
 ```python
 # pylint: disable=undefined-variable
-bootstrap.load_verbs(repo, "moo.bootstrap.mygame_verbs", replace=True)
+bootstrap.load_verbs(repo, "moo.bootstrap.mygame.verbs", replace=True)
 ```
 
 `load_verbs` walks the verb package recursively, parses each shebang,
@@ -371,7 +381,7 @@ resetting it. `get_or_create_object` skips objects that already exist;
 
 ## Step 11: Test it
 
-Tests for your dataset live under `mygame_verbs/tests/`. Use the
+Tests for your dataset live under `mygame/tests/`. Use the
 `t_init` fixture with your dataset name:
 
 ```python
@@ -404,24 +414,35 @@ the test runs.
 Run the suite with:
 
 ```bash
-uv run pytest -n auto moo/bootstrap/mygame_verbs/tests/
+uv run pytest -n auto moo/bootstrap/mygame/tests/
 ```
 
 ## Where to look for more
 
 - `moo/bootstrap/default/` — the canonical real-world bootstrap package.
-  Read `__init__.py` for the orchestrator pattern, `000_initialize.py`
+  Read `bootstrap.py` for the orchestrator pattern, `000_initialize.py`
   through `999_finalize.py` for concrete examples of class definition,
   room creation, player setup, and finalization.
-- `moo/bootstrap/default_verbs/<class>/` — verb files organised by
+- `moo/bootstrap/default/verbs/<class>/` — verb files organised by
   root-class name. Even though your world doesn't reuse the verbs, the
   directory layout, shebang conventions, and SDK usage are all worth
   copying.
+- `moo/bootstrap/zork1/` — a second from-scratch bootstrap. Its
+  `010_classes.py` shows a parallel root-class hierarchy
+  (`Zork Room`, `Zork Thing`, `Zork Container`, `Zork Actor`) that
+  does not inherit from `default`'s classes; `verbs/commands/` shows
+  player commands (`take`, `drop`, `examine`, …) that target a custom
+  `$player` alias rather than the LambdaCore one. Read this for a
+  concrete example of supporting an alternate command vocabulary.
 - {doc}`../reference/bootstrapping` — function reference for
   `initialize_dataset`, `get_or_create_object`, `load_verbs`,
   `load_verb_source`, and `parse_shebang`.
 - {doc}`../how-to/bootstrapping` — additional bootstrap patterns:
   property inheritance flags, ACL setup, multi-file organisation.
+- {doc}`../reference/zil-importer` — if your world is itself a
+  translation from another text-adventure source language, the
+  `zil_import` package shows one approach (parser + IR + translator +
+  generator) to producing a bootstrap from foreign data.
 
 ## Out-of-tree packaging (future direction)
 
@@ -431,7 +452,7 @@ orchestrator, numbered scripts, sibling verb directory — is identical to
 what a pip-installable out-of-tree package would need. When entry-point
 discovery lands, the change will be straightforward:
 
-- Move `mygame/` and `mygame_verbs/` out of `moo/bootstrap/` into their
+- Move `mygame/` and `mygame/verbs/` out of `moo/bootstrap/` into their
   own repository.
 - Add an entry-point row to your `pyproject.toml` along the lines of
   `[project.entry-points."moo.bootstrap"]` declaring the bootstrap

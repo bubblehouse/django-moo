@@ -140,8 +140,8 @@ moo/
   core/           Core game engine: models, code execution, parser, permissions
   core/tests/     Unit and integration tests for the engine
   bootstrap/      Database initialisation and default game world
-    default_verbs/        Verb source files installed on default objects
-    default_verbs/tests/  Integration tests for those verbs
+    default/verbs/        Verb source files installed on default objects
+    default/verbs/tests/  Integration tests for those verbs
   shell/          AsyncSSH server and interactive prompt
   settings/       Django configuration (base, dev, test, local)
 docs/             Sphinx source for the user guide and API reference
@@ -218,7 +218,7 @@ There are two kinds of tests:
 | Kind | Location | What it tests |
 |------|----------|---------------|
 | Core unit/integration | `moo/core/tests/` | Models and the execution engine against the `test` bootstrap dataset |
-| Verb integration | `moo/bootstrap/default_verbs/tests/` | Verb behaviour against a fully initialised default world |
+| Verb integration | `moo/bootstrap/default/verbs/tests/` | Verb behaviour against a fully initialised default world |
 
 ### Writing tests
 
@@ -358,7 +358,7 @@ Review changelogs carefully before committing major version bumps.
 
 ## Writing Verb Code
 
-Verbs are Python functions that run inside a [RestrictedPython](https://restrictedpython.readthedocs.io/) sandbox. They live under `moo/bootstrap/default_verbs/`.
+Verbs are Python functions that run inside a [RestrictedPython](https://restrictedpython.readthedocs.io/) sandbox. They live under `moo/bootstrap/default/verbs/`.
 
 ### File format
 
@@ -398,7 +398,7 @@ Pylance will warn about `this`, `passthrough`, `_`, `args`, and `kwargs` being u
 
 ### Testing verbs
 
-Write an integration test in `moo/bootstrap/default_verbs/tests/` using the `t_init` / `t_wizard` fixtures and `parse.interpret()` to drive the full command pipeline.
+Write an integration test in `moo/bootstrap/default/verbs/tests/` using the `t_init` / `t_wizard` fixtures and `parse.interpret()` to drive the full command pipeline.
 
 ---
 

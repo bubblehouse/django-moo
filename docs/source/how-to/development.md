@@ -128,9 +128,9 @@ uv run pytest --pdb
 |------|---------------|
 | `moo/bootstrap/test.py` | Minimal bootstrap data used by core unit tests via the `t_init` fixture |
 | `moo/bootstrap/default/` | Production-shape bootstrap package (orchestrator + numbered scripts) used to populate playable databases |
-| `moo/bootstrap/default_verbs/` | Verb sources for the `default` dataset, organised by root-class name |
+| `moo/bootstrap/default/verbs/` | Verb sources for the `default` dataset, organised by root-class name |
 | `moo/core/tests/` | Unit tests for models, permissions, the verb execution engine |
-| `moo/bootstrap/default_verbs/tests/` | Integration tests for default verbs against a fully bootstrapped world |
+| `moo/bootstrap/default/tests/` | Integration tests for default verbs against a fully bootstrapped world |
 
 Shared pytest fixtures live in `moo/conftest.py` (notably `t_init` and `t_wizard`).
 
@@ -171,7 +171,7 @@ def test_permission_denial():
 
 #### Default tests
 
-Tests in `moo/bootstrap/default_verbs/tests/` exercise verbs against a fully bootstrapped world.
+Tests in `moo/bootstrap/default/tests/` exercise verbs against a fully bootstrapped world.
 
 They use two shared fixtures from `moo/conftest.py`:
 

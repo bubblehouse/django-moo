@@ -345,7 +345,7 @@ if not context.parser.has_dobj_str():
 
 ## A real verb, end to end
 
-`default_verbs/thing/take.py` puts most of the patterns above into one
+`default/verbs/thing/take.py` puts most of the patterns above into one
 file:
 
 ```python

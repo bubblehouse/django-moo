@@ -249,9 +249,9 @@ even when most users connect from plain SSH.
   field is absent.
 
 Default verbs emit `Room.Info` from
-[`player/confunc`](https://gitlab.com/bubblehouse/django-moo/-/blob/main/moo/bootstrap/default_verbs/player/confunc.py)
+[`player/confunc`](https://gitlab.com/bubblehouse/django-moo/-/blob/main/moo/bootstrap/default/verbs/player/confunc.py)
 on connect and from
-[`exit/move`](https://gitlab.com/bubblehouse/django-moo/-/blob/main/moo/bootstrap/default_verbs/exit/move.py)
+[`exit/move`](https://gitlab.com/bubblehouse/django-moo/-/blob/main/moo/bootstrap/default/verbs/exit/move.py)
 after every successful move.
 
 ### Mudlet mapper integration

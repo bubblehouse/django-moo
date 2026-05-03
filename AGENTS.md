@@ -56,7 +56,7 @@ This document provides essential context for AI models interacting with the Djan
     * `/moo/core/management/commands`: Django management commands (moo_init, moo_enableuser, etc.)
     * `/moo/core/tests`: Unit and integration tests using pytest
   * `/moo/bootstrap`: Dataset initialization system. `default/` is a package whose `__init__.py` orchestrates numbered scripts (`010_core_classes.py`, `020_utility_objects.py`, ...) executed in sorted order. `test.py` is a flat module providing the minimal test dataset.
-    * `/moo/bootstrap/default_verbs`: Verb sources for `default`, organised by root-class name (`player/`, `room/`, `thing/`, `programmer/`, ...). `default_verbs/tests/` contains pytest integration tests for those verbs.
+    * `/moo/bootstrap/default/verbs`: Verb sources for `default`, organised by root-class name (`player/`, `room/`, `thing/`, `programmer/`, ...). `default/verbs/tests/` contains pytest integration tests for those verbs.
     * Bootstrap helpers `get_or_create_object`, `load_verb_source`, and `load_verbs` (in `moo/bootstrap/__init__.py`) are idempotent — use them instead of `Object.objects.create()` in any bootstrap file intended to support `moo_init --sync`
   * `/moo/shell`: SSH server implementation and interactive prompt system
   * `/moo/settings`: Django configuration modules (base.py, dev.py, test.py, local.py)
@@ -106,6 +106,56 @@ rows (`read`, `deleted` fields). Verb authors should use SDK functions exclusive
 **Admin setup:** `@gripe` sends to the `gripe_recipients` property on the system
 object (`_`). A wizard must set this to a list of player Objects before `@gripe` is
 usable.
+
+### Multi-Universe Support
+
+A single deployment can host independent worlds. Each universe is a Django
+`Site` row. SSH has no protocol-level hostname indication, so connections
+either encode the Site domain in the username (`ssh user+sitedomain@host`)
+or are routed via the post-auth picker; webssh injects the suffix from the
+browser `Host` header automatically. Queries through `Object.objects` /
+`Property.objects` / `Verb.objects` are silently filtered to the active
+site by `SiteManager` (`moo/core/managers.py`). Use `Object.global_objects`
+for cross-site queries (diagnostics, migrations).
+
+| Mechanism | Purpose |
+|-----------|---------|
+| `Player(user, site, avatar, wizard)` | Per-site avatar; same `User` may have one Player per Site |
+| `UniversalWizard(user)` | Opt-in cross-universe wizard rights; auto-provisions a wizard avatar on first SSH connection to any Site without an existing Player row |
+| `moo_init --bootstrap NAME --hostname H` | Bootstrap an additional universe at hostname `H` |
+| `moo_make_universal username [--remove]` | Grant or revoke universal-wizard status |
+| `code.ContextManager(player, ..., site=site)` | Set the active site for a block (management commands, Celery tasks) |
+
+`User.is_superuser` does **not** grant cross-site wizard rights — universal
+status is opt-in via `moo_make_universal`. See {doc}`how-to/multi-universe`
+in Sphinx for the operational walkthrough.
+
+### Bootstrap Datasets
+
+| Dataset | Source | Purpose |
+|---------|--------|---------|
+| `default` | `moo/bootstrap/default/` | Production game world; LambdaCore-style classes and verbs |
+| `zork1` | `moo/bootstrap/zork1/` | Example bootstrap mirroring Infocom *Zork I*; demonstrates a from-scratch class hierarchy and command vocabulary independent of `default` |
+| `test` | `moo/bootstrap/test.py` | Minimal flat module used by `t_init` fixture in `moo/conftest.py`; not loadable via `moo_init` |
+
+### Save / Reset World State
+
+For datasets where players accumulate runtime state (turn counters, doors
+opened, score, inventory placement), `moo_save_state` snapshots the world
+to a Django fixture, and `moo_reset` restores from that fixture and clears
+per-player `zstate_*` properties on Player avatars. Bootstrap-level
+`zstate_*` (e.g. ZIL `<LTABLE>` data on `$zork_sdk`) is preserved across
+resets so the world remains playable without a follow-up `--sync`.
+
+### ZIL Importer
+
+`extras/zil_import/` parses Infocom ZIL source and emits a DjangoMOO
+bootstrap; the `zork1` dataset is its output. The package is a four-stage
+pipeline (parser → converter → translator → generator) under
+`extras/zil_import/{parser,converter,translator,generator}.py`. See
+{doc}`reference/zil-importer` and {doc}`explanation/zil-importer` in Sphinx
+for the API surface and rationale. Tests live in
+`extras/zil_import/tests/test_translator.py`.
 
 ## 4. Coding Conventions & Style Guide
 
@@ -231,7 +281,7 @@ usable.
   * **Framework**: pytest with pytest-django, pytest-xdist (parallel execution), pytest-cov (coverage)
   * **Test Organization**:
     * Core tests in `moo/core/tests/` operate on the `test` dataset
-    * Bootstrap-related tests in `moo/bootstrap/default_verbs/tests/`
+    * Bootstrap-related tests in `moo/bootstrap/default/verbs/tests/`
     * Test data defined in `moo/bootstrap/test.py`
     * Game data defined in the `moo/bootstrap/default/` package (orchestrator + numbered scripts)
   * **Running Tests**:
@@ -244,7 +294,7 @@ usable.
 
     Always run Ruff format, then pylint, after pytest. All three must pass before a change is considered complete. Ruff format runs before pylint at commit time — if it reformats a file, pylint sees the reformatted version, so formatting must be run first when checking manually.
   * **Ruff format and pylint interaction**: `# pylint: disable=...` comments must appear on the specific line containing the offending code, not on a closing bracket or the next line. Ruff format may reformat expressions such that a comment on a closing `)` is no longer adjacent to the flagged code, making the suppression ineffective.
-  * **Verb files**: Black silently skips verb files in `moo/bootstrap/default_verbs/` because they contain module-level `return` statements, which are a `SyntaxError` in standard Python. Black cannot parse them and leaves them unchanged.
+  * **Verb files**: Black silently skips verb files in `moo/bootstrap/default/verbs/` because they contain module-level `return` statements, which are a `SyntaxError` in standard Python. Black cannot parse them and leaves them unchanged.
   * **Test Coverage**: Must not decrease with new code. Target: >= 80% coverage
   * **New Features**: Every feature or bug fix must include corresponding unit tests
   * **Django Settings**: Tests automatically use `moo.settings.test` (set in pyproject.toml)
@@ -321,7 +371,7 @@ usable.
   * prompt_toolkit handles all terminal I/O itself. The asyncssh line editor must be disabled.
 
 * **MOO Verb Code Development:**
-  * **File Organization**: Verbs for the `default` dataset are organized in `moo/bootstrap/default_verbs/`. The `test` dataset uses no additional verb files.
+  * **File Organization**: Verbs for the `default` dataset are organized in `moo/bootstrap/default/verbs/`. The `test` dataset uses no additional verb files.
   * **Shebang Line**: Every verb file starts with `#!moo verb <names> --on <object>` and optional flags. Example:
 
     ```python
@@ -345,7 +395,7 @@ usable.
 
   * **RestrictedPython Caveats**: Ignore warnings about undefined variables for `this`, `passthrough`, `_`, `args`, and `kwargs`. These are injected by the execution environment.
   * **Return Behavior**: Verbs can use `return` from anywhere, not just at function end (courtesy of RestrictedPython compilation).
-  * **Testing Verbs**: Tests for `default` verbs live in `moo/bootstrap/default_verbs/tests/`.
+  * **Testing Verbs**: Tests for `default` verbs live in `moo/bootstrap/default/verbs/tests/`.
 
 * **Documentation:**
   * **Code Documentation**: Use docstrings (Google/NumPy style) for all classes, functions, and modules
@@ -363,7 +413,7 @@ usable.
   * **Indexing**: Add database indexes to frequently queried fields (Django `db_index=True`)
 
 * **Testing Best Practices:**
-  * **Three test types**: Core unit tests (`moo/core/tests/`) test models and the verb execution engine without a full bootstrap. App integration tests (e.g., `moo/shell/tests/`) test Django features (forms, views) that interact with MOO objects — use `@pytest.mark.parametrize("t_init", ["default"], indirect=True)` when the full default world is needed. Verb integration tests (`moo/bootstrap/default_verbs/tests/`) test verb behaviour against a fully bootstrapped `default` world. The `t_init` parametrize pattern is not exclusive to `default_verbs/tests/` — any test file can use it.
+  * **Three test types**: Core unit tests (`moo/core/tests/`) test models and the verb execution engine without a full bootstrap. App integration tests (e.g., `moo/shell/tests/`) test Django features (forms, views) that interact with MOO objects — use `@pytest.mark.parametrize("t_init", ["default"], indirect=True)` when the full default world is needed. Verb integration tests (`moo/bootstrap/default/verbs/tests/`) test verb behaviour against a fully bootstrapped `default` world. The `t_init` parametrize pattern is not exclusive to `default/verbs/tests/` — any test file can use it.
   * **Bootstrap test fixtures**: Both `t_init` (bootstraps `default.py`) and `t_wizard` (returns the Wizard player) come from `moo/conftest.py`. `t_init` must be requested with `@pytest.mark.parametrize("t_init", ["default"], indirect=True)` and `@pytest.mark.django_db(transaction=True, reset_sequences=True)`.
   * **Output capture**: Pass a `_writer` callback to `code.ContextManager` to capture everything `print()`ed to the player during a test.
   * **State assertions**: Call `obj.refresh_from_db()` after `parse.interpret` or a direct verb call before asserting locations or other database-backed fields.
@@ -411,8 +461,17 @@ docker compose run webapp manage.py createsuperuser --username wizard
 # Connect Django user to MOO wizard player (--wizard grants in-game wizard privileges)
 docker compose run webapp manage.py moo_enableuser --wizard wizard Wizard
 
-# Create a non-wizard user and avatar in one step (agents, test accounts, regular players)
+# Create a non-wizard user and avatar in one step (test accounts, regular players)
 docker compose run webapp manage.py moo_createuser username AvatarName --password secret
+
+# Snapshot world state (objects, properties, verb names, aliases) for a dataset
+docker compose run webapp manage.py moo_save_state --bootstrap zork1 --output zork1_world.json
+
+# Reset a dataset to its snapshot fixture (clears per-player zstate_* state)
+docker compose run webapp manage.py moo_reset --bootstrap zork1
+
+# Mark a Django user as wizard on every Site (multi-universe deployments)
+docker compose run webapp manage.py moo_make_universal alice
 ```
 
 ### Standard Development Workflow

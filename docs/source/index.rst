@@ -30,6 +30,7 @@
    how-to/advanced-verbs
    how-to/permissions
    how-to/bootstrapping
+   how-to/multi-universe
    how-to/development
    how-to/connection-control
    how-to/accessibility
@@ -50,6 +51,7 @@
    reference/tasks
    reference/builtins
    reference/bootstrapping
+   reference/zil-importer
 
 .. toctree::
    :maxdepth: 2
@@ -59,6 +61,7 @@
    explanation/parser
    explanation/sandbox
    explanation/shell-internals
+   explanation/zil-importer
 
 .. toctree::
    :maxdepth: 1

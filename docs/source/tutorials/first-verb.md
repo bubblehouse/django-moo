@@ -126,7 +126,7 @@ The second response comes from the parser itself, not your code, because `--dspe
 
 ## Step 5: Make it permanent (optional)
 
-Verbs created with `@edit verb` live in the database and survive server restarts, but it won't be part of other deployments using the `default` dataset. If you want this verb to be part of your bootstrap dataset, add a verb file in `default_verbs/`. See {doc}`../reference/bootstrapping` for how that works.
+Verbs created with `@edit verb` live in the database and survive server restarts, but it won't be part of other deployments using the `default` dataset. If you want this verb to be part of your bootstrap dataset, add a verb file in `default/verbs/`. See {doc}`../reference/bootstrapping` for how that works.
 
 ## Where to go next
 

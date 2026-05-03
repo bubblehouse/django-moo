@@ -133,7 +133,7 @@ Python docstrings must use RST format: `:param x:`, `:type x:`, `:return:`, `:rt
 | What does verb-author skill say about the parser API? | `Read extras/skills/verb-author/references/parser-api.md` |
 | What does AGENTS.md say about test patterns? | `Read moo/AGENTS.md` |
 | What got added to the SDK recently? | `git log --oneline -- moo/sdk/` |
-| What verbs were added recently? | `git log --oneline -- moo/bootstrap/default_verbs/` |
+| What verbs were added recently? | `git log --oneline -- moo/bootstrap/default/verbs/` |
 | What autonomous agents exist and what do they do? | `Read extras/agents/README.md`, then each agent's `README.md` |
 | How does a specific Tradesman work? | `Read extras/agents/<name>/README.md` and `extras/agents/<name>/SOUL.md` |
 

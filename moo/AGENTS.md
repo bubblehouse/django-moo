@@ -40,7 +40,7 @@ The `moo` package is organized as a Django project with the following main compo
 
 - `default/`: Bootstrap package with the production game world. `__init__.py` is the orchestrator; numbered scripts (`010_core_classes.py`, `020_utility_objects.py`, ...) run in sorted order
 - `test.py`: Flat module providing the minimal test dataset used by the pytest `t_init` fixture
-- `default_verbs/`: Verb sources for the default dataset, organised by root-class name (`player/`, `room/`, `thing/`, ...)
+- `default/verbs/`: Verb sources for the default dataset, organised by root-class name (`player/`, `room/`, `thing/`, ...)
 
 ### `/moo/shell` - SSH Server & Terminal Interface
 
@@ -187,7 +187,7 @@ def test_permission_check():
         obj.can_caller("write")
 ```
 
-#### Bootstrap integration tests (`moo/bootstrap/default_verbs/tests/`)
+#### Bootstrap integration tests (`moo/bootstrap/default/tests/`)
 
 These exercise verbs against a fully bootstrapped `default` world. They require two shared fixtures from `moo/conftest.py`:
 

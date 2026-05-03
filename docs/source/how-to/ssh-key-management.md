@@ -80,6 +80,6 @@ Each player's SSH keys are stored as `UserKey` records linked to their Django `U
 
 ## Verb source files
 
-- `moo/bootstrap/default_verbs/player/at_keys.py`
-- `moo/bootstrap/default_verbs/player/at_add_key.py`
-- `moo/bootstrap/default_verbs/player/at_remove_key.py`
+- `moo/bootstrap/default/verbs/player/at_keys.py`
+- `moo/bootstrap/default/verbs/player/at_add_key.py`
+- `moo/bootstrap/default/verbs/player/at_remove_key.py`

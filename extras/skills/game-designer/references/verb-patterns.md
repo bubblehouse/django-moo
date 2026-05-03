@@ -2,7 +2,7 @@
 
 All verbs run inside the RestrictedPython sandbox.
 
-**No shebang in SSH-edited verbs.** The `#!moo verb name --on $obj` shebang is only for bootstrap verb *files* in `moo/bootstrap/default_verbs/`. When you create a verb via `@edit verb <name> on "<obj>"` in an SSH session, the verb name and target are already registered by that command — the code body starts directly with imports.
+**No shebang in SSH-edited verbs.** The `#!moo verb name --on $obj` shebang is only for bootstrap verb *files* in `moo/bootstrap/default/verbs/`. When you create a verb via `@edit verb <name> on "<obj>"` in an SSH session, the verb name and target are already registered by that command — the code body starts directly with imports.
 
 ## Imports
 

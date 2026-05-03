@@ -195,4 +195,4 @@ prompt, not interleaved with it. Disconnect callbacks are fire-and-forget.
 
 Session settings cross the Celery / SSH server process boundary via the Kombu message queue — the same mechanism used by the text editor and paginator. `set_session_setting()` in `moo/sdk/output.py` publishes a `{"event": "session_setting", ...}` message; the SSH server's `process_messages()` loop applies it to the connection's own registry.
 
-See `moo/bootstrap/default_verbs/player/PREFIX.py`, `SUFFIX.py`, `OUTPUTPREFIX.py`, `OUTPUTSUFFIX.py`, `a11y.py`, and `WRAP.py` for the verb implementations. `.flush` is handled directly in `moo/shell/prompt.py` (`process_commands` and `_drain_messages`).
+See `moo/bootstrap/default/verbs/player/PREFIX.py`, `SUFFIX.py`, `OUTPUTPREFIX.py`, `OUTPUTSUFFIX.py`, `a11y.py`, and `WRAP.py` for the verb implementations. `.flush` is handled directly in `moo/shell/prompt.py` (`process_commands` and `_drain_messages`).

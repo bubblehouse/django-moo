@@ -22,7 +22,7 @@ to property lookup. Each call counts against the calling task's 3-second
 time limit.
 
 A real verb that demonstrates the pattern is
-`default_verbs/thing/take.py`:
+`default/verbs/thing/take.py`:
 
 ```python
 elif this.moveto(context.player):
@@ -47,7 +47,7 @@ Three verbs are invoked here without explicit imports:
 verb on the next ancestor up the parent chain, so a child can run
 type-specific logic and then defer to the generic behaviour.
 
-`default_verbs/thing/moveto.py` is the reference:
+`default/verbs/thing/moveto.py` is the reference:
 
 ```python
 #!moo verb moveto --on $thing
@@ -87,7 +87,7 @@ applies only to verbs invoked from the command parser. Verbs invoked
 default verbs use a layer of helpers that return strings to be
 `print()`ed by the parser-facing verb.
 
-`default_verbs/thing/messages.py` defines eight such helpers in one
+`default/verbs/thing/messages.py` defines eight such helpers in one
 file:
 
 ```python
@@ -180,7 +180,7 @@ if task_time_low():
     return
 ```
 
-`default_verbs/programmer/at_reload.py` is the canonical
+`default/verbs/programmer/at_reload.py` is the canonical
 implementation. The relevant excerpt:
 
 ```python
@@ -354,7 +354,7 @@ For the full inventory with signatures and arguments, see
 
 ### Editor callback example
 
-`default_verbs/note/edit.py` opens an editor pre-filled with the
+`default/verbs/note/edit.py` opens an editor pre-filled with the
 note's body, and routes the saved text back into a callback verb:
 
 ```python

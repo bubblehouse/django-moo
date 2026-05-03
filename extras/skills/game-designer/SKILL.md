@@ -349,7 +349,7 @@ If a verb silently fails with `TypeError: exec() arg 1 must be a string, bytes o
 
 Supports global lookup by name or #N ID. The build script uses this for all alias operations (clean, no `@eval` needed).
 
-**Implementation:** `moo/bootstrap/default_verbs/player/at_alias.py`
+**Implementation:** `moo/bootstrap/default/verbs/player/at_alias.py`
 
 ## Build Automation
 

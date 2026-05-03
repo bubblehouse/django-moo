@@ -4,7 +4,7 @@ A Claude Code skill for writing, reviewing, and debugging verb files in the Djan
 
 ## When to use it
 
-Invoke this skill when working on anything in `moo/bootstrap/default_verbs/` or any task involving:
+Invoke this skill when working on anything in `moo/bootstrap/default/verbs/` or any task involving:
 
 - Creating or modifying verb files with the `#!moo` shebang syntax
 - Debugging RestrictedPython sandbox errors
@@ -46,6 +46,6 @@ The skill knows about:
 
 ## Verb files live here
 
-`moo/bootstrap/default_verbs/` — organized by the object class the verb belongs to (`room/`, `thing/`, `player/`, `exit/`, `string_utils/`, etc.)
+`moo/bootstrap/default/verbs/` — organized by the object class the verb belongs to (`room/`, `thing/`, `player/`, `exit/`, `string_utils/`, etc.)
 
-Tests live in `moo/bootstrap/default_verbs/tests/`.
+Tests live in `moo/bootstrap/default/verbs/tests/`.

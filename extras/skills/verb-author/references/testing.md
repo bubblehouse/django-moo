@@ -4,7 +4,7 @@
 
 **Core unit tests** (`moo/core/tests/`) — test models and the execution engine without bootstrapping the full game world.
 
-**Bootstrap integration tests** (`moo/bootstrap/default_verbs/tests/`) — test verbs against the fully initialised `default` world. Write these when adding or changing a `default_verbs/` verb.
+**Bootstrap integration tests** (`moo/bootstrap/default/verbs/tests/`) — test verbs against the fully initialised `default` world. Write these when adding or changing a `default/verbs/` verb.
 
 ## Bootstrap Test Skeleton
 

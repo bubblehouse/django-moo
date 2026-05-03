@@ -57,7 +57,7 @@ Scan the layers for common drift types. Work through this checklist:
 
 **SDK functions** — new functions added to any `moo/sdk/*.py` submodule (`output.py`, `objects.py`, `tasks.py`, `admin.py`, `mail.py`, `ssh_keys.py`, `password.py`) need entries in `docs/source/reference/builtins.md` (the canonical reference, organised by group) and a one-line mention in `docs/source/how-to/advanced-verbs.md` "Common SDK helpers" if verb authors will reach for it. Also update the `verb-author` skill's `references/sdk.md`.
 
-**New verb patterns** — any new verb added to `moo/bootstrap/default_verbs/` that introduces a pattern not already documented (property access, object creation, permission checks).
+**New verb patterns** — any new verb added to `moo/bootstrap/default/verbs/` that introduces a pattern not already documented (property access, object creation, permission checks).
 
 **Sandbox restrictions** — new `ALLOWED_MODULES`, new `BLOCKED_IMPORTS`, or new guard mechanisms belong in `docs/source/reference/sandbox.md` (the enforcement detail) and the `sandbox-auditor` skill.
 

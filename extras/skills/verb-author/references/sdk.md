@@ -122,7 +122,7 @@ Rules:
 - Dispatch on `verb_name`, not `isinstance(args[0], list)` — more explicit and avoids confusion with other verbs that accept list args.
 - Do NOT assign to `verb_name` anywhere in the verb body (see Pitfalls in SKILL.md).
 - Helper function names must not start with `_` (RestrictedPython blocks them).
-- Reference implementation: `moo/bootstrap/default_verbs/programmer/at_reload.py`
+- Reference implementation: `moo/bootstrap/default/verbs/programmer/at_reload.py`
 
 ## `open_editor(obj, initial_content, callback_verb, *args, content_type="text")`
 

@@ -19,10 +19,30 @@ docker compose run webapp manage.py moo_init --bootstrap default
 ```
 
 Lives at `moo/bootstrap/default/`. The package contains an orchestrator
-`__init__.py` plus numbered sub-scripts (`000_initialize.py`,
+`bootstrap.py` plus numbered sub-scripts (`000_initialize.py`,
 `010_core_classes.py`, ..., `999_finalize.py`) executed in sorted order.
-Verb sources live in the sibling `moo/bootstrap/default_verbs/` package,
-organised by root-class name.
+The package's `__init__.py` is intentionally empty so importing the
+package (e.g. for test discovery) does not run database setup; the
+orchestrator is invoked explicitly by `moo_init` via `bootstrap.py`.
+Verb sources live in the sibling `moo/bootstrap/default/verbs/` package,
+organised by root-class name; tests live in `moo/bootstrap/default/tests/`.
+
+`zork1` — an example bootstrap derived from the original Infocom
+*Zork I: The Great Underground Empire* source (released by
+Microsoft / Activision under the MIT License in 2025). It is provided
+as a reference implementation, not a recommended starting point for a
+new world. Loaded with:
+
+```bash
+docker compose run webapp manage.py moo_init --bootstrap zork1
+```
+
+Lives at `moo/bootstrap/zork1/`. The package contains the orchestrator
+`bootstrap.py`, numbered `010_classes.py` … `040_exits.py` setup
+scripts, ~200 verb files implementing the original ZIL routines, a
+`$zork_sdk` runtime under `verbs/zork_sdk/`, and player-facing
+commands under `verbs/commands/`. See {doc}`./zil-importer` for how
+the dataset relates to the upstream Zork I source.
 
 `test` — a minimal dataset used by the pytest `t_init` fixture in
 `moo/conftest.py`. It is *not* loadable via `moo_init`. It exists as a
@@ -34,7 +54,7 @@ tests need to exercise the verb execution engine.
 `bootstrap.initialize_dataset(name)` is the entry point every bootstrap
 package calls first. It is idempotent and produces:
 
-- A `Repository` row (`slug=name`, `prefix=moo/bootstrap/<name>_verbs`)
+- A `Repository` row (`slug=name`, `prefix=moo/bootstrap/<name>/verbs`)
   used by `load_verbs` to locate verb sources.
 - The full set of `Permission` rows defined by
   `settings.DEFAULT_PERMISSIONS`.
@@ -56,20 +76,25 @@ natively by `moo.core.utils.apply_default_permissions`; no
 
 ## Orchestrator pattern
 
-Every loadable bootstrap is a Python package whose `__init__.py`:
+Every loadable bootstrap is a Python package whose `bootstrap.py` entry
+point:
 
 1. Calls `bootstrap.initialize_dataset(name)`.
 2. Builds a `_namespace` dict containing every name the sub-scripts
    need (`bootstrap`, `lookup`, `wizard`, `sys`, etc.).
 3. Discovers numbered `.py` files in the package via
-   `importlib.resources.files(__package__).iterdir()`.
+   `importlib.resources.files("moo.bootstrap.<name>").iterdir()`.
 4. Runs each script via `exec(compile(...), _namespace)` inside a
-   `code.ContextManager(wizard, log.info)` block so that ownership and
-   permissions track to the Wizard player.
+   `code.ContextManager(wizard, log.info, site=wizard.site)` block so
+   ownership, permissions, and the active site track to the Wizard player.
 5. Either calls `bootstrap.load_verbs` directly at the end, or defers
    that to a `999_finalize.py` script.
 
-`moo/bootstrap/default/__init__.py` is the canonical example.
+The package's `__init__.py` is left empty; `moo_init` invokes
+`bootstrap.py` explicitly via `load_python` rather than importing the
+package, so test collection can import the package safely.
+
+`moo/bootstrap/default/bootstrap.py` is the canonical example.
 
 ## Function reference
 
