@@ -44,7 +44,9 @@ def test_take_nontakeable_refuses(t_init, t_wizard):
         parse.interpret(ctx, "take heavy rock")
     rock.refresh_from_db()
     assert rock.location == room
-    assert any("can't take" in p.lower() for p in printed)
+    # ZIL prints a randomly chosen YUKS refusal message; any of the four is fine.
+    yuks = {"A valiant attempt.", "You can't be serious.", "An interesting idea...", "What a concept!"}
+    assert any(p in yuks for p in printed)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -70,6 +72,9 @@ def test_open_closed_container(t_init, t_wizard):
     room = create("Test Room", parents=[lookup("Zork Room")])
     place(t_wizard, room)
     box = create("wooden box", parents=[lookup("Zork Container")])
+    # ZIL V-OPEN gates on contbit + non-zero capacity — Zork Container sets
+    # capacity=10 but objects must opt in to "this is a container" themselves.
+    box.set_property("contbit", True)
     box.set_property("open", False)
     place(box, room)
 
@@ -86,6 +91,7 @@ def test_close_open_container(t_init, t_wizard):
     room = create("Test Room", parents=[lookup("Zork Room")])
     place(t_wizard, room)
     box = create("wooden box", parents=[lookup("Zork Container")])
+    box.set_property("contbit", True)
     box.set_property("open", True)
     place(box, room)
 
@@ -141,7 +147,8 @@ def test_read_non_readable(t_init, t_wizard):
     printed = []
     with code.ContextManager(t_wizard, printed.append) as ctx:
         parse.interpret(ctx, "read heavy rock")
-    assert any("nothing to read" in p.lower() for p in printed)
+    # ZIL V-READ on a non-readable object prints "How does one read a <name>?".
+    assert any("how does one read" in p.lower() for p in printed)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
