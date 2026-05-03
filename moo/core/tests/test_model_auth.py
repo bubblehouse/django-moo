@@ -12,13 +12,14 @@ from .utils import ctx as _ctx
 
 User = get_user_model()
 
+pytestmark = pytest.mark.django_db(transaction=True, reset_sequences=True)
+
 
 # ---------------------------------------------------------------------------
 # Player creation
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_player_creation_with_user_and_avatar(t_init, t_wizard):
     with _ctx(t_wizard):
         avatar = create("new avatar")
@@ -30,7 +31,6 @@ def test_player_creation_with_user_and_avatar(t_init, t_wizard):
     assert player.wizard is False
 
 
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_player_creation_without_user(t_init, t_wizard):
     with _ctx(t_wizard):
         avatar = create("npc avatar")
@@ -45,7 +45,6 @@ def test_player_creation_without_user(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_object_is_player_true(t_init, t_wizard):
     with _ctx(t_wizard):
         obj = create("player avatar")
@@ -53,14 +52,12 @@ def test_object_is_player_true(t_init, t_wizard):
     assert obj.is_player()
 
 
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_object_is_player_false(t_init, t_wizard):
     with _ctx(t_wizard):
         obj = create("not a player")
     assert not obj.is_player()
 
 
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_object_is_wizard_true(t_init, t_wizard):
     with _ctx(t_wizard):
         obj = create("wizard avatar")
@@ -68,7 +65,6 @@ def test_object_is_wizard_true(t_init, t_wizard):
     assert obj.is_wizard()
 
 
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_object_is_wizard_false(t_init, t_wizard):
     with _ctx(t_wizard):
         obj = create("mortal avatar")
@@ -81,7 +77,6 @@ def test_object_is_wizard_false(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_is_connected_always_true(t_init, t_wizard):
     with _ctx(t_wizard):
         obj = create("conn obj")

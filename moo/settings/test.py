@@ -5,7 +5,7 @@ from .base import *  # pylint: disable=wildcard-import
 
 os.environ.setdefault("CELERY_RESULT_BACKEND", "django-db")
 
-INSTALLED_APPS += ["django_celery_results"]  # noqa: F405
+INSTALLED_APPS += ["django_celery_results", "moo.bootstrap"]  # noqa: F405
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "django-insecure-061+p62f39ohlfrgu&)%1lxo%%#_-$rc5l_zsrlx6jqy)sw(=r"

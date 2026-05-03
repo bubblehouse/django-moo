@@ -9,12 +9,13 @@ from .. import create
 from ..models import Access, Object
 from .utils import ctx as _ctx
 
+pytestmark = pytest.mark.django_db(transaction=True, reset_sequences=True)
+
 # ---------------------------------------------------------------------------
 # Property.__str__ and .kind
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_property_str(t_init, t_wizard):
     with _ctx(t_wizard):
         obj = create("prop str obj")
@@ -25,7 +26,6 @@ def test_property_str(t_init, t_wizard):
     assert str(obj) in s
 
 
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_property_kind(t_init, t_wizard):
     with _ctx(t_wizard):
         obj = create("prop kind obj")
@@ -39,7 +39,6 @@ def test_property_kind(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_property_save_applies_default_permissions(t_init, t_wizard):
     with _ctx(t_wizard):
         obj = create("prop perm obj")
@@ -53,7 +52,6 @@ def test_property_save_applies_default_permissions(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_property_inherit_owner_propagates(t_init, t_wizard):
     with _ctx(t_wizard):
         parent = create("inh parent")
@@ -73,7 +71,6 @@ def test_property_inherit_owner_propagates(t_init, t_wizard):
     assert child_prop.owner == child.owner
 
 
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_property_inherit_owner_only_on_change(t_init, t_wizard):
     with _ctx(t_wizard):
         parent = create("no-change parent")
@@ -97,7 +94,6 @@ def test_property_inherit_owner_only_on_change(t_init, t_wizard):
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_property_value_roundtrip_string(t_init, t_wizard):
     with _ctx(t_wizard):
         obj = create("rt str obj")
@@ -106,7 +102,6 @@ def test_property_value_roundtrip_string(t_init, t_wizard):
         assert obj.get_property("greeting") == "hello world"
 
 
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_property_value_roundtrip_integer(t_init, t_wizard):
     with _ctx(t_wizard):
         obj = create("rt int obj")
@@ -115,7 +110,6 @@ def test_property_value_roundtrip_integer(t_init, t_wizard):
         assert obj.get_property("count") == 42
 
 
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_property_value_roundtrip_list(t_init, t_wizard):
     with _ctx(t_wizard):
         obj = create("rt list obj")
@@ -124,7 +118,6 @@ def test_property_value_roundtrip_list(t_init, t_wizard):
         assert obj.get_property("items") == ["a", "b", "c"]
 
 
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_property_value_roundtrip_none(t_init, t_wizard):
     with _ctx(t_wizard):
         obj = create("rt none obj")
@@ -133,7 +126,6 @@ def test_property_value_roundtrip_none(t_init, t_wizard):
         assert obj.get_property("empty") is None
 
 
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_property_value_roundtrip_object_ref(t_init, t_wizard):
     with _ctx(t_wizard):
         target = create("rt ref target")
@@ -144,7 +136,6 @@ def test_property_value_roundtrip_object_ref(t_init, t_wizard):
     assert result == target
 
 
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_child_owns_inherited_property(t_init: Object):
     player = Object.objects.create(name="Player")
     room_class = Object.objects.create(name="room class")
@@ -155,7 +146,6 @@ def test_child_owns_inherited_property(t_init: Object):
     assert description.origin == room
 
 
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_returned_property_is_from_correct_object(t_init: Object):
     player = Object.objects.create(name="Player")
     room_class = Object.objects.create(name="room class")
@@ -166,7 +156,6 @@ def test_returned_property_is_from_correct_object(t_init: Object):
     assert description.owner == player
 
 
-@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_property_inheritance_can_change_after_save(t_init: Object, t_wizard: Object):
     player = Object.objects.create(name="Player")
     o = Object.objects.create(name="new object", owner=player)
