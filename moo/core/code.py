@@ -124,8 +124,11 @@ def get_restricted_environment(name, writer):
     from moo.core.models.property import Property
 
     class _print_:
-        def _call_print(self, s):
-            writer(s)
+        def _call_print(self, *args, sep=" ", end=""):
+            # Default ``end=""`` preserves the long-standing no-newline-added
+            # behavior of verb prints; ``sep``/``end`` are accepted for
+            # stdlib-``print`` compatibility (RestrictedPython forwards both).
+            writer(sep.join(str(a) for a in args) + end)
 
     class _write_:
         def __init__(self, obj):
@@ -254,6 +257,20 @@ def get_restricted_environment(name, writer):
         restricted_builtins[n] = __builtins__[n]
     restricted_builtins["getattr"] = safe_getattr
     restricted_builtins["hasattr"] = safe_hasattr
+    # ``verb_name`` stays bound to the invoked verb (so SDK helpers that
+    # dispatch on their own canonical name keep working).  ``player_verb``
+    # is the parser's matched player verb (ZIL's ``PRSA``) — translated
+    # ZIL routines reference it instead of ``verb_name`` so cross-routine
+    # ``invoke_verb`` calls preserve the original player command.
+    parser = ContextManager.get("parser")
+    player_verb_name = name
+    if parser is not None:
+        matched = getattr(parser, "verb", None)
+        if matched is not None:
+            invoked = getattr(matched, "_invoked_name", None)
+            if invoked:
+                player_verb_name = invoked
+
     env = dict(
         _apply_=lambda f, *a, **kw: f(*a, **kw),
         _print_=lambda x: _print_(),
@@ -271,6 +288,7 @@ def get_restricted_environment(name, writer):
         __package__=None,
         __doc__=None,
         verb_name=name,
+        player_verb=player_verb_name,
     )
 
     return env
@@ -301,6 +319,7 @@ _CONTEXT_VARS: dict[str, contextvars.ContextVar] = {
     # published event type so the shell can read what events to expect.
     # Default None means "not tracking" — most sessions don't need this.
     "published_events": contextvars.ContextVar("published_events", default=None),
+    "site": contextvars.ContextVar("site", default=None),
 }
 
 
@@ -335,6 +354,14 @@ class ContextManager:
         if name in _CONTEXT_VARS:
             return _CONTEXT_VARS[name].get()
         raise NotImplementedError(f"Unknown ContextManager variable: {name}")
+
+    @classmethod
+    def get_site(cls):
+        return _CONTEXT_VARS["site"].get()
+
+    @classmethod
+    def set_site(cls, site):
+        _CONTEXT_VARS["site"].set(site)
 
     @classmethod
     def get_perm_cache(cls) -> dict | None:
@@ -387,6 +414,7 @@ class ContextManager:
         player: Any = None,
         connection: Any = None,
         track_events: bool = False,
+        site: Any = None,
     ) -> None:
         self._tokens: dict = {}
         self._initial_values: dict = {
@@ -406,6 +434,7 @@ class ContextManager:
             "verb_lookup_cache": {},
             "prop_lookup_cache": {},
             "published_events": [] if track_events else None,
+            "site": site,
         }
 
     def set_parser(self, parser):

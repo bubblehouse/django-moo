@@ -68,7 +68,7 @@ def interpret(ctx, line):
     # Give database code a chance to handle the command first (LambdaMOO $do_command).
     # If the system object defines a do_command verb and it returns a truthy value,
     # the command is considered fully handled and normal dispatch is skipped.
-    system = lookup(1)
+    system = Object.objects.get(unique_name=True, name="System Object")
     if system.has_verb("do_command"):
         do_command = system.get_verb("do_command")
         result = do_command(*parser.words)
@@ -83,6 +83,16 @@ def interpret(ctx, line):
         else:
             raise
     verb()
+
+    # After every parsed command, fire the player's current room's
+    # ``turnfunc`` hook (LambdaMOO ``<thing>func`` convention; equivalent
+    # to ZIL ``M-END``).  Used by Zork's LIVING-ROOM-FCN to recompute
+    # SCORE whenever an item is taken from / put in the trophy case;
+    # other rooms / datasets are free to leave it undefined.  Errors
+    # propagate through the existing exception path.
+    location = context.player.location
+    if location and location.has_verb("turnfunc"):
+        location.invoke_verb("turnfunc")
 
 
 def unquote(s):
@@ -693,3 +703,31 @@ class Parser:  # pylint: disable=too-many-instance-attributes
                 found_prep = True
                 break
         return found_prep
+
+    def get_iobj(self, lookup=False):
+        """Return the first indirect-object :class:`Object` found across
+        any preposition in the command, or raise :class:`NoSuchObjectError`
+        if none resolved.
+
+        Use this when the calling code doesn't care which preposition was
+        typed (e.g. ZIL ``,PRSI`` semantics — "the indirect object,
+        whatever its preposition is").  For a specific preposition, use
+        :meth:`get_pobj` instead.
+        """
+        for prep in self.prepositions:
+            for item in self.prepositions[prep]:
+                if item[2]:
+                    return item[2]
+                if lookup and item[1] is not None:
+                    from moo.core import lookup as _lookup
+
+                    return _lookup(item[1])
+        raise NoSuchObjectError("indirect object")
+
+    def has_iobj(self):
+        """Return ``True`` if any preposition resolved to a real object."""
+        for prep in self.prepositions:
+            for item in self.prepositions[prep]:
+                if item[2]:
+                    return True
+        return False
