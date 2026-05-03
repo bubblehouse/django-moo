@@ -79,6 +79,7 @@ async def embed(
     user: models.User,
     session=None,
     mode: str = MODE_RICH,
+    site=None,
 ) -> None:
     """
     Start the interactive MOO shell for the given user.
@@ -90,8 +91,19 @@ async def embed(
     :param user: the authenticated Django user whose avatar is the active player
     :param session: the asyncssh session; its ``_chan`` drives raw-mode I/O
     :param mode: ``"rich"`` (default) or ``"raw"``
+    :param site: the Django Site for this connection (used to scope universe context)
     """
-    repl = MooPrompt(user, session=session, mode=mode)
+    from moo.core.code import ContextManager
+
+    # Stamp the site on this asyncio task's contextvars so direct ORM queries
+    # in MooPrompt (Object.objects.get(pk=...) at command-dispatch and
+    # editor-completion time) hit the right universe. Each SSH session runs
+    # in its own asyncio task with isolated contextvars, so this does not
+    # bleed into other sessions. Celery tasks build their own ContextManager
+    # with site= derived from caller.site, independent of this stamp.
+    if site is not None:
+        ContextManager.set_site(site)
+    repl = MooPrompt(user, session=session, mode=mode, site=site)
     repl_tasks = [asyncio.ensure_future(f()) for f in (repl.process_commands, repl.process_messages)]
     try:
         await asyncio.wait(repl_tasks, return_when=asyncio.FIRST_COMPLETED)
@@ -130,14 +142,16 @@ class MooPrompt:
     #: prompt-toolkit Style derived from the prompt palette.
     style = Style.from_dict(_PROMPT_PALETTE)
 
-    def __init__(self, user, session=None, mode: str = MODE_RICH):
+    def __init__(self, user, session=None, mode: str = MODE_RICH, site=None):
         """
         :param user: the authenticated Django user whose avatar is the active player
         :param session: the asyncssh session; used by raw mode to reach ``_chan``
         :param mode: ``"rich"`` (prompt_toolkit) or ``"raw"`` (line I/O)
+        :param site: the Django Site for this connection
         """
         self.user = user
         self.mode = mode
+        self.site = site
         self._chan = getattr(session, "_chan", None) if session is not None else None
         self._iac_enabled = bool(getattr(session, "iac_enabled", False)) if session is not None else False
         self.is_exiting = False
@@ -171,6 +185,24 @@ class MooPrompt:
         self.color_system = "truecolor"
 
         self._raw_line_buffer: str = ""
+
+    def _get_avatar(self):
+        """
+        Look up the player avatar for this user on the active site.
+
+        Player.user is a ForeignKey (multi-universe), so a single Django user
+        can hold a separate Player per site.  Falls back to the user's only
+        Player if no site-scoped record exists, which keeps single-universe
+        deployments working when ``site`` is None.
+        """
+        from moo.core.models.auth import Player
+
+        record = None
+        if self.site is not None:
+            record = Player.objects.filter(user=self.user, site=self.site).first()
+        if record is None:
+            record = Player.objects.filter(user=self.user).first()
+        return record.avatar if record else None
 
     def _osc133_enabled(self) -> bool:
         # MUD clients don't speak OSC 133; the BEL-terminated frames upset
@@ -505,6 +537,11 @@ class MooPrompt:
                         # return value. Drain it here so it appears before the
                         # next prompt instead of below it.
                         await self._drain_async_tell_output()
+        except asyncio.CancelledError:
+            # Unclean SSH disconnect — asyncio.wait() inside the REPL loop
+            # gets cancelled when the channel goes away.  Log compactly
+            # rather than dumping a stack trace.
+            log.info("Raw REPL cancelled (client disconnected).")
         except:  # pylint: disable=bare-except
             log.exception("Error in raw command processing")
         finally:
@@ -777,7 +814,7 @@ class MooPrompt:
         Dispatch ``player.confunc`` then ``player.location.confunc`` as Celery
         tasks. Returns the ``AsyncResult`` list so the caller can wait on them.
         """
-        player = self.user.player.avatar
+        player = self._get_avatar()
         results = []
         if player.has_verb("confunc"):
             results.append(
@@ -811,7 +848,7 @@ class MooPrompt:
     @sync_to_async
     def _fire_disfunc(self):
         """Dispatch ``player.location.disfunc`` then ``player.disfunc`` as Celery tasks."""
-        player = self.user.player.avatar
+        player = self._get_avatar()
         if player.location and player.location.has_verb("disfunc"):
             tasks.invoke_verb.delay(
                 caller_id=player.pk,
@@ -850,11 +887,11 @@ class MooPrompt:
         """
         from django.core.cache import cache
 
-        caller = self.user.player.avatar
+        caller = self._get_avatar()
         now = datetime.now(timezone.utc)
         # Rate-limit last_connected_time writes to avoid hammering the DB.
         if self.last_property_write is None or (now - self.last_property_write).total_seconds() > 15:
-            with code.ContextManager(caller, lambda x: None):
+            with code.ContextManager(caller, lambda x: None, site=self.site):
                 caller.set_property("last_connected_time", now)
             self.last_property_write = now
         log.info(f"{caller}: {line}")

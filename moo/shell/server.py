@@ -39,6 +39,28 @@ def _fd_count() -> int:
 
 _MUD_CLIENT_TERM_MARKERS = ("mudlet", "tintin", "mushclient", "blowtorch", "mudrammer", "zmud", "cmud")
 
+# Delimiter used to encode a Site domain inside the SSH username, e.g.
+# ``ssh phil+zork1.local@host`` routes ``phil`` to the ``zork1.local`` Site.
+# ``+`` is the de-facto convention (sshpiper, etc.) and is allowed in Django
+# usernames but not used by any account in this codebase.
+USER_SITE_DELIMITER = "+"
+
+
+def _split_user_suffix(raw_username: str) -> tuple[str, str | None]:
+    """Split ``user+sitedomain`` into ``(user, sitedomain)``.
+
+    Returns ``(raw_username, None)`` when no delimiter is present.  SSH has
+    no protocol-level hostname indication (no SNI, no Host header — see
+    RFCs 4253/4254/8308), so the dialed Site has to ride in the username.
+    """
+    if USER_SITE_DELIMITER not in raw_username:
+        return raw_username, None
+    base, _, suffix = raw_username.partition(USER_SITE_DELIMITER)
+    suffix = suffix.strip()
+    if not base or not suffix:
+        return raw_username, None
+    return base, suffix
+
 
 def _iac_bytes_to_str(data: bytes) -> str:
     """
@@ -87,6 +109,7 @@ class MooPromptToolkitSSHSession(PromptToolkitSSHSession):
     """
 
     user = None  # set by MooSSHServer.session_requested() before the session starts
+    site = None  # set by MooSSHServer.session_requested() before the session starts
     mode: str = "rich"
     iac_enabled: bool = False  # set to True in connection_made when TERM looks like a MUD client
 
@@ -344,6 +367,71 @@ class MooPromptToolkitSSHSession(PromptToolkitSSHSession):
         }
 
 
+@sync_to_async
+def _available_sites_for_user(user) -> tuple[list, bool]:
+    """Return ``(sites, is_universal_wizard)`` for picker display.
+
+    Non-wizards see only Sites where they already have a Player.  Universal
+    wizards see every Site in the database, since their whole point is
+    cross-universe access (auto-provision on first connect to a new site).
+    """
+    from django.contrib.sites.models import Site
+
+    from moo.core.models.auth import Player, UniversalWizard
+
+    is_universal = UniversalWizard.objects.filter(user=user).exists()
+    if is_universal:
+        return list(Site.objects.order_by("domain")), True
+    site_ids = Player.objects.filter(user=user).values_list("site_id", flat=True).distinct()
+    return list(Site.objects.filter(pk__in=list(site_ids)).order_by("domain")), False
+
+
+async def _pick_site(session: "MooPromptToolkitSSHSession", user) -> "object | None":
+    """Resolve a Site for *user* when the username carried no suffix.
+
+    Auto-picks when there is exactly one available Site; prompts otherwise.
+    Returns ``None`` when the user has no available Sites, in which case
+    :func:`interact` should disconnect.
+    """
+    from prompt_toolkit.shortcuts.prompt import PromptSession
+
+    sites, _is_universal = await _available_sites_for_user(user)
+    if not sites:
+        return None
+
+    if len(sites) == 1:
+        return sites[0]
+
+    chan = getattr(session, "_chan", None)
+    if chan is None:
+        return sites[0]
+
+    chan.write("\r\nAvailable universes:\r\n")
+    for idx, s in enumerate(sites, 1):
+        chan.write(f"  [{idx}] {s.domain}\r\n")
+    chan.write(
+        f"\r\nTip: skip this prompt next time with ``ssh {user.username}{USER_SITE_DELIMITER}<domain>@…``.\r\n\r\n"
+    )
+
+    prompt_session: PromptSession = PromptSession()
+    while True:
+        try:
+            answer = await prompt_session.prompt_async(f"Pick a universe [1-{len(sites)}]: ")
+        except (EOFError, KeyboardInterrupt):
+            return None
+        answer = (answer or "").strip()
+        if not answer:
+            continue
+        try:
+            choice = int(answer)
+        except ValueError:
+            chan.write("Please enter a number.\r\n")
+            continue
+        if 1 <= choice <= len(sites):
+            return sites[choice - 1]
+        chan.write(f"Choice must be between 1 and {len(sites)}.\r\n")
+
+
 async def interact(ssh_session: PromptToolkitSSHSession) -> None:
     """
     Initial entry point for SSH sessions.
@@ -364,11 +452,50 @@ async def interact(ssh_session: PromptToolkitSSHSession) -> None:
         _fd_count(),
         mode,
     )
+
     try:
-        await embed(session.user, session=session, mode=mode)
+        if session.site is None and session.user is not None:
+            site = await _pick_site(session, session.user)
+            if site is None:
+                chan = getattr(session, "_chan", None)
+                if chan is not None:
+                    chan.write("\r\nNo accessible universe for this account.\r\n")
+                return
+            session.site = site
+            await sync_to_async(_provision_after_pick)(session.user, site)
+
+        chan = getattr(session, "_chan", None)
+        if chan is not None and session.site is not None:
+            chan.write(f"\r\nConnected to universe: {session.site.domain}\r\n\r\n")
+
+        await embed(session.user, session=session, mode=mode, site=getattr(session, "site", None))
     finally:
         _active_sessions.discard(username)
         log.info("disconnect user=%s active=%d fds=%d", username, len(_active_sessions), _fd_count())
+
+
+def _provision_after_pick(user, site) -> None:
+    """Provision a UniversalWizard's Player+avatar on a freshly-picked Site.
+
+    Mirrors :meth:`SSHServer._auto_provision_universal_wizard` for the picker
+    branch where ``self.site`` was unknown at auth time.  Idempotent.
+    """
+    from moo.core.models.auth import Player, UniversalWizard
+    from moo.core.models.object import Object
+
+    if not UniversalWizard.objects.filter(user=user).exists():
+        return
+    if Player.objects.filter(user=user, site=site).exists():
+        return
+    avatar, created = Object.global_objects.get_or_create(
+        name=user.username,
+        unique_name=True,
+        site=site,
+    )
+    if created:
+        avatar.owner = avatar
+        avatar.save()
+    Player.objects.create(user=user, avatar=avatar, wizard=True, site=site)
 
 
 async def _health_handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
@@ -428,6 +555,9 @@ class SSHServer(PromptToolkitSSHServer):
     Create an SSH server for client access.
     """
 
+    user = None
+    site = None
+
     def begin_auth(self, _: str) -> bool:
         """
         Allow user login.
@@ -440,6 +570,57 @@ class SSHServer(PromptToolkitSSHServer):
         """
         return True
 
+    def _resolve_site(self):
+        """Resolve the active Site for this connection.
+
+        Order of precedence:
+
+        1. ``self._site_hint`` — the suffix parsed from the SSH username
+           (``user+sitedomain``).  This is the only path that actually carries
+           the dialed hostname through SSH; webssh injects it server-side from
+           the browser ``Host`` header before forwarding.
+        2. Leave ``self.site = None`` so :func:`interact` runs the post-auth
+           picker.
+
+        ``conn.get_extra_info("server_host")`` is intentionally not consulted:
+        it returns the local bind interface, not the hostname the client
+        dialed.
+        """
+        from django.contrib.sites.models import Site
+
+        hint = getattr(self, "_site_hint", None)
+        if hint:
+            self.site = Site.objects.filter(domain=hint).first()
+            if self.site:
+                return
+            log.warning("SSH username site suffix %s is unknown — deferring to picker", hint)
+        self.site = None
+
+    def _auto_provision_universal_wizard(self):
+        """Provision a wizard avatar+Player for a UniversalWizard user on a new site."""
+        from moo.core.models.auth import Player, UniversalWizard
+        from moo.core.models.object import Object
+
+        if not (self.user and self.site):
+            return
+        if not UniversalWizard.objects.filter(user=self.user).exists():
+            return
+        # Idempotent: a Player for this (user, site) already exists.
+        if Player.objects.filter(user=self.user, site=self.site).exists():
+            return
+        # Avatar lookup must include unique_name=True so a non-unique object
+        # with the same name cannot be hijacked. The owner is set to itself
+        # post-create so the wizard owns their own avatar.
+        avatar, created = Object.global_objects.get_or_create(
+            name=self.user.username,
+            unique_name=True,
+            site=self.site,
+        )
+        if created:
+            avatar.owner = avatar
+            avatar.save()
+        Player.objects.create(user=self.user, avatar=avatar, wizard=True, site=self.site)
+
     @sync_to_async
     def validate_password(self, username: str, password: str) -> bool:
         """
@@ -448,12 +629,16 @@ class SSHServer(PromptToolkitSSHServer):
         :param username: username of the Django User to login as
         :param password: the password string
         """
+        base_username, site_hint = _split_user_suffix(username)
         try:
-            user = User.objects.get(username=username)
+            user = User.objects.get(username=base_username)
         except User.DoesNotExist:
             return False
         if user.check_password(password):
             self.user = user  # pylint: disable=attribute-defined-outside-init
+            self._site_hint = site_hint  # pylint: disable=attribute-defined-outside-init
+            self._resolve_site()
+            self._auto_provision_universal_wizard()
             return True
         return False
 
@@ -471,11 +656,15 @@ class SSHServer(PromptToolkitSSHServer):
         :param username: username of the Django User to login as
         :param key: the SSH key
         """
-        for user_key in UserKey.objects.filter(user__username=username).select_related("user"):
+        base_username, site_hint = _split_user_suffix(username)
+        for user_key in UserKey.objects.filter(user__username=base_username).select_related("user"):
             user_pem = " ".join(user_key.key.split()[:2]) + "\n"
             server_pem = key.export_public_key().decode("utf8")
             if user_pem == server_pem:
                 self.user = user_key.user  # pylint: disable=attribute-defined-outside-init
+                self._site_hint = site_hint  # pylint: disable=attribute-defined-outside-init
+                self._resolve_site()
+                self._auto_provision_universal_wizard()
                 return True
         return False
 
@@ -485,4 +674,5 @@ class SSHServer(PromptToolkitSSHServer):
         """
         session = MooPromptToolkitSSHSession(self.interact, enable_cpr=self.enable_cpr)
         session.user = self.user
+        session.site = getattr(self, "site", None)
         return session

@@ -43,6 +43,17 @@ def terminal(request):
 
     if request.method == "POST":
         data = {k: v for k, v in request.POST.items() if k != "csrfmiddlewaretoken"}
+        # Encode the dialed Site domain into the SSH username so the
+        # asyncssh server can route to the right universe.  SSH has no
+        # protocol-level hostname indication; this is the only seam where
+        # the browser's Host header is still available.
+        host = request.get_host().split(":", 1)[0]
+        username = data.get("username", "")
+        if host and username and "+" not in username:
+            from django.contrib.sites.models import Site
+
+            if Site.objects.filter(domain=host).exists():
+                data["username"] = f"{username}+{host}"
         encoded = urllib.parse.urlencode(data).encode()
         req = urllib.request.Request(settings.WEBSSH_INTERNAL_URL + "/", data=encoded)
         client_ip = request.headers.get("x-forwarded-for", request.META["REMOTE_ADDR"])
