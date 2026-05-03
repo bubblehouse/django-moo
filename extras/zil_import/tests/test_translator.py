@@ -130,10 +130,10 @@ def test_move_passes_atom_args():
     assert "LIVING-ROOM" in out or "LIVING_ROOM" in out
 
 
-def test_getp_emits_get_property():
-    """<GETP ,OBJ P?DESC> becomes a get_property call."""
+def test_getp_emits_getp_helper():
+    """<GETP ,OBJ P?DESC> routes through _.zil_sdk.getp() for safe property access."""
     out = _translate("<ROUTINE FOO () <GETP ,LANTERN P?DESC>>")
-    assert "get_property" in out
+    assert "zil_sdk.getp" in out
 
 
 # ---------------------------------------------------------------------------
