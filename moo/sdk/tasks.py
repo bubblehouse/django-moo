@@ -174,7 +174,7 @@ def moo_eval(code_string: str):
         {
             "this": context.player,
             "passthrough": lambda: None,
-            "_": lookup(1),
+            "_": lookup("System Object"),
         }
     )
 

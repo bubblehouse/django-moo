@@ -16,13 +16,28 @@ class Command(BaseCommand):
             action="store_true",
             help="Optionally set the user as a wizard (superuser) inside the game.",
         )
+        parser.add_argument(
+            "--hostname",
+            default=None,
+            help="Hostname of the Site to associate the player with (defaults to Site 1).",
+        )
 
-    def handle(self, username, avatar, wizard=False, **kwargs):  # pylint: disable=arguments-differ
-        avatar = Object.objects.get(name=avatar, unique_name=True)
+    def handle(self, username, avatar, wizard=False, hostname=None, **kwargs):  # pylint: disable=arguments-differ
+        from django.contrib.sites.models import Site
+
+        from moo.core.managers import get_default_site
+
+        if hostname:
+            site, _ = Site.objects.get_or_create(domain=hostname, defaults={"name": hostname})
+        else:
+            site = get_default_site()
+
+        avatar_obj = Object.global_objects.get(name=avatar, unique_name=True, site=site)
         user = User.objects.get(username=username)
-        player = Player.objects.get(avatar=avatar)
-        if not player:
-            player = Player(avatar=avatar)
-        player.user = user
-        player.wizard = wizard
-        player.save()
+        player, created = Player.objects.get_or_create(
+            avatar=avatar_obj, site=site, defaults=dict(user=user, wizard=wizard)
+        )
+        if not created:
+            player.user = user
+            player.wizard = wizard
+            player.save()

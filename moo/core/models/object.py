@@ -5,6 +5,7 @@ The primary Object class
 
 import logging
 
+from django.contrib.sites.models import Site
 from django.db import models, transaction
 from django.db.models import IntegerField, Value
 from django.db.models.expressions import F
@@ -17,6 +18,7 @@ from django_cte import CTE, with_cte
 
 from moo import bootstrap
 from .. import exceptions, invoke, utils
+from ..managers import SiteManager, get_default_site
 from ..exceptions import NoSuchVerbError, NoSuchPropertyError
 from ..code import ContextManager
 from .acl import Access, AccessibleMixin, Permission, _get_permission_id
@@ -128,6 +130,9 @@ def relationship_changed(sender, instance, action, model, signal, reverse, pk_se
 
 
 class Object(models.Model, AccessibleMixin):
+    objects = SiteManager()
+    global_objects = models.Manager()  # Cross-site lookups; use sparingly
+
     #: The canonical name of the object
     name = models.CharField(max_length=255, db_index=True)
     #: If True, this object is the only object with this name
@@ -190,6 +195,17 @@ class Object(models.Model, AccessibleMixin):
     Finally, if `where` is still the location of `self`, then the verb-call `where.enterfunc(self)` is performed and its
     result is ignored; again, it is not an error if `where` does not define a verb named `enterfunc`.
     """
+
+    site = models.ForeignKey(Site, null=True, blank=True, on_delete=models.SET_NULL, db_index=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["name", "site"],
+                condition=Q(unique_name=True),
+                name="unique_name_per_site",
+            )
+        ]
 
     _original_owner = None
     _original_location = None
@@ -263,6 +279,56 @@ class Object(models.Model, AccessibleMixin):
         )
         if exclude_hidden_placement:
             qs = qs.exclude(placement_prep__in=settings.HIDDEN_PLACEMENT_PREPS)
+        # ZIL ``LOCAL-GLOBALS`` (zork1's ``global_scenery`` property) lists
+        # objects that exist in the room conceptually but live in a shared
+        # globals container.  Resolve listed atoms via the System Object's
+        # property and union into the result so ``open trap door`` finds the
+        # trap door from the Living Room.  No-op if the property is missing.
+        extra_pks: list[int] = []
+        try:
+            scenery_atoms = self.get_property("global_scenery")
+        except NoSuchPropertyError:
+            scenery_atoms = None
+        if scenery_atoms:
+            try:
+                system = Object.objects.get(unique_name=True, name="System Object")
+            except Object.DoesNotExist:
+                system = None
+            if system is not None:
+                for atom in scenery_atoms:
+                    prop_name = str(atom).lower().replace("-", "_")
+                    try:
+                        scenery_obj = system.get_property(prop_name)
+                    except NoSuchPropertyError:
+                        continue
+                    if scenery_obj is None or not hasattr(scenery_obj, "pk"):
+                        continue
+                    if (
+                        scenery_obj.name.lower() == name.lower()
+                        or scenery_obj.aliases.filter(alias__iexact=name).exists()
+                    ):
+                        extra_pks.append(scenery_obj.pk)
+        # Container peek: ZIL's parser sees through *open* containers that are
+        # in the same room as the searcher (``take leaflet`` while the mailbox
+        # is open).  Walk the direct contents and union any matches found
+        # inside an open container.
+        for child in Object.objects.filter(location=self):
+            try:
+                is_open = child.get_property("open")
+            except NoSuchPropertyError:
+                continue
+            if not is_open:
+                continue
+            inside = (
+                Object.objects.filter(location=child)
+                .filter(Q(name__iexact=name) | Q(aliases__alias__iexact=name))
+                .values_list("pk", flat=True)
+            )
+            extra_pks.extend(inside)
+        if extra_pks:
+            # Combine with the contents result.  Both sides need
+            # ``.distinct()`` for the OR to be valid in Django's ORM.
+            qs = (qs.distinct() | Object.objects.filter(pk__in=extra_pks).distinct()).distinct()
         return qs
 
     @property
@@ -921,6 +987,24 @@ class Object(models.Model, AccessibleMixin):
             caller = ContextManager.get("caller")
             if caller and self.owner != caller:
                 raise PermissionError("Can't change owner at creation time.")
+            # Inherit site from the active context — falls back to the caller's
+            # site_id (avoids a 2-query __getattr__ lookup for caller.site),
+            # then to the configured default Site so single-universe deployments
+            # still work without explicit site= kwargs.
+            # pylint: disable=access-member-before-definition,attribute-defined-outside-init
+            if self.site_id is None:
+                site = ContextManager.get_site()
+                if site is not None:
+                    self.site = site
+                else:
+                    caller_site_id = getattr(caller, "site_id", None) if caller is not None else None
+                    if caller_site_id is not None:
+                        self.site_id = caller_site_id
+                    else:
+                        try:
+                            self.site = get_default_site()
+                        except Site.DoesNotExist:
+                            self.site = None
         # Recursion Check: must run BEFORE super().save() so the loop never reaches the DB;
         # a new object (unsaved) cannot yet contain anything, so skip it there.
         if not unsaved and self.location and self.contains(self.location):
@@ -955,7 +1039,10 @@ class Object(models.Model, AccessibleMixin):
                     raise PermissionError(f"{self.location} did not accept {self}")
                 # the optional `exitfunc` Verb will be called asyncronously
                 if original_location_id:
-                    _prev_location = Object.objects.get(pk=original_location_id)
+                    # Use global_objects so the lookup doesn't fail when the
+                    # save runs without the previous location's site context
+                    # (e.g. an admin shell op resetting a multi-universe avatar).
+                    _prev_location = Object.global_objects.get(pk=original_location_id)
                     if _prev_location.has_verb("exitfunc"):
                         _exitfunc = _prev_location.get_verb("exitfunc")
                         _self = self

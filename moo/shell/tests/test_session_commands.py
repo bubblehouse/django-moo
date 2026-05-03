@@ -30,6 +30,7 @@ def _make_prompt_user(name, location=None):
     avatar.name = name
     avatar.location = location
     user = MagicMock()
+    user.pk = 1  # int so f-string cache keys don't contain '<MagicMock ...>'
     user.player.avatar = avatar
     return user, avatar
 
@@ -38,6 +39,7 @@ def _make_handle_command_mocks():
     """Return (prompt, avatar, parse_task_mock) with patched parse_command and ContextManager."""
     user, avatar = _make_prompt_user("Wizard")
     prompt = MooPrompt(user)
+    prompt._get_avatar = lambda: avatar
     parse_result = MagicMock()
     parse_result.get.return_value = ([], 0)
     parse_result.id = "test-task-id"

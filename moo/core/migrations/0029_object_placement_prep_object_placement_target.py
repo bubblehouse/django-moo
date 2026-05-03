@@ -5,20 +5,25 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0028_mail'),
+        ("core", "0028_mail"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='object',
-            name='placement_prep',
+            model_name="object",
+            name="placement_prep",
             field=models.CharField(blank=True, max_length=20, null=True),
         ),
         migrations.AddField(
-            model_name='object',
-            name='placement_target',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='placed_objects', to='core.object'),
+            model_name="object",
+            name="placement_target",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="placed_objects",
+                to="core.object",
+            ),
         ),
     ]

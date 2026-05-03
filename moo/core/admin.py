@@ -104,3 +104,10 @@ class UserAdmin(BaseUserAdmin):
 @admin.register(auth.Player)
 class PlayerAdmin(admin.ModelAdmin):
     model = auth.Player
+
+
+@admin.register(auth.UniversalWizard)
+class UniversalWizardAdmin(admin.ModelAdmin):
+    list_display = ("user", "created_at")
+    search_fields = ("user__username",)
+    raw_id_fields = ("user",)
