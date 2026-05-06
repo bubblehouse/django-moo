@@ -108,7 +108,7 @@ def pytest_collection_modifyitems(config, items):  # pylint: disable=unused-argu
     the marker — deserializing the full default snapshot is slower than
     running ``test.py`` AND would change their semantics (they'd see the
     full default world instead of a minimal sentinel-only DB).  Tests
-    parametrized to ``zork1`` also opt out.
+    parametrized to a non-default dataset also opt out.
 
     Tests that must run against a freshly-uninitialized DB (i.e. test the
     bootstrap mechanism itself) opt out via ``pytestmark.no_default_snapshot``;

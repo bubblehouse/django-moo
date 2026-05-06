@@ -257,19 +257,6 @@ def get_restricted_environment(name, writer):
         restricted_builtins[n] = __builtins__[n]
     restricted_builtins["getattr"] = safe_getattr
     restricted_builtins["hasattr"] = safe_hasattr
-    # ``verb_name`` stays bound to the invoked verb (so SDK helpers that
-    # dispatch on their own canonical name keep working).  ``player_verb``
-    # is the parser's matched player verb (ZIL's ``PRSA``) — translated
-    # ZIL routines reference it instead of ``verb_name`` so cross-routine
-    # ``invoke_verb`` calls preserve the original player command.
-    parser = ContextManager.get("parser")
-    player_verb_name = name
-    if parser is not None:
-        matched = getattr(parser, "verb", None)
-        if matched is not None:
-            invoked = getattr(matched, "_invoked_name", None)
-            if invoked:
-                player_verb_name = invoked
 
     env = dict(
         _apply_=lambda f, *a, **kw: f(*a, **kw),
@@ -288,7 +275,6 @@ def get_restricted_environment(name, writer):
         __package__=None,
         __doc__=None,
         verb_name=name,
-        player_verb=player_verb_name,
     )
 
     return env

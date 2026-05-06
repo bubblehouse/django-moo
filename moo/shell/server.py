@@ -40,7 +40,7 @@ def _fd_count() -> int:
 _MUD_CLIENT_TERM_MARKERS = ("mudlet", "tintin", "mushclient", "blowtorch", "mudrammer", "zmud", "cmud")
 
 # Delimiter used to encode a Site domain inside the SSH username, e.g.
-# ``ssh phil+zork1.local@host`` routes ``phil`` to the ``zork1.local`` Site.
+# ``ssh alice+example.com@host`` routes ``alice`` to the ``example.com`` Site.
 # ``+`` is the de-facto convention (sshpiper, etc.) and is allowed in Django
 # usernames but not used by any account in this codebase.
 USER_SITE_DELIMITER = "+"

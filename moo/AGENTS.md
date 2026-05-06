@@ -1,5 +1,23 @@
 # AGENTS.md: moo Package Guide
 
+> # 🛑 STOP — THIS PACKAGE IS GAME-AGNOSTIC
+>
+> ## **DO NOT MODIFY ANYTHING IN `moo/` TO MAKE THE ZORK BOOTSTRAP WORK.**
+>
+> Everything under `moo/` (except `moo/bootstrap/zork1/`) is the generic game engine. It must not contain ZIL concepts, Zork-specific class names, or any logic whose only justification is "the Zork dataset needs this."
+>
+> If a Zork translation gap can't be solved without touching core, **stop and ask the user first** — the answer is almost always "fix `extras/zil_import/` instead."
+>
+> Forbidden in `moo/core/`, `moo/sdk/`, `moo/shell/`, `moo/bootstrap/__init__.py`, default-bootstrap verbs, and tests:
+>
+> - References to ZIL primitives (`PRSO`, `PRSI`, `M-BEG`, `M-LOOK`, `M-END`, `getpt`, `ptsize`, `UEXIT`, `NEXIT`, etc.) — even in comments.
+> - Hard-coded Zork class names (`Zork Root`, `Zork Thing`, `Zork Container`, etc.).
+> - ZIL-mirror env vars (`player_verb`, `the_player_verb`).
+> - ZIL-shaped properties baked into core lookups (`global_scenery`, `zstate_*`).
+> - Management commands or helpers whose sole purpose is Zork.
+>
+> The legitimate ZIL adapter surface lives in `extras/zil_import/` (translator + generator) and `extras/zil_import/verbs/zil_sdk/` (SDK shims copied into generated output).
+
 This document provides specific guidance for the `moo` package, the main DjangoMOO application.
 
 ## Package Structure

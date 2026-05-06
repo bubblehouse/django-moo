@@ -1,5 +1,15 @@
 # AGENTS.md: Bootstrap & Verb Code Development Guide
 
+> # 🛑 STOP — `moo/bootstrap/__init__.py` AND `default/` ARE NOT FOR ZORK
+>
+> ## **DO NOT EDIT THE BOOTSTRAP LOADER OR DEFAULT VERBS TO MAKE THE ZORK BOOTSTRAP WORK.**
+>
+> The shared bootstrap machinery (`moo/bootstrap/__init__.py`, `parse_shebang`, `load_verbs`, `get_or_create_object`) is game-agnostic infrastructure used by every dataset. Adding ZIL-driven behavior to it is forbidden.
+>
+> The `default/` dataset is not a sandbox for tuning Zork — it's the canonical example world for new operators. Don't change its verb shebangs, dspecs, or contents to make a translated Zork verb dispatch correctly.
+>
+> The Zork bootstrap (`zork1/`) is **generated output** from `extras/zil_import/`. Fix the translator/generator there. Don't hand-edit `zork1/` and don't reach into the loader to paper over translation gaps.
+
 This document provides specific guidance for working with the DjangoMOO bootstrap system and verb code.
 
 ## Bootstrap System Overview

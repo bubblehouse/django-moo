@@ -66,12 +66,6 @@ class Command(BaseCommand):
             site = get_default_site()
         ContextManager.set_site(site)
 
-        if bootstrap == "zork1":
-            self.stdout.write(
-                "Zork 1 bootstrap: derived from MIT-licensed Microsoft/Activision source (2025). "
-                "See moo/bootstrap/zork1/LICENSE."
-            )
-
         with transaction.atomic():
             if sync:
                 try:

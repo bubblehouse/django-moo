@@ -85,11 +85,8 @@ def interpret(ctx, line):
     verb()
 
     # After every parsed command, fire the player's current room's
-    # ``turnfunc`` hook (LambdaMOO ``<thing>func`` convention; equivalent
-    # to ZIL ``M-END``).  Used by Zork's LIVING-ROOM-FCN to recompute
-    # SCORE whenever an item is taken from / put in the trophy case;
-    # other rooms / datasets are free to leave it undefined.  Errors
-    # propagate through the existing exception path.
+    # ``turnfunc`` hook (LambdaMOO ``<thing>func`` convention) when the
+    # room defines one.  Rooms without a turnfunc are unaffected.
     location = context.player.location
     if location and location.has_verb("turnfunc"):
         location.invoke_verb("turnfunc")
@@ -523,8 +520,18 @@ class Parser:  # pylint: disable=too-many-instance-attributes
 
     def get_pronoun_object(self, pronoun):
         """
-        Also, a object number (starting with a #) will
-        return the object for that id.
+        Resolve pronoun-like dobj/iobj strings to the object they refer
+        to.  Called as a fallback after :meth:`find_object` fails — so
+        in-scope objects always take precedence over these matches.
+
+        Recognised forms:
+
+        - ``me`` — the caller.
+        - ``here`` — the caller's location.
+        - the caller's location's name or any of its aliases — useful
+          when the player is inside a vehicle/container they want to
+          name directly (``disembark boat`` while inside the boat).
+        - ``#N`` — the object with primary key ``N``.
         """
         if pronoun == "me":
             return self.caller
@@ -535,8 +542,11 @@ class Parser:  # pylint: disable=too-many-instance-attributes
                 return Object.objects.get(pk=int(pronoun[1:]))
             except Object.DoesNotExist as exc:
                 raise NoSuchObjectError(pronoun) from exc
-        else:
-            return None
+        loc = self.caller.location
+        if loc is not None:
+            if pronoun.lower() == loc.name.lower() or loc.aliases.filter(alias__iexact=pronoun).exists():
+                return loc
+        return None
 
     def get_dobj(self, lookup=False):
         """
@@ -710,9 +720,8 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         if none resolved.
 
         Use this when the calling code doesn't care which preposition was
-        typed (e.g. ZIL ``,PRSI`` semantics — "the indirect object,
-        whatever its preposition is").  For a specific preposition, use
-        :meth:`get_pobj` instead.
+        typed — "the indirect object, whatever its preposition is".  For
+        a specific preposition, use :meth:`get_pobj` instead.
         """
         for prep in self.prepositions:
             for item in self.prepositions[prep]:

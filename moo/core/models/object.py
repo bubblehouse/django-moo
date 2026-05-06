@@ -279,56 +279,6 @@ class Object(models.Model, AccessibleMixin):
         )
         if exclude_hidden_placement:
             qs = qs.exclude(placement_prep__in=settings.HIDDEN_PLACEMENT_PREPS)
-        # ZIL ``LOCAL-GLOBALS`` (zork1's ``global_scenery`` property) lists
-        # objects that exist in the room conceptually but live in a shared
-        # globals container.  Resolve listed atoms via the System Object's
-        # property and union into the result so ``open trap door`` finds the
-        # trap door from the Living Room.  No-op if the property is missing.
-        extra_pks: list[int] = []
-        try:
-            scenery_atoms = self.get_property("global_scenery")
-        except NoSuchPropertyError:
-            scenery_atoms = None
-        if scenery_atoms:
-            try:
-                system = Object.objects.get(unique_name=True, name="System Object")
-            except Object.DoesNotExist:
-                system = None
-            if system is not None:
-                for atom in scenery_atoms:
-                    prop_name = str(atom).lower().replace("-", "_")
-                    try:
-                        scenery_obj = system.get_property(prop_name)
-                    except NoSuchPropertyError:
-                        continue
-                    if scenery_obj is None or not hasattr(scenery_obj, "pk"):
-                        continue
-                    if (
-                        scenery_obj.name.lower() == name.lower()
-                        or scenery_obj.aliases.filter(alias__iexact=name).exists()
-                    ):
-                        extra_pks.append(scenery_obj.pk)
-        # Container peek: ZIL's parser sees through *open* containers that are
-        # in the same room as the searcher (``take leaflet`` while the mailbox
-        # is open).  Walk the direct contents and union any matches found
-        # inside an open container.
-        for child in Object.objects.filter(location=self):
-            try:
-                is_open = child.get_property("open")
-            except NoSuchPropertyError:
-                continue
-            if not is_open:
-                continue
-            inside = (
-                Object.objects.filter(location=child)
-                .filter(Q(name__iexact=name) | Q(aliases__alias__iexact=name))
-                .values_list("pk", flat=True)
-            )
-            extra_pks.extend(inside)
-        if extra_pks:
-            # Combine with the contents result.  Both sides need
-            # ``.distinct()`` for the OR to be valid in Django's ORM.
-            qs = (qs.distinct() | Object.objects.filter(pk__in=extra_pks).distinct()).distinct()
         return qs
 
     @property

@@ -1,87 +1,109 @@
 # AGENTS.md: AI Collaboration Guide
 
+> # 🛑 STOP — READ THIS BEFORE TOUCHING `moo/`
+>
+> ## **DO NOT MODIFY django-moo CORE TO MAKE THE ZORK BOOTSTRAP WORK.**
+>
+> This is a hard rule, not a guideline. It applies to **every file under `moo/`** that is not inside `moo/bootstrap/zork1/`.
+>
+> **Forbidden — no matter how convenient:**
+>
+> - Adding ZIL-aware logic to `moo/core/`, `moo/sdk/`, `moo/shell/`, or any model/parser/manager.
+> - Hard-coding Zork class names (`Zork Root`, `Zork Thing`, etc.) anywhere in `moo/`.
+> - Adding `zstate_*`, `global_scenery`, `player_verb`, `PRSO/PRSI`, `M-BEG/M-LOOK/M-END`, or any other ZIL primitive into core code or comments.
+> - Creating management commands, helpers, or features whose only purpose is the Zork dataset.
+> - Editing `moo/bootstrap/__init__.py` or default-bootstrap verbs to accommodate the ZIL importer.
+>
+> **The right place for ZIL adapter code is `extras/zil_import/` (translator + generator) and `extras/zil_import/verbs/zil_sdk/` (runtime shims that get copied into the generated bootstrap).** If a translation gap can't be expressed there, the answer is to fix `extras/zil_import/`, not to grow `moo/`.
+>
+> If you find yourself thinking *"just this one tiny change to core will make Zork pass another command"* — **stop and ask the user first.** The default answer is no.
+>
+> Violating this rule has cost the user real time and trust. Don't do it.
+
+---
+
 This document provides essential context for AI models interacting with the DjangoMOO project. Adhering to these guidelines will ensure consistency and maintain code quality standards established by the project.
 
 ## 1. Project Overview & Purpose
 
-* **Primary Goal:** DjangoMOO is a modern game server for hosting text-based MOO-like games. It reimplements the core concepts of LambdaMOO on the Django framework, providing an interactive online environment where players can create, manipulate, and interact with persistent virtual objects through both web and SSH interfaces.
-* **Business Domain:** Game Development - specifically text-based interactive fiction and MUD-like games.
-* **Key Innovation:** Combines Django's robust ORM and admin interface with RestrictedPython's sandboxed code execution to allow dynamic verb programming within the game server itself.
+- **Primary Goal:** DjangoMOO is a modern game server for hosting text-based MOO-like games. It reimplements the core concepts of LambdaMOO on the Django framework, providing an interactive online environment where players can create, manipulate, and interact with persistent virtual objects through both web and SSH interfaces.
+- **Business Domain:** Game Development - specifically text-based interactive fiction and MUD-like games.
+- **Key Innovation:** Combines Django's robust ORM and admin interface with RestrictedPython's sandboxed code execution to allow dynamic verb programming within the game server itself.
 
 ## 2. Core Technologies & Stack
 
-* **Languages:**
-  * Python 3.11+ (primary language)
-  * Restricted Python for in-game verb code (compiled via RestrictedPython)
-* **Frameworks & Runtimes:**
-  * Django 5.x (web framework)
-  * Celery 5.4+ (task queue and distributed task processing)
-  * AsyncSSH 2.14+ (SSH server implementation)
-  * uWSGI (application server)
-  * prompt-toolkit (interactive shell/REPL)
-* **Databases:**
-  * PostgreSQL (primary data store, required for production)
-  * Redis (caching, Celery message broker, session storage)
-* **Key Libraries/Dependencies:**
-  * RestrictedPython (sandboxed code execution for verbs)
-  * prompt-toolkit (interactive SSH/shell terminal experience)
-  * asyncssh with bcrypt (SSH authentication)
-  * Django SimpleSSHKey (SSH key management for user authentication)
-  * django-ace (ACE code editor for verb editing in admin)
-  * watchdog (file monitoring for development)
-  * Rich (formatted console output)
-  * ptpython (enhanced Python REPL)
-  * Django Celery Results/Beat (task result storage and scheduling)
-  * WebSSH (browser-based SSH client interface)
-* **Platforms:** Linux (primary), Docker/Kubernetes, cloud-agnostic via Docker Compose and Helm charts
-* **Package Manager:** uv (Python dependencies) with semantic versioning
+- **Languages:**
+  - Python 3.11+ (primary language)
+  - Restricted Python for in-game verb code (compiled via RestrictedPython)
+- **Frameworks & Runtimes:**
+  - Django 5.x (web framework)
+  - Celery 5.4+ (task queue and distributed task processing)
+  - AsyncSSH 2.14+ (SSH server implementation)
+  - uWSGI (application server)
+  - prompt-toolkit (interactive shell/REPL)
+- **Databases:**
+  - PostgreSQL (primary data store, required for production)
+  - Redis (caching, Celery message broker, session storage)
+- **Key Libraries/Dependencies:**
+  - RestrictedPython (sandboxed code execution for verbs)
+  - prompt-toolkit (interactive SSH/shell terminal experience)
+  - asyncssh with bcrypt (SSH authentication)
+  - Django SimpleSSHKey (SSH key management for user authentication)
+  - django-ace (ACE code editor for verb editing in admin)
+  - watchdog (file monitoring for development)
+  - Rich (formatted console output)
+  - ptpython (enhanced Python REPL)
+  - Django Celery Results/Beat (task result storage and scheduling)
+  - WebSSH (browser-based SSH client interface)
+- **Platforms:** Linux (primary), Docker/Kubernetes, cloud-agnostic via Docker Compose and Helm charts
+- **Package Manager:** uv (Python dependencies) with semantic versioning
 
 ## 3. Architectural Patterns
 
-* **Overall Architecture:**
-  * **Monolithic game server with modular components**: DjangoMOO is primarily a monolithic Django application that manages the entire game state and logic. However, it's designed with clear separation of concerns:
-    * **Core Game Engine** (`moo.core`): Handles objects, properties, verbs, permissions, and the fundamental MOO object model
-    * **Robust Boostrapping** (`moo.bootstrap`): Utilities and code to populate brand new MOO universes
-    * **Shell/SSH Interface** (`moo.shell`): Asynchronous SSH server providing player access via terminal
-    * **Web Interface**: Django admin for wizard (administrator) access and configuration
-    * **Task Processing** (Celery): All code executions run in celery tasks, includes asynchronous operations like scheduled tasks
-    * **Bootstrap System**: Initialization of game datasets (`default` and `test`)
-  * **Sandboxed Code Execution**: User-written verb code is compiled and executed within RestrictedPython's restricted environment to prevent malicious or accidental damage to the server.
-  * **Inheritance-based Object Model**: Objects inherit from parent objects, forming a hierarchy similar to traditional MOO systems. Properties and verbs are inherited and can be overridden.
+- **Overall Architecture:**
+  - **Monolithic game server with modular components**: DjangoMOO is primarily a monolithic Django application that manages the entire game state and logic. However, it's designed with clear separation of concerns:
+    - **Core Game Engine** (`moo.core`): Handles objects, properties, verbs, permissions, and the fundamental MOO object model
+    - **Robust Boostrapping** (`moo.bootstrap`): Utilities and code to populate brand new MOO universes
+    - **Shell/SSH Interface** (`moo.shell`): Asynchronous SSH server providing player access via terminal
+    - **Web Interface**: Django admin for wizard (administrator) access and configuration
+    - **Task Processing** (Celery): All code executions run in celery tasks, includes asynchronous operations like scheduled tasks
+    - **Bootstrap System**: Initialization of game datasets (`default` and `test`)
+  - **Sandboxed Code Execution**: User-written verb code is compiled and executed within RestrictedPython's restricted environment to prevent malicious or accidental damage to the server.
+  - **Inheritance-based Object Model**: Objects inherit from parent objects, forming a hierarchy similar to traditional MOO systems. Properties and verbs are inherited and can be overridden.
 
-* **Directory Structure Philosophy:**
-  * `/moo`: Main DjangoMOO package
-    * `/moo/core`: Core game engine, models (Object, Verb, Player, Property, Permission/ACL), and code execution
-    * `/moo/core/models`: Django ORM models defining the game object hierarchy, properties, verbs, permissions, and ACLs
-    * `/moo/core/management/commands`: Django management commands (moo_init, moo_enableuser, etc.)
-    * `/moo/core/tests`: Unit and integration tests using pytest
-  * `/moo/bootstrap`: Dataset initialization system. `default/` is a package whose `__init__.py` orchestrates numbered scripts (`010_core_classes.py`, `020_utility_objects.py`, ...) executed in sorted order. `test.py` is a flat module providing the minimal test dataset.
-    * `/moo/bootstrap/default/verbs`: Verb sources for `default`, organised by root-class name (`player/`, `room/`, `thing/`, `programmer/`, ...). `default/verbs/tests/` contains pytest integration tests for those verbs.
-    * Bootstrap helpers `get_or_create_object`, `load_verb_source`, and `load_verbs` (in `moo/bootstrap/__init__.py`) are idempotent — use them instead of `Object.objects.create()` in any bootstrap file intended to support `moo_init --sync`
-  * `/moo/shell`: SSH server implementation and interactive prompt system
-  * `/moo/settings`: Django configuration modules (base.py, dev.py, test.py, local.py)
-  * `/docs`: End-user documentation generated by Sphinx from ReStructuredText and Markdown
-  * `/extras`: Non-Python support assets:
-    * `/extras/helm`: Kubernetes Helm 3 chart for production deployment
-    * `/extras/nginx`: Nginx configuration for reverse proxy routing (WebSSH, Admin, static files)
-    * `/extras/uwsgi`: uWSGI configuration for application server
-    * `/extras/webssh`: Updated WebSSH HTML template for browser-based SSH access
-  * `/tests`: Integration and higher-level tests (as opposed to unit tests in modules)
-  * `/static`: Django static assets (CSS, JavaScript, images)
+- **Directory Structure Philosophy:**
+  - `/moo`: Main DjangoMOO package
+    - `/moo/core`: Core game engine, models (Object, Verb, Player, Property, Permission/ACL), and code execution
+    - `/moo/core/models`: Django ORM models defining the game object hierarchy, properties, verbs, permissions, and ACLs
+    - `/moo/core/management/commands`: Django management commands (moo_init, moo_enableuser, etc.)
+    - `/moo/core/tests`: Unit and integration tests using pytest
+  - `/moo/bootstrap`: Dataset initialization system. `default/` is a package whose `__init__.py` orchestrates numbered scripts (`010_core_classes.py`, `020_utility_objects.py`, ...) executed in sorted order. `test.py` is a flat module providing the minimal test dataset.
+    - `/moo/bootstrap/default/verbs`: Verb sources for `default`, organised by root-class name (`player/`, `room/`, `thing/`, `programmer/`, ...). `default/verbs/tests/` contains pytest integration tests for those verbs.
+    - Bootstrap helpers `get_or_create_object`, `load_verb_source`, and `load_verbs` (in `moo/bootstrap/__init__.py`) are idempotent — use them instead of `Object.objects.create()` in any bootstrap file intended to support `moo_init --sync`
+  - `/moo/shell`: SSH server implementation and interactive prompt system
+  - `/moo/settings`: Django configuration modules (base.py, dev.py, test.py, local.py)
+  - `/docs`: End-user documentation generated by Sphinx from ReStructuredText and Markdown
+  - `/extras`: Non-Python support assets:
+    - `/extras/helm`: Kubernetes Helm 3 chart for production deployment
+    - `/extras/nginx`: Nginx configuration for reverse proxy routing (WebSSH, Admin, static files)
+    - `/extras/uwsgi`: uWSGI configuration for application server
+    - `/extras/webssh`: Updated WebSSH HTML template for browser-based SSH access
+  - `/tests`: Integration and higher-level tests (as opposed to unit tests in modules)
+  - `/static`: Django static assets (CSS, JavaScript, images)
 
-* **Module Organization:**
-  * The core game logic is organized around Django's MVT (Model-View-Template) pattern, plus additional layers:
-    * **Models** (`moo.core.models.*`): Represent game entities (Object, Verb, Property, Player, Permission)
-    * **Management Commands** (`moo.core.management.commands`): CLI entry points for setup and administration
-    * **Code Execution** (`moo.core.code`): Handles RestrictedPython compilation and verb execution
-    * **Permissions/ACL** (`moo.core.models.acl`): Access control list implementation for object permissions
-    * **Admin** (`moo.core.admin`): Django admin interface
-    * **Shell/REPL** (`moo.shell.prompt`): Interactive command line interface for players
-    * **SSH Server** (`moo.shell.server`): AsyncSSH server implementation
-    * **Bootstrap** (`moo.bootstrap`): Database initialization and default object creation
-    * **Mail** (`moo.core.models.mail`): `Message` and `MessageRecipient` Django models; all verb-facing operations are in `moo.sdk` (`send_message`, `get_mailbox`, etc.)
-    * **Public SDK** (`moo.sdk`): Canonical import location for all verb authors — `lookup`, `create`, `write`, `open_editor`, `open_paginator`, mail functions, and exceptions
-  * Modules follow Django conventions with `models.py`, `admin.py`, `apps.py` for each app
+- **Module Organization:**
+  - The core game logic is organized around Django's MVT (Model-View-Template) pattern, plus additional layers:
+    - **Models** (`moo.core.models.*`): Represent game entities (Object, Verb, Property, Player, Permission)
+    - **Management Commands** (`moo.core.management.commands`): CLI entry points for setup and administration
+    - **Code Execution** (`moo.core.code`): Handles RestrictedPython compilation and verb execution
+    - **Permissions/ACL** (`moo.core.models.acl`): Access control list implementation for object permissions
+    - **Admin** (`moo.core.admin`): Django admin interface
+    - **Shell/REPL** (`moo.shell.prompt`): Interactive command line interface for players
+    - **SSH Server** (`moo.shell.server`): AsyncSSH server implementation
+    - **Bootstrap** (`moo.bootstrap`): Database initialization and default object creation
+    - **Mail** (`moo.core.models.mail`): `Message` and `MessageRecipient` Django models; all verb-facing operations are in `moo.sdk` (`send_message`, `get_mailbox`, etc.)
+    - **Public SDK** (`moo.sdk`): Canonical import location for all verb authors — `lookup`, `create`, `write`, `open_editor`, `open_paginator`, mail functions, and exceptions
+  - Modules follow Django conventions with `models.py`, `admin.py`, `apps.py` for each app
 
 ### Mail System
 
@@ -159,78 +181,78 @@ for the API surface and rationale. Tests live in
 
 ## 4. Coding Conventions & Style Guide
 
-* **Formatting:**
-  * Follows PEP 8 with some relaxations as defined in the project's pylintrc
-  * Black formatter with line length of 120 characters (see pyproject.toml)
-  * 4-space indentation (Python standard)
-  * Comments are complete sentences ending with a period
-  * Docstrings follow Google/NumPy style conventions
+- **Formatting:**
+  - Follows PEP 8 with some relaxations as defined in the project's pylintrc
+  - Black formatter with line length of 120 characters (see pyproject.toml)
+  - 4-space indentation (Python standard)
+  - Comments are complete sentences ending with a period
+  - Docstrings follow Google/NumPy style conventions
 
-* **Naming Conventions:**
-  * **Variables and Functions:** `snake_case` (`my_variable`, `do_something()`)
-  * **Classes:** `PascalCase` (`MyClass`, `Object`, `Verb`)
-  * **Constants:** `SCREAMING_SNAKE_CASE` (`MAX_BUFFER_SIZE`, `DEFAULT_PERMISSIONS`)
-  * **File Names:** `snake_case` (`models.py`, `verb_parser.py`)
-  * **Django Models:** Singular, PascalCase, e.g., `Object`, `Verb`, `Property`
-  * **Model Fields:** `snake_case` (`owner`, `parent_classes`, `location`)
-  * **URLs/Endpoints:** Use kebab-case for URL paths (Django convention)
+- **Naming Conventions:**
+  - **Variables and Functions:** `snake_case` (`my_variable`, `do_something()`)
+  - **Classes:** `PascalCase` (`MyClass`, `Object`, `Verb`)
+  - **Constants:** `SCREAMING_SNAKE_CASE` (`MAX_BUFFER_SIZE`, `DEFAULT_PERMISSIONS`)
+  - **File Names:** `snake_case` (`models.py`, `verb_parser.py`)
+  - **Django Models:** Singular, PascalCase, e.g., `Object`, `Verb`, `Property`
+  - **Model Fields:** `snake_case` (`owner`, `parent_classes`, `location`)
+  - **URLs/Endpoints:** Use kebab-case for URL paths (Django convention)
 
-* **API Design:**
-  * **Style:** Primarily object-oriented with some procedural patterns. The game API exposes through:
-    * Django ORM for database operations (query sets, model instantiation)
-    * Verb code execution via `code.interpret()` and `code.compile_verb_code()`
-    * Access to current user context (current player and current verb caller) through the public `moo.sdk.context` object
-  * **Abstraction:** The API abstracts away database details through Django models. Verb code execution is sandboxed through RestrictedPython.
-  * **Extensibility:**
-    * New verbs can be added to objects dynamically via the Verb model
-    * Properties are dynamically added to objects and inherited
-    * Custom permissions can be created in the ACL system
-    * Wizards can create their own object hierarchies and classes
-  * **Trade-offs:**
-    * **Performance vs. Safety**: RestrictedPython adds overhead but provides security guarantees for user-written code
-    * **Simplicity vs. Power**: The MOO object model is simpler than traditional OOP or procedural systems but is powerful enough for complex game logic
-    * **Database vs. In-Memory**: Uses PostgreSQL for durability; Redis is used for caching and Celery message storage
-    * **Attribute Lookup Caching**: Verb and property lookups use a three-tier cache: (1) a per-`ContextManager` session dict, (2) a Redis cross-session store keyed by `moo:verb:…` / `moo:prop:…`, and (3) the `AncestorCache` denormalized table that replaces recursive CTEs on the hot dispatch path. The Redis TTL is controlled by `MOO_ATTRIB_CACHE_TTL` (default 120 s; set to 0 in tests).
+- **API Design:**
+  - **Style:** Primarily object-oriented with some procedural patterns. The game API exposes through:
+    - Django ORM for database operations (query sets, model instantiation)
+    - Verb code execution via `code.interpret()` and `code.compile_verb_code()`
+    - Access to current user context (current player and current verb caller) through the public `moo.sdk.context` object
+  - **Abstraction:** The API abstracts away database details through Django models. Verb code execution is sandboxed through RestrictedPython.
+  - **Extensibility:**
+    - New verbs can be added to objects dynamically via the Verb model
+    - Properties are dynamically added to objects and inherited
+    - Custom permissions can be created in the ACL system
+    - Wizards can create their own object hierarchies and classes
+  - **Trade-offs:**
+    - **Performance vs. Safety**: RestrictedPython adds overhead but provides security guarantees for user-written code
+    - **Simplicity vs. Power**: The MOO object model is simpler than traditional OOP or procedural systems but is powerful enough for complex game logic
+    - **Database vs. In-Memory**: Uses PostgreSQL for durability; Redis is used for caching and Celery message storage
+    - **Attribute Lookup Caching**: Verb and property lookups use a three-tier cache: (1) a per-`ContextManager` session dict, (2) a Redis cross-session store keyed by `moo:verb:…` / `moo:prop:…`, and (3) the `AncestorCache` denormalized table that replaces recursive CTEs on the hot dispatch path. The Redis TTL is controlled by `MOO_ATTRIB_CACHE_TTL` (default 120 s; set to 0 in tests).
 
-* **Common Patterns & Idioms:**
-  * **Inheritance & Properties**: Objects inherit from parent objects. Properties are created via `Object.set_property()` and retrieved via `Object.get_property()` or model access. Inherited properties are propagated to child objects automatically, optionally inheriting ownership.
-  * **Verb Code Execution**: Verbs are Python functions compiled and executed within a restricted environment. The entry point is `def verb(this, passthrough, _, *args, **kwargs)`, but verb source files only contain the body of this function.
-  * **Permissions/ACL**: Access control uses a permission string model (`"read"`, `"write"`, `"execute"`, etc.). Objects check permissions via `can_caller()` methods.
-  * **Async/Concurrency**: SSH server and task processing leverage asyncio and Celery for handling concurrent player sessions and background tasks.
-  * **Type Hints**: Modern code uses Python type hints for clarity; some legacy code may lack them.
-  * **Django Admin Integration**: Administrative access is primarily through Django's admin interface at `/admin`.
+- **Common Patterns & Idioms:**
+  - **Inheritance & Properties**: Objects inherit from parent objects. Properties are created via `Object.set_property()` and retrieved via `Object.get_property()` or model access. Inherited properties are propagated to child objects automatically, optionally inheriting ownership.
+  - **Verb Code Execution**: Verbs are Python functions compiled and executed within a restricted environment. The entry point is `def verb(this, passthrough, _, *args, **kwargs)`, but verb source files only contain the body of this function.
+  - **Permissions/ACL**: Access control uses a permission string model (`"read"`, `"write"`, `"execute"`, etc.). Objects check permissions via `can_caller()` methods.
+  - **Async/Concurrency**: SSH server and task processing leverage asyncio and Celery for handling concurrent player sessions and background tasks.
+  - **Type Hints**: Modern code uses Python type hints for clarity; some legacy code may lack them.
+  - **Django Admin Integration**: Administrative access is primarily through Django's admin interface at `/admin`.
 
-* **Error Handling:**
-  * Exceptions are used for error signaling (e.g., `PermissionDenied`, `Object.DoesNotExist`)
-  * Django ValidationError is used for model validation
-  * RestrictedPython compile errors are caught and reported to players
-  * Verb execution errors are caught and reported to the player executing the verb
+- **Error Handling:**
+  - Exceptions are used for error signaling (e.g., `PermissionDenied`, `Object.DoesNotExist`)
+  - Django ValidationError is used for model validation
+  - RestrictedPython compile errors are caught and reported to players
+  - Verb execution errors are caught and reported to the player executing the verb
 
 ## 5. Key Files & Entrypoints
 
-* **Main EntryPoint:**
-  * `/manage.py` - Django management interface (entry point for all administrative and startup commands)
-  * SSH Server starts via management command in `moo.shell.server`: `python manage.py moo_shell`
-  * Web application served via uWSGI (see `/extras/uwsgi/uwsgi.ini`) `wsgi --ini /etc/uwsgi.ini`
+- **Main EntryPoint:**
+  - `/manage.py` - Django management interface (entry point for all administrative and startup commands)
+  - SSH Server starts via management command in `moo.shell.server`: `python manage.py moo_shell`
+  - Web application served via uWSGI (see `/extras/uwsgi/uwsgi.ini`) `wsgi --ini /etc/uwsgi.ini`
 
-* **Configuration:**
-  * `moo/settings/base.py` - Core Django settings
-  * `moo/settings/dev.py` - Development overrides
-  * `moo/settings/local.py` - Local/Docker environment overrides
-  * `moo/settings/test.py` - Test environment (used by pytest)
-  * `pyproject.toml` - uv dependency and project configuration
-  * `compose.yml` - Multi-container orchestration for local development and simple deployments
-  * `Dockerfile` - Container image definition for all services
-  * `/extras/helm/Chart.yaml` - Kubernetes Helm chart for production deployments
+- **Configuration:**
+  - `moo/settings/base.py` - Core Django settings
+  - `moo/settings/dev.py` - Development overrides
+  - `moo/settings/local.py` - Local/Docker environment overrides
+  - `moo/settings/test.py` - Test environment (used by pytest)
+  - `pyproject.toml` - uv dependency and project configuration
+  - `compose.yml` - Multi-container orchestration for local development and simple deployments
+  - `Dockerfile` - Container image definition for all services
+  - `/extras/helm/Chart.yaml` - Kubernetes Helm chart for production deployments
 
-* **CI/CD Pipeline:**
-  * `.gitlab-ci.yml` - GitLab CI/CD configuration defining lint, test, release, and deploy stages
-  * `.readthedocs.yaml` - ReadTheDocs configuration for automatic documentation building
-  * `.pre-commit-config.yaml` - Pre-commit hooks for local development
+- **CI/CD Pipeline:**
+  - `.gitlab-ci.yml` - GitLab CI/CD configuration defining lint, test, release, and deploy stages
+  - `.readthedocs.yaml` - ReadTheDocs configuration for automatic documentation building
+  - `.pre-commit-config.yaml` - Pre-commit hooks for local development
 
 ## 6. Development & Testing Workflow
 
-* **Local Development Environment:**
+- **Local Development Environment:**
   1. **Prerequisites**: Ensure Python 3.11+, Docker, and Docker Compose are installed
   2. **Clone and Setup**:
 
@@ -262,29 +284,29 @@ for the API surface and rationale. Tests live in
      ```
 
   6. **Access Services**:
-     * Web Admin: <https://localhost/admin>
-     * WebSSH: <https://localhost/>
-     * SSH Direct: `ssh localhost -p 8022`
+     - Web Admin: <https://localhost/admin>
+     - WebSSH: <https://localhost/>
+     - SSH Direct: `ssh localhost -p 8022`
 
-* **Task Configuration:**
-  * **uv**: Defined in `pyproject.toml`. Run `uv run <command>`
-  * **Django Management Commands**: Run via `python manage.py <command>` or `docker compose run webapp manage.py <command>`
-  * **Common Commands**:
-    * `uv run pytest -n auto` - Run all tests (always use `-n auto` for parallel execution)
-    * `uv run pylint moo` - Lint code
-    * `uv run coverage report` - View coverage report
-    * `python manage.py shell` - Django shell for debugging
-    * `python manage.py moo_init` - Initialize default game world
-    * `python manage.py moo_enableuser --wizard <username> Wizard` - Make a user a wizard
+- **Task Configuration:**
+  - **uv**: Defined in `pyproject.toml`. Run `uv run <command>`
+  - **Django Management Commands**: Run via `python manage.py <command>` or `docker compose run webapp manage.py <command>`
+  - **Common Commands**:
+    - `uv run pytest -n auto` - Run all tests (always use `-n auto` for parallel execution)
+    - `uv run pylint moo` - Lint code
+    - `uv run coverage report` - View coverage report
+    - `python manage.py shell` - Django shell for debugging
+    - `python manage.py moo_init` - Initialize default game world
+    - `python manage.py moo_enableuser --wizard <username> Wizard` - Make a user a wizard
 
-* **Testing:**
-  * **Framework**: pytest with pytest-django, pytest-xdist (parallel execution), pytest-cov (coverage)
-  * **Test Organization**:
-    * Core tests in `moo/core/tests/` operate on the `test` dataset
-    * Bootstrap-related tests in `moo/bootstrap/default/verbs/tests/`
-    * Test data defined in `moo/bootstrap/test.py`
-    * Game data defined in the `moo/bootstrap/default/` package (orchestrator + numbered scripts)
-  * **Running Tests**:
+- **Testing:**
+  - **Framework**: pytest with pytest-django, pytest-xdist (parallel execution), pytest-cov (coverage)
+  - **Test Organization**:
+    - Core tests in `moo/core/tests/` operate on the `test` dataset
+    - Bootstrap-related tests in `moo/bootstrap/default/verbs/tests/`
+    - Test data defined in `moo/bootstrap/test.py`
+    - Game data defined in the `moo/bootstrap/default/` package (orchestrator + numbered scripts)
+  - **Running Tests**:
 
     ```bash
     uv run pytest -n auto --cov
@@ -293,86 +315,86 @@ for the API surface and rationale. Tests live in
     ```
 
     Always run Ruff format, then pylint, after pytest. All three must pass before a change is considered complete. Ruff format runs before pylint at commit time — if it reformats a file, pylint sees the reformatted version, so formatting must be run first when checking manually.
-  * **Ruff format and pylint interaction**: `# pylint: disable=...` comments must appear on the specific line containing the offending code, not on a closing bracket or the next line. Ruff format may reformat expressions such that a comment on a closing `)` is no longer adjacent to the flagged code, making the suppression ineffective.
-  * **Verb files**: Black silently skips verb files in `moo/bootstrap/default/verbs/` because they contain module-level `return` statements, which are a `SyntaxError` in standard Python. Black cannot parse them and leaves them unchanged.
-  * **Test Coverage**: Must not decrease with new code. Target: >= 80% coverage
-  * **New Features**: Every feature or bug fix must include corresponding unit tests
-  * **Django Settings**: Tests automatically use `moo.settings.test` (set in pyproject.toml)
+  - **Ruff format and pylint interaction**: `# pylint: disable=...` comments must appear on the specific line containing the offending code, not on a closing bracket or the next line. Ruff format may reformat expressions such that a comment on a closing `)` is no longer adjacent to the flagged code, making the suppression ineffective.
+  - **Verb files**: Black silently skips verb files in `moo/bootstrap/default/verbs/` because they contain module-level `return` statements, which are a `SyntaxError` in standard Python. Black cannot parse them and leaves them unchanged.
+  - **Test Coverage**: Must not decrease with new code. Target: >= 80% coverage
+  - **New Features**: Every feature or bug fix must include corresponding unit tests
+  - **Django Settings**: Tests automatically use `moo.settings.test` (set in pyproject.toml)
 
-* **CI/CD Process:**
-  * **On Commit to Any Branch**:
+- **CI/CD Process:**
+  - **On Commit to Any Branch**:
     1. **Lint Stage**: PyLint checks code quality (minimum score 8.0), generates coverage badge
     2. **Test Stage**: pytest runs with coverage tracking, generates JUnit XML report
     3. **Artifacts**: Coverage reports, lint reports uploaded to GitLab
-  * **On Commit to `main` Branch**:
+  - **On Commit to `main` Branch**:
     1. **Release Stage**: Semantic versioning via `semantic-release`, builds/pushes Docker images
     2. **Deploy Stage**: ReadTheDocs automatically builds documentation
-  * **Failure Conditions**:
-    * PyLint score drops below 8.0
-    * Test coverage drops below configured threshold
-    * Any test fails
-    * Docker image build fails
+  - **Failure Conditions**:
+    - PyLint score drops below 8.0
+    - Test coverage drops below configured threshold
+    - Any test fails
+    - Docker image build fails
 
 ## 7. Specific Instructions for AI Collaboration
 
-* **Contribution Guidelines:**
-  * **Code Review Checklist**:
-    * All tests must pass (`uv run pytest -n auto`)
-    * Ruff formatting passes (`uv run ruff format moo`)
-    * PyLint score must not go down (`uv run pylint moo`)
-    * Test coverage must not go down (`uv run pytest -n auto --cov`)
-    * Add new tests for any feature or bug fix
-    * Update documentation for user-facing changes
-  * **Pull Request Requirements**:
-    * Every PR should answer: What changed? Why? Are there breaking changes?
-    * Follow Conventional Commits specification for commit messages (see below)
-    * Target the `main` branch for merges
-  * **Code Style**:
-    * Follow existing code style in the codebase
-    * Use Black formatter (line length 120)
-    * Write complete sentences in comments and docstrings, ending with a period
-    * Import organization: stdlib → third-party → local (Black compliant)
-    * Use type hints for clarity in modern code
+- **Contribution Guidelines:**
+  - **Code Review Checklist**:
+    - All tests must pass (`uv run pytest -n auto`)
+    - Ruff formatting passes (`uv run ruff format moo`)
+    - PyLint score must not go down (`uv run pylint moo`)
+    - Test coverage must not go down (`uv run pytest -n auto --cov`)
+    - Add new tests for any feature or bug fix
+    - Update documentation for user-facing changes
+  - **Pull Request Requirements**:
+    - Every PR should answer: What changed? Why? Are there breaking changes?
+    - Follow Conventional Commits specification for commit messages (see below)
+    - Target the `main` branch for merges
+  - **Code Style**:
+    - Follow existing code style in the codebase
+    - Use Black formatter (line length 120)
+    - Write complete sentences in comments and docstrings, ending with a period
+    - Import organization: stdlib → third-party → local (Black compliant)
+    - Use type hints for clarity in modern code
 
-* **Commit Messages:**
-  * Follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification
-  * Format: `<type>(<scope>): <subject><CRLF><CRLF><body>`
-  * **Types**: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `ci`
-  * **Scope**: Module or component affected (e.g., `core`, `shell`, `admin`, `bootstrap`)
-  * **Subject**: Lowercase, imperative mood, no period. Max 50 characters.
-  * **Body**: Explain what and why, not how. Wrap at 72 characters. Optional for simple changes.
-  * **Examples**:
-    * `feat(core): add object property inheritance`
-    * `fix(shell): handle SSH disconnect during verb execution`
-    * `docs(readme): update quick start instructions`
-    * `test(core): add coverage for permission denial cases`
+- **Commit Messages:**
+  - Follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification
+  - Format: `<type>(<scope>): <subject><CRLF><CRLF><body>`
+  - **Types**: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `ci`
+  - **Scope**: Module or component affected (e.g., `core`, `shell`, `admin`, `bootstrap`)
+  - **Subject**: Lowercase, imperative mood, no period. Max 50 characters.
+  - **Body**: Explain what and why, not how. Wrap at 72 characters. Optional for simple changes.
+  - **Examples**:
+    - `feat(core): add object property inheritance`
+    - `fix(shell): handle SSH disconnect during verb execution`
+    - `docs(readme): update quick start instructions`
+    - `test(core): add coverage for permission denial cases`
 
-* **Security:**
-  * **RestrictedPython Safety**: User-written verb code is executed in a restricted environment. Do not bypass this for performance reasons; it's a security boundary.
-  * **SQL Injection**: Use Django ORM exclusively; never construct raw SQL with user input.
-  * **SSH Key Management**: SSH keys are stored securely in the database. Do not log them or expose them in error messages.
-  * **Secrets**: Never hardcode API keys, database passwords, or other secrets. Use environment variables and Django settings.
-  * **Input Validation**: Validate and sanitize all player input before processing or storing.
+- **Security:**
+  - **RestrictedPython Safety**: User-written verb code is executed in a restricted environment. Do not bypass this for performance reasons; it's a security boundary.
+  - **SQL Injection**: Use Django ORM exclusively; never construct raw SQL with user input.
+  - **SSH Key Management**: SSH keys are stored securely in the database. Do not log them or expose them in error messages.
+  - **Secrets**: Never hardcode API keys, database passwords, or other secrets. Use environment variables and Django settings.
+  - **Input Validation**: Validate and sanitize all player input before processing or storing.
 
-* **Dependencies:**
-  * **Adding New Dependencies**:
+- **Dependencies:**
+  - **Adding New Dependencies**:
     1. Run `uv add <package>` or `uv add --group dev <package>` for dev dependencies
     2. Verify the package doesn't conflict with existing dependencies
     3. Update documentation if the dependency is a significant addition
     4. `uv.lock` is automatically updated
-  * **Updating Dependencies**:
+  - **Updating Dependencies**:
     1. Run `uv lock --upgrade` to update all dependencies to latest compatible versions
     2. Test thoroughly after updates
     3. Be cautious with major version updates; review changelogs for breaking changes
-  * **Dependency Rationale**: Document why a new dependency is needed in the PR description or code comments
+  - **Dependency Rationale**: Document why a new dependency is needed in the PR description or code comments
 
-* **AsyncSSH + prompt_toolkit Integration:**
-  * The SSH server (`moo/shell/server.py`) must pass `line_editor=False` to `asyncssh.create_server()`. asyncssh's `line_editor=True` default wraps every channel with `SSHLineEditorChannel`, which intercepts ALL output through `SSHLineEditor.process_output()`. This is incompatible with prompt_toolkit: it does a second `\n`→`\r\n` replacement (causing `\r\r\r\n` triples), tracks cursor position with a naive parser that only ends escape sequences on `m` (corrupting column tracking for all other VT100 codes), and injects `' \b'` at column-80 boundaries — overwriting characters in the terminal.
-  * prompt_toolkit handles all terminal I/O itself. The asyncssh line editor must be disabled.
+- **AsyncSSH + prompt_toolkit Integration:**
+  - The SSH server (`moo/shell/server.py`) must pass `line_editor=False` to `asyncssh.create_server()`. asyncssh's `line_editor=True` default wraps every channel with `SSHLineEditorChannel`, which intercepts ALL output through `SSHLineEditor.process_output()`. This is incompatible with prompt_toolkit: it does a second `\n`→`\r\n` replacement (causing `\r\r\r\n` triples), tracks cursor position with a naive parser that only ends escape sequences on `m` (corrupting column tracking for all other VT100 codes), and injects `' \b'` at column-80 boundaries — overwriting characters in the terminal.
+  - prompt_toolkit handles all terminal I/O itself. The asyncssh line editor must be disabled.
 
-* **MOO Verb Code Development:**
-  * **File Organization**: Verbs for the `default` dataset are organized in `moo/bootstrap/default/verbs/`. The `test` dataset uses no additional verb files.
-  * **Shebang Line**: Every verb file starts with `#!moo verb <names> --on <object>` and optional flags. Example:
+- **MOO Verb Code Development:**
+  - **File Organization**: Verbs for the `default` dataset are organized in `moo/bootstrap/default/verbs/`. The `test` dataset uses no additional verb files.
+  - **Shebang Line**: Every verb file starts with `#!moo verb <names> --on <object>` and optional flags. Example:
 
     ```python
     #!moo verb accept --on $room
@@ -380,7 +402,7 @@ for the API surface and rationale. Tests live in
     ```
 
     The `--on` parameter supports the `$<name>` syntax to refer to properties on the system object.
-  * **Verb Function Signature**: When executed, verb code is wrapped in this function signature before being called with the required parameters.
+  - **Verb Function Signature**: When executed, verb code is wrapped in this function signature before being called with the required parameters.
 
     ```python
     def verb(this, passthrough, _, *args, **kwargs):
@@ -393,32 +415,32 @@ for the API surface and rationale. Tests live in
         """
     ```
 
-  * **RestrictedPython Caveats**: Ignore warnings about undefined variables for `this`, `passthrough`, `_`, `args`, and `kwargs`. These are injected by the execution environment.
-  * **Return Behavior**: Verbs can use `return` from anywhere, not just at function end (courtesy of RestrictedPython compilation).
-  * **Testing Verbs**: Tests for `default` verbs live in `moo/bootstrap/default/verbs/tests/`.
+  - **RestrictedPython Caveats**: Ignore warnings about undefined variables for `this`, `passthrough`, `_`, `args`, and `kwargs`. These are injected by the execution environment.
+  - **Return Behavior**: Verbs can use `return` from anywhere, not just at function end (courtesy of RestrictedPython compilation).
+  - **Testing Verbs**: Tests for `default` verbs live in `moo/bootstrap/default/verbs/tests/`.
 
-* **Documentation:**
-  * **Code Documentation**: Use docstrings (Google/NumPy style) for all classes, functions, and modules
-  * **User Documentation**: Update `.md` or `.rst` files in `/docs` for user-facing changes
-  * **Auto-Generated Docs**: API documentation is generated via Sphinx from docstrings and published to ReadTheDocs
-  * **README Updates**: Keep README.md current with quick start instructions and key information
-  * **Contributor Docs**: Update this file if adding new components or significant architectural changes
+- **Documentation:**
+  - **Code Documentation**: Use docstrings (Google/NumPy style) for all classes, functions, and modules
+  - **User Documentation**: Update `.md` or `.rst` files in `/docs` for user-facing changes
+  - **Auto-Generated Docs**: API documentation is generated via Sphinx from docstrings and published to ReadTheDocs
+  - **README Updates**: Keep README.md current with quick start instructions and key information
+  - **Contributor Docs**: Update this file if adding new components or significant architectural changes
 
-* **Performance Considerations:**
-  * **Database Queries**: Use Django QuerySet `.select_related()` and `.prefetch_related()` to minimize N+1 queries
-  * **Attribute Caching**: Verb and property lookups are automatically cached at three levels — do not implement separate caching for these. See `docs/source/reference/caching.md` for the full architecture.
-  * **Caching**: Redis is available for caching other frequently accessed data (room contents, player locations, etc.)
-  * **Celery Tasks**: All code and command-parser invocations are executed as tasks inside Celery workers. Creating new Celery Tasks is uncommon.
-  * **Verb Time Limits**: Verbs called with `__getattr__` syntax (`obj.someverb()`) add to the total execution time for a verb, which is limited to 3 seconds. For verbs with effective runtimes that are longer than this, the `moo.sdk.invoke()` command can be used to asynchronously execute another verb with its own 3-second time limit.
-  * **Indexing**: Add database indexes to frequently queried fields (Django `db_index=True`)
+- **Performance Considerations:**
+  - **Database Queries**: Use Django QuerySet `.select_related()` and `.prefetch_related()` to minimize N+1 queries
+  - **Attribute Caching**: Verb and property lookups are automatically cached at three levels — do not implement separate caching for these. See `docs/source/reference/caching.md` for the full architecture.
+  - **Caching**: Redis is available for caching other frequently accessed data (room contents, player locations, etc.)
+  - **Celery Tasks**: All code and command-parser invocations are executed as tasks inside Celery workers. Creating new Celery Tasks is uncommon.
+  - **Verb Time Limits**: Verbs called with `__getattr__` syntax (`obj.someverb()`) add to the total execution time for a verb, which is limited to 3 seconds. For verbs with effective runtimes that are longer than this, the `moo.sdk.invoke()` command can be used to asynchronously execute another verb with its own 3-second time limit.
+  - **Indexing**: Add database indexes to frequently queried fields (Django `db_index=True`)
 
-* **Testing Best Practices:**
-  * **Three test types**: Core unit tests (`moo/core/tests/`) test models and the verb execution engine without a full bootstrap. App integration tests (e.g., `moo/shell/tests/`) test Django features (forms, views) that interact with MOO objects — use `@pytest.mark.parametrize("t_init", ["default"], indirect=True)` when the full default world is needed. Verb integration tests (`moo/bootstrap/default/verbs/tests/`) test verb behaviour against a fully bootstrapped `default` world. The `t_init` parametrize pattern is not exclusive to `default/verbs/tests/` — any test file can use it.
-  * **Bootstrap test fixtures**: Both `t_init` (bootstraps `default.py`) and `t_wizard` (returns the Wizard player) come from `moo/conftest.py`. `t_init` must be requested with `@pytest.mark.parametrize("t_init", ["default"], indirect=True)` and `@pytest.mark.django_db(transaction=True, reset_sequences=True)`.
-  * **Output capture**: Pass a `_writer` callback to `code.ContextManager` to capture everything `print()`ed to the player during a test.
-  * **State assertions**: Call `obj.refresh_from_db()` after `parse.interpret` or a direct verb call before asserting locations or other database-backed fields.
-  * **Direct verb calls**: Inside a `code.ContextManager` block, verbs are callable as Python methods — `widget.drop_succeeded_msg()` — useful for testing helpers without going through the command parser.
-  * **Lock testing**: Set `key = ["!", obj.id]` on a destination to block a specific object; `key = None` (the default) means unlocked.
+- **Testing Best Practices:**
+  - **Three test types**: Core unit tests (`moo/core/tests/`) test models and the verb execution engine without a full bootstrap. App integration tests (e.g., `moo/shell/tests/`) test Django features (forms, views) that interact with MOO objects — use `@pytest.mark.parametrize("t_init", ["default"], indirect=True)` when the full default world is needed. Verb integration tests (`moo/bootstrap/default/verbs/tests/`) test verb behaviour against a fully bootstrapped `default` world. The `t_init` parametrize pattern is not exclusive to `default/verbs/tests/` — any test file can use it.
+  - **Bootstrap test fixtures**: Both `t_init` (bootstraps `default.py`) and `t_wizard` (returns the Wizard player) come from `moo/conftest.py`. `t_init` must be requested with `@pytest.mark.parametrize("t_init", ["default"], indirect=True)` and `@pytest.mark.django_db(transaction=True, reset_sequences=True)`.
+  - **Output capture**: Pass a `_writer` callback to `code.ContextManager` to capture everything `print()`ed to the player during a test.
+  - **State assertions**: Call `obj.refresh_from_db()` after `parse.interpret` or a direct verb call before asserting locations or other database-backed fields.
+  - **Direct verb calls**: Inside a `code.ContextManager` block, verbs are callable as Python methods — `widget.drop_succeeded_msg()` — useful for testing helpers without going through the command parser.
+  - **Lock testing**: Set `key = ["!", obj.id]` on a destination to block a specific object; `key = None` (the default) means unlocked.
 
 ## 8. Developer Quick Reference
 
@@ -490,11 +512,11 @@ docker compose run webapp manage.py moo_make_universal alice
 
 ### Directory Navigation
 
-* **Core Logic**: `moo/core/models/` and `moo/core/code.py`
-* **Game Logic**: `moo/bootstrap/`
-* **SSH/Interactive**: `moo/shell/`
-* **Testing**: `moo/core/tests/`
-* **Configuration**: `moo/settings/`
-* **Game Data**: `moo/bootstrap/`
-* **Django Admin**: `moo/core/admin.py`
-* **Documentation**: `docs/source/`
+- **Core Logic**: `moo/core/models/` and `moo/core/code.py`
+- **Game Logic**: `moo/bootstrap/`
+- **SSH/Interactive**: `moo/shell/`
+- **Testing**: `moo/core/tests/`
+- **Configuration**: `moo/settings/`
+- **Game Data**: `moo/bootstrap/`
+- **Django Admin**: `moo/core/admin.py`
+- **Documentation**: `docs/source/`

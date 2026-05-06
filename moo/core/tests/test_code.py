@@ -384,12 +384,10 @@ def test_get_restricted_environment_exact_keys():
         "__package__",
         "__doc__",
         "verb_name",
-        "player_verb",
     }
     assert set(env.keys()) == expected
     assert env["__name__"] == "test_verb"
     assert env["verb_name"] == "test_verb"
-    assert env["player_verb"] == "test_verb"
 
 
 def test_print_and_print_factory_both_present():
