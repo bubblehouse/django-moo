@@ -1,19 +1,19 @@
-#!moo verb desc global_in --on $zil_sdk
+#!moo verb desc global_in --on "Zork Root"
 # pylint: disable=return-outside-function,undefined-variable
 """
-Output helpers for Zork verbs.
+Output / scope helpers for Zork verbs.
 
-desc:      args[0] = object; returns display name string
-           (get_property("description") falling back to obj.title())
-global_in: args[0] = object, args[1] = location
-           Returns True if object is globally visible from location.
+desc:      no args; returns ``this.get_property("description")`` falling
+           back to ``this.name``.  Translated routines call as
+           ``obj.desc()``.
+global_in: args[0] = location; True if ``this`` appears in the location's
+           ``global_scenery`` list.  Called as ``obj.global_in(loc)``.
 """
 
 from moo.sdk import NoSuchPropertyError
 
 if verb_name == "global_in":
-    obj = args[0]
-    loc = args[1]
+    loc = args[0]
     try:
         scenery = loc.get_property("global_scenery")
     except NoSuchPropertyError:
@@ -21,9 +21,9 @@ if verb_name == "global_in":
     if not scenery:
         return False
     # Single query across the whole scenery list rather than N exists() calls.
-    return obj.aliases.filter(alias__in=scenery).exists()
+    return this.aliases.filter(alias__in=scenery).exists()
 else:
     try:
-        return args[0].get_property("description")
+        return this.get_property("description")
     except NoSuchPropertyError:
-        return args[0].name
+        return this.name

@@ -81,11 +81,17 @@ def test_cond_emits_if_else_chain():
 
 
 def test_verb_predicate_emits_membership_check():
-    """<VERB? TAKE> becomes a `player_verb in [...]` lookup (PRSA, not the
-    invoked verb_name) so synonyms still match when ACTION routines hand off
-    to V-routines."""
+    """<VERB? TAKE> becomes a ``the_player_verb in [...]`` membership check
+    with each ZIL synonym (take/get/pick) listed so any of them matches at
+    dispatch time.  ``the_player_verb`` is bound at the top of the routine
+    from ``context.parser.words[0]`` so it carries the player's typed verb
+    even when the routine is invoked as a sub-call from another verb (where
+    ``verb_name`` would be the callee's own name)."""
     out = _translate("<ROUTINE FOO () <COND (<VERB? TAKE> <RTRUE>)>>")
-    assert "player_verb" in out
+    assert "the_player_verb in [" in out
+    assert "'take'" in out
+    # Setup line should be present so the_player_verb resolves correctly.
+    assert "context.parser.words[0]" in out
 
 
 # ---------------------------------------------------------------------------
@@ -94,27 +100,27 @@ def test_verb_predicate_emits_membership_check():
 
 
 def test_fset_predicate_emits_flag_call():
-    """<FSET? ,OBJ ,FLAGBIT> becomes a _.zil_sdk.flag(...) call."""
+    """<FSET? ,OBJ ,FLAGBIT> becomes an obj.flag(...) call."""
     out = _translate("<ROUTINE FOO () <COND (<FSET? ,LANTERN ,LIGHTBIT> <RTRUE>)>>")
-    assert "_.zil_sdk.flag" in out
+    assert ".flag(" in out
 
 
 def test_move_emits_zil_sdk_move():
-    """<MOVE ,OBJ ,LOC> becomes _.zil_sdk.move(...)."""
+    """<MOVE ,OBJ ,LOC> becomes .moveto(...)."""
     out = _translate("<ROUTINE FOO () <MOVE ,LANTERN ,LIVING-ROOM>>")
-    assert "_.zil_sdk.move" in out
+    assert ".moveto" in out
 
 
 def test_remove_emits_zil_sdk_remove():
-    """<REMOVE ,OBJ> becomes _.zil_sdk.remove(...)."""
+    """<REMOVE ,OBJ> becomes _.remove(...)."""
     out = _translate("<ROUTINE FOO () <REMOVE ,LANTERN>>")
-    assert "_.zil_sdk.remove" in out
+    assert "_.remove" in out
 
 
 def test_jigs_up_emits_death_call():
-    """<JIGS-UP "msg"> becomes _.zil_sdk.jigs_up(...)."""
+    """<JIGS-UP "msg"> becomes _.jigs_up(...)."""
     out = _translate('<ROUTINE FOO () <JIGS-UP "You died.">>')
-    assert "_.zil_sdk.jigs_up" in out
+    assert "_.jigs_up" in out
 
 
 # ---------------------------------------------------------------------------
@@ -123,17 +129,17 @@ def test_jigs_up_emits_death_call():
 
 
 def test_move_passes_atom_args():
-    """<MOVE ,OBJ ,LOC> emits a _.zil_sdk.move call with both atoms."""
+    """<MOVE ,OBJ ,LOC> emits a .moveto call with both atoms."""
     out = _translate("<ROUTINE FOO () <MOVE ,LANTERN ,LIVING-ROOM>>")
-    assert "_.zil_sdk.move" in out
+    assert ".moveto" in out
     assert "LANTERN" in out
     assert "LIVING-ROOM" in out or "LIVING_ROOM" in out
 
 
 def test_getp_emits_getp_helper():
-    """<GETP ,OBJ P?DESC> routes through _.zil_sdk.getp() for safe property access."""
+    """<GETP ,OBJ P?DESC> routes through obj.getp() for safe property access."""
     out = _translate("<ROUTINE FOO () <GETP ,LANTERN P?DESC>>")
-    assert "zil_sdk.getp" in out
+    assert ".getp(" in out
 
 
 # ---------------------------------------------------------------------------
@@ -188,16 +194,16 @@ def test_unhandled_enable_form_emits_zil_comment_only():
 
 
 def test_enable_queue_emits_sdk_queue():
-    """<ENABLE <QUEUE routine delay>> compiles to _.zil_sdk.queue(...)."""
+    """<ENABLE <QUEUE routine delay>> compiles to _.queue(...)."""
     out = _translate("<ROUTINE FOO () <ENABLE <QUEUE I-LANTERN 100>>>")
-    assert "_.zil_sdk.queue('i-lantern', 100)" in out
+    assert "_.queue('i-lantern', 100)" in out
 
 
 def test_enable_int_emits_sdk_queue_with_zero_delay():
     """<ENABLE <INT routine>> re-enables a previously queued task; in
     SDK terms that's a queue() with delay=0."""
     out = _translate("<ROUTINE FOO () <ENABLE <INT I-CYCLOPS>>>")
-    assert "_.zil_sdk.queue('i-cyclops', 0)" in out
+    assert "_.queue('i-cyclops', 0)" in out
 
 
 def test_double_equal_predicate_translates_as_equality():
@@ -223,11 +229,17 @@ def test_translation_starts_with_moo_shebang():
 
 @pytest.mark.parametrize("name", ["FOO", "BAR-FN", "X-Y-Z"])
 def test_routine_name_appears_in_shebang(name):
-    """Routine names are lower-cased into the shebang verb name."""
+    """Routine names are snake-cased into the shebang verb name (D-mild).
+
+    Hyphens become underscores so callers can reach the verb via
+    dot-syntax (``_.zork_thing.bar_fn()``) instead of always going
+    through ``invoke_verb``.  Player-typed verb names in action-handler
+    routines still keep their hyphens — that case is handled by the
+    multi-verb shebang branch in ``_shebang()`` and isn't exercised here.
+    """
     out = _translate(f'<ROUTINE {name} () <TELL "x" CR>>')
-    # The shebang preserves dashes (DjangoMOO verb names accept them); only
-    # the `--on $foo` target file name uses snake_case.
-    assert name.lower() in out.splitlines()[0]
+    expected = name.lower().replace("-", "_")
+    assert expected in out.splitlines()[0]
 
 
 # ---------------------------------------------------------------------------

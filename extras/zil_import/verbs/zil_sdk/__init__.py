@@ -1,8 +1,9 @@
 """
-ZIL SDK — component verbs loaded onto the $zil_sdk object.
+ZIL SDK — component verbs implementing generic ZIL intrinsics.
 
-These verbs implement generic ZIL intrinsics called by translated verb code
-via ``_.zil_sdk.FUNCTION(args)``.  They are not imported as a Python module;
-they are loaded by ``load_verbs`` and dispatched through the normal DjangoMOO
-verb-execution path.
+These verbs are loaded by ``load_verbs`` and dispatched through the normal
+DjangoMOO verb-execution path.  Most are attached to the System Object so
+translated routines call them as ``_.flag(...)``, ``_.queue(...)``, etc.
+``zstate_get`` / ``zstate_set`` live on ``$player`` (per-player state) and
+``move`` lives on ``$root_class`` (any object can move another).
 """

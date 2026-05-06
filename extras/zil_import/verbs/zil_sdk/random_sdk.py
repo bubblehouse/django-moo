@@ -1,4 +1,4 @@
-#!moo verb pick --on $zil_sdk
+#!moo verb pick --on "System Object"
 # pylint: disable=return-outside-function,undefined-variable
 """
 Pick a random element from a ZIL table.
@@ -6,7 +6,7 @@ Pick a random element from a ZIL table.
 args[0] = either:
     - a table list (the value of a ZIL global, e.g. ``zstate_get("YUKS")``), or
     - a table name in UPPER-KEBAB-CASE (e.g. "HERO-MELEE"), looked up on
-      ``this`` ($zil_sdk) as ``zstate_<lower_snake>``.
+      ``this`` (the System Object) as ``zstate_<lower_snake>``.
 
 ZIL tables typically have a leading length-marker (0) or "PURE" sentinel;
 those are skipped so callers do not see them as a return value.

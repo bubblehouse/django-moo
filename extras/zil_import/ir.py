@@ -47,6 +47,7 @@ class ZilObject:
     size: int = 5
     value: int = 0
     tvalue: int = 0  # treasure value toward score
+    vtype: str | None = None  # vehicle-type atom (e.g. NONLANDBIT for boats)
 
 
 @dataclass
@@ -113,6 +114,10 @@ FLAG_PROPERTIES: dict[str, tuple[str, object]] = {
     "READBIT": ("readable", True),
     "DRINKBIT": ("drinkable", True),
     "FOODBIT": ("edible", True),
+    # ``obvious`` is intrinsic on Object (model field, not Property).  The
+    # SDK ``flag`` / ``set_flag`` helpers special-case this name and route
+    # to the field; 030_objects.py also writes the field directly during
+    # bootstrap and skips the Property-style flag for it.
     "NDESCBIT": ("obvious", False),
     "TRANSBIT": ("transparent", True),
     "WEAPONBIT": ("weapon", True),
@@ -149,6 +154,14 @@ ROOM_FLAG_PROPERTIES: dict[str, tuple[str, object]] = {
     "RLANDBIT": ("outdoor", True),
     "SACREDBIT": ("sacred", True),
     "MAZEBIT": ("maze", True),
+    # Vehicle-type flags.  ``GOTO`` checks ``flag(rm, av)`` where ``av``
+    # is the vehicle's ``vtype`` atom (e.g. ``NONLANDBIT``).  Match the
+    # boat's ``(VTYPE NONLANDBIT)`` against rooms tagged with the same
+    # flag — water rooms get ``nonlandbit=True`` so ``flag(reservoir,
+    # "NONLANDBIT")`` returns truthy.
+    "NONLANDBIT": ("nonlandbit", True),
+    "RWATERBIT": ("nonlandbit", True),
+    "RAIRBIT": ("nonlandbit", True),
 }
 
 # ZIL verb atom → zork1 command verb aliases

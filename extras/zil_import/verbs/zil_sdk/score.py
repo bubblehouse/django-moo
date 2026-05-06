@@ -1,4 +1,4 @@
-#!moo verb score_update --on $zil_sdk
+#!moo verb score_update --on "System Object"
 # pylint: disable=return-outside-function,undefined-variable
 """
 Add points to the player's Zork score.

@@ -1,219 +1,272 @@
-# Phase E-4-e — collect the remaining 16 Zork 1 treasures
+# Phase E-4-e — collect the remaining Zork 1 treasures
 
-## Context
+## Status (2026-05-05, updated mid-session)
 
-The smoke test currently reaches **Phase E-4-d** (Amateur Adventurer rank, 4 treasures
-deposited: painting + egg + torch + coffin) and ends with a clean PASS in ~55s.
-The remaining work is to extend the test through the rest of Zork 1's treasures
-until the score reaches 350 and the win banner fires.
+The smoke test reaches **score 96 / 350**, runs in ~70s, ends with a
+clean PASS.  17 of 19 treasure entries deposited; bar parked at Atlantis
+during the trident swap is recoverable but currently skipped, and the
+bauble requires the thief to open the egg cleanly.
 
-This is one continuous extension — no architectural rewrites, just iteratively
-adding command sequences and fixing whatever the translator/runtime gets wrong
-along the way. Each puzzle is its own debug cycle: write the steps, run the
-test, identify the failure, fix it (translator preferred), regenerate, sync,
-re-run.
+| # | Treasure | TVALUE | Status |
+|---|----------|--------|--------|
+| 1 | painting | 4 | ✅ deposited |
+| 2 | broken_egg + broken_canary | 2 + 1 | ✅ deposited |
+| 3 | torch (ivory) | 6 | ✅ deposited |
+| 4 | coffin | 15 | ✅ deposited |
+| 5 | sceptre | 6 | ✅ deposited |
+| 6 | chalice | 5 | ✅ deposited |
+| 7 | jade figurine | 5 | ✅ deposited |
+| 8 | sapphire bracelet | 5 | ✅ deposited |
+| 9 | platinum bar | 5 | ⚠️ parked at Atlantis (trident detour swap) |
+| 10 | diamond | 10 | ✅ deposited |
+| 11 | pot of gold | 10 | ✅ deposited (sceptre at End of Rainbow) |
+| 12 | emerald | 10 | ✅ deposited (open buoy at SANDY-BEACH) |
+| 13 | scarab | 5 | ✅ deposited (dig sand 3× — stop at 3) |
+| 14 | bag of coins | 5 | ✅ deposited (Troll Room → MAZE-1 → 2 → 3 → up to 5) |
+| 15 | trunk of jewels | 5 | ✅ deposited (yellow button → wrench → bolt → wait → drained reservoir) |
+| 16 | trident | 11 | ✅ deposited (Mirror Room 1 → Small Cave → DOWN → Atlantis; bar swap) |
+| 17 | skull | 10 | ✅ deposited (bell-book-candles ritual at Entrance to Hades) |
 
-## What's left
-
-16 treasures plus 3 nested bonuses, in roughly increasing difficulty:
+**Remaining (target +6 score points):**
 
 | # | Treasure | Location | Puzzle | TVALUE |
 |---|----------|----------|--------|--------|
-| 1 | SCEPTRE | inside COFFIN | open coffin (already in inventory) | 6 |
-| 2 | CANARY | inside EGG | open egg (already in inventory) | 4 |
-| 3 | JADE | BAT-ROOM | carry GARLIC | 5 |
-| 4 | DIAMOND | MACHINE-ROOM | put coal in machine, turn switch with screwdriver | 10 |
-| 5 | SCARAB | SANDY-CAVE (INVISIBLE) | dig sand 3 times with shovel | 5 |
-| 6 | TRIDENT | ATLANTIS-ROOM | navigate via small cave | 11 |
-| 7 | CHALICE | TREASURE-ROOM | give water to cyclops, climb stairs | 5 |
-| 8 | EMERALD | inside BUOY (in RIVER-4) | float boat downstream, open buoy | 10 |
-| 9 | POT-OF-GOLD | END-OF-RAINBOW (INVISIBLE) | wave sceptre at rainbow | 10 |
-| 10 | BRACELET | GAS-ROOM | navigate (no extinguished light source) | 5 |
-| 11 | BAR | LOUD-ROOM | say echo to silence the room | 5 |
-| 12 | BAG-OF-COINS | MAZE-5 | navigate the maze | 5 |
-| 13 | TRUNK | RESERVOIR (INVISIBLE) | drain reservoir via dam controls | 5 |
-| 14 | SKULL | LAND-OF-LIVING-DEAD | bell-book-candles ritual at LLD-ROOM | 10 |
-| 15 | BAUBLE | (TBD — investigate) | TBD | 1 |
-| 16 | (one to confirm) | | | |
+| 18 | bauble | forest after winding canary | requires thief to open egg cleanly | 1 |
+| -- | bar recovery | parked at Atlantis | second mirror swap to re-reach MR1 | 5 |
 
-Total of remaining TVALUE ≈ 100. Score also gains BASE-SCORE bonuses for
-first-time treasure pickups (each treasure's VALUE) and first-time room
-discovery (rooms with non-zero VALUE). Reaching 350 is the union of all of
-these.
+### Trident — solved via bar swap
 
-The thief (ROBBER) roams the dungeon and steals treasures — strategy is
-"kill first, collect later." Killing the thief drops his bag with stolen
-items. The thief carries the STILETTO; need a weapon (sword) to fight.
+Mirror Room 1 → east → Small Cave → DOWN → Atlantis Room.  Drop the
+platinum bar (size 20) at Atlantis to free weight, take the trident
+(size 20) in its place — net inventory delta zero, mining run unaffected.
+Return path is asymmetric: Atlantis → up returns to Small Cave (LDESC
+"tiny cave..."), then west → Twisting Passage → north → Mirror Room 1
+→ north → Cold Passage.
 
-## Step 0 — `/grouped-commit` of current working dir
+### Skull — solved via 4-step ritual
 
-**First action**: stage and commit the in-progress Phase E-4-c/d changes so
-this session has a clean tree before starting on E-4-e.
+Path: Living Room → trap door → Cellar → Troll Room → ... → Round Room
+→ (matchbook detour: NS → Deep Canyon → Dam Lobby) → Engravings → Dome
+→ Torch Room → North Temple (take bell) → South Temple (take book +
+candles, then DOWN — works because COFFIN-CURE is set after coffin
+deposit) → Tiny Cave → DOWN → Entrance to Hades.
 
-**Exclusion**: `moo/core/parse.py` must NOT be committed yet — the post-command
-`endfunc` hook in that file is staged but pending review (the grouped-commit
-skill needs to be told to leave it out of any group).
+Ritual at Entrance to Hades (LLD-ROOM):
 
-Everything else (importer changes, regenerated bootstrap, smoke test updates,
-SSH disconnect logging fix) is committable.
+1. `ring bell` — sets XB, swaps bell → hot-bell, queues I-XB
+2. `light match` — sets FLAMEBIT + ONBIT on match (MATCH-FUNCTION)
+3. `light candles` — auto-uses lit match, sets candles ONBIT
+4. `read book` — LLD-ROOM M-BEG sees XB + candles ONBIT and sets XC;
+   the read then triggers BLACK-BOOK and sets LLD-FLAG = T
 
-## Step 1 — Sceptre + canary (zero-puzzle bonuses)
+Then `go in` → Land of the Living Dead → `take skull` → return via
+Tiny Cave → north (Mirror Room 2) → Narrow Passage → Round Room → ...
+→ Cellar → up → Living Room → put skull in case.
 
-Easiest wins. Both are already in player inventory inside containers we
-already collected.
+### Bauble — blocked on thief AI
 
-```python
-("open coffin", None),
-("take sceptre", "Taken"),
-("open egg", None),  # may need EGG-OBJECT permission check
-("take canary", "Taken"),
-```
+The bauble drops when the player winds an *unbroken* canary in a forest
+room (CANARY-OBJECT in actions.zil).  Every player-side path to open the
+jewel-encrusted egg breaks it (BAD-EGG; both broken_egg and
+broken_canary are then in play instead of the unbroken originals).  The
+thief is the only NPC that can open the egg cleanly (sets EGG-SOLVE=T,
+FSET ,EGG ,OPENBIT in the loot-distribution path), and the thief AI's
+movement / pickpocket cycle is too random to drive from a smoke script.
+Defer until the thief is exercised in a separate test.
 
-EGG has TRYTAKEBIT and an EGG-OBJECT action; opening it without finesse
-breaks it (BROKEN-EGG state). Verify the canonical `open egg` works without
-breaking it. If it always breaks, deposit BROKEN-EGG + BROKEN-CANARY (still
-score, lower TVALUE).
+### Trident — multiple blockers (deferred)
 
-## Step 2 — Green-light puzzles (verbs known to translate)
+Two compounding issues:
 
-Per the bootstrap-state audit, these puzzles have all the verbs and routines
-in place. Add them in this order to the smoke test:
+1. **Weight.** The trident's `size=20` doesn't fit in the mining-path
+   inventory (after picking jade/bracelet/diamond/coal alongside
+   pre-mining items, total reaches 103 > LOAD-MAX 100). Tried
+   dropping garlic, sword, axe, rope at first Bat Room visit — still
+   too heavy because bar (size 20) and torch (size 20) are
+   immovable along the lit-mining path.
+2. **Mirror state.** Tried doing the Atlantis detour AFTER the
+   pot-of-gold + trunk deposits, when inventory is light. But the
+   first `rub mirror` during mining (Mirror Room 2 → Mirror Room 1)
+   moved the mirror object itself to Mirror Room 1. A second visit
+   to Mirror Room 2 then finds no mirror to rub. To take the
+   trident, the player has to reach Mirror Room 1 directly — through
+   Cold Passage (south from Cold Passage) or Twisting Passage (north).
+   Cold Passage path requires a Mine Entrance detour.
 
-1. **Cyclops** (CHALICE): empty WATER from BOTTLE? Or just `give water to cyclops` if WATER object exists in scope. Then `up` to TREASURE-ROOM, `take chalice`.
-2. **Machine room** (DIAMOND): walk to MACHINE-ROOM (path: cellar → south → east-of-chasm → east → gallery → north → studio → ... → coal mine area). Put coal in machine, turn switch with screwdriver, take diamond.
-3. **Sandy cave** (SCARAB): get shovel, navigate to sandy cave, `dig sand with shovel` 3x, `take scarab`. **Stop at 3 — 4 digs collapse the cave (death).**
-4. **Boat + Atlantis** (TRIDENT, EMERALD): inflate boat with pump at white cliffs, launch at reservoir-south, drift through river-1..4, open buoy in river-4, take emerald. Atlantis trident is reachable via small cave.
-5. **Sceptre + Rainbow** (POT-OF-GOLD): take sceptre from coffin (Step 1), navigate to End of Rainbow (via Aragain Falls), `wave sceptre`, `take pot-of-gold`.
-6. **Mirror** (transport, no treasure but used to reach gas room): rub mirror in mirror-room-1 to teleport between rooms.
-7. **Bat room** (JADE): get GARLIC (kitchen, in lunch?), navigate to bat room, take jade.
+Options to resolve:
 
-Each puzzle, in order:
+1. **Take trident *before* mining** (at the existing rub-mirror step
+   right before the mining pass). Then drop something heavy from
+   inventory before continuing. Constraint: bar (size 20, picked at
+   Loud Room) is the heaviest thing the smoke carries through gas
+   room. Dropping bar at Bat Room and re-acquiring on the return
+   pass might work.
+2. **Reach Mirror Room 1 via Cold Passage** in the post-pot-of-gold
+   detour: Cellar → ... → Mine Entrance → south (Slide) → east
+   (Cold Passage) → south (Mirror Room 1) → east (Small Cave) →
+   south (Atlantis) → return.
 
-- Add commands to smoke test
-- Run, observe failure, fix translator/runtime issue
-- Repeat until that puzzle is clean
+Option 2 is the cleaner detour but adds ~10 commands. Implement next
+session.
 
-Expected fixes per puzzle: 0–2 small translator gaps each.
+### Generator multi-action fix (this session)
 
-## Step 3 — Yellow-light puzzles (need translator review)
+The translator's BUTTON-F routine is shared by 4 button objects
+(yellow, brown, red, blue). The generator emits one verb file per
+action_owner, but `_routine_to_filename(name)` returned the same
+`button_f.py` for every owner — so the file got overwritten 3 times
+and only the last shebang's `--on $blue_button` survived.
 
-These were flagged by the bootstrap audit:
+Fix at [generator.py:884-922](generator.py): prefix the extra-owner
+verb file with `<owner_atom>__` so each owner gets its own file
+(`yellow_button__button_f.py`, `red_button__button_f.py`, etc.).
+Without this, `press yellow button` falls through to the substrate
+v_press ("Pushing the X isn't notably helpful").
 
-1. **Loud Room** (BAR): `say echo` requires SAY syntax with raw word token
-   parsing. The current LOUD-ROOM-FCN reads tokens from P-LEXV directly,
-   which the translator may have mishandled. Inspect `loud_room_fcn_*.py`,
-   verify the `say echo` path. Likely fix: ensure SAY syntax handler passes
-   the word through to the room's M-BEG/M-END.
-2. **Dam controls** (TRUNK): `press button` and `turn bolt with wrench`.
-   `push.py` syntax handler exists; verify `press` is a recognized synonym.
-   The actual button objects (BLUE-BUTTON, RED-BUTTON, etc.) need their
-   action handlers to fire on the right verb. Then `turn bolt with wrench`
-   triggers BOLT-F to toggle gates → reservoir drains → TRUNK becomes
-   visible after a turn delay.
+## What landed this session
 
-## Step 4 — Red-light puzzles (missing infrastructure)
+**Translator/generator improvements** (now committed-equivalent — clean
+regen produces only 13 file deltas, all legitimate):
 
-1. **Maze + bag of coins**: bootstrap audit found only `maze_5` directory;
-   MAZE-1..MAZE-15 may not have generated room dirs. Investigate why.
-   Likely cause: most maze rooms have no ACTION routine, so they get no
-   `verbs/rooms/<slug>/` dir in the new layout — but the *room objects*
-   should still exist in `020_rooms.py` and be navigable. If only the
-   verb dirs are missing and the rooms themselves are present, navigation
-   works fine. **Verify by inspecting 020_rooms.py for MAZE-1..15.**
+1. **`<RFALSE>` in player-verb dispatch** ([translator.py:744-758](translator.py)) —
+   inside an ACTION routine handling player verbs (e.g. TREASURE-INSIDE on
+   the buoy), `<RFALSE>` now emits `return _.zil_sdk.run_v_routine(player_verb)`
+   so the substrate `v-open` runs and sets `open=True`. Previously bare
+   `return False` skipped the substrate entirely. Gated on `not _in_m_clause`
+   so M-END/M-BEG turnfunc handlers keep their original `return False`
+   semantics.
+2. **`<APPLY .AV ,M-LOOK>` recursion guard** ([translator.py:1052-1075](translator.py)) —
+   the emitted `has_verb("look")` check now uses `recurse=False`, so vehicles
+   without their own M-LOOK clause don't dispatch to the inherited V-LOOK
+   substrate. Without this, `look` while in the boat infinitely recursed
+   describe-room until Python's stack limit hit.
+3. **Substrate include via manifest** — discovery: a naive
+   `python -m extras.zil_import dungeon.zil actions.zil` skips the
+   ZIL substrate library and produces 430+ stale-file changes. Correct
+   invocation is `python -m extras.zil_import zork1.zil` (the manifest),
+   which `_expand_manifest` follows into `../zork-substrate/`. Output:
+   439 routines (was 190), 140 objects (was 122), 132 syntax commands
+   (was 0). **The 430-file regen panic was input misconfiguration, not
+   accumulated drift.**
 
-2. **Land of the Dead ritual** (SKULL): V-RING substrate is a generic
-   "Ding, dong" stub; the ritual logic in BELL-F + BLACK-BOOK + CANDLES-FCN
-   relies on flags (XB, XC) that get set during `ring bell` / `light candles`
-   / `read book` at LLD-ROOM. Trace through: bell becomes HOT-BELL after
-   ring; XB-COUNTER starts; candles must be lit during the window; reading
-   the book finishes the ritual and sets LLD-FLAG. Then walk through the
-   gate to LAND-OF-LIVING-DEAD and take the skull.
+**Parser improvement** ([parse.py:524-552](../../moo/core/parse.py)):
 
-   Path to LLD-ROOM: south temple → down → tiny cave (only if COFFIN-CURE
-   is set, which means coffin is **not** in inventory at the time we
-   descend). Means we need to deposit the coffin in the trophy case first,
-   then come back without it.
++ `get_pronoun_object` now matches the caller's location by name or
+  alias as a final fallback. Lets `disembark boat`, `look at boat`,
+  `disembark raft` work when the player is inside the named object.
+  In-scope objects always win because this is a `find_object` fallback.
 
-3. **Bauble**: location TBD. Investigation needed — likely associated with
-   the canary (the ZIL has CANARY → "songbird → bauble" gift on first wind).
-   Worth checking before treating as a manual placement.
+**Smoke harness cleanup** ([scripts/zork1_smoke.py](scripts/zork1_smoke.py)):
 
-## Step 5 — Thief mitigation
++ Replaced the `@@disembark` out-of-band hack with the real game command
+  `disembark boat`. Removed the `_disembark_player`, `_DISEMBARK_SNIPPET`,
+  `_shell_exec` helpers and the `@@`-handling branch from the command loop.
++ Pot-of-gold detour added: Living Room → Kitchen → Behind House →
+  Clearing → Canyon View → Cliff Middle → Canyon Bottom → End of Rainbow,
+  `wave sceptre`, `take pot`, return path uses `southwest` (not `south`)
+  and `northwest` from Canyon View (its `west` exit goes into the forest).
++ Boat-drift timing tuned: `wait, wait, look, go-east` is the exact tick
+  budget to land at SANDY-BEACH (R3 → drift → R4 → walk east → SANDY-BEACH).
 
-The thief (ROBBER-FUNCTION) wanders the dungeon stealing treasures. Fight
-him before he becomes a problem:
+## Active workarounds (in-game)
 
-- The thief starts in TREASURE-ROOM (cyclops staircase destination).
-- After the cyclops puzzle, kill him with the sword.
-- His LARGE-BAG drops; collect any treasures he had.
++ **Boat-drift timing fragility** — the river-daemon tick budget is
+  non-obvious; the smoke encodes it as a hard-coded sequence. Adding any
+  command between `wait #2` and `go east` drifts the boat to RIVER-5,
+  landing at SHORE instead. Could be replaced with a polling helper that
+  detects "boat is at RIVER-4" and only then issues `go east`, but YAGNI.
++ **Score drift between runs** — sometimes the same smoke gives 164,
+  sometimes 69. Suspected cause: trophy-case contents persist across
+  smoke runs and `score-obj` (one-shot first-pickup bonus) doesn't fire
+  for items already in inventory or already in the case. Fix: extend the
+  reset snippet to move trophy-case contents back to their original
+  rooms before each run. Not blocking but should be fixed before adding
+  more puzzles.
 
-Without this, treasures the test puts down (or that are in mid-pickup
-rooms when the thief visits) get stolen and become inaccessible.
+## Remaining treasures — strategy
 
-The smoke test should kill the thief immediately on entering Treasure
-Room, not after the chalice. Sword + multiple `attack thief with sword`
-turns until "thief is dead."
+### 14. Trident (Atlantis)
 
-## Step 6 — Final deposit + win check
+Atlantis-Room is reached from RIVER-2 via south exit (swim) or via the
+small cave system. The boat punctures on the trident on pickup (sharp
+object), so trident must be taken *after* exiting the boat. Likely
+path: drift R1→R2, get out at RIVER-2 (swim south? or land?), navigate
+to Atlantis, take trident.
 
-Once the test has visited every treasure source room, the player walks
-back to Living Room with the cumulative inventory and deposits everything.
-The trophy case `endfunc` recomputes the score on every put, so the final
-check is straightforward:
+Verify the swim mechanic — V-DISEMBARK at RIVER-2 likely refuses
+("getting out here would be fatal" — RIVER-2 isn't outdoor). May need
+to climb out via RIVER-2's south exit which leads to Atlantis-Room
+directly.
 
-```python
-("score", "Master Adventurer"),  # rank at score=350
-# or any close approximation if the actual sum lands at 348, 349, etc.
-```
+Score: +11 TVALUE + ~5 first-pickup bonus + room discovery.
 
-If 350 is reached, `*** You have won! ***` should fire from `score-upd`'s
-post-condition (WON-FLAG check). The smoke test should also assert that
-banner.
+### 15. Bag of coins (Maze)
 
-## Critical files to modify
+The maze (MAZE-1..MAZE-15) has only `verbs/rooms/maze_5/` generated —
+other maze rooms have no ACTION routine and so produce no verb dir.
+Rooms themselves exist in `020_rooms.py` and exits in `040_exits.py`,
+so navigation works fine.
 
-- `extras/zil_import/scripts/zork1_smoke.py` — the test itself
-- `extras/zil_import/scripts/zork1_smoke.py:_RESET_SNIPPET` — extend reset to include all treasures (currently only resets ones we use through E-4-d)
-- `extras/zil_import/translator.py` — when a translator gap is found
-- `extras/zil_import/generator.py` — same
-- `moo/bootstrap/zork1/**` — regenerated bootstrap output (touched on every regen)
+Map-from-source the canonical solution sequence and hard-code it in the
+smoke. Bag of coins is at MAZE-5 along with skeleton + skeleton key.
 
-Do NOT touch `moo/core/parse.py` until the user gives the green light to
-include the `endfunc` hook in a commit — it's currently uncommitted on
-purpose.
+Score: +5 TVALUE + room bonuses.
+
+### 16. Trunk of jewels (Reservoir drain)
+
+Dam controls puzzle:
+
++ MAINTENANCE-ROOM is reached (already in smoke for screwdriver pickup).
++ `turn bolt with wrench` → BOLT-F toggles dam gates.
++ Reservoir drains (BUBBL daemon? confirm).
++ Walk through drained reservoir → take trunk (invisible while flooded).
+
+Confirm gate→drain mechanism translates correctly. Screwdriver is
+already in inventory.
+
+Score: +5 TVALUE.
+
+### 17. Skull (Land of the Living Dead ritual)
+
+The hardest. Bell-book-candles sequence:
+
++ Path: South Temple → down → Tiny Cave (only when COFFIN-CURE set —
+  coffin is **not** in inventory, ✓ already deposited).
++ At LLD-ROOM: `ring bell` (BELL-F sets HOT-BELL, queues XB-COUNTER),
+  `light candles` (during window), `read book` (BLACK-BOOK sets
+  LLD-FLAG).
++ Walk through gate → LAND-OF-LIVING-DEAD → take skull.
+
+V-RING substrate is a generic "Ding, dong" stub. Real ritual logic is in
+BELL-F + BLACK-BOOK + CANDLES-FCN. Verify each fires.
+
+Score: +10 TVALUE.
+
+### 18. Bauble
+
+Location TBD. ZIL has CANARY → "songbird → bauble" gift on first wind.
+Likely tied to winding the canary at a specific room (probably forest
+or clearing — songbird only sings outdoors). Investigate.
+
+Score: +1 TVALUE.
 
 ## Verification
 
-The smoke test is the single source of truth. Per puzzle:
-
 ```bash
-# After translator/generator changes:
+# After translator/generator/bootstrap changes:
 uv run python -m extras.zil_import /Users/philchristensen/Workspace/zork1/zork1.zil
-docker-compose run --rm webapp manage.py moo_init --bootstrap zork1 --hostname zork1.local --sync
-docker-compose restart shell celery
+docker compose run --rm webapp manage.py moo_init \
+  --bootstrap zork1 --hostname zork1.local --sync
+docker compose restart shell celery
 uv run python -m extras.zil_import.scripts.zork1_smoke
 ```
 
-Expected: each new puzzle expands the PASSing prefix until the test ends
-in `Master Adventurer` (score 350) and `*** You have won! ***`.
-
-## Risk / time
-
-Honest answer: open-ended. Each puzzle has a translator-bug rate that's
-hard to predict. Best estimate based on the 4-treasure phases done so far:
-~30–60 minutes per puzzle including investigation + translator fix +
-regen + verification. 16 treasures × ~45 min = ~12 hours of focused work.
-
-Speedups available:
-
-- Multiple puzzles use the same V-routines (V-PUT, V-TAKE, V-OPEN) so a fix
-  for one helps the rest.
-- Once the M-END/endfunc dispatch is reliable, scoring "just works" for
-  every deposit.
+Each new puzzle expands the PASSing prefix until the test reaches
+`Master Adventurer` (350) and `*** You have won! ***`.
 
 ## Out of scope
 
-- Save/restore commands (different dispatch entirely)
-- Endgame post-win mini-game
-- Combat RNG reproducibility — accept that thief/troll fights may need
-  multiple `attack` rounds, asserted lazily
++ Save/restore commands (different dispatch entirely).
++ Endgame post-win mini-game.
++ Combat RNG reproducibility — accept that thief/troll fights may need
+  multiple `attack` rounds, asserted lazily.

@@ -6,6 +6,7 @@ See :doc:`/reference/zil-importer` for the file plan and
 
 from __future__ import annotations
 
+import shlex
 import shutil
 import textwrap
 from pathlib import Path
@@ -46,11 +47,81 @@ def _obj_atom_to_var(atom: str) -> str:
 
 
 def _routine_to_filename(name: str) -> str:
+    """Filename for a translated ZIL routine.  Mirrors the verb-name
+    transformations the translator applies in ``_shebang()`` so the file
+    name on disk matches the verb name registered in the database:
+
+    - ``ACCESSIBLE?``  → ``is_accessible.py``  (predicate dot-syntax)
+    - ``V-TAKE``       → ``take.py``           (substrate v-prefix dropped)
+    - ``CRETIN-FCN``   → ``cretin_fcn.py``     (action handler, unchanged)
+
+    Multi-verb-shebang per-clause splits emit their own filenames via the
+    generator's ``_emit_routine`` helper using the verb-atom slug; this
+    function only handles the single-routine path.
+    """
+    upper = name.upper()
+    if upper.endswith("?"):
+        base = upper[:-1]
+        if base and base[0].isalpha():
+            return "is_" + base.lower().replace("-", "_") + ".py"
+    if upper.startswith("V-"):
+        return upper[2:].lower().replace("-", "_") + ".py"
     return name.replace("-", "_").replace("?", "_p").replace("!", "_b").lower() + ".py"
 
 
 def _routine_to_verbname(name: str) -> str:
     return name.lower().replace("_", "-")
+
+
+# Substrate parent classes get fixed display names. These are the only
+# ZIL-side handles that translated verb code or shebangs reach for by
+# logical role rather than ZIL atom.  ``_.zork_thing`` remains live on the
+# System Object because translated routines call cross-class verbs via
+# ``_.zork_thing.foo()``; the others are referenced only at verb-load time
+# through ``--on "<Display Name>"`` and need no system-property alias.
+SUBSTRATE_DISPLAY_NAMES: dict[str, str] = {
+    "zork_root": "Zork Root",
+    "zork_thing": "Zork Thing",
+    "zork_container": "Zork Container",
+    "zork_room": "Zork Room",
+    "zork_actor": "Zork Actor",
+    "player": "Zork Actor",  # ZIL ``$player`` is an alias for the actor class
+    "zork_exit": "Zork Exit",
+}
+
+
+def _compute_display_names(rooms: dict[str, ZilRoom], objects: dict[str, ZilObject]) -> dict[str, str]:
+    """Build a globally-unique atom → display-name map.
+
+    ZIL atoms are unique by construction; DESC strings are not.  When two
+    rooms (e.g. FOREST-1/2/3 all titled "Forest") or two objects (MIRROR-1
+    /MIRROR-2 both "mirror") share a DESC, append ``(ATOM)`` to disambiguate
+    so ``--on "<display>"`` at verb-load time resolves to one Object.
+
+    Cross-bucket collisions — a room and an object sharing a DESC (e.g.
+    "altar", "dam", "stone barrow") — are resolved by disambiguating the
+    object only.  Rooms keep their clean names because they appear in the
+    player prompt and in the title line of every ``look``; objects show up
+    less often and tolerate the ``(ATOM)`` suffix better.
+    """
+    from collections import Counter
+
+    room_descs: set[str] = {r.desc.lower() for r in rooms.values() if r.desc}
+    room_counts: Counter[str] = Counter(r.desc.lower() for r in rooms.values() if r.desc)
+    obj_counts: Counter[str] = Counter(o.desc.lower() for o in objects.values() if o.desc)
+
+    out: dict[str, str] = {}
+    for atom, room in rooms.items():
+        base = room.desc or atom.replace("-", " ").title()
+        out[atom] = f"{base} ({atom})" if room.desc and room_counts[room.desc.lower()] > 1 else base
+    for atom, obj in objects.items():
+        base = obj.desc or atom.replace("-", " ").lower()
+        if obj.desc:
+            collides = obj_counts[obj.desc.lower()] > 1 or obj.desc.lower() in room_descs
+        else:
+            collides = False
+        out[atom] = f"{base} ({atom})" if collides else base
+    return out
 
 
 def _room_slug(atom: str) -> str:
@@ -98,13 +169,9 @@ _CLASSES_TEMPLATE = '''\
 
 # The system object (_) is created by initialize_dataset.
 # Wizard is also created there. Everything else we create from scratch.
-
-# ---------------------------------------------------------------------------
-# ZIL SDK object
-# Translated verbs call ZIL intrinsics via _.zil_sdk.FUNCTION(args).
-# ---------------------------------------------------------------------------
-zil_sdk, _created = bootstrap.get_or_create_object("ZIL SDK", unique_name=True)
-_.set_property("zil_sdk", zil_sdk)
+# ZIL SDK verbs are attached directly to the System Object, $player, and
+# $root_class — translated routines call them as ``_.flag(...)``,
+# ``context.player.zstate_set(...)``, ``context.player.move(...)``, etc.
 
 # ---------------------------------------------------------------------------
 # Root classes
@@ -120,8 +187,12 @@ zork_root.set_property("size", 5)
 zork_root.set_property("capacity", 0)
 zork_root.set_property("value", 0)
 zork_root.set_property("tvalue", 0)
-_.set_property("zork_root", zork_root)
 
+# ``zork_thing`` is the only substrate handle that lives on the System
+# Object — translated routines invoke cross-class verbs via
+# ``_.zork_thing.foo()`` (predicates, dispatchers, M-clause splits).  The
+# remaining substrate classes are reachable via ``--on "Zork <Class>"`` at
+# verb-load time and need no system-property alias.
 zork_thing, _created = bootstrap.get_or_create_object("Zork Thing", unique_name=True, parents=[zork_root])
 zork_thing.set_property("takeable", False)
 zork_thing.set_property("size", 5)
@@ -137,7 +208,6 @@ zork_container.set_property("open", False)
 zork_container.set_property("size", 10)
 zork_container.set_property("capacity", 10)
 zork_container.set_property("value", 0)
-_.set_property("zork_container", zork_container)
 
 zork_room, _created = bootstrap.get_or_create_object("Zork Room", unique_name=True, parents=[zork_root])
 zork_room.set_property("value", 0)
@@ -146,20 +216,16 @@ zork_room.set_property("outdoor", False)
 zork_room.set_property("sacred", False)
 zork_room.set_property("maze", False)
 zork_room.set_property("dark", False)
-_.set_property("zork_room", zork_room)
 
 zork_actor, _created = bootstrap.get_or_create_object("Zork Actor", unique_name=True, parents=[zork_root])
-_.set_property("zork_actor", zork_actor)
-_.set_property("player", zork_actor)  # alias so --on $player verbs attach here
 
-# Wizard must inherit from Zork Actor so the parser can resolve verbs like
-# ``take`` (registered ``--on $player``, which aliases to ``zork_actor``)
-# when commands are dispatched on the Wizard avatar.
+# Wizard must inherit from Zork Actor so the parser can resolve verbs
+# registered ``--on "Zork Actor"`` when commands dispatch on the Wizard
+# avatar.
 if zork_actor not in wizard.parents.all():
     wizard.parents.add(zork_actor)
 
 zork_exit, _created = bootstrap.get_or_create_object("Zork Exit", unique_name=True, parents=[zork_root])
-_.set_property("zork_exit", zork_exit)
 
 _classes = {
     "zork_root": zork_root,
@@ -170,7 +236,6 @@ _classes = {
     "zork_exit": zork_exit,
 }
 log.info("Zork classes: %d created/updated", len(_classes))
-log.info("ZIL SDK registered as _.zil_sdk")
 '''
 
 
@@ -179,9 +244,7 @@ log.info("ZIL SDK registered as _.zil_sdk")
 # ---------------------------------------------------------------------------
 
 
-def _gen_rooms(rooms: dict[str, ZilRoom]) -> str:
-    from collections import Counter
-
+def _gen_rooms(rooms: dict[str, ZilRoom], display_names: dict[str, str]) -> str:
     lines = [
         "# Generated by extras/zil_import — do not edit by hand",
         '"""Zork room objects."""',
@@ -189,23 +252,24 @@ def _gen_rooms(rooms: dict[str, ZilRoom]) -> str:
         "",
         "_rooms = {}  # keyed by ZIL atom — used by 040_exits.py",
         "",
+        "def _ensure_parent(obj, parent):",
+        "    # Defensive: re-attach parent if missing.  ``get_or_create_object``",
+        "    # only sets parents on first create; this heals DBs created by an",
+        "    # older bootstrap that had the object without correct parentage.",
+        "    if parent.pk not in obj.parents.values_list('pk', flat=True):",
+        "        obj.parents.add(parent)",
+        "",
     ]
-
-    # Some ZIL games re-use the same DESC across multiple rooms (e.g. Zork 1
-    # has FOREST-1/2/3 all titled "Forest").  ``unique_name=True`` collapses
-    # them to a single Object, which silently breaks navigation.  Append the
-    # atom in parens for any DESC that's not unique.
-    desc_counts: Counter[str] = Counter(r.desc for r in rooms.values() if r.desc)
 
     for atom, room in rooms.items():
         var = _atom_to_var(atom)
-        base = room.desc or atom.replace("-", " ").title()
-        display_name = f"{base} ({atom})" if room.desc and desc_counts[room.desc] > 1 else base
+        display_name = display_names[atom]
         lines.append(f"# {atom}")
         lines.append(f"{var}, _created = bootstrap.get_or_create_object(")
         lines.append(f"    {repr(display_name)}, unique_name=True,")
         lines.append(f"    parents=[_classes['zork_room']],")
         lines.append(f")")
+        lines.append(f"_ensure_parent({var}, _classes['zork_room'])")
 
         if room.ldesc:
             lines.append(f"{var}.set_property('description', {_py_str(room.ldesc)})")
@@ -229,11 +293,9 @@ def _gen_rooms(rooms: dict[str, ZilRoom]) -> str:
 
         if room.action:
             lines.append(f"# ACTION: {room.action} — see verbs/{_routine_to_filename(room.action)}")
-            action_prop = room.action.lower().replace("-", "_")
-            lines.append(f"_.set_property({repr(action_prop)}, {var})")
 
-        atom_prop = atom.lower().replace("-", "_")
-        lines.append(f"_.set_property({repr(atom_prop)}, {var})")
+        atom_alias = atom.lower().replace("-", "_")
+        lines.append(f"{var}.add_alias({repr(atom_alias)})")
         lines.append(f"_rooms[{repr(atom)}] = {var}")
         lines.append("")
 
@@ -246,13 +308,24 @@ def _gen_rooms(rooms: dict[str, ZilRoom]) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _gen_objects(objects: dict[str, ZilObject], rooms: dict[str, ZilRoom]) -> str:
+def _gen_objects(
+    objects: dict[str, ZilObject],
+    rooms: dict[str, ZilRoom],
+    display_names: dict[str, str],
+) -> str:
     lines = [
         "# Generated by extras/zil_import — do not edit by hand",
         '"""Zork game objects."""',
         "# pylint: disable=undefined-variable",
         "",
         "_objects = {}  # keyed by ZIL atom",
+        "",
+        "def _ensure_parent(obj, parent):",
+        "    # Defensive: re-attach parent if missing.  ``get_or_create_object``",
+        "    # only sets parents on first create; this heals DBs created by an",
+        "    # older bootstrap that had the object without correct parentage.",
+        "    if parent.pk not in obj.parents.values_list('pk', flat=True):",
+        "        obj.parents.add(parent)",
         "",
     ]
     # ZIL ``IN`` may reference an object declared later in dungeon.zil
@@ -271,8 +344,12 @@ def _gen_objects(objects: dict[str, ZilObject], rooms: dict[str, ZilRoom]) -> st
         else:
             parent = "_classes['zork_thing']"
 
-        # Obvious flag
-        obvious = "False" if "NDESCBIT" in obj.flags else "True"
+        # ``obvious`` is the parser's dobj-visibility flag; both NDESCBIT
+        # and INVISIBLE hide objects from player commands in ZIL, so both
+        # map onto ``obvious=False`` at bootstrap time.  Runtime ``set_flag
+        # ('invisible', X)`` keeps writing through to ``obvious`` via
+        # ``zil_sdk/flags.py``.
+        obvious = "False" if ("NDESCBIT" in obj.flags or "INVISIBLE" in obj.flags) else "True"
 
         # Resolve location
         if obj.location and obj.location in rooms:
@@ -289,13 +366,14 @@ def _gen_objects(objects: dict[str, ZilObject], rooms: dict[str, ZilRoom]) -> st
         else:
             loc_expr = "None"
 
-        display_name = obj.desc or atom.replace("-", " ").lower()
+        display_name = display_names[atom]
         lines.append(f"# {atom}")
         lines.append(f"{var}, _created = bootstrap.get_or_create_object(")
         lines.append(f"    {repr(display_name)}, unique_name=False,")
         lines.append(f"    parents=[{parent}],")
         lines.append(f"    location={loc_expr},")
         lines.append(f")")
+        lines.append(f"_ensure_parent({var}, {parent})")
         lines.append(f"{var}.obvious = {obvious}")
         lines.append(f"{var}.save()")
 
@@ -317,10 +395,15 @@ def _gen_objects(objects: dict[str, ZilObject], rooms: dict[str, ZilRoom]) -> st
         if obj.adjectives:
             lines.append(f"{var}.set_property('adjectives', {obj.adjectives!r})")
 
-        # Flag properties
+        # Flag properties.  ``obvious`` is intrinsic and was set above via
+        # the model field, so we skip both ``obvious`` and ``invisible``
+        # (the runtime SDK routes ``flag('invisible')`` through ``obvious``
+        # — keeping the property would let stale state mask the field).
         for flag in obj.flags:
             if flag in FLAG_PROPERTIES:
                 prop, val = FLAG_PROPERTIES[flag]
+                if prop in ("obvious", "invisible"):
+                    continue
                 lines.append(f"{var}.set_property({repr(prop)}, {repr(val)})")
 
         if obj.capacity:
@@ -331,14 +414,14 @@ def _gen_objects(objects: dict[str, ZilObject], rooms: dict[str, ZilRoom]) -> st
             lines.append(f"{var}.set_property('value', {obj.value})")
         if obj.tvalue:
             lines.append(f"{var}.set_property('tvalue', {obj.tvalue})")
+        if obj.vtype:
+            lines.append(f"{var}.set_property('vtype', {obj.vtype!r})")
 
         if obj.action:
             lines.append(f"# ACTION: {obj.action} — see verbs/{_routine_to_filename(obj.action)}")
-            action_prop = obj.action.lower().replace("-", "_")
-            lines.append(f"_.set_property({repr(action_prop)}, {var})")
 
-        atom_prop = atom.lower().replace("-", "_")
-        lines.append(f"_.set_property({repr(atom_prop)}, {var})")
+        atom_alias = atom.lower().replace("-", "_")
+        lines.append(f"{var}.add_alias({repr(atom_alias)})")
         lines.append(f"_objects[{repr(atom)}] = {var}")
         lines.append("")
 
@@ -451,7 +534,16 @@ def _gen_exits(rooms: dict[str, ZilRoom]) -> str:
 # ---------------------------------------------------------------------------
 
 
+_BANNER = (
+    "ZORK I: The Great Underground Empire\n"
+    "  Original (c) Infocom, Inc. 1980; MIT-licensed source release 2025.\n"
+    "  Zork is a registered trademark of Activision Publishing, Inc.\n"
+    "  DjangoMOO bootstrap: {rooms} rooms, {objects} objects."
+)
+
+
 def _gen_bootstrap_init(rooms: dict, objects: dict) -> str:
+    banner = _BANNER.format(rooms=len(rooms), objects=len(objects))
     return textwrap.dedent(f"""\
         # Generated by extras/zil_import — do not edit by hand
         \"\"\"
@@ -479,6 +571,8 @@ def _gen_bootstrap_init(rooms: dict, objects: dict) -> str:
         from moo.core import code, lookup
 
         log = logging.getLogger(__name__)
+        for _line in {banner!r}.splitlines():
+            log.info(_line)
         _repo = bootstrap.initialize_dataset("zork1")
         wizard = lookup("Wizard")
         _ = lookup("System Object")
@@ -579,28 +673,46 @@ def _gen_globals(globals_dict: dict[str, object]) -> str:
 
 
 # ---------------------------------------------------------------------------
-# 015_tables.py — ZIL table data stored as properties on $zil_sdk
+# 035_tables.py — ZIL table data stored as properties on the System Object
 # ---------------------------------------------------------------------------
 
 
 def _gen_tables(tables: dict[str, list]) -> str:
-    """Generate 015_tables.py which stores ZIL table data on $zil_sdk."""
+    """Generate 035_tables.py which stores ZIL table data on the System Object.
+
+    Atom references (entries prefixed with ``@``) are resolved to the
+    matching room/object via ``_rooms`` / ``_objects`` lookup at
+    bootstrap time, so ``lkp`` / ``go-next`` can compare table entries
+    against ``here()`` (an Object) directly.  Non-atom entries (numbers,
+    quoted strings) pass through verbatim.
+    """
     lines = [
         "# Generated by extras/zil_import — do not edit by hand",
-        '"""ZIL table data stored as list properties on $zil_sdk."""',
+        '"""ZIL table data stored as list properties on the System Object."""',
         "# pylint: disable=undefined-variable",
         "",
         "# Tables are stored with zstate_ prefix so pick() can find them.",
         "# Key conversion: UPPER-KEBAB-CASE -> lower_snake_case with zstate_ prefix.",
-        "_zil_sdk = _.get_property('zil_sdk')",
         "",
     ]
+
+    def _entry_repr(item: object) -> str:
+        if isinstance(item, str) and item.startswith("@"):
+            atom = item[1:]
+            # Atom may be a room or object; both are stored in _rooms /
+            # _objects after 020/030 run.  Fall back to the raw string
+            # so bootstrap doesn't crash if a table references an atom
+            # we never created (defensive; LTABLE pairs need both ends).
+            return f"_rooms.get({atom!r}) or _objects.get({atom!r}) or {atom!r}"
+        return repr(item)
+
     if tables:
         for atom, values in tables.items():
             prop_name = "zstate_" + atom.lower().replace("-", "_")
-            lines.append(f"_zil_sdk.set_property({repr(prop_name)}, {values!r})")
+            entries = ", ".join(_entry_repr(v) for v in values)
+            lines.append(f"_.set_property({repr(prop_name)}, [{entries}])")
         lines.append("")
-        lines.append(f"log.info('Zork tables: {len(tables)} loaded onto $zil_sdk')")
+        lines.append(f"log.info('Zork tables: {len(tables)} loaded onto System Object')")
     else:
         lines.append("# No tables extracted from ZIL source.")
         lines.append("# If ZIL source contains LTABLE/TABLE globals, re-run the converter.")
@@ -658,54 +770,63 @@ def generate_all(
     # Bootstrap entry point — invoked via `moo_init --bootstrap`.
     (output_dir / "bootstrap.py").write_text(_gen_bootstrap_init(rooms, objects), encoding="utf-8")
 
-    # 010_classes.py — includes $zil_sdk creation
+    # 010_classes.py — root classes only; SDK verbs attach directly to System Object
     (output_dir / "010_classes.py").write_text(_CLASSES_TEMPLATE, encoding="utf-8")
 
     # 013_globals.py — scalar GLOBAL declarations (LOAD-ALLOWED, etc.)
     (output_dir / "013_globals.py").write_text(_gen_globals(globals_dict), encoding="utf-8")
 
-    # 015_tables.py — ZIL table data on $zil_sdk
-    (output_dir / "015_tables.py").write_text(_gen_tables(tables), encoding="utf-8")
+    # NB: tables are emitted *after* 030_objects so atom-reference
+    # resolution can use the ``_rooms`` / ``_objects`` dicts that
+    # 020/030 leave in the bootstrap namespace.  Old runs may have a
+    # stale ``015_tables.py`` lying around; remove it so loader doesn't
+    # double-emit the tables (now 035_tables.py).
+    stale_015 = output_dir / "015_tables.py"
+    if stale_015.exists():
+        stale_015.unlink()
+
+    # Compute globally-unique display names once and reuse for object/room
+    # creation and verb shebangs so ``--on "<display>"`` resolves to a
+    # single Object at verb-load time.
+    display_names = _compute_display_names(rooms, objects)
 
     # 020_rooms.py
-    (output_dir / "020_rooms.py").write_text(_gen_rooms(rooms), encoding="utf-8")
+    (output_dir / "020_rooms.py").write_text(_gen_rooms(rooms, display_names), encoding="utf-8")
 
     # 030_objects.py
-    (output_dir / "030_objects.py").write_text(_gen_objects(objects, rooms), encoding="utf-8")
+    (output_dir / "030_objects.py").write_text(_gen_objects(objects, rooms, display_names), encoding="utf-8")
+
+    # 035_tables.py — ZIL table data on the System Object.  After rooms/
+    # objects so atom references can resolve to actual Object instances.
+    (output_dir / "035_tables.py").write_text(_gen_tables(tables), encoding="utf-8")
 
     # 040_exits.py
     (output_dir / "040_exits.py").write_text(_gen_exits(rooms), encoding="utf-8")
 
     # Translated verb files
-    # Map each routine to the object/room it's an action for
+    # Map each routine to the object/room it's an action for.
+    # When multiple objects share the same ACTION routine, the last one wins as
+    # primary (existing behaviour); extras are tracked separately so the
+    # generator can emit a verb file for each additional owner.
     action_owners: dict[str, tuple[str | None, bool]] = {}  # name → (atom, is_room)
+    action_all_owners: dict[str, list[tuple[str, bool]]] = {}  # name → ALL owners
     for atom, room in rooms.items():
         if room.action:
             action_owners[room.action] = (atom, True)
+            action_all_owners.setdefault(room.action, []).append((atom, True))
     for atom, obj in objects.items():
         if obj.action:
             action_owners[obj.action] = (atom, False)
-
-    # Routine-name → room-slug grouping so the file tree under verbs/ is
-    # browsable.  Room ACTIONs go under their own room dir; object ACTIONs
-    # go under whichever room contains the object.  Helper/system routines
-    # with no action_owner entry land in verbs/_global/.
-    routine_room: dict[str, str] = {}
-    for atom, room in rooms.items():
-        if room.action:
-            routine_room[room.action] = _room_slug(atom)
-    for atom, obj in objects.items():
-        if obj.action:
-            room_atom = _resolve_object_room(atom, objects, rooms)
-            if room_atom:
-                routine_room[obj.action] = _room_slug(room_atom)
+            action_all_owners.setdefault(obj.action, []).append((atom, False))
 
     def _global_bucket(routine_name: str) -> str:
-        """Subdivide global helpers so no bucket holds more than a few dozen files.
+        """Subdivide a substrate-class bucket by routine-name shape.
 
-        Substrate prefixes (V-/PRE-/I-/M-) are well-known.  Everything else
-        is bucketed by ZIL naming convention: ``-PSEUDO``/``-FCN``/``-F``
-        suffixes mean object handlers, ``-P`` are predicates, plus a few
+        Only used inside large substrate dirs (``zork_thing/``, etc.) where
+        the flat list would be hundreds of files long.  Substrate prefixes
+        (V-/PRE-/I-/M-) are well-known.  Everything else is bucketed by ZIL
+        naming convention: ``-PSEUDO``/``-FCN``/``-F`` suffixes mean object
+        handlers, ``?``-suffixed names are predicates, plus a few
         keyword-driven buckets for combat, parser, output, and scoring
         helpers.  Anything that doesn't match lands in ``helpers/``.
         """
@@ -734,17 +855,46 @@ def generate_all(
             return "score"
         return "helpers"
 
-    def _target_dir(routine_name: str) -> Path:
-        slug = routine_room.get(routine_name)
-        if slug:
-            sub = verbs_dir / "rooms" / slug
-        else:
-            sub = verbs_dir / "_global" / _global_bucket(routine_name)
-        sub.mkdir(parents=True, exist_ok=True)
-        init = sub / "__init__.py"
+    # Substrate dirs that need topic subdivision (too many verbs to read flat).
+    _SUBDIVIDED_SUBSTRATE = {"zork_thing"}
+
+    def _substrate_dir(substrate_name: str, routine_name: str) -> Path:
+        """Directory for a substrate-attached verb.  ``zork_thing`` is large
+        enough to need topic subdirs; smaller buckets stay flat."""
+        # ZIL ``$player`` is an alias for ``Zork Actor``; collapse the layout.
+        if substrate_name == "player":
+            substrate_name = "zork_actor"
+        if substrate_name in _SUBDIVIDED_SUBSTRATE:
+            return verbs_dir / substrate_name / _global_bucket(routine_name)
+        return verbs_dir / substrate_name
+
+    def _atom_dir(atom: str, is_room: bool) -> Path:
+        slug = atom.lower().replace("-", "_")
+        if is_room:
+            return verbs_dir / "rooms" / slug
+        # Co-locate object handlers with their starting room so each room's
+        # directory contains the room's action verbs and the per-object
+        # action verbs for items that begin life there.  Orphan objects
+        # (global pseudos, contents of containers we can't trace back to
+        # a room) stay at the top level under ``verbs/<slug>/``.
+        room_atom = _resolve_object_room(atom, objects, rooms)
+        if room_atom:
+            return verbs_dir / "rooms" / _room_slug(room_atom) / slug
+        return verbs_dir / slug
+
+    def _ensure_dir(path: Path) -> Path:
+        path.mkdir(parents=True, exist_ok=True)
+        init = path / "__init__.py"
         if not init.exists():
             init.write_text("", encoding="utf-8")
-        return sub
+        return path
+
+    def _target_dir(routine_name: str, action_owner: tuple[str, bool] | None) -> Path:
+        if action_owner:
+            atom, is_room = action_owner
+            return _ensure_dir(_atom_dir(atom, is_room))
+        substrate = owner_overrides.get(routine_name.upper(), "zork_thing")
+        return _ensure_dir(_substrate_dir(substrate, routine_name))
 
     translated_names = []
     m_clause_count = 0
@@ -753,50 +903,290 @@ def generate_all(
     object_atoms = set(rooms.keys()) | set(objects.keys())
     routine_atoms = set(routines.keys())
 
+    # Routines we explicitly skip because they reference Z-machine
+    # internals that don't translate cleanly.  CLOCKER is replaced by
+    # a static template that calls ``zil_sdk.tick``; the rest are
+    # parser-internal (walk ``P-LEXV`` / ``P-PRSO`` / ``P-PRSI``
+    # tables we don't populate) or object-resolution helpers that
+    # depend on the ZIL parser.  DjangoMOO's parser handles command
+    # dispatch and object matching, so these routines have no callers
+    # in code we keep.
+    _SKIP_ROUTINES = {
+        # Z-machine read loop / parser core
+        "CLOCKER",
+        "MAIN-LOOP",
+        "MAIN-LOOP-1",
+        "PARSER",
+        # Parser-internal predicates
+        "YES?",
+        "NUMBER?",
+        # Parser clause walking
+        "CLAUSE",
+        "CLAUSE-ADD",
+        "CLAUSE-COPY",
+        "ACLAUSE-WIN",
+        "NCLAUSE-WIN",
+        "SYNTAX-CHECK",
+        "SYNTAX-FOUND",
+        "UNKNOWN-WORD",
+        "ORPHAN",
+        "ORPHAN-MERGE",
+        "CANT-USE",
+        "CANT-ORPHAN",
+        "WHICH-PRINT",
+        "THING-PRINT",
+        # Parser output helpers — produce only ZIL-parser failure messages
+        # ("I don't know the word X", "You can't see any X here") that
+        # DjangoMOO's parser surfaces through its own NoSuchObject /
+        # NoSuchVerb exceptions.  No remaining caller in the kept tree.
+        "WORD-PRINT",
+        "BUFFER-PRINT",
+        "NOT-HERE-PRINT",
+        # Object-resolution helpers tied to the ZIL parser
+        "NOT-HERE-OBJECT-F",
+        "SNARF-OBJECTS",
+        "SNARFEM",
+        "GET-OBJECT",
+        "MANY-CHECK",
+        "ITAKE-CHECK",
+        "GLOBAL-CHECK",
+        "GWIM",
+        "BUT-MERGE",
+        # NOTE: THIS-IS-IT is *kept* — translated v-* / object handlers
+        # invoke it 19+ times to set the ZIL pronoun (P-IT-OBJECT) state.
+        # The translated body is just zstate writes, harmless to run.
+        #
+        # F.1: Movement substrate replaced by zil_sdk/exit_move.py + walk
+        # dispatcher (see D2).  Z-machine exit-table walking via
+        # getpt/ptsize/UEXIT/NEXIT/FEXIT/CEXIT/DEXIT has no caller in
+        # the kept tree.  V-CLIMB-* call each other in chains that all
+        # become unreachable when V-CLIMB-UP is skipped.
+        "V-WALK",
+        "DO-WALK",
+        "V-CLIMB-UP",
+        "V-CLIMB-DOWN",
+        "V-CLIMB-ON",
+        "V-CLIMB-FOO",
+        # F.1: Parser-buffer (P-LEXV) substrate verbs — read words the
+        # player typed via Z-machine word-buffer slots, which DjangoMOO
+        # doesn't populate.  Their syntax entries route to V-XXX but no
+        # caller actually invokes them in the kept tree.
+        "V-SAY",
+        "V-ECHO",
+        "V-INCANT",
+        # F.1: V-LEAP body uses ptsize exit-table walking; same
+        # dead-after-D2 logic as V-WALK.  JUMP routes here in syntax but
+        # the routine is unreachable (chains through V-WALK).
+        "V-LEAP",
+        # F.3: Parser-internal name-match predicates that walk Z-machine
+        # synonym/adjective tables via getpt/ptsize.  DjangoMOO's parser
+        # already does name resolution against ``Object.aliases``; these
+        # routines have no live callers in the kept tree.
+        "THIS-IT?",
+        "GLOBAL-IN?",
+        # F.3: Lit-room search chain (LIT? dark-branch helpers).  ``LIT?``
+        # only enters this branch when zstate keys ``P-SLOCBITS`` /
+        # ``P-TABLE`` / ``P-MERGE`` are populated, which DjangoMOO never
+        # does.  ``DO-SL`` and ``SEARCH-LIST`` are the only callers and
+        # both end here, so the whole chain is dead.
+        "DO-SL",
+        "SEARCH-LIST",
+        "OBJ-FOUND",
+        # C.3: HELD? walks the location chain via ``while True``; the SDK
+        # template at zil_sdk/is_held.py provides a bounded walk with
+        # cycle detection and a depth cap.
+        "HELD?",
+    }
+
+    def _filename_from_shebang(code: str) -> str:
+        """Derive ``<first_verb_snake>.py`` from the verb shebang on line 1.
+
+        The shebang is the source of truth for verb identity, so the file on
+        disk takes its name directly from it.  Falls back to ``unnamed.py``
+        for code that lacks a shebang (shouldn't happen in normal output;
+        guards the writer against an empty translation).
+        """
+        first_line = code.split("\n", 1)[0] if code else ""
+        if not first_line.startswith("#!moo verb"):
+            return "unnamed.py"
+        rest = first_line[len("#!moo verb") :].strip()
+        try:
+            tokens = shlex.split(rest)
+        except ValueError:
+            tokens = rest.split()
+        first = tokens[0] if tokens else ""
+        snake = first.lower().replace("-", "_").replace("@", "").replace("?", "_p").replace("!", "_b")
+        return (snake or "unnamed") + ".py"
+
+    def _write_unique(target: Path, fname: str, code: str) -> None:
+        """Write ``code`` to ``target/fname``, suffixing on collision.
+
+        Within one owner's directory two clauses can theoretically share a
+        first-verb name (different ZIL routines whose shebangs happen to
+        emit the same ``--on``-target + first-verb).  Append ``_2``, ``_3``,
+        ... in that case so neither clause clobbers the other.
+        """
+        path = target / fname
+        if not path.exists():
+            path.write_text(code, encoding="utf-8")
+            return
+        stem = fname[:-3]
+        n = 2
+        while True:
+            candidate = target / f"{stem}_{n}.py"
+            if not candidate.exists():
+                candidate.write_text(code, encoding="utf-8")
+                return
+            n += 1
+
+    def _emit_routine(translator: ZilTranslator, target: Path, name: str) -> None:
+        """Emit per-clause + per-M-clause + residual files for one routine.
+
+        Each emitted file is named after the first verb in its shebang's
+        verb list (snake-cased).  With the per-owner directory layout, no
+        prefix is needed: each owner's verbs already live in their own
+        ``rooms/<room>/<obj>/`` (or ``zork_thing/<topic>/``) folder.
+        """
+        nonlocal m_clause_count
+        # M-clauses (M-BEG / M-LOOK / M-END / ...) → one file per constant.
+        if translator.has_m_dispatch():
+            for m_const in translator.m_constants_found():
+                clause_code = translator.translate_m_clause(m_const)
+                if _clause_is_empty(clause_code):
+                    continue
+                _write_unique(target, _filename_from_shebang(clause_code), clause_code)
+                m_clause_count += 1
+        # VERB? clauses (player-verb dispatch) → one file per clause, with
+        # the multi-verb shebang preserved when the ZIL grouped them.
+        if translator.has_verb_dispatch():
+            for verb_atoms, extra_test, body_forms in translator.verb_clauses_for_split():
+                clause_code = translator.translate_verb_clause(verb_atoms, extra_test, body_forms)
+                if not clause_code:
+                    continue
+                _write_unique(target, _filename_from_shebang(clause_code), clause_code)
+        # Residual full-routine body — only emitted if anything is left after
+        # both pruning passes.  ``translate()`` returns "" for an empty
+        # residual (per-clause files already cover everything).
+        full_code = translator.translate()
+        if full_code:
+            _write_unique(target, _filename_from_shebang(full_code), full_code)
+
+    # D3 Phase 1: relocate substrate verbs whose syntax entry is strictly
+    # 0-OBJECT.  Without a dobj the parser can't reach $zork_thing via
+    # inheritance, so the substrate would be unreachable; moving it onto
+    # $player (aliased to $zork_actor in the bootstrap) puts it back in
+    # the search order and lets us drop the syntax/ trampoline.
+    #
+    # syntax-finish bucket B extension: same-routine mixed-arity verbs
+    # (CURSE, EXIT, FOLLOW, HELLO, JUMP, STAND, SWIM — all 0-OBJECT and
+    # 1-OBJECT slots dispatch to the same V-routine) also relocate.
+    # Parser dispatch finds the player-owned substrate for both arities;
+    # the body internally handles dobj-presence.
+    _PLAYER_OWNED_ROUTINES: set[str] = set()
+    _SAME_ROUTINE_MIXED: set[str] = set()
+    # Reverse map: V-routine name → set of player verbs that dispatch to it.
+    # Built from SYNTAX rules so substrate verbs like V-LAMP-ON register under
+    # their player name (``light``) and any synonyms — without this, the
+    # parser's verb match would only find ``lamp_on`` which no player types.
+    _ROUTINE_TO_VERBS: dict[str, list[str]] = {}
+    for verb, rules in syntax_dict.items():
+        counts = {n for n, _ in rules}
+        v_routines = {v for n, v in rules}
+        if counts == {0}:
+            v_routine = next((v for n, v in rules if n == 0), None)
+            if v_routine:
+                _PLAYER_OWNED_ROUTINES.add(v_routine.upper())
+        elif 0 in counts and len(v_routines) == 1:
+            # Mixed arity but every rule maps to the same V-routine.
+            v_routine = next(iter(v_routines))
+            _PLAYER_OWNED_ROUTINES.add(v_routine.upper())
+            _SAME_ROUTINE_MIXED.add(verb)
+        for _, v_routine in rules:
+            v_upper = v_routine.upper()
+            verb_lower = verb.lower()
+            bucket = _ROUTINE_TO_VERBS.setdefault(v_upper, [])
+            if verb_lower not in bucket:
+                bucket.append(verb_lower)
+            for syn in synonyms_dict.get(verb, []):
+                syn_lower = syn.lower()
+                if syn_lower and not syn_lower.startswith("\\") and syn_lower not in bucket:
+                    bucket.append(syn_lower)
+    owner_overrides = {name: "player" for name in _PLAYER_OWNED_ROUTINES}
+
+    # syntax-finish bucket A: V-routines whose PRE-X handler exists get a
+    # pre-X check inlined at the top of the substrate body during
+    # translation, replacing the syntax/ trampoline.  Compute the set of
+    # PRE-X bases here so the translator can prepend the check, and the
+    # syntax loop below knows to skip emission for these verbs.
+    _pre_bases: set[str] = set()
+    for r_name in routines.keys():
+        upper = r_name.upper()
+        if upper.startswith("PRE-"):
+            _pre_bases.add(upper.removeprefix("PRE-"))
+    pre_handler_routines = {f"V-{base}" for base in _pre_bases}
+
     for name, routine in routines.items():
+        if name in _SKIP_ROUTINES:
+            continue
         translator = ZilTranslator(
             routine,
             object_atoms=object_atoms,
             routine_atoms=routine_atoms,
             action_owner=action_owners.get(name),
+            owner_overrides=owner_overrides,
+            pre_handler_routines=pre_handler_routines,
+            display_names=display_names,
+            substrate_display_names=SUBSTRATE_DISPLAY_NAMES,
+            routine_to_verbs=_ROUTINE_TO_VERBS,
         )
 
-        target = _target_dir(name)
-
-        if translator.has_m_dispatch():
-            # Split M-* clauses into separate verb files
-            m_constants = translator.m_constants_found()
-            for m_const in m_constants:
-                clause_code = translator.translate_m_clause(m_const)
-                # Skip clauses whose ZIL body is ``<>`` (no-op event handlers).
-                if _clause_is_empty(clause_code):
-                    continue
-                m_verb = m_const.lower().replace("m-", "")
-                filename = f"{_routine_to_filename(name)[:-3]}_{m_verb}.py"
-                (target / filename).write_text(clause_code, encoding="utf-8")
-                m_clause_count += 1
-            # Also write the full routine as a fallback for any unhandled RARG
-            full_code = translator.translate()
-            (target / _routine_to_filename(name)).write_text(full_code, encoding="utf-8")
-        else:
-            full_code = translator.translate()
-            (target / _routine_to_filename(name)).write_text(full_code, encoding="utf-8")
+        target = _target_dir(name, action_owners.get(name))
+        _emit_routine(translator, target, name)
 
         translated_names.append(name)
 
-    # SYNTAX-driven player commands.  For every unique verb declared in
-    # ``syntax.zil`` (folded with ``synonyms.zil``), emit a tiny ``$player``
-    # verb file whose body delegates to the V-routine recorded for that
-    # verb.  These files live in ``verbs/syntax/`` to keep them out of the
-    # hand-shipped ``verbs/commands/`` directory while we transition.
-    syntax_dir = verbs_dir / "syntax"
-    syntax_dir.mkdir(exist_ok=True)
-    (syntax_dir / "__init__.py").write_text("", encoding="utf-8")
+        # For shared ACTION routines (same routine on multiple objects/rooms),
+        # emit a separate verb file for each additional owner so each object
+        # gets its own ``--on "<display>"`` registration.
+        primary_owner = action_owners.get(name)
+        for extra_atom, extra_is_room in action_all_owners.get(name, []):
+            if primary_owner and extra_atom == primary_owner[0]:
+                continue  # skip the primary; it was written above
+            extra_translator = ZilTranslator(
+                routine,
+                object_atoms=object_atoms,
+                routine_atoms=routine_atoms,
+                action_owner=(extra_atom, extra_is_room),
+                owner_overrides=owner_overrides,
+                pre_handler_routines=pre_handler_routines,
+                display_names=display_names,
+                substrate_display_names=SUBSTRATE_DISPLAY_NAMES,
+            )
+            # Each owner now lives in its own directory under ``rooms/`` (or
+            # at the top level for orphans), so a shared ACTION routine
+            # (e.g. BUTTON-F across yellow/brown/red/blue) writes the same
+            # filename into different directories — no clobber risk.
+            extra_sub = _ensure_dir(_atom_dir(extra_atom, extra_is_room))
+            _emit_routine(extra_translator, extra_sub, name)
+
+    # SYNTAX-driven player commands.  After D3 + syntax-finish, only the
+    # genuinely-special routing shims remain — WALK/PUT specials and the
+    # mixed-arity verbs whose 0-OBJECT and 1-OBJECT slots dispatch to
+    # different V-routines (LOOK, ANSWER, ENTER, LEAVE, #).  These attach to
+    # ``Zork Actor`` (``$player``); the legacy ``verbs/syntax/`` and
+    # ``verbs/_global/dispatchers/`` directories are no longer created.
+    dispatchers_dir = _ensure_dir(verbs_dir / "zork_actor" / "dispatchers")
     # Verbs whose substrate V-routine uses Z-machine table-based exits
     # (V-WALK, V-WALK-AROUND).  Our exit model is Object-based, so the
     # WALK family delegates to our zil_sdk.walk helper instead of the
     # substrate routine.
     OBJECT_WALK_OVERRIDES = {"WALK"}
+
+    # Verbs that have a 2-object "put X in Y" form (→ V-PUT) and a
+    # 1-object "drop X" form (→ V-DROP).  The generator's 2-object skip
+    # logic would lose the container routing, so we special-case them here:
+    # if any preposition was parsed, route to v-put; otherwise v-drop.
+    PUT_OVERRIDES = {"PUT"}
 
     syntax_count = 0
     for verb, rules in syntax_dict.items():
@@ -804,25 +1194,79 @@ def generate_all(
         names = [n.lower() for n in names if n and not n.startswith("\\")]
         if not names or not rules:
             continue
+        # D3 Phase 1: skip trampolines for strictly-0-OBJECT verbs.  Their
+        # substrate has been relocated to $player by ``owner_overrides``, so
+        # parser dispatch finds it directly without a trampoline shim.
+        counts = {n for n, _ in rules}
+        if counts == {0}:
+            continue
+        # syntax-finish bucket B: same-routine mixed-arity verbs are also
+        # relocated to $player and need no trampoline.
+        if verb in _SAME_ROUTINE_MIXED:
+            continue
+        # OBJECT-bearing verbs need a dispatcher when the player verb name
+        # doesn't match the V-routine's snake-name — otherwise ``light
+        # lamp`` (which routes to V-LAMP-ON, snake-name ``lamp_on``) finds
+        # nothing on the dobj.  When the names DO match (e.g. player
+        # ``take`` → V-TAKE → snake-name ``take``), the substrate is
+        # already discoverable on the dobj via inheritance and a dispatcher
+        # would just be dead code (parser's last-match-wins picks the
+        # dobj-bound substrate over the caller-bound dispatcher).
+        if 0 not in counts and verb not in {"WALK", "PUT"}:
+            v_variants = {v for n, v in rules if n >= 1}
+            substrate_names = {v.lower().removeprefix("v-") for v in v_variants}
+            if verb.lower() in substrate_names:
+                continue
         # WALK family: delegate to the generic exit-Object traversal helper
-        # (``$zil_sdk.walk``) rather than the substrate's table-based
-        # V-WALK, which assumes Z-machine memory exits we don't have.
+        # (``_.walk``) rather than the substrate's table-based V-WALK,
+        # which assumes Z-machine memory exits we don't have.
         if verb in OBJECT_WALK_OVERRIDES:
             body = textwrap.dedent(f"""\
-                #!moo verb {" ".join(names)} --on $player --dspec either
+                #!moo verb {" ".join(names)} --on "Zork Actor" --dspec either
+
                 # Generated by extras/zil_import — do not edit by hand
-                # pylint: disable=return-outside-function,undefined-variable,pointless-statement,unnecessary-negation,disallowed-name,using-constant-test,redefined-outer-name,no-else-return,unused-variable,redefined-builtin,singleton-comparison
+                # pylint: disable=return-outside-function,undefined-variable,pointless-statement,unnecessary-negation,disallowed-name,using-constant-test,redefined-outer-name,no-else-return,unused-variable,redefined-builtin,singleton-comparison,unnecessary-pass,expression-not-assigned
+
                 \"\"\"Player command for {verb}: traverse an exit Object.\"\"\"
 
                 from moo.sdk import context
 
-                if context.parser.has_dobj_str():
-                    _.zil_sdk.walk(context.parser.get_dobj_str())
+                parser = context.parser
+                if parser.has_dobj_str():
+                    _.walk(parser.get_dobj_str())
+                elif len(parser.words) > 1:
+                    _.walk(parser.words[1])
                 else:
                     print("Where do you want to go?")
             """)
             fname = verb.lower() + ".py"
-            (syntax_dir / fname).write_text(body, encoding="utf-8")
+            (dispatchers_dir / fname).write_text(body, encoding="utf-8")
+            syntax_count += 1
+            continue
+        # PUT family: "put X in Y" → v-put, "put X" → v-drop.  The
+        # 2-object variant is skipped by the general codegen below, so we
+        # special-case it: route to v-put when any preposition is present.
+        if verb in PUT_OVERRIDES:
+            body = textwrap.dedent(f"""\
+                #!moo verb {" ".join(names)} --on "Zork Actor" --dspec either
+
+                # Generated by extras/zil_import — do not edit by hand
+                # pylint: disable=return-outside-function,undefined-variable,pointless-statement,unnecessary-negation,disallowed-name,using-constant-test,redefined-outer-name,no-else-return,unused-variable,redefined-builtin,singleton-comparison,unnecessary-pass,expression-not-assigned
+
+                # Player command for {verb}: put in container (with prep) or drop (bare).
+                from moo.sdk import context
+
+                if context.parser.prepositions:
+                    if _.zork_thing.has_verb("pre-put") and _.zork_thing.invoke_verb("pre-put"):
+                        return
+                    _.zork_thing.put()
+                else:
+                    if _.zork_thing.has_verb("pre-drop") and _.zork_thing.invoke_verb("pre-drop"):
+                        return
+                    _.zork_thing.drop()
+            """)
+            fname = verb.lower() + ".py"
+            (dispatchers_dir / fname).write_text(body, encoding="utf-8")
             syntax_count += 1
             continue
         # Pick the no-OBJECT and the single-OBJECT variants.  Two-OBJECT
@@ -837,35 +1281,70 @@ def generate_all(
             # commands like ``put`` (only ever multi-object in syntax) still
             # have something to delegate to.
             obj_variant = next((v for n, v in sorted(rules, key=lambda r: r[0]) if n >= 1), None)
+
         # Build the body.  When both variants exist, branch on whether the
         # player typed a dobj.  Otherwise just delegate to whichever rule
         # we have.
+        # ZIL semantics: each V-routine has an optional PRE-routine that
+        # runs first and short-circuits dispatch on truthy return.  Map
+        # ``v-<base>`` ↔ ``pre-<base>`` and emit a guard so the pre-verb
+        # actually fires (the parser doesn't know about it).  After Phase
+        # 3 item 3 (drop ``v-`` prefix on substrate verbs), the substrate
+        # verb is registered under the plain ``<base>`` name.
+        def _pre_for(v_name: str) -> str:
+            # ``has_verb`` / ``invoke_verb`` look up by string name, so the
+            # pre-X key keeps the ZIL-style hyphen (``pre-lamp-on``) — that's
+            # the verb name actually registered on Zork Thing.
+            base = v_name.lower().removeprefix("v-")
+            return "pre-" + base
+
+        def _substrate_for(v_name: str) -> str:
+            # Substrate verbs are registered with ``v-`` stripped and dashes
+            # kept as the verb name, but the dispatcher reaches them via
+            # dot-syntax (``_.zork_thing.lamp_on()``) which requires a
+            # Python-valid identifier.  Snake-case the routine name so the
+            # generated Python parses.
+            return v_name.lower().removeprefix("v-").replace("-", "_")
+
         if no_obj and obj_variant and no_obj != obj_variant:
             body = textwrap.dedent(f"""\
-                #!moo verb {" ".join(names)} --on $player --dspec either
+                #!moo verb {" ".join(names)} --on "Zork Actor" --dspec either
+
                 # Generated by extras/zil_import — do not edit by hand
-                # pylint: disable=return-outside-function,undefined-variable,pointless-statement,unnecessary-negation,disallowed-name,using-constant-test,redefined-outer-name,no-else-return,unused-variable,redefined-builtin,singleton-comparison
+                # pylint: disable=return-outside-function,undefined-variable,pointless-statement,unnecessary-negation,disallowed-name,using-constant-test,redefined-outer-name,no-else-return,unused-variable,redefined-builtin,singleton-comparison,unnecessary-pass,expression-not-assigned
+
                 \"\"\"Player command for {verb}: dispatch by object slot.\"\"\"
 
                 from moo.sdk import context
 
                 if context.parser.has_dobj_str():
-                    _.zork_thing.invoke_verb({obj_variant.lower()!r})
+                    pre = {_pre_for(obj_variant)!r}
+                    if _.zork_thing.has_verb(pre) and _.zork_thing.invoke_verb(pre):
+                        return
+                    _.zork_thing.{_substrate_for(obj_variant)}()
                 else:
-                    _.zork_thing.invoke_verb({no_obj.lower()!r})
+                    pre = {_pre_for(no_obj)!r}
+                    if _.zork_thing.has_verb(pre) and _.zork_thing.invoke_verb(pre):
+                        return
+                    _.zork_thing.{_substrate_for(no_obj)}()
             """)
         else:
             v_routine = obj_variant or no_obj
             body = textwrap.dedent(f"""\
-                #!moo verb {" ".join(names)} --on $player --dspec either
+                #!moo verb {" ".join(names)} --on "Zork Actor" --dspec either
+
                 # Generated by extras/zil_import — do not edit by hand
-                # pylint: disable=return-outside-function,undefined-variable,pointless-statement,unnecessary-negation,disallowed-name,using-constant-test,redefined-outer-name,no-else-return,unused-variable,redefined-builtin,singleton-comparison
+                # pylint: disable=return-outside-function,undefined-variable,pointless-statement,unnecessary-negation,disallowed-name,using-constant-test,redefined-outer-name,no-else-return,unused-variable,redefined-builtin,singleton-comparison,unnecessary-pass,expression-not-assigned
+
                 \"\"\"Player command for {verb}: delegate to {v_routine}.\"\"\"
 
-                _.zork_thing.invoke_verb({v_routine.lower()!r})
+                pre = {_pre_for(v_routine)!r}
+                if _.zork_thing.has_verb(pre) and _.zork_thing.invoke_verb(pre):
+                    return
+                _.zork_thing.{_substrate_for(v_routine)}()
             """)
         fname = verb.lower().replace("?", "_p").replace("!", "_b") + ".py"
-        (syntax_dir / fname).write_text(body, encoding="utf-8")
+        (dispatchers_dir / fname).write_text(body, encoding="utf-8")
         syntax_count += 1
     print(f"  syntax commands: {syntax_count}")
 

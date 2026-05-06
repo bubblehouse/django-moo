@@ -1,4 +1,4 @@
-#!moo verb SUFFIX --on $player --dspec either
+#!moo verb SUFFIX --on "Zork Actor" --dspec either
 
 # pylint: disable=return-outside-function,undefined-variable
 

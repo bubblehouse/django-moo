@@ -195,6 +195,7 @@ def _extract_object(form: list) -> ZilObject:
     size = 5
     value = 0
     tvalue = 0
+    vtype = None
 
     for prop in form[2:]:
         if not _is_group(prop) or not prop:
@@ -230,6 +231,14 @@ def _extract_object(form: list) -> ZilObject:
             value = prop[1] if len(prop) > 1 and isinstance(prop[1], int) else 0
         elif key == "TVALUE":
             tvalue = prop[1] if len(prop) > 1 and isinstance(prop[1], int) else 0
+        elif key == "VTYPE":
+            # ``(VTYPE NONLANDBIT)`` declares the vehicle type atom that
+            # ``GOTO`` checks against the destination room's flags.  Stored
+            # lower-cased to match the ``ROOM_FLAG_PROPERTIES`` mapping
+            # (``NONLANDBIT`` → ``nonlandbit=True`` on water rooms).
+            vtype_atom = prop[1] if len(prop) > 1 and isinstance(prop[1], str) else None
+            if vtype_atom:
+                vtype = vtype_atom.lower()
 
     return ZilObject(
         atom=atom,
@@ -246,6 +255,7 @@ def _extract_object(form: list) -> ZilObject:
         size=size,
         value=value,
         tvalue=tvalue,
+        vtype=vtype,
     )
 
 
@@ -323,27 +333,48 @@ def _extract_routine(form: list) -> ZilRoutine:
 
 def _extract_table_values(form: Any) -> list:
     """
-    Extract scalar values from a ZIL TABLE or LTABLE form.
+    Extract values from a ZIL ``TABLE`` or ``LTABLE`` form.
 
-    TABLE/LTABLE entries can be strings, integers, or atom references (,NAME).
-    We extract only the string and integer values for bootstrap storage.
+    Entries can be quoted strings (game text), integers, or bare atom
+    references (``RESERVOIR-SOUTH``, etc.).  Bare uppercase atoms are
+    *kept* as atom-reference strings — they're how ZIL tables encode
+    room/object references.  Parenthesized flag groups like ``(PURE)``
+    are discarded.
+
+    For ``LTABLE``, prepend the implicit length so ``LKP`` /
+    ``GO-NEXT``'s ``table_get(tbl, 0)`` reads the count.
+
+    The bootstrap output (``015_tables.py``) is responsible for
+    resolving atom-reference strings to runtime ``Object`` references
+    so that ``lkp`` can compare against ``here()`` etc.
     """
     if not isinstance(form, list) or not form:
         return []
     head = form[0]
     if head not in ("TABLE", "LTABLE"):
         return []
+    from .parser import Str
+
     values = []
     for item in form[1:]:
-        if isinstance(item, str) and not item.isupper():
-            # Quoted string value
-            values.append(item)
+        if isinstance(item, Str):
+            # Quoted string — game text.
+            values.append(str(item))
         elif isinstance(item, int):
             values.append(item)
-        elif isinstance(item, tuple) and len(item) == 1 and isinstance(item[0], str):
-            # Atom reference like ,NAME — store as string atom
-            values.append(item[0])
-        # Skip nested TABLE, flags, etc.
+        elif isinstance(item, str):
+            # Bare atom — atom reference.  Prefix with ``@`` so the
+            # generator can distinguish atom refs from regular strings
+            # when emitting bootstrap code.
+            values.append("@" + item)
+        elif isinstance(item, tuple):
+            # Parenthesized flag group like ``(PURE)`` — skip.
+            continue
+        # Skip nested TABLE/LTABLE (translator emits inner tables
+        # separately; we don't currently need nested-table data).
+    if head == "LTABLE":
+        # ZIL's LTABLE stores the element count at offset 0 implicitly.
+        return [len(values)] + values
     return values
 
 

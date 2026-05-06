@@ -1,4 +1,4 @@
-#!moo verb move remove goto walk perform next_sibling --on $zil_sdk
+#!moo verb remove goto walk perform next_sibling --on "System Object"
 # pylint: disable=return-outside-function,undefined-variable
 """
 Movement helpers for ZIL games.
@@ -9,15 +9,17 @@ objects.  ``walk`` does the full exit-Object traversal that the substrate
 direct property/location helper that's marginally too multi-line for the
 translator to inline.
 
-move:    args[0] = object, args[1] = destination
 remove:  args[0] = object  (moves to None / limbo)
-goto:    args[0] = destination room  (moves context.player)
+goto:    args[0] = destination room  (moves context.player or vehicle)
 walk:    args[0] = direction string  (traverse the matching exit Object)
 perform: args[0] = verb name string, args[1] = prso, args[2] = prsi
          Calls ACTION handler with explicit objects (ZIL PERFORM equivalent)
 next_sibling: args[0] = object — returns the next sibling in
          ``args[0].location.contents`` (pk-ordered) or ``None``.  The ZIL
          translation of ``<NEXT? .CONT>`` calls this.
+
+The ``here`` verb (vehicle-transparent room) lives on ``$player`` since it
+reads from the player rather than taking explicit arguments.
 """
 
 from moo.sdk import context, NoSuchPropertyError
@@ -28,18 +30,39 @@ def place(target, destination):
     target.save()
 
 
-if verb_name == "move":
-    place(args[0], args[1])
+def current_vehicle():
+    """Return the vehicle object if the player is inside one, else None."""
+    loc = context.player.location
+    if loc is None:
+        return None
+    try:
+        is_veh = loc.get_property("vehicle")
+    except NoSuchPropertyError:
+        is_veh = False
+    return loc if is_veh else None
 
-elif verb_name == "remove":
+
+def effective_room():
+    """Effective current room: vehicle's location when inside one."""
+    cur = current_vehicle()
+    if cur is not None:
+        return cur.location
+    return context.player.location
+
+
+if verb_name == "remove":
     place(args[0], None)
 
 elif verb_name == "goto":
-    place(context.player, args[0])
+    veh = current_vehicle()
+    if veh is not None:
+        place(veh, args[0])
+    else:
+        place(context.player, args[0])
 
 elif verb_name == "walk":
     direction = args[0]
-    room = context.player.location
+    room = effective_room()
     if room is None:
         print("You can't go that way.")
         return
@@ -55,48 +78,10 @@ elif verb_name == "walk":
     if exit_obj is None:
         print("You can't go that way.")
         return
-
-    try:
-        dest = exit_obj.get_property("dest")
-    except NoSuchPropertyError:
-        dest = None
-    if dest is None:
-        try:
-            routine_name = exit_obj.get_property("exit_routine")
-        except NoSuchPropertyError:
-            routine_name = None
-        if routine_name:
-            zthing = _.get_property("zork_thing")
-            if zthing is not None and zthing.has_verb(routine_name.lower()):
-                dest = zthing.invoke_verb(routine_name.lower())
-
-    if not dest:
-        try:
-            print(exit_obj.get_property("nogo_msg"))
-        except NoSuchPropertyError:
-            try:
-                exit_obj.get_property("exit_routine")  # routine printed its own block message
-            except NoSuchPropertyError:
-                print("You can't go that way.")
-        return
-
-    try:
-        print(exit_obj.get_property("message"))
-    except NoSuchPropertyError:
-        pass
-
-    context.player.location = dest
-    context.player.save()
-
-    if dest.has_verb("look_action"):
-        dest.invoke_verb("look_action")
-    elif dest.has_verb("look"):
-        dest.invoke_verb("look")
-    else:
-        try:
-            print(dest.get_property("description"))
-        except NoSuchPropertyError:
-            print(f"You enter {dest.name}.")
+    # Delegate to the exit's own move verb.  Per-exit overrides handle
+    # conditional/per-routine/door variants; the default at
+    # extras/zil_import/verbs/zil_sdk/exit_move.py covers the common case.
+    exit_obj.invoke_verb("move", context.player)
 
 elif verb_name == "perform":
     verb_str = args[0]

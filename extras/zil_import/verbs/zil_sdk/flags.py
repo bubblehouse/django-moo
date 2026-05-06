@@ -1,33 +1,58 @@
-#!moo verb flag set_flag getp --on $zil_sdk
+#!moo verb flag set_flag getp --on "Zork Root"
 # pylint: disable=return-outside-function,undefined-variable
 """
-Read or write properties on a Zork object.
+Property/flag helpers for ZIL game objects.
 
-flag:     args[0] = object, args[1] = property name
-          Returns bool (False if property missing)
-set_flag: args[0] = object, args[1] = property name, args[2] = value
-getp:     args[0] = object, args[1] = property name [, args[2] = default]
-          Returns the property value, or default (None) if not defined.
-          ZIL's ``<GETP obj prop>`` returns 0 for missing properties; verb
-          translation routes through this helper to avoid NoSuchPropertyError.
+flag:     args[0] = property name → bool (False if missing)
+set_flag: args[0] = property name, args[1] = value
+getp:     args[0] = property name [, args[1] = default]
+          ZIL's ``<GETP obj prop>`` returns 0 for missing properties; this
+          helper lets translated code avoid ``NoSuchPropertyError``.
+
+``obvious`` is intrinsic on Object (a model field, not a Property), so
+both reads and writes route through attribute access.
+
+Translated routines call these as methods on the target object, e.g.
+``obj.flag("openable")``, ``obj.set_flag("obvious", True)``,
+``obj.getp("strength")``.
 """
 
 from moo.sdk import NoSuchPropertyError
 
 if verb_name == "set_flag":
-    args[0].set_property(args[1], bool(args[2]))
+    name = args[0]
+    value = bool(args[1])
+    if name == "obvious":
+        this.obvious = value
+        this.save()
+    elif name == "invisible":
+        # ZIL ``INVISIBLE`` flag inverts ``obvious``: setting INVISIBLE
+        # hides from the parser, clearing it reveals.  Routing through
+        # the intrinsic field keeps the parser's dobj search consistent
+        # with what translated routines like RUG-FCN expect after a
+        # ``<FCLEAR obj ,INVISIBLE>``.
+        this.obvious = not value
+        this.save()
+    else:
+        this.set_property(name, value)
 elif verb_name == "getp":
-    obj = args[0]
-    name = args[1]
-    default = args[2] if len(args) > 2 else None
-    if obj is None:
-        return default
+    name = args[0]
+    default = args[1] if len(args) > 1 else None
+    if name == "obvious":
+        return this.obvious
+    if name == "invisible":
+        return not this.obvious
     try:
-        return obj.get_property(name)
+        return this.get_property(name)
     except NoSuchPropertyError:
         return default
 else:
+    name = args[0]
+    if name == "obvious":
+        return bool(this.obvious)
+    if name == "invisible":
+        return not this.obvious
     try:
-        return bool(args[0].get_property(args[1]))
+        return bool(this.get_property(name))
     except NoSuchPropertyError:
         return False
