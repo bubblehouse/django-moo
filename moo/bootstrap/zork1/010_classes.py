@@ -4,13 +4,9 @@
 
 # The system object (_) is created by initialize_dataset.
 # Wizard is also created there. Everything else we create from scratch.
-
-# ---------------------------------------------------------------------------
-# ZIL SDK object
-# Translated verbs call ZIL intrinsics via _.zil_sdk.FUNCTION(args).
-# ---------------------------------------------------------------------------
-zil_sdk, _created = bootstrap.get_or_create_object("ZIL SDK", unique_name=True)
-_.set_property("zil_sdk", zil_sdk)
+# ZIL SDK verbs are attached directly to the System Object, $player, and
+# $root_class — translated routines call them as ``_.flag(...)``,
+# ``context.player.zstate_set(...)``, ``context.player.move(...)``, etc.
 
 # ---------------------------------------------------------------------------
 # Root classes
@@ -26,8 +22,12 @@ zork_root.set_property("size", 5)
 zork_root.set_property("capacity", 0)
 zork_root.set_property("value", 0)
 zork_root.set_property("tvalue", 0)
-_.set_property("zork_root", zork_root)
 
+# ``zork_thing`` is the only substrate handle that lives on the System
+# Object — translated routines invoke cross-class verbs via
+# ``_.zork_thing.foo()`` (predicates, dispatchers, M-clause splits).  The
+# remaining substrate classes are reachable via ``--on "Zork <Class>"`` at
+# verb-load time and need no system-property alias.
 zork_thing, _created = bootstrap.get_or_create_object("Zork Thing", unique_name=True, parents=[zork_root])
 zork_thing.set_property("takeable", False)
 zork_thing.set_property("size", 5)
@@ -43,7 +43,6 @@ zork_container.set_property("open", False)
 zork_container.set_property("size", 10)
 zork_container.set_property("capacity", 10)
 zork_container.set_property("value", 0)
-_.set_property("zork_container", zork_container)
 
 zork_room, _created = bootstrap.get_or_create_object("Zork Room", unique_name=True, parents=[zork_root])
 zork_room.set_property("value", 0)
@@ -52,20 +51,16 @@ zork_room.set_property("outdoor", False)
 zork_room.set_property("sacred", False)
 zork_room.set_property("maze", False)
 zork_room.set_property("dark", False)
-_.set_property("zork_room", zork_room)
 
 zork_actor, _created = bootstrap.get_or_create_object("Zork Actor", unique_name=True, parents=[zork_root])
-_.set_property("zork_actor", zork_actor)
-_.set_property("player", zork_actor)  # alias so --on $player verbs attach here
 
-# Wizard must inherit from Zork Actor so the parser can resolve verbs like
-# ``take`` (registered ``--on $player``, which aliases to ``zork_actor``)
-# when commands are dispatched on the Wizard avatar.
+# Wizard must inherit from Zork Actor so the parser can resolve verbs
+# registered ``--on "Zork Actor"`` when commands dispatch on the Wizard
+# avatar.
 if zork_actor not in wizard.parents.all():
     wizard.parents.add(zork_actor)
 
 zork_exit, _created = bootstrap.get_or_create_object("Zork Exit", unique_name=True, parents=[zork_root])
-_.set_property("zork_exit", zork_exit)
 
 _classes = {
     "zork_root": zork_root,
@@ -76,4 +71,3 @@ _classes = {
     "zork_exit": zork_exit,
 }
 log.info("Zork classes: %d created/updated", len(_classes))
-log.info("ZIL SDK registered as _.zil_sdk")

@@ -25,6 +25,8 @@ from moo import bootstrap
 from moo.core import code, lookup
 
 log = logging.getLogger(__name__)
+for _line in "ZORK I: The Great Underground Empire\n  Original (c) Infocom, Inc. 1980; MIT-licensed source release 2025.\n  Zork is a registered trademark of Activision Publishing, Inc.\n  DjangoMOO bootstrap: 110 rooms, 140 objects.".splitlines():
+    log.info(_line)
 _repo = bootstrap.initialize_dataset("zork1")
 wizard = lookup("Wizard")
 _ = lookup("System Object")
