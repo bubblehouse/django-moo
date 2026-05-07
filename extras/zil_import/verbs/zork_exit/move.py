@@ -39,11 +39,11 @@ def current_vehicle():
 
 def resolve_dest():
     try:
-        dest = this.get_property("dest")
+        target = this.get_property("dest")
     except NoSuchPropertyError:
-        dest = None
-    if dest is not None:
-        return dest
+        target = None
+    if target is not None:
+        return target
     # exit_routine is a verb name on $zork_thing returning the
     # destination room (or None to block).  The routine prints its
     # own block message before returning None.
@@ -57,10 +57,10 @@ def resolve_dest():
     # generator registers them as snake_case verbs (``trap_door_exit``)
     # so dot-syntax dispatch works.  Snake-case the lookup name.
     verb_name_snake = routine_name.lower().replace("-", "_")
-    zthing = _.get_property("zork_thing")
-    if zthing is None or not zthing.has_verb(verb_name_snake):
+    zthing_local = _.get_property("zork_thing")
+    if zthing_local is None or not zthing_local.has_verb(verb_name_snake):
         return None
-    return zthing.invoke_verb(verb_name_snake)
+    return zthing_local.invoke_verb(verb_name_snake)
 
 
 dest = resolve_dest()
@@ -86,6 +86,16 @@ if veh is not None:
 else:
     context.player.location = dest
     context.player.save()
+
+# Mirror the relevant tail of ZIL's GOTO: fire the room's M-ENTER hook
+# (enterfunc) for per-room setup, then award the first-visit discovery
+# bonus via SCORE-OBJ.  The exit-driven walk path bypasses GOTO, so
+# without this both behaviours are silently dropped.
+if dest.has_verb("enterfunc", recurse=False):
+    dest.invoke_verb("enterfunc")
+zthing = _.get_property("zork_thing")
+if zthing is not None and zthing.has_verb("score_obj"):
+    zthing.invoke_verb("score_obj", dest)
 
 if dest.has_verb("look_action"):
     dest.invoke_verb("look_action")

@@ -65,10 +65,10 @@ _KNOWN_PRIMITIVE_LEAKS: set[str] = {
     "zork_thing/daemons/i_sword.py",
     "zork_thing/helpers/other_side.py",
     "zork_thing/substrate_pre/pre_fill.py",
-    # zil_sdk/dispatch.py mentions getpt/ptsize/UEXIT in a comment
+    # system/dispatch.py mentions getpt/ptsize/UEXIT in a comment
     # explaining the quarantine — not actual leakage.  Allowlisted so the
     # word-boundary scan doesn't trip on the documentation.
-    "zil_sdk/dispatch.py",
+    "system/dispatch.py",
 }
 
 
@@ -165,13 +165,12 @@ def test_allowlist_does_not_grow_stale() -> None:
 
 
 def test_zil_sdk_templates_have_no_primitives() -> None:
-    """The zil_sdk and system templates we control must stay clean.
+    """The hand-edited templates under ``extras/zil_import/verbs/`` must
+    stay clean.  These are copied verbatim into the generated bootstrap;
+    any primitive leakage here is ours to fix immediately, not a
+    translator-output artifact.
 
-    These directories are hand-edited templates copied verbatim into the
-    bootstrap.  Any primitive leakage here is ours to fix immediately, not
-    a translator-output artifact.
-
-    The zil_sdk/dispatch.py file is allowed to mention primitives in
+    The ``system/dispatch.py`` file is allowed to mention primitives in
     comments documenting the WALK_VERBS quarantine — we strip comments
     before scanning to avoid false positives.
     """

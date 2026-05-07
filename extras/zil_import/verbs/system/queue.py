@@ -52,9 +52,16 @@ if verb_name == "tick":
         return
     for entry in due:
         name = entry.get("name")
-        if name and zthing.has_verb(name):
+        if not name:
+            continue
+        # Daemons are queued under their ZIL atom (UPPER-KEBAB or
+        # lower-kebab like ``i-river``); the verb registry stores them
+        # snake-cased (``i_river``) per the translator's identifier
+        # sanitization.  Convert kebab → snake before lookup.
+        verb = name.lower().replace("-", "_")
+        if zthing.has_verb(verb):
             try:
-                zthing.invoke_verb(name)
+                zthing.invoke_verb(verb)
             except Exception:  # pylint: disable=broad-except
                 # Drop the broken daemon — re-queueing it would just
                 # crash on the next tick.  A future Phase 3 fix will
