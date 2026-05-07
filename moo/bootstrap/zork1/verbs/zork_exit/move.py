@@ -39,11 +39,11 @@ def current_vehicle():
 
 def resolve_dest():
     try:
-        dest = this.get_property("dest")
+        target = this.get_property("dest")
     except NoSuchPropertyError:
-        dest = None
-    if dest is not None:
-        return dest
+        target = None
+    if target is not None:
+        return target
     # exit_routine is a verb name on $zork_thing returning the
     # destination room (or None to block).  The routine prints its
     # own block message before returning None.
@@ -57,10 +57,10 @@ def resolve_dest():
     # generator registers them as snake_case verbs (``trap_door_exit``)
     # so dot-syntax dispatch works.  Snake-case the lookup name.
     verb_name_snake = routine_name.lower().replace("-", "_")
-    zthing = _.get_property("zork_thing")
-    if zthing is None or not zthing.has_verb(verb_name_snake):
+    zthing_local = _.get_property("zork_thing")
+    if zthing_local is None or not zthing_local.has_verb(verb_name_snake):
         return None
-    return zthing.invoke_verb(verb_name_snake)
+    return zthing_local.invoke_verb(verb_name_snake)
 
 
 dest = resolve_dest()
