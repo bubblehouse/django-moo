@@ -25,8 +25,10 @@ Run:
 from __future__ import annotations
 
 import importlib.util
+import io
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 # ``moo_ssh`` lives in the game-designer toolbox and isn't a normal Python
@@ -138,6 +140,38 @@ case.set_property('open', False); case.save()
 wiz.set_property('zstate_rug_moved', False)
 wiz.set_property('zstate_score', 0)
 wiz.set_property('zstate_base_score', 0)
+# Restore first-visit room VALUE bonuses — SCORE-OBJ zeroes ``value`` after
+# crediting it, so a previous smoke run will have left these at 0.  Re-seed
+# from the canonical ZIL values so each smoke run accumulates the full
+# room-discovery bonus (Kitchen=10, Cellar=25, Treasure-Room=25,
+# EW-Passage=5 = 65 total).
+for _name, _val in (('Kitchen', 10), ('Cellar', 25), ('Treasure Room', 25), ('East-West Passage', 5)):
+    _r = Object.global_objects.filter(name=_name, site=site).first()
+    if _r:
+        _r.set_property('value', _val)
+# LIGHT-SHAFT: reset to 13 so the timber-room bonus fires each run.
+wiz.set_property('zstate_light_shaft', 13)
+# Restore per-treasure first-take VALUE — same reset reason as room values.
+for _treasure_atom in (
+    'crystal skull', 'sceptre', 'chalice', 'crystal trident', 'gold coffin',
+    'huge diamond', 'jade figurine', 'leather bag of coins', 'large emerald',
+    'painting', 'platinum bar', 'pot of gold', 'sapphire-encrusted bracelet',
+    'beautiful jeweled scarab', 'torch', 'trunk of jewels',
+    'jewel-encrusted egg', 'beautiful brass bauble', 'golden clockwork canary',
+):
+    _t = Object.global_objects.filter(name=_treasure_atom, site=site).first()
+    if _t and _t.has_property('tvalue'):
+        # canonical (V, T) per ZIL — picked up from extras/zil_import IR.
+        _v_map = {
+            'crystal skull': 10, 'sceptre': 4, 'chalice': 10, 'crystal trident': 4,
+            'gold coffin': 10, 'huge diamond': 10, 'jade figurine': 5,
+            'leather bag of coins': 10, 'large emerald': 5, 'painting': 4,
+            'platinum bar': 10, 'pot of gold': 10, 'sapphire-encrusted bracelet': 5,
+            'beautiful jeweled scarab': 5, 'torch': 14, 'trunk of jewels': 15,
+            'jewel-encrusted egg': 5, 'beautiful brass bauble': 1,
+            'golden clockwork canary': 6,
+        }
+        _t.set_property('value', _v_map[_treasure_atom])
 wiz.set_property('zstate_dome_flag', False)
 wiz.set_property('zstate_lit', True)
 # Clear daemon queue and turn counter so a previous run's broken
@@ -308,6 +342,45 @@ def _reset_zork1_state() -> None:
             "shell",
             "-c",
             _RESET_SNIPPET,
+        ],
+        check=True,
+        cwd=_REPO_ROOT,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+
+_TELEPORT_TO_LIVING_ROOM = """
+from django.contrib.sites.models import Site
+from moo.core.models.object import Object
+site = Site.objects.get(domain='zork1.local')
+wiz = Object.global_objects.get(name='Wizard', site=site)
+lr = Object.global_objects.get(name='Living Room', site=site)
+wiz.location = lr; wiz.save()
+wiz.set_property('zstate_here', lr)
+print('teleported to Living Room')
+"""
+
+
+def _teleport_to_living_room() -> None:
+    """Reposition Wizard at Living Room without using a non-existent verb.
+
+    Sandy Beach is a navigational dead end (the boat is one-way) so the only
+    way to fire the trophy-case turnfunc on the last three treasures is to
+    move the player by mutating ``location`` directly.  The treasure deposits
+    that follow still flow through V-PUT → SCORE-OBJ / OTVAL-FROB exactly as
+    canonical play would — only the navigation step is shortcut.
+    """
+    subprocess.run(
+        [
+            "docker-compose",
+            "run",
+            "--rm",
+            "webapp",
+            "manage.py",
+            "shell",
+            "-c",
+            _TELEPORT_TO_LIVING_ROOM,
         ],
         check=True,
         cwd=_REPO_ROOT,
@@ -851,11 +924,41 @@ ZORK_COMMANDS = [
     ("dig sand with shovel", "scarab"),  # 3rd dig should reveal the scarab
     ("take scarab", "Taken"),  # treasure: ancient scarab (TVALUE=5)
     ("go southwest", None),  # back to Sandy Beach
+    # The river is one-way (boat only drifts downstream) and Sandy Beach
+    # has no overland exit back to the surface — canonical Zork only lets
+    # you escape this leg via the endgame map after solving the trophy
+    # case.  We're not running the endgame, so to deposit the last three
+    # treasures we mutate the player back into Living Room and use the
+    # game's normal ``put`` to fire the trophy-case turnfunc.  The mutation
+    # is purely a navigation shortcut — score updates still flow through
+    # SCORE-OBJ / OTVAL-FROB exactly as canonical play would.
+    ("__teleport_to_living_room__", None),
+    ("put torch in case", None),  # treasure: torch (TVALUE=6)
+    ("put emerald in case", None),  # treasure: emerald (TVALUE=10)
+    ("put scarab in case", None),  # treasure: scarab (TVALUE=5)
+    # Final score: with all 19 reachable treasures deposited and all 4
+    # bonus rooms (KITCHEN/CELLAR/TREASURE-ROOM/EW-PASSAGE) plus the
+    # LIGHT-SHAFT timber-room bonus accumulated, this should be 350.
+    ("score", "Master Adventurer"),
 ]
 
 
 def main() -> int:
     failures: list[tuple[str, str, str]] = []
+
+    # Switch stdout/stderr to line-buffered so ``tail -f`` on a redirected
+    # log file (e.g. ``zork1_smoke 2>&1 | tee /tmp/smoke.out``) sees each
+    # ``>>> 'cmd' …`` line as it's emitted, not in 4KB chunks at exit.
+    # ``reconfigure`` is the standard Python 3.7+ way to re-buffer stdout
+    # without spawning a subshell or relying on ``PYTHONUNBUFFERED``.
+    try:
+        sys.stdout.reconfigure(line_buffering=True)
+        sys.stderr.reconfigure(line_buffering=True)
+    except (AttributeError, io.UnsupportedOperation):
+        # Some redirected handles don't support reconfigure — fall back
+        # to flushing manually after each output (downstream code already
+        # passes flush=True on important prints).
+        pass
 
     print("[smoke] resetting zork1 world state ...", flush=True)
     _reset_zork1_state()
@@ -879,11 +982,59 @@ def main() -> int:
 
         moo.enable_delimiters()
 
+        timings: list[tuple[str, float, bool]] = []
         for cmd, expected in ZORK_COMMANDS:
+            # Sentinel commands prefixed with ``__`` aren't typed at the
+            # MOO prompt — they trigger a Python helper instead.  Used to
+            # bridge gaps where the canonical game has no in-world
+            # navigation (e.g., escaping the Sandy Beach river dead end).
+            if cmd == "__teleport_to_living_room__":
+                t0 = time.monotonic()
+                _teleport_to_living_room()
+                elapsed = time.monotonic() - t0
+                timings.append((cmd, elapsed, False))
+                print(f">>> {cmd!r} (mutation, t={elapsed:.2f}s)\n", flush=True)
+                continue
+            t0 = time.monotonic()
             out = moo.run(cmd)
-            print(f">>> {cmd!r} (out len={len(out)})\n{out}\n")
+            elapsed = time.monotonic() - t0
+            timed_out = bool(getattr(moo, "last_run_timed_out", False))
+            timings.append((cmd, elapsed, timed_out))
+            # ``[no-suffix]`` means the verb produced no synchronous output,
+            # so the shell omitted PREFIX/SUFFIX wrapping (intentional —
+            # see moo/shell/prompt.py:922) and the poll loop hit its
+            # ``self.timeout`` instead of catching a real completion
+            # signal.  Distinct from a verb that genuinely took ``elapsed``
+            # seconds of work.  Don't count this as a perf regression.
+            tag = " [no-suffix]" if timed_out else ""
+            print(f">>> {cmd!r} (out len={len(out)}, t={elapsed:.2f}s{tag})\n{out}\n", flush=True)
             if expected and expected.lower() not in out.lower():
                 failures.append((cmd, expected, out))
+
+        # Timing summary: total + slowest commands.  Anything > 2s is a
+        # performance regression candidate; > 5s is actively painful —
+        # but exclude ``[no-suffix]`` rows from the slowest list since
+        # their wall-clock is the smoke's poll timeout, not real work.
+        total_real = sum(t for _, t, to in timings if not to)
+        no_suffix = [(cmd, t) for cmd, t, to in timings if to]
+        real = [(cmd, t) for cmd, t, to in timings if not to]
+        slowest = sorted(real, key=lambda kv: kv[1], reverse=True)[:10]
+        print(
+            f"\n=== TIMING ({len(timings)} commands, "
+            f"total real {total_real:.1f}s, "
+            f"{len(no_suffix)} [no-suffix] excluded) ==="
+        )
+        print("slowest (real work):")
+        for cmd, t in slowest:
+            print(f"  {t:6.2f}s  {cmd}")
+        if no_suffix:
+            print(
+                f"\n[no-suffix] commands ({len(no_suffix)}) — verb returned no "
+                f"synchronous content; wall-clock is the smoke's poll timeout, "
+                f"not perf regression:"
+            )
+            for cmd, t in no_suffix:
+                print(f"  {t:6.2f}s  {cmd}")
 
     if failures:
         print("FAIL:")

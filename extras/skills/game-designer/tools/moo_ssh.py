@@ -67,6 +67,7 @@ class MooSSH:
         password=DEFAULT_PASSWORD,
         timeout=DEFAULT_TIMEOUT,
         verbose=True,
+        prefix_wait=2.0,
     ):
         self.host = host
         self.port = port
@@ -74,6 +75,25 @@ class MooSSH:
         self.password = password
         self.timeout = timeout
         self.verbose = verbose
+        # Once the command has been sent, wait at most ``prefix_wait``
+        # seconds for the PREFIX marker before declaring "no synchronous
+        # output" and bailing.  The shell omits PREFIX/SUFFIX wrapping
+        # for empty-content tasks (``moo/shell/prompt.py`` line 922), so
+        # without this short-circuit the poll loop sits idle for the full
+        # ``timeout`` (10s in the smoke).  2.0s comfortably exceeds every
+        # real-work command's server time (slowest is ~0.4s) while still
+        # cutting ~24s off the smoke wall-clock for the three known
+        # no-output commands (pray / light match / launch).
+        self.prefix_wait = prefix_wait
+        # Set after every ``run()`` call: True when the SUFFIX marker was
+        # never observed within ``self.timeout`` seconds.  This happens
+        # when the verb produces no synchronous content — the shell
+        # intentionally omits PREFIX/SUFFIX wrapping for empty-content
+        # tasks (see ``moo/shell/prompt.py`` line 922 comment) — so the
+        # poll loop exits at the deadline rather than on a real signal.
+        # Callers can check this flag to distinguish "command produced no
+        # output" from "command actually took 10s".
+        self.last_run_timed_out = False
         self.child = None
         self.prefix_marker = None
         self.suffix_marker = None
@@ -170,6 +190,13 @@ class MooSSH:
         if hasattr(self, "suffix_marker") and self.suffix_marker:
             accumulated = []
             deadline = time.time() + self.timeout
+            # Two-phase deadline: short window to see PREFIX, full window
+            # for SUFFIX once PREFIX has been observed.  Empty-content
+            # tasks emit neither marker, so once prefix_deadline elapses
+            # without a PREFIX we know no synchronous output is coming.
+            prefix_deadline = time.time() + self.prefix_wait
+            prefix_seen = False
+            suffix_seen = False
 
             while time.time() < deadline:
                 try:
@@ -178,15 +205,28 @@ class MooSSH:
                         accumulated.append(chunk)
                         # Check if we've received the suffix
                         full_output = "".join(accumulated)
+                        if not prefix_seen and self.prefix_marker in full_output:
+                            prefix_seen = True
                         if self.suffix_marker in full_output:
+                            suffix_seen = True
                             break
                 except (pexpect.TIMEOUT, pexpect.EOF):
                     time.sleep(0.1)
+                if not prefix_seen and time.time() >= prefix_deadline:
+                    # PREFIX never arrived — verb produced no synchronous
+                    # output.  Bail rather than waiting for the full
+                    # timeout (saves ~8s per such command).
+                    break
 
+            self.last_run_timed_out = not suffix_seen
             raw = "".join(accumulated)
             output = self._extract_delimited_output(raw)
             time.sleep(0.1)
         else:
+            # Fallback path: no SUFFIX marker is configured, so "timeout"
+            # isn't a meaningful concept — we always wait the fixed
+            # window.  Keep the flag False for callers that check it.
+            self.last_run_timed_out = False
             # Fallback: timeout-based polling (original behavior)
             accumulated = []
             for i in range(4):
