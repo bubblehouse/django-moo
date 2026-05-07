@@ -87,6 +87,36 @@ _PY_BUILTIN_SHADOWS = frozenset(
 )
 
 
+# Pylint disables emitted on generated verb files.
+#
+# ``_DISABLE_INTRINSIC`` covers the two messages that are inherent to the
+# DjangoMOO verb-file format and cannot be eliminated at the translator
+# level: ``return-outside-function`` (verbs use module-level ``return``)
+# and ``undefined-variable`` (``context``/``passthrough``/``verb_name``/
+# ``args`` are injected at execution time).  Manually-written verbs in
+# ``moo/bootstrap/default/`` carry the same two-disable header.
+#
+# ``_DISABLE_FULL`` adds the legacy "tolerant" set used when the operator
+# regenerates without ``--lint``: it absorbs translator-emitted patterns
+# (``unnecessary-pass``, ``pointless-statement``, ``no-else-return``, ...)
+# that an opt-in lint run would surface as actionable issues.  When
+# ``--lint`` is active the generator emits ``_DISABLE_INTRINSIC`` only and
+# the translator must produce code that pylint accepts on its merits.
+DISABLE_INTRINSIC = "return-outside-function,undefined-variable"
+DISABLE_FULL = (
+    "return-outside-function,undefined-variable,pointless-statement,"
+    "unnecessary-negation,disallowed-name,using-constant-test,"
+    "redefined-outer-name,no-else-return,unused-variable,"
+    "redefined-builtin,singleton-comparison,unnecessary-pass,"
+    "expression-not-assigned"
+)
+
+
+def pylint_disable_line(*, lint_active: bool) -> str:
+    """Return the ``# pylint: disable=...`` line for a generated verb file."""
+    return "# pylint: disable=" + (DISABLE_INTRINSIC if lint_active else DISABLE_FULL)
+
+
 def _verb_attr_safe(name: str) -> bool:
     """True when a verb name can be invoked via attribute access.
 
@@ -173,6 +203,29 @@ def _as_object(expr: str) -> str:
         atom = stripped[1:-1]
         return f'lookup("{atom.lower().replace("-", " ")}")'
     return stripped
+
+
+def _ends_in_unconditional_return(body_lines: list[str]) -> bool:
+    """Return True if the last semantically meaningful body line is an
+    unconditional top-level ``return ...`` statement.
+
+    Used to suppress redundant ``return passthrough()`` appends that would
+    trip pylint's ``unreachable-code`` (W0101) check.  Only inspects the
+    very last non-empty, non-comment line at indent 0 — branches inside
+    ``if``/``while`` are intentionally not considered "unconditional".
+    """
+    for line in reversed(body_lines):
+        stripped = line.lstrip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        # Indented lines mean the last statement is inside a block; the
+        # block doesn't guarantee an unconditional exit.
+        if line[: len(line) - len(stripped)]:
+            return False
+        return stripped.startswith("return") and (
+            len(stripped) == len("return") or stripped[len("return")] in (" ", "\n")
+        )
+    return False
 
 
 # ---------------------------------------------------------------------------
@@ -389,6 +442,7 @@ class ZilTranslator:
         display_names: dict[str, str] | None = None,
         substrate_display_names: dict[str, str] | None = None,
         routine_to_verbs: dict[str, list[str]] | None = None,
+        lint_active: bool = False,
     ) -> None:
         self.routine = routine
         # Atoms that name a Room/Object — used to wrap atom refs as
@@ -434,6 +488,12 @@ class ZilTranslator:
         # ``<VERB? FOO BAR>`` form during ``_translate_body``).  Used by
         # ``_shebang()``.
         self._verbs_handled: set[str] = set()
+        # Set by the generator before ``translate()`` is called: the verbs
+        # already emitted as per-clause split files.  ``_shebang()``
+        # subtracts these from the residual's verb list so the residual
+        # doesn't compete with the per-clause splits for the same verb
+        # name in parser dispatch.
+        self._clause_split_verbs: set[str] = set()
         # ``<REPEAT … <RETURN>>`` exits the loop, not the function.  Track
         # how many REPEAT bodies we're nested inside so the RETURN handler
         # can emit ``break`` instead of ``return None`` when appropriate.
@@ -444,6 +504,10 @@ class ZilTranslator:
         # (which equals the invoked verb name = "preturnfunc" at that
         # point in dispatch).
         self._in_m_clause = False
+        # When True, emit only the format-intrinsic pylint disables in the
+        # verb-file header — translator-emitted patterns must pass pylint
+        # on their merits rather than being silenced by file-level disables.
+        self.lint_active = lint_active
 
     def _is_noop_body(self, forms: list) -> bool:
         """Return True when an M-clause body is effectively a no-op.
@@ -733,7 +797,10 @@ class ZilTranslator:
         # only handles the CELLAR branch falls off silently in LIVING-ROOM
         # — masking the per-clause Living-Room split because the residual's
         # PK is lower (loaded first → wins same-rank tie in parser dispatch).
-        if self.action_owner and any_pruned:
+        # Skip the append when the body already ends in an unconditional
+        # ``return`` at indent 0 — otherwise pylint flags the trailing
+        # passthrough as W0101 (unreachable-code).
+        if self.action_owner and any_pruned and not _ends_in_unconditional_return(body_lines):
             body_lines.append("return passthrough()")
         # syntax-finish bucket A: inline pre-X check at top of substrate body
         # for V-routines whose PRE-X handler exists.  Replaces the old
@@ -758,7 +825,13 @@ class ZilTranslator:
             unpack_lines.append(f"{_sanitize_ident(param)} = args[{i}] if len(args) > {i} else {default_expr}")
         for aux in self.routine.aux_vars:
             default = self.routine.initial_values.get(aux)
-            default_expr = self._translate_expr(default) if default is not None else "None"
+            # Z-machine semantics: aux locals reset to 0 on each routine
+            # call.  Translated bodies use these vars in arithmetic
+            # (``-count``, ``count < 0``, ``count + 1``) and pylint is
+            # correct to flag ``-None`` as a real runtime TypeError —
+            # emit ``0`` so the default initialization matches the
+            # source language and the body actually runs.
+            default_expr = self._translate_expr(default) if default is not None else "0"
             unpack_lines.append(f"{_sanitize_ident(aux)} = {default_expr}")
         body_lines, unpack_lines = self._polish(body_lines, unpack_lines)
         # If the residual body has any <VERB?> check, bind ``the_player_verb``
@@ -776,10 +849,18 @@ class ZilTranslator:
         self._auto_import(unpack_lines + body_lines)
         imports = self._build_imports()
         header = self._shebang()
+        # When per-clause splits cover every verb the residual would
+        # have registered, the residual has nothing to dispatch on —
+        # skip emission so we don't write a verb file with an empty
+        # verb list.  The action-owner case is the only one that can
+        # produce this; non-action-owner routines always have a
+        # well-defined verb name from ``self.routine.name``.
+        if self.action_owner and self._verbs_handled and not (self._verbs_handled - self._clause_split_verbs):
+            return ""
         parts = [
             header,
             "# Generated by extras/zil_import — do not edit by hand",
-            "# pylint: disable=return-outside-function,undefined-variable,pointless-statement,unnecessary-negation,disallowed-name,using-constant-test,redefined-outer-name,no-else-return,unused-variable,redefined-builtin,singleton-comparison,unnecessary-pass,expression-not-assigned",
+            pylint_disable_line(lint_active=self.lint_active),
             "",
         ]
         if imports:
@@ -829,11 +910,30 @@ class ZilTranslator:
             unpack_lines.append(f"{_sanitize_ident(param)} = args[{i}] if len(args) > {i} else {default_expr}")
         for aux in self.routine.aux_vars:
             default = self.routine.initial_values.get(aux)
-            default_expr = self._translate_expr(default) if default is not None else "None"
+            # Z-machine semantics: aux locals reset to 0 on each routine
+            # call.  Translated bodies use these vars in arithmetic
+            # (``-count``, ``count < 0``, ``count + 1``) and pylint is
+            # correct to flag ``-None`` as a real runtime TypeError —
+            # emit ``0`` so the default initialization matches the
+            # source language and the body actually runs.
+            default_expr = self._translate_expr(default) if default is not None else "0"
             unpack_lines.append(f"{_sanitize_ident(aux)} = {default_expr}")
         # do_command passes the player's typed verb as args[1] (so PRSA
-        # resolves correctly inside M-clauses).  Bind it for body refs.
-        unpack_lines.append("the_player_verb = args[1] if len(args) > 1 else verb_name")
+        # resolves correctly inside M-clauses).  When the M-clause is
+        # invoked from a different code path that doesn't pass args[1]
+        # (e.g. ``parse.py``'s post-dispatch ``location.invoke_verb(
+        # "turnfunc")`` for M-END), fall back to ``context.parser.words[0]``
+        # which is the player's typed verb at parse time — the same value
+        # do_command would have passed.  Without this fallback, M-END
+        # clauses (turnfunc) end up with ``the_player_verb == "turnfunc"``
+        # and ``<VERB? PUT>`` checks fail, breaking the trophy-case score
+        # update path among others.
+        unpack_lines.append(
+            "the_player_verb = args[1] if len(args) > 1 else "
+            "(context.parser.words[0].lower() "
+            "if context.parser is not None and context.parser.words "
+            "else verb_name)"
+        )
         body_lines, unpack_lines = self._polish(body_lines, unpack_lines)
         self._auto_import(unpack_lines + body_lines)
         imports = self._build_imports()
@@ -841,7 +941,7 @@ class ZilTranslator:
         parts = [
             header,
             "# Generated by extras/zil_import — do not edit by hand",
-            "# pylint: disable=return-outside-function,undefined-variable,pointless-statement,unnecessary-negation,disallowed-name,using-constant-test,redefined-outer-name,no-else-return,unused-variable,redefined-builtin,singleton-comparison,unnecessary-pass,expression-not-assigned",
+            pylint_disable_line(lint_active=self.lint_active),
         ]
         if imports:
             parts.append(imports)
@@ -897,6 +997,15 @@ class ZilTranslator:
         """Translate one VERB? clause as a complete verb file body."""
         if self._is_noop_body(body_forms):
             return ""
+        # Pre-populate ``_verbs_handled`` so that ``<RFALSE>`` inside the
+        # clause body emits ``return passthrough()`` (the action-owner
+        # fall-through pattern).  Without this seed, an RFALSE in a verb
+        # clause whose body has no nested ``<VERB?>`` (e.g. TREASURE-INSIDE
+        # OPEN's ``<SCORE-OBJ EMERALD> <RFALSE>``) emits ``return False``
+        # and the substrate v-open never runs — meaning the buoy never
+        # actually opens despite the verb dispatching.
+        for atom in verb_atoms:
+            self._verbs_handled.add(atom.lower())
         # Emit the clause body, optionally wrapped in ``if <extra_test>:``
         # when the original ZIL clause was ``<AND <VERB? X> <other>>``.
         if extra_test is not None:
@@ -911,8 +1020,10 @@ class ZilTranslator:
         # to the substrate verb on the parent class — append it once at
         # the end so the unhandled tail of (e.g.) ``rope.take`` invokes
         # ``Zork Thing.take``.  Earlier ``return``/``return True`` paths
-        # short-circuit this naturally.
-        if self.action_owner:
+        # short-circuit this naturally — and we skip the append when the
+        # body already ends in an unconditional ``return`` so pylint
+        # doesn't flag the trailing passthrough as unreachable-code.
+        if self.action_owner and not _ends_in_unconditional_return(body_lines):
             body_lines.append("return passthrough()")
 
         unpack_lines: list[str] = []
@@ -922,7 +1033,13 @@ class ZilTranslator:
             unpack_lines.append(f"{_sanitize_ident(param)} = args[{i}] if len(args) > {i} else {default_expr}")
         for aux in self.routine.aux_vars:
             default = self.routine.initial_values.get(aux)
-            default_expr = self._translate_expr(default) if default is not None else "None"
+            # Z-machine semantics: aux locals reset to 0 on each routine
+            # call.  Translated bodies use these vars in arithmetic
+            # (``-count``, ``count < 0``, ``count + 1``) and pylint is
+            # correct to flag ``-None`` as a real runtime TypeError —
+            # emit ``0`` so the default initialization matches the
+            # source language and the body actually runs.
+            default_expr = self._translate_expr(default) if default is not None else "0"
             unpack_lines.append(f"{_sanitize_ident(aux)} = {default_expr}")
 
         body_lines, unpack_lines = self._polish(body_lines, unpack_lines)
@@ -942,7 +1059,7 @@ class ZilTranslator:
         parts = [
             header,
             "# Generated by extras/zil_import — do not edit by hand",
-            "# pylint: disable=return-outside-function,undefined-variable,pointless-statement,unnecessary-negation,disallowed-name,using-constant-test,redefined-outer-name,no-else-return,unused-variable,redefined-builtin,singleton-comparison",
+            pylint_disable_line(lint_active=self.lint_active),
             "",
         ]
         if imports:
@@ -1020,7 +1137,15 @@ class ZilTranslator:
         name = self.routine.name.lower().replace("_", "-")
         if self.action_owner and self._verbs_handled:
             atom, _is_room = self.action_owner
-            verbs = " ".join(sorted(self._verbs_handled))
+            # Subtract verbs already covered by per-clause split files so
+            # the residual doesn't compete for them in parser dispatch.
+            # When per-clause split + residual both register the same
+            # verb name on the same object, the parser picks one (the
+            # lower-pk one) and the other branch is unreachable; the
+            # residual losing its share of those verbs is the lesser
+            # evil — its body would have HERE-gated the branch anyway.
+            residual_verbs = self._verbs_handled - self._clause_split_verbs
+            verbs = " ".join(sorted(residual_verbs))
             return f"#!moo verb {verbs} {self._on_for_atom(atom)} --dspec either"
         name = self._SHEBANG_NAME_OVERRIDE.get(name, name)
         # Drop ``v-`` prefix on substrate V-routines so the parser finds
@@ -1310,7 +1435,7 @@ class ZilTranslator:
             # routines that ``SETG`` them to set up a follow-up PERFORM
             # become no-ops since perform() takes its own args.
             if key in {"PRSA", "PRSO", "PRSI", "P-PRSA", "P-PRSO", "P-PRSI", "P-LEXV"}:
-                return [f"{ind}pass  # SETG of parser-state slot is a no-op in DjangoMOO"]
+                return [f"{ind}# SETG of parser-state slot is a no-op in DjangoMOO"]
             val = self._translate_expr(form[2]) if len(form) > 2 else "None"
             return [f"{ind}context.player.zstate_set({repr(key)}, {val})"]
 
@@ -2106,6 +2231,59 @@ class ZilTranslator:
                 out.append(line)
         return out
 
+    # Matches a TELL-style line: ``    print(<EXPR>, end='')`` or with
+    # double quotes.  Group(1) is the leading indent, group(2) is EXPR.
+    # Anchored on a non-greedy EXPR + the closing ``, end=''`` so we
+    # don't accidentally swallow nested commas inside f-strings.
+    _PRINT_END_RE = re.compile(r"^(\s*)print\((.+), end=(?:''|\"\")\)$")
+
+    def _merge_adjacent_prints(self, lines: list[str]) -> list[str]:
+        """Merge runs of ``print(EXPR, end='')`` lines at the same indent.
+
+        ZIL's ``<TELL "X" ,SCORE " Y" ,MOVES>`` emits a sequence of
+        single-print statements (``print("X", end="")`` then
+        ``print(str(score), end="")`` then ``print(" Y", end="")`` …).
+        Each ``print`` is a separate ``writer()`` call, which appends a
+        separate item to the celery task's output list — and the shell
+        renders each item on its own line.  The player sees the score
+        broken across newlines.
+
+        Folding adjacent same-indent print lines into a single
+        ``print("X" + str(score) + " Y" + str(moves), end="")`` matches
+        ZIL's TELL semantics (one logical stream) and gives the player a
+        single line of output.
+
+        Safety: only contiguous lines at the same indent are merged.
+        Anything between them (including a comment or blank line) breaks
+        the run.  Numeric expressions are already wrapped with ``str()``
+        upstream in ``_translate_tell``, so ``+`` concatenation is
+        well-typed.
+        """
+        out: list[str] = []
+        i = 0
+        while i < len(lines):
+            m = self._PRINT_END_RE.match(lines[i])
+            if not m:
+                out.append(lines[i])
+                i += 1
+                continue
+            indent_str = m.group(1)
+            exprs = [m.group(2)]
+            j = i + 1
+            while j < len(lines):
+                m2 = self._PRINT_END_RE.match(lines[j])
+                if not m2 or m2.group(1) != indent_str:
+                    break
+                exprs.append(m2.group(2))
+                j += 1
+            if len(exprs) > 1:
+                joined = " + ".join(exprs)
+                out.append(f"{indent_str}print({joined}, end='')")
+            else:
+                out.append(lines[i])
+            i = j
+        return out
+
     def _replace_self_lookup_with_this(self, lines: list[str]) -> list[str]:
         """When the verb is owned by an object atom, rewrite ``lookup("atom")``
         → ``this`` in body lines.  The translator can't always know which
@@ -2185,6 +2363,7 @@ class ZilTranslator:
         repeated atoms; parser hoist runs last so it sees the final body."""
         body_lines = self._fix_return_print(body_lines)
         body_lines = self._replace_self_lookup_with_this(body_lines)
+        body_lines = self._merge_adjacent_prints(body_lines)
 
         cache_lines, combined = self._cache_repeated_lookups(unpack_lines + body_lines)
         unpack_lines = combined[: len(unpack_lines)]

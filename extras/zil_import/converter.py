@@ -451,6 +451,16 @@ def extract_all(
                 # zstate slot that ITAKE / V-WALK / etc. read at runtime.
                 globals_dict[name] = value_form
 
+        elif head == "SETG" and len(node) >= 3:
+            # Top-level ``<SETG ZORK-NUMBER 1>`` initialises a zstate slot the
+            # same way ``<GLOBAL FOO 100>`` does — translated routines branch
+            # on these via ``player.zstate_get("ZORK-NUMBER")`` and silently
+            # fall through to the ZORK-NUMBER == 0 path otherwise.
+            name = node[1] if isinstance(node[1], str) else None
+            value_form = node[2] if len(node) > 2 else None
+            if name and isinstance(value_form, (int, str)) and name not in globals_dict:
+                globals_dict[name] = value_form
+
         elif head == "SYNTAX" and len(node) >= 4:
             # ``<SYNTAX LIGHT OBJECT (FIND LIGHTBIT) ... = V-LAMP-ON>``.
             # Record (object_slots, v_routine) for every rule so the

@@ -78,8 +78,11 @@ parser = context.parser
 if parser is not None and parser.dobj is None and parser.dobj_str:
     needle = parser.dobj_str.lower()
 
-    # Areas to scan: the physical room always; the vehicle (if any) too.
-    areas = []
+    # Areas to scan: player inventory (for open containers the player is
+    # carrying — e.g. opened buoy holding emerald), the vehicle (if any),
+    # and the physical room.  Inventory comes first since carried open
+    # containers are conceptually closer to the player than scenery.
+    areas = [player]
     if is_vehicle and loc is not None and loc is not physical_room:
         areas.append(loc)
     if physical_room is not None:

@@ -15,12 +15,13 @@ from .ir import (
     DIRECTION_ALIASES,
     FLAG_PROPERTIES,
     ROOM_FLAG_PROPERTIES,
+    ZIL_VERBS,
     ZilExit,
     ZilObject,
     ZilRoom,
     ZilRoutine,
 )
-from .translator import ZilTranslator
+from .translator import DISABLE_FULL, DISABLE_INTRINSIC, ZilTranslator
 
 # Static verb-tree templates copied verbatim into ``output_dir/verbs/`` on
 # every regen.  These cover the few pieces that have no ZIL counterpart:
@@ -296,6 +297,17 @@ def _gen_rooms(rooms: dict[str, ZilRoom], display_names: dict[str, str]) -> str:
 
         atom_alias = atom.lower().replace("-", "_")
         lines.append(f"{var}.add_alias({repr(atom_alias)})")
+        # Also alias by ACTION-routine name when it differs from the atom.
+        # ZIL code like ``<EQUAL? ,HERE ,LLD-ROOM>`` references the room
+        # by its ROOM-FUNCTION name (LLD-ROOM is the action of
+        # ENTRANCE-TO-HADES); without this alias the translator emits
+        # ``_.zork_thing.lld_room()`` (a routine call) which crashes
+        # because LLD-ROOM is the room's lifecycle handler, not a
+        # standalone helper.
+        if room.action:
+            action_alias = room.action.lower().replace("-", "_")
+            if action_alias != atom_alias:
+                lines.append(f"{var}.add_alias({repr(action_alias)})")
         lines.append(f"_rooms[{repr(atom)}] = {var}")
         lines.append("")
 
@@ -610,9 +622,15 @@ def _gen_verb_translated(
     routine: ZilRoutine,
     object_atoms: set[str] | None = None,
     routine_atoms: set[str] | None = None,
+    lint_active: bool = False,
 ) -> str:
     """Translate a ZilRoutine to a DjangoMOO verb file using ZilTranslator."""
-    translator = ZilTranslator(routine, object_atoms=object_atoms, routine_atoms=routine_atoms)
+    translator = ZilTranslator(
+        routine,
+        object_atoms=object_atoms,
+        routine_atoms=routine_atoms,
+        lint_active=lint_active,
+    )
     return translator.translate()
 
 
@@ -621,9 +639,15 @@ def _gen_m_clause_verb(
     m_constant: str,
     object_atoms: set[str] | None = None,
     routine_atoms: set[str] | None = None,
+    lint_active: bool = False,
 ) -> str:
     """Generate a single M-* clause as a separate verb file."""
-    translator = ZilTranslator(routine, object_atoms=object_atoms, routine_atoms=routine_atoms)
+    translator = ZilTranslator(
+        routine,
+        object_atoms=object_atoms,
+        routine_atoms=routine_atoms,
+        lint_active=lint_active,
+    )
     return translator.translate_m_clause(m_constant)
 
 
@@ -734,11 +758,20 @@ def generate_all(
     globals_dict: dict[str, object] | None = None,
     syntax_dict: dict[str, list[tuple[int, str]]] | None = None,
     synonyms_dict: dict[str, list[str]] | None = None,
+    linter=None,  # extras.zil_import.lint.Linter | None — optional per-file pylint
 ) -> None:
     tables = tables or {}
     globals_dict = globals_dict or {}
     syntax_dict = syntax_dict or {}
     synonyms_dict = synonyms_dict or {}
+    # When ``--lint`` is on the translator emits a smaller pylint-disable
+    # header (only the verb-format-intrinsic ``return-outside-function``
+    # and ``undefined-variable``) so every other warning surfaces and gets
+    # fixed at the translator level instead of being silenced by file
+    # comments.  Without ``--lint`` the legacy "tolerant" disable list is
+    # emitted so manual pylint runs over the bootstrap stay quiet.
+    lint_active = linter is not None
+    pylint_disable = "# pylint: disable=" + (DISABLE_INTRINSIC if lint_active else DISABLE_FULL)
     output_dir.mkdir(parents=True, exist_ok=True)
     verbs_dir = output_dir / "verbs"
     # Wipe the previous regen so stale files (renamed routines, removed
@@ -763,18 +796,31 @@ def generate_all(
         else:
             shutil.copy2(src, dst)
 
+    def _write_and_lint(path: Path, code: str) -> None:
+        """Write a top-level bootstrap script and lint it when ``--lint`` is on.
+
+        Top-level bootstrap files (``020_rooms.py``, ``030_objects.py``,
+        etc.) bypass the per-clause ``_write_unique`` path; this helper
+        keeps the lint check consistent across both code paths.
+        """
+        path.write_text(code, encoding="utf-8")
+        if linter is not None:
+            linter.check_or_raise(path)
+
     # Empty package marker — keeps the bootstrap directory importable for
     # test discovery without running database setup at import time.
+    # Skip the lint check — pylint scores empty files at "no statements"
+    # which our threshold gate already treats as a no-op.
     (output_dir / "__init__.py").write_text("", encoding="utf-8")
 
     # Bootstrap entry point — invoked via `moo_init --bootstrap`.
-    (output_dir / "bootstrap.py").write_text(_gen_bootstrap_init(rooms, objects), encoding="utf-8")
+    _write_and_lint(output_dir / "bootstrap.py", _gen_bootstrap_init(rooms, objects))
 
     # 010_classes.py — root classes only; SDK verbs attach directly to System Object
-    (output_dir / "010_classes.py").write_text(_CLASSES_TEMPLATE, encoding="utf-8")
+    _write_and_lint(output_dir / "010_classes.py", _CLASSES_TEMPLATE)
 
     # 013_globals.py — scalar GLOBAL declarations (LOAD-ALLOWED, etc.)
-    (output_dir / "013_globals.py").write_text(_gen_globals(globals_dict), encoding="utf-8")
+    _write_and_lint(output_dir / "013_globals.py", _gen_globals(globals_dict))
 
     # NB: tables are emitted *after* 030_objects so atom-reference
     # resolution can use the ``_rooms`` / ``_objects`` dicts that
@@ -791,17 +837,17 @@ def generate_all(
     display_names = _compute_display_names(rooms, objects)
 
     # 020_rooms.py
-    (output_dir / "020_rooms.py").write_text(_gen_rooms(rooms, display_names), encoding="utf-8")
+    _write_and_lint(output_dir / "020_rooms.py", _gen_rooms(rooms, display_names))
 
     # 030_objects.py
-    (output_dir / "030_objects.py").write_text(_gen_objects(objects, rooms, display_names), encoding="utf-8")
+    _write_and_lint(output_dir / "030_objects.py", _gen_objects(objects, rooms, display_names))
 
     # 035_tables.py — ZIL table data on the System Object.  After rooms/
     # objects so atom references can resolve to actual Object instances.
-    (output_dir / "035_tables.py").write_text(_gen_tables(tables), encoding="utf-8")
+    _write_and_lint(output_dir / "035_tables.py", _gen_tables(tables))
 
     # 040_exits.py
-    (output_dir / "040_exits.py").write_text(_gen_exits(rooms), encoding="utf-8")
+    _write_and_lint(output_dir / "040_exits.py", _gen_exits(rooms))
 
     # Translated verb files
     # Map each routine to the object/room it's an action for.
@@ -901,6 +947,16 @@ def generate_all(
 
     # See :doc:`/reference/zil-importer` for how these are used.
     object_atoms = set(rooms.keys()) | set(objects.keys())
+    # ZIL conflates room-action names with the room itself in some
+    # references — e.g. ``<EQUAL? ,HERE ,LLD-ROOM>`` compares the player's
+    # current room to the room whose ACTION routine is LLD-ROOM (i.e.
+    # ENTRANCE-TO-HADES).  To preserve that semantic, treat each room's
+    # ACTION-routine name as an object atom; the bootstrap also adds it
+    # as an alias on the room so ``lookup("lld_room")`` resolves to
+    # ENTRANCE-TO-HADES.
+    for room in rooms.values():
+        if room.action:
+            object_atoms.add(room.action)
     routine_atoms = set(routines.keys())
 
     # Routines we explicitly skip because they reference Z-machine
@@ -1025,10 +1081,17 @@ def generate_all(
         first-verb name (different ZIL routines whose shebangs happen to
         emit the same ``--on``-target + first-verb).  Append ``_2``, ``_3``,
         ... in that case so neither clause clobbers the other.
+
+        When a ``linter`` is wired into ``generate_all`` the freshly
+        written file is scored immediately; below-threshold scores raise
+        ``RuntimeError`` from inside the regen so the operator sees the
+        offending file's pylint output without searching post-hoc.
         """
         path = target / fname
         if not path.exists():
             path.write_text(code, encoding="utf-8")
+            if linter is not None:
+                linter.check_or_raise(path)
             return
         stem = fname[:-3]
         n = 2
@@ -1036,6 +1099,8 @@ def generate_all(
             candidate = target / f"{stem}_{n}.py"
             if not candidate.exists():
                 candidate.write_text(code, encoding="utf-8")
+                if linter is not None:
+                    linter.check_or_raise(candidate)
                 return
             n += 1
 
@@ -1058,15 +1123,23 @@ def generate_all(
                 m_clause_count += 1
         # VERB? clauses (player-verb dispatch) → one file per clause, with
         # the multi-verb shebang preserved when the ZIL grouped them.
+        clause_split_verbs: set[str] = set()
         if translator.has_verb_dispatch():
             for verb_atoms, extra_test, body_forms in translator.verb_clauses_for_split():
                 clause_code = translator.translate_verb_clause(verb_atoms, extra_test, body_forms)
                 if not clause_code:
                     continue
+                # Track which verb aliases the clause registered so the
+                # residual can subtract them and avoid a parser-dispatch
+                # collision on the same (object, verb-name) pair.
+                for atom in verb_atoms:
+                    for alias in ZIL_VERBS.get(atom.upper(), [atom.lower()]):
+                        clause_split_verbs.add(alias)
                 _write_unique(target, _filename_from_shebang(clause_code), clause_code)
         # Residual full-routine body — only emitted if anything is left after
         # both pruning passes.  ``translate()`` returns "" for an empty
         # residual (per-clause files already cover everything).
+        translator._clause_split_verbs = clause_split_verbs  # pylint: disable=protected-access
         full_code = translator.translate()
         if full_code:
             _write_unique(target, _filename_from_shebang(full_code), full_code)
@@ -1138,6 +1211,7 @@ def generate_all(
             display_names=display_names,
             substrate_display_names=SUBSTRATE_DISPLAY_NAMES,
             routine_to_verbs=_ROUTINE_TO_VERBS,
+            lint_active=lint_active,
         )
 
         target = _target_dir(name, action_owners.get(name))
@@ -1161,6 +1235,7 @@ def generate_all(
                 pre_handler_routines=pre_handler_routines,
                 display_names=display_names,
                 substrate_display_names=SUBSTRATE_DISPLAY_NAMES,
+                lint_active=lint_active,
             )
             # Each owner now lives in its own directory under ``rooms/`` (or
             # at the top level for orphans), so a shared ACTION routine
@@ -1225,7 +1300,7 @@ def generate_all(
                 #!moo verb {" ".join(names)} --on "Zork Actor" --dspec either
 
                 # Generated by extras/zil_import — do not edit by hand
-                # pylint: disable=return-outside-function,undefined-variable,pointless-statement,unnecessary-negation,disallowed-name,using-constant-test,redefined-outer-name,no-else-return,unused-variable,redefined-builtin,singleton-comparison,unnecessary-pass,expression-not-assigned
+                {pylint_disable}
 
                 \"\"\"Player command for {verb}: traverse an exit Object.\"\"\"
 
@@ -1251,7 +1326,7 @@ def generate_all(
                 #!moo verb {" ".join(names)} --on "Zork Actor" --dspec either
 
                 # Generated by extras/zil_import — do not edit by hand
-                # pylint: disable=return-outside-function,undefined-variable,pointless-statement,unnecessary-negation,disallowed-name,using-constant-test,redefined-outer-name,no-else-return,unused-variable,redefined-builtin,singleton-comparison,unnecessary-pass,expression-not-assigned
+                {pylint_disable}
 
                 # Player command for {verb}: put in container (with prep) or drop (bare).
                 from moo.sdk import context
@@ -1311,7 +1386,7 @@ def generate_all(
                 #!moo verb {" ".join(names)} --on "Zork Actor" --dspec either
 
                 # Generated by extras/zil_import — do not edit by hand
-                # pylint: disable=return-outside-function,undefined-variable,pointless-statement,unnecessary-negation,disallowed-name,using-constant-test,redefined-outer-name,no-else-return,unused-variable,redefined-builtin,singleton-comparison,unnecessary-pass,expression-not-assigned
+                {pylint_disable}
 
                 \"\"\"Player command for {verb}: dispatch by object slot.\"\"\"
 
@@ -1334,7 +1409,7 @@ def generate_all(
                 #!moo verb {" ".join(names)} --on "Zork Actor" --dspec either
 
                 # Generated by extras/zil_import — do not edit by hand
-                # pylint: disable=return-outside-function,undefined-variable,pointless-statement,unnecessary-negation,disallowed-name,using-constant-test,redefined-outer-name,no-else-return,unused-variable,redefined-builtin,singleton-comparison,unnecessary-pass,expression-not-assigned
+                {pylint_disable}
 
                 \"\"\"Player command for {verb}: delegate to {v_routine}.\"\"\"
 

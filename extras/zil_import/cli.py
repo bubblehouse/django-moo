@@ -34,12 +34,14 @@ def _expand_manifest(zil_files: list[str]) -> list[str]:
         inserts = [
             str(node[1]) for node in nodes if isinstance(node, list) and len(node) == 2 and node[0] == "INSERT-FILE"
         ]
-        if inserts:
-            for rel in inserts:
-                target = base / (rel if rel.endswith(".zil") else rel + ".zil")
-                visit(str(target))
-        else:
-            out.append(zil_path)
+        # Always include the file itself.  Manifests like ``zork1.zil`` carry
+        # top-level ``<SETG …>`` forms (e.g. ``<SETG ZORK-NUMBER 1>``) that
+        # initialise zstate slots — dropping them silently disables every
+        # ZORK-NUMBER == 1 branch in translated routines.
+        out.append(zil_path)
+        for rel in inserts:
+            target = base / (rel if rel.endswith(".zil") else rel + ".zil")
+            visit(str(target))
 
     for zil in zil_files:
         visit(zil)
@@ -71,6 +73,22 @@ def main(argv: list[str] | None = None) -> int:
         "-v",
         action="store_true",
         help="Enable debug logging.",
+    )
+    parser.add_argument(
+        "--lint",
+        action="store_true",
+        help=(
+            "After generating, run pylint on the output directory and fail "
+            "the import if the score drops below --lint-threshold.  "
+            "Off by default — pylint takes ~15s on the full Zork 1 bootstrap."
+        ),
+    )
+    parser.add_argument(
+        "--lint-threshold",
+        type=float,
+        default=9.0,
+        metavar="SCORE",
+        help="Minimum acceptable pylint score (0-10, default 9.0).  Only used with --lint.",
     )
     args = parser.parse_args(argv)
 
@@ -117,16 +135,35 @@ def main(argv: list[str] | None = None) -> int:
     # Generate bootstrap
     output_dir = Path(args.output)
     log.info("Generating bootstrap at %s ...", output_dir)
-    generate_all(  # pylint: disable=unexpected-keyword-arg
-        rooms,
-        objects,
-        routines,
-        output_dir,
-        tables={name: t.values for name, t in tables.items()},
-        globals_dict=globals_dict,
-        syntax_dict=syntax_dict,
-        synonyms_dict=synonyms_dict,
-    )
+
+    # Optional per-file pylint validation.  Off by default — pylint's
+    # warmup is ~0.8s and warm calls are ~0.04-0.1s per file, so opting
+    # in adds 30-60s to a regen.  When on, the generator raises
+    # immediately as soon as a generated file falls below the score
+    # threshold so the operator sees the offending file's findings
+    # instead of hunting through a post-hoc full report.
+    linter = None
+    if args.lint:
+        from .lint import Linter  # pylint: disable=import-outside-toplevel
+
+        log.info("Per-file pylint enabled (threshold %.2f)", args.lint_threshold)
+        linter = Linter(threshold=args.lint_threshold)
+
+    try:
+        generate_all(  # pylint: disable=unexpected-keyword-arg
+            rooms,
+            objects,
+            routines,
+            output_dir,
+            tables={name: t.values for name, t in tables.items()},
+            globals_dict=globals_dict,
+            syntax_dict=syntax_dict,
+            synonyms_dict=synonyms_dict,
+            linter=linter,
+        )
+    except RuntimeError as exc:
+        log.error("%s", exc)
+        return 1
 
     return 0
 
