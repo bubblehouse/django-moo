@@ -1,3 +1,11 @@
+## [1.7.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.6.0...v1.7.0) (2026-05-07)
+
+### Features
+
+* **zil_import:** close score gap to canonical 350 and add opt-in pylint validation ([d0db2ec](https://gitlab.com/bubblehouse/django-moo/commit/d0db2ec7fc586fb7e75858671b54287e5df99102))
+* **zil_import:** game-side replacements for moo-core rollback (do_command resolver, the_player_verb, residual passthrough, exit_move snake-case) ([7fab941](https://gitlab.com/bubblehouse/django-moo/commit/7fab941b2afd8fb036872bd65b8efd5a971654b2))
+* **zil_import:** smoke deposits final treasures and short-circuits no-output verbs ([644aa6d](https://gitlab.com/bubblehouse/django-moo/commit/644aa6d4837e2eb6978989ff8303cd7f6542d0c8))
+
 ## [1.6.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.5.2...v1.6.0) (2026-05-03)
 
 ### Features
