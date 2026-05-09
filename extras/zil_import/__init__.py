@@ -1,1 +1,0 @@
-# ZIL → DjangoMOO bootstrap converter
