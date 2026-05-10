@@ -1,3 +1,10 @@
+## [1.7.1](https://gitlab.com/bubblehouse/django-moo/compare/v1.7.0...v1.7.1) (2026-05-10)
+
+### Bug Fixes
+
+* dont raise exception for old queue messages ([3f23787](https://gitlab.com/bubblehouse/django-moo/commit/3f23787c9b34e504a1629b08f17ea23d9ecfca1c))
+* improve bootstrap handling and simplify celery logs ([98c6eeb](https://gitlab.com/bubblehouse/django-moo/commit/98c6eeb7d320ba7caec39eb1b6c7502c8b2647f5))
+
 ## [1.7.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.6.0...v1.7.0) (2026-05-07)
 
 ### Features
