@@ -3,6 +3,12 @@
 A game server for hosting text-based online MOO-like games.
 """
 
+# Extend the package search path so sibling distributions (e.g. moo-agent)
+# can contribute additional ``moo.*`` subpackages such as ``moo.bootstrap.zork1``.
+from pkgutil import extend_path
+
+__path__ = extend_path(__path__, __name__)
+
 # This will make sure the app is always imported when
 # Django starts so that shared_task will use this app.
 from .celery import app as celery_app

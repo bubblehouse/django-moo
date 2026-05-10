@@ -86,10 +86,10 @@ def t_init(request):
         slug=name,
         defaults={"prefix": f"moo/bootstrap/{name}/verbs", "url": settings.DEFAULT_GIT_REPO_URL},
     )
-    pkg = importlib.resources.files("moo.bootstrap")
-    pkg_script = pkg / name / "bootstrap.py"
-    pkg_flat = pkg / f"{name}.py"
-    ref = pkg_script if (pkg / name).is_dir() else pkg_flat
+    try:
+        ref = importlib.resources.files(f"moo.bootstrap.{name}") / "bootstrap.py"
+    except (ModuleNotFoundError, TypeError):
+        ref = importlib.resources.files("moo.bootstrap") / f"{name}.py"
     with importlib.resources.as_file(ref) as path:
         load_python(path)
     yield Object.objects.get(id=1)
@@ -170,7 +170,7 @@ def _patch_django_test_teardown(django_db_setup, django_db_blocker):
         )
         # Re-run the bootstrap so the snapshot has both the post-flush
         # content_types AND the bootstrap data the seed migration added.
-        ref = importlib.resources.files("moo.bootstrap") / "default" / "bootstrap.py"
+        ref = importlib.resources.files("moo.bootstrap.default") / "bootstrap.py"
         with importlib.resources.as_file(ref) as path:
             load_python(path)
         connection._test_serialized_contents = (  # pylint: disable=protected-access
@@ -259,8 +259,7 @@ def t_two_sites_default():
     clear_nothing_cache()
     site1, _ = Site.objects.get_or_create(pk=1, defaults={"domain": "site1.test", "name": "site1"})
     site2 = Site.objects.create(domain="site2.test", name="site2")
-    pkg = importlib.resources.files("moo.bootstrap")
-    pkg_script = pkg / "default" / "bootstrap.py"
+    pkg_script = importlib.resources.files("moo.bootstrap.default") / "bootstrap.py"
     for site in (site1, site2):
         ContextManager.set_site(site)
         with importlib.resources.as_file(pkg_script) as path:

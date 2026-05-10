@@ -26,10 +26,13 @@ logging = {
             "format": "%(asctime)s: %(levelname)s %(message)s",
         },
         "celeryTask": {
-            "()": "celery.app.log.TaskFormatter",
+            "()": "moo.logging.ShortTaskFormatter",
             "fmt": "%(asctime)s: %(levelname)s %(task_name)s[%(task_id)s]: %(message)s",
         },
-        "celeryProcess": {"()": "celery.utils.log.ColorFormatter", "fmt": "%(asctime)s: %(levelname)s %(message)s"},
+        "celeryProcess": {
+            "()": "moo.logging.ShortProcessFormatter",
+            "fmt": "%(asctime)s: %(levelname)s %(message)s",
+        },
     },
     "filters": {
         "celeryTask": {

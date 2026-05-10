@@ -7,7 +7,13 @@ import argparse
 import importlib.resources
 import logging
 import shlex
+from pkgutil import extend_path
+
 from django.conf import settings
+
+# Allow sibling distributions (e.g. moo-agent's ``moo/bootstrap/zork1/``) to
+# contribute additional bootstrap packages alongside ``default/``.
+__path__ = extend_path(__path__, __name__)
 
 log = logging.getLogger(__name__)
 
@@ -53,7 +59,9 @@ def get_source(filename, dataset="default"):
     :return: The source code for the verb.
     :rtype: str
     """
-    ref = importlib.resources.files("moo.bootstrap") / f"{dataset}/verbs/{filename}"
+    ref = importlib.resources.files(f"moo.bootstrap.{dataset}.verbs")
+    for part in filename.split("/"):
+        ref = ref / part
     with importlib.resources.as_file(ref) as path:
         with open(path, encoding="utf8") as f:
             return f.read()

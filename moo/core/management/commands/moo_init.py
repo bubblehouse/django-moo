@@ -39,8 +39,17 @@ class Command(BaseCommand):
         moo.bootstrap.  The script lives at
         ``moo/bootstrap/<name>/bootstrap.py`` so importing the package
         (for test discovery) does not run database-touching setup code.
+
+        Resolves through ``moo.bootstrap.<name>`` directly so that datasets
+        contributed by sibling distributions (e.g. ``moo-agent``'s ``zork1``
+        package) are found via their own ``__path__``.
         """
-        ref = importlib.resources.files("moo.bootstrap") / bootstrap / "bootstrap.py"
+        try:
+            ref = importlib.resources.files(f"moo.bootstrap.{bootstrap}") / "bootstrap.py"
+        except ModuleNotFoundError as exc:
+            raise CommandError(
+                f"Bootstrap '{bootstrap}' not found. Expected an entry point at moo/bootstrap/{bootstrap}/bootstrap.py."
+            ) from exc
         try:
             with importlib.resources.as_file(ref) as path:
                 if not path.exists():
