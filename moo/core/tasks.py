@@ -38,7 +38,11 @@ def parse_command(self, caller_id: int, line: str) -> tuple[list[Any], int]:
     output: list[Any] = []
     exit_status = 0
     task_id = self.request.id
-    caller = Object.global_objects.get(pk=caller_id)
+    try:
+        caller = Object.global_objects.get(pk=caller_id)
+    except Object.DoesNotExist:
+        log.warning(f"Skipping command {line!r}: caller {caller_id} recycled or disconnected")
+        return [], 0
     site = caller.site if caller.site_id else None
     with code.ContextManager(caller, output.append, task_id=task_id, track_events=True, site=site) as ctx:
         prefix = "[ERROR] " if get_session_setting("prefixes_mode", False) else ""
@@ -79,7 +83,11 @@ def parse_code(self, caller_id: int, source: str, runtype: str = "exec") -> tupl
     """
     output: list[Any] = []
     task_id = self.request.id
-    caller = Object.global_objects.get(pk=caller_id)
+    try:
+        caller = Object.global_objects.get(pk=caller_id)
+    except Object.DoesNotExist:
+        log.warning(f"Skipping code execution: caller {caller_id} recycled or disconnected")
+        return [], None
     site = caller.site if caller.site_id else None
     with code.ContextManager(caller, output.append, task_id=task_id, site=site):
         with transaction.atomic():
@@ -113,9 +121,16 @@ def invoke_verb(
 
     task_id = self.request.id
     with transaction.atomic():
-        caller = Object.global_objects.get(pk=caller_id)
-        player = Object.global_objects.get(pk=player_id) if player_id else None
-        this = Object.global_objects.get(pk=this_id)
+        try:
+            caller = Object.global_objects.get(pk=caller_id)
+            player = Object.global_objects.get(pk=player_id) if player_id else None
+            this = Object.global_objects.get(pk=this_id)
+        except Object.DoesNotExist:
+            log.warning(
+                f"Skipping {verb_name}: object recycled or disconnected "
+                f"(caller={caller_id}, player={player_id}, this={this_id})"
+            )
+            return
         verb_obj = this.get_verb(verb_name)
         if player:
 
