@@ -41,8 +41,9 @@ Lives at `moo/bootstrap/zork1/`. The package contains the orchestrator
 `bootstrap.py`, numbered `010_classes.py` … `040_exits.py` setup
 scripts, ~200 verb files implementing the original ZIL routines, a
 `$zork_sdk` runtime under `verbs/zork_sdk/`, and player-facing
-commands under `verbs/commands/`. See {doc}`./zil-importer` for how
-the dataset relates to the upstream Zork I source.
+commands under `verbs/commands/`. The translator that produced this
+dataset lives in the moo-agent project; see its `reference/zil-importer`
+for how the dataset relates to the upstream Zork I source.
 
 `test` — a minimal dataset used by the pytest `t_init` fixture in
 `moo/conftest.py`. It is *not* loadable via `moo_init`. It exists as a

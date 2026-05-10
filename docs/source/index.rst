@@ -51,7 +51,6 @@
    reference/tasks
    reference/builtins
    reference/bootstrapping
-   reference/zil-importer
 
 .. toctree::
    :maxdepth: 2
@@ -61,7 +60,6 @@
    explanation/parser
    explanation/sandbox
    explanation/shell-internals
-   explanation/zil-importer
 
 .. toctree::
    :maxdepth: 1

@@ -439,10 +439,11 @@ uv run pytest -n auto moo/bootstrap/mygame/tests/
   `load_verb_source`, and `parse_shebang`.
 - {doc}`../how-to/bootstrapping` — additional bootstrap patterns:
   property inheritance flags, ACL setup, multi-file organisation.
-- {doc}`../reference/zil-importer` — if your world is itself a
-  translation from another text-adventure source language, the
-  `zil_import` package shows one approach (parser + IR + translator +
-  generator) to producing a bootstrap from foreign data.
+- The `zil_import` package in the moo-agent project (see its
+  `reference/zil-importer`) — if your world is itself a translation from
+  another text-adventure source language, that package shows one
+  approach (parser + IR + translator + generator) to producing a
+  bootstrap from foreign data.
 
 ## Out-of-tree packaging (future direction)
 
