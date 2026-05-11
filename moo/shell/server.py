@@ -513,8 +513,6 @@ async def server(port=8022):
     await asyncio.sleep(1)
 
     loop = asyncio.get_event_loop()
-    loop.set_debug(True)
-    loop.slow_callback_duration = 0.050  # warn on any callback >50ms
 
     # faulthandler dumps thread stacks synchronously, even when the event loop
     # is blocked — unlike loop.add_signal_handler which needs a live loop.
