@@ -1,3 +1,9 @@
+## [1.7.2](https://gitlab.com/bubblehouse/django-moo/compare/v1.7.1...v1.7.2) (2026-05-11)
+
+### Bug Fixes
+
+* remove debug logging ([43e345a](https://gitlab.com/bubblehouse/django-moo/commit/43e345a11e54dc6688f583a3059d339bd465dde6))
+
 ## [1.7.1](https://gitlab.com/bubblehouse/django-moo/compare/v1.7.0...v1.7.1) (2026-05-10)
 
 ### Bug Fixes
