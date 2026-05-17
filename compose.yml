@@ -107,9 +107,14 @@ services:
       POSTGRES_PASSWORD: moo
       POSTGRES_USER: moo
       POSTGRES_DB: moo
+    volumes:
+      - moo_postgres_data:/var/lib/postgresql
   # Redis provides the queueing system Celery uses to run background tasks.
   # It also provides a cache for the Django application.
   redis:
     image: redis
     ports:
       - 6379:6379
+
+volumes:
+  moo_postgres_data:
