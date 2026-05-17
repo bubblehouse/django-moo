@@ -5,7 +5,7 @@ Public SDK for verb authors. Import game primitives from here:
     from moo.sdk import context, lookup, create, NoSuchObjectError
 """
 
-from .context import context
+from .context import context, invoked_verb_name
 from .objects import (
     lookup,
     create,

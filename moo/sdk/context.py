@@ -67,3 +67,18 @@ class _Context:
 
 
 context = _Context()
+
+
+def invoked_verb_name(default: str | None = None) -> str | None:
+    """
+    Return the verb name as the player typed it (lowercased), or ``default``
+    when there is no active parser context.
+
+    Verbs called via :func:`moo.sdk.invoke`, async callbacks, or test
+    harnesses have no parser; pass the sandbox-injected ``verb_name`` as
+    ``default`` to fall back to the verb's defined name.
+    """
+    parser = context.parser
+    if parser is None or not parser.words:
+        return default
+    return parser.words[0].lower()
