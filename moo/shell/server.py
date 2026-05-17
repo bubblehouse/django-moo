@@ -487,15 +487,45 @@ def _provision_after_pick(user, site) -> None:
         return
     if Player.objects.filter(user=user, site=site).exists():
         return
+    avatar = _provision_wizard_avatar(user, site)
+    Player.objects.create(user=user, avatar=avatar, wizard=True, site=site)
+
+
+def _provision_wizard_avatar(user, site):
+    """Create or fetch a wizard avatar named after ``user.username`` on ``site``,
+    properly parented to ``Generic Wizard`` and located at ``$player_start``.
+
+    The avatar name is the username (not ``"Wizard"``) so it stays unique
+    within the site alongside the bootstrap Wizard. Idempotent.
+    """
+    from moo.core.exceptions import NoSuchPropertyError
+    from moo.core.models.object import Object
+
     avatar, created = Object.global_objects.get_or_create(
         name=user.username,
         unique_name=True,
         site=site,
     )
+    if not created and avatar.parents.exists() and avatar.location_id is not None:
+        return avatar  # already fully provisioned
     if created:
         avatar.owner = avatar
         avatar.save()
-    Player.objects.create(user=user, avatar=avatar, wizard=True, site=site)
+    if not avatar.parents.exists():
+        generic_wizard = Object.global_objects.filter(site=site, name="Generic Wizard", unique_name=True).first()
+        if generic_wizard is not None:
+            avatar.parents.add(generic_wizard)
+    if avatar.location_id is None:
+        system = Object.global_objects.filter(site=site, name="System Object", unique_name=True).first()
+        if system is not None:
+            try:
+                start = system.get_property("player_start")
+            except NoSuchPropertyError:
+                start = None
+            if start is not None:
+                avatar.location = start
+                avatar.save()
+    return avatar
 
 
 async def _health_handler(reader: asyncio.StreamReader, writer: asyncio.StreamWriter) -> None:
@@ -597,7 +627,6 @@ class SSHServer(PromptToolkitSSHServer):
     def _auto_provision_universal_wizard(self):
         """Provision a wizard avatar+Player for a UniversalWizard user on a new site."""
         from moo.core.models.auth import Player, UniversalWizard
-        from moo.core.models.object import Object
 
         if not (self.user and self.site):
             return
@@ -606,17 +635,7 @@ class SSHServer(PromptToolkitSSHServer):
         # Idempotent: a Player for this (user, site) already exists.
         if Player.objects.filter(user=self.user, site=self.site).exists():
             return
-        # Avatar lookup must include unique_name=True so a non-unique object
-        # with the same name cannot be hijacked. The owner is set to itself
-        # post-create so the wizard owns their own avatar.
-        avatar, created = Object.global_objects.get_or_create(
-            name=self.user.username,
-            unique_name=True,
-            site=self.site,
-        )
-        if created:
-            avatar.owner = avatar
-            avatar.save()
+        avatar = _provision_wizard_avatar(self.user, self.site)
         Player.objects.create(user=self.user, avatar=avatar, wizard=True, site=self.site)
 
     @sync_to_async
