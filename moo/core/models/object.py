@@ -916,7 +916,7 @@ class Object(models.Model, AccessibleMixin):
 
     def delete(self, *args, **kwargs):
         self.can_caller("write", self)
-        if self.has_verb("recycle", recurse=False):
+        if self.has_verb("recycle", recurse=True):
             self.invoke_verb("recycle")
         self._replace_stale_refs()
         # Clear placement_prep for objects placed on this one.
