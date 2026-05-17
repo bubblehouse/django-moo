@@ -139,3 +139,23 @@ daemon.set_property("periodic_task_id", None, inherit_owner=True)
 daemon.set_property("target", None, inherit_owner=True)
 daemon.set_property("tick_count", 0, inherit_owner=True)
 daemon.set_property("last_tick_at", None, inherit_owner=True)
+
+# $npc — autonomous actor. Multi-parent: $player gives parser identity and
+# tell()/look/gender; $daemon gives scheduled-tick machinery. The two parents'
+# direct verbs and properties don't collide. Parent weight is assigned by
+# ascending PK in the M2M through-table, so $daemon (created after $player
+# in this file) wins depth-1 ties — including `recycle`, which is the one we
+# care about (it disables the PT when an NPC is deleted).
+npc, _ = bootstrap.get_or_create_object("Generic NPC", unique_name=True, parents=[player, daemon])
+if {p.pk for p in npc.parents.all()} != {player.pk, daemon.pk}:
+    npc.parents.set([player, daemon])
+sys.set_property("npc", npc)
+npc.set_property("description", "A nondescript person, going about their business.")
+npc.set_property("interval", 30, inherit_owner=True)
+
+wanderer, _ = bootstrap.get_or_create_object("Generic Wanderer", unique_name=True, parents=[npc])
+sys.set_property("wanderer", wanderer)
+wanderer.set_property("description", "Someone who never stays in one place for long.")
+wanderer.set_property("wander_rooms", [], inherit_owner=True)
+wanderer.set_property("wander_leave_msg", "%N wanders off.", inherit_owner=True)
+wanderer.set_property("wander_arrive_msg", "%N wanders in.", inherit_owner=True)
