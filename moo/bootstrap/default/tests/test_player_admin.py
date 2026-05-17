@@ -87,6 +87,30 @@ def test_create_from_parent_in_void(t_init: Object, t_wizard: Object):
     assert obj.parents.filter(pk=system.thing.pk).exists()
 
 
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_create_from_parent_uses_global_lookup(t_init: Object, t_wizard: Object):
+    """@create <name> from <class> finds the class even if a same-named object
+    is in the player's local area (regression: prior behavior would shadow the
+    global class with a local match).
+    """
+    system = lookup(1)
+    rooms_cls = lookup("Generic Room")
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        room = create("Test Room", parents=[rooms_cls])
+        t_wizard.location = room
+        save_quietly(t_wizard)
+        # Put a decoy object in the room named the same as a target class.
+        decoy = create("Generic Container", parents=[system.thing], location=room)
+        parse.interpret(ctx, '@create "box" from "Generic Container"')
+    obj = Object.objects.filter(name="box").first()
+    assert obj is not None
+    # The parent must be the class, not the decoy.
+    assert obj.parents.filter(pk=system.container.pk).exists()
+    assert not obj.parents.filter(pk=decoy.pk).exists()
+
+
 # --- whodunnit ---
 
 

@@ -18,7 +18,7 @@ Usage:
     @create <name> in the void
 """
 
-from moo.sdk import context, create, set_task_perms
+from moo.sdk import context, create, lookup, set_task_perms, NoSuchObjectError
 
 if not (context.parser.has_dobj_str()):
     print("[yellow]What do you want to create?[/yellow]")
@@ -43,10 +43,20 @@ if not place_in_void and location is None:
     location = context.player
 
 # Resolve parent up front so we can pass it to create() in one step.
+# Always use a global lookup — ``from <parent>`` references a class (e.g.
+# "Generic Container"), which lives outside the player's local area and
+# must not be shadowed by a same-named object in the room or inventory.
 parent = None
 if context.parser.has_pobj_str("from"):
-    with set_task_perms(context.player):
-        parent = context.parser.get_pobj("from", lookup=True)
+    parent_ref = context.parser.get_pobj_str("from").strip()
+    try:
+        if parent_ref.startswith("#"):
+            parent = lookup(int(parent_ref[1:]))
+        else:
+            parent = lookup(parent_ref)
+    except (NoSuchObjectError, ValueError):
+        print(f"[yellow]I don't know the parent '{parent_ref}'.[/yellow]")
+        return
 
 with set_task_perms(context.player):
     if parent is not None:
