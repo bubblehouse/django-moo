@@ -12,7 +12,7 @@ Usage:
 
 from moo.sdk import context, lookup, open_paginator
 
-system = lookup(1)
+system = lookup("System Object")
 room_class = system.room
 
 rooms = [obj for obj in room_class.get_descendents() if obj.pk != room_class.pk]

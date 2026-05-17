@@ -29,7 +29,7 @@ if not raw:
     print("Divine what? Try: @divine location, @divine child of $thing, @divine location of <object>")
     return
 
-system = lookup(1)
+system = lookup("System Object")
 
 parts = raw.split(" of ", 1)
 subject = parts[0].strip().lower()

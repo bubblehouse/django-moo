@@ -23,7 +23,7 @@ if context.parser.has_dobj_str():
         print(f"No object named '{context.parser.get_dobj_str()}' found.")
         return
 else:
-    system = lookup(1)
+    system = lookup("System Object")
     root = system.root_class
 
 descs = list(root.get_descendents())

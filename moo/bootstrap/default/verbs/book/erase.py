@@ -12,7 +12,7 @@ Usage:
 
 from moo.sdk import context, lookup
 
-wizard = lookup(1).wizard
+wizard = lookup("System Object").wizard
 if context.player != this.owner and not context.player.is_a(wizard):
     print("You don't have permission to erase pages from this book.")
     return
