@@ -57,17 +57,18 @@ def _passes_parse_filters(verb, viewed_by, parser):
 
 def split_command_fragments(line: str) -> list[str]:
     """
-    Split *line* into independent command fragments on ``.``, ``,``, and
-    the standalone word ``THEN`` (case-insensitive).
+    Split *line* into independent command fragments on ``.``, ``,``, ``;``,
+    and the standalone word ``THEN`` (case-insensitive).
 
     The splitter is intentionally conservative — only commands clearly
     composed of multiple actions get split:
 
     - inside quoted strings (``"..."`` / ``'...'``) and bracketed regions
       (``()``, ``[]``, ``{}``), no separator splits anything;
-    - a ``.`` or ``,`` only splits when followed by whitespace and an
-      alphabetic continuation (so ``emote waves hello.``, ``@set x [1,2]``,
-      and ``Bill's spoon`` all pass through untouched);
+    - a ``.``, ``,``, or ``;`` only splits when followed by whitespace and
+      an alphabetic or ``@`` continuation (so ``emote waves hello.``,
+      ``@set x [1,2]``, and ``Bill's spoon`` all pass through untouched;
+      ``@``-prefixed wizard verbs after a separator do split);
     - ``THEN`` only splits when it stands alone as a word.
 
     Empty fragments are dropped.  Lines with no separator hits round-trip
@@ -103,14 +104,15 @@ def split_command_fragments(line: str) -> list[str]:
             current.append(ch)
             i += 1
             continue
-        if bracket_depth == 0 and ch in (".", ","):
-            # Require ``<sep> <whitespace>+ <alpha>`` to count as a real split.
-            # Trailing punctuation (``emote waves hello.``) and bracketed
-            # content (``[1, 2, 3]``) pass through untouched.
+        if bracket_depth == 0 and ch in (".", ",", ";"):
+            # Require ``<sep> <whitespace>+ <alpha-or-@>`` to count as a real
+            # split. Trailing punctuation (``emote waves hello.``) and
+            # bracketed content (``[1, 2, 3]``) pass through untouched; ``@``
+            # is allowed because MOO wizard/builder verbs start with ``@``.
             j = i + 1
             while j < n and line[j] == " ":
                 j += 1
-            if j > i + 1 and j < n and line[j].isalpha():
+            if j > i + 1 and j < n and (line[j].isalpha() or line[j] == "@"):
                 frag = "".join(current).strip()
                 if frag:
                     fragments.append(frag)

@@ -467,6 +467,43 @@ def test_split_fragments_comma_separates_with_alpha_continuation():
     assert parse.split_command_fragments("walk, run") == ["walk", "run"]
 
 
+def test_split_fragments_at_prefixed_verb_splits():
+    """Wizard/builder verbs starting with ``@`` are valid fragment heads."""
+    assert parse.split_command_fragments("@create thing, @set thing prop 1") == [
+        "@create thing",
+        "@set thing prop 1",
+    ]
+    assert parse.split_command_fragments("@create thing. @daemon list") == [
+        "@create thing",
+        "@daemon list",
+    ]
+
+
+def test_split_fragments_semicolon_separates():
+    """``;`` is a separator alongside ``.`` and ``,``."""
+    assert parse.split_command_fragments("walk; run") == ["walk", "run"]
+    assert parse.split_command_fragments("@create thing; @set thing prop 1") == [
+        "@create thing",
+        "@set thing prop 1",
+    ]
+
+
+def test_split_fragments_semicolon_no_space_kept():
+    """``;`` with no following whitespace+alpha is not a separator."""
+    assert parse.split_command_fragments("say a;b;c") == ["say a;b;c"]
+
+
+def test_split_fragments_mixed_at_and_alpha_chain():
+    """A single line can chain ``@``-verbs and plain verbs across separators."""
+    line = "@create Generic Daemon named ticker; @set ticker interval 5; enable ticker; @daemon list"
+    assert parse.split_command_fragments(line) == [
+        "@create Generic Daemon named ticker",
+        "@set ticker interval 5",
+        "enable ticker",
+        "@daemon list",
+    ]
+
+
 def test_split_fragments_comma_no_space_kept():
     """``n,n,n`` (no spaces) is NOT split — cardinal-direction shorthand
     that the canonical splitter handled is sacrificed to protect ``[1,2,3]``
