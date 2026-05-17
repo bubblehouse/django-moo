@@ -1,3 +1,14 @@
+## [1.9.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.8.0...v1.9.0) (2026-05-17)
+
+### Features
+
+* **sdk:** add invoked_verb_name() helper for verbs needing the typed verb name ([a544bce](https://gitlab.com/bubblehouse/django-moo/commit/a544bce4582dee5a9387fa904187ed9ce861b612))
+
+### Bug Fixes
+
+* **core:** buffer print collector so end="" coalesces fragments into one writer call ([ff83586](https://gitlab.com/bubblehouse/django-moo/commit/ff835860e84a6d539b89e242fe0d945f6ab5af8f))
+* **core:** case-insensitive verb dispatch, compound-command splitter, and dead-object error classification ([7845252](https://gitlab.com/bubblehouse/django-moo/commit/7845252f3b7e8b1c160859267b7f0fb3ed9a52f5))
+
 ## [1.8.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.7.2...v1.8.0) (2026-05-17)
 
 ### Features
