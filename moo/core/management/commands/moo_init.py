@@ -86,6 +86,7 @@ class Command(BaseCommand):
                 bootstrap_path = self._find_bootstrap_path(bootstrap)
                 log.info("Syncing bootstrap '%s' against existing database...", bootstrap)
                 load_python(bootstrap_path)
+                log.info("Syncing complete for bootstrap '%s'.", bootstrap)
             else:
                 try:
                     Repository.objects.get(slug=bootstrap)
