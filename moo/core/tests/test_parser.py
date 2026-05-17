@@ -395,3 +395,178 @@ def test_escaped_quotes_do_not_count_as_unmatched():
     # Two outer quotes + two escaped inner quotes = 2 unescaped quotes (even).
     lex = parse.Lexer(r'@describe here as "He said \"hello\""')
     assert lex.words[0] == "@describe"
+
+
+# ---------------------------------------------------------------------------
+# Item 1 — case-insensitive verb dispatch and article stripping
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("typed", ["frobulate", "FROBULATE", "Frobulate", "fRoBuLaTe"])
+def test_verb_dispatch_is_case_insensitive(t_init, t_wizard, typed):
+    """Verbs are stored lowercase; uppercase input must still dispatch."""
+    t_wizard.add_verb("frobulate", code="print('frobulated')")
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, typed)
+    assert "frobulated" in printed
+
+
+@pytest.mark.parametrize("article", ["the", "a", "an", "my"])
+def test_article_stripping_lowercase(article):
+    """Lowercase articles ``the/a/an/my`` are stripped as specifiers.
+    Uppercase forms are intentionally NOT stripped — many bootstrap room
+    names start with capital "The" (``The Laboratory``, ``The North
+    Hall``) and stripping would break ``get_pobj_str`` lookups."""
+    lex = parse.Lexer(f"take {article} leaflet")
+    assert lex.dobj_str == "leaflet"
+    assert lex.dobj_spec_str == article
+
+
+def test_possessive_specifier_stays_as_specifier():
+    """``Bill's`` (a proper noun possessive) is treated as a specifier
+    on the dobj — this branch of the SPEC regex preserves casing."""
+    lex = parse.Lexer("take Bill's spoon")
+    assert lex.dobj_str == "spoon"
+    assert lex.dobj_spec_str == "Bill's"
+
+
+# ---------------------------------------------------------------------------
+# Item 3 — period/comma/THEN compound-command splitter
+# ---------------------------------------------------------------------------
+
+
+def test_split_fragments_no_separators_round_trips():
+    assert parse.split_command_fragments("look") == ["look"]
+    assert parse.split_command_fragments("take the leaflet") == ["take the leaflet"]
+
+
+def test_split_fragments_period_separates_with_alpha_continuation():
+    """``take sword. kill troll`` splits — Zork-style multi-action input."""
+    assert parse.split_command_fragments("take sword. kill troll with sword.") == [
+        "take sword",
+        "kill troll with sword.",
+    ]
+
+
+def test_split_fragments_trailing_period_kept():
+    """Trailing period with no alpha continuation stays as text — so
+    ``emote waves hello.`` reaches the verb intact."""
+    assert parse.split_command_fragments("emote waves hello.") == ["emote waves hello."]
+
+
+def test_split_fragments_period_no_space_kept():
+    """``foo.bar`` (no space after period) is not a split — preserves
+    decimals, abbreviations, file paths, etc."""
+    assert parse.split_command_fragments("@set obj prop 3.14") == ["@set obj prop 3.14"]
+
+
+def test_split_fragments_comma_separates_with_alpha_continuation():
+    """Commas split only when followed by whitespace + alpha."""
+    assert parse.split_command_fragments("walk, run") == ["walk", "run"]
+
+
+def test_split_fragments_comma_no_space_kept():
+    """``n,n,n`` (no spaces) is NOT split — cardinal-direction shorthand
+    that the canonical splitter handled is sacrificed to protect ``[1,2,3]``
+    JSON values."""
+    assert parse.split_command_fragments("n,n,n,e") == ["n,n,n,e"]
+
+
+def test_split_fragments_inside_brackets_preserved():
+    """Commas/periods inside ``()``, ``[]``, ``{}`` never split."""
+    assert parse.split_command_fragments("@set obj prop [1, 2, 3]") == ["@set obj prop [1, 2, 3]"]
+    assert parse.split_command_fragments('@set obj prop {"a": 1, "b": 2}') == ['@set obj prop {"a": 1, "b": 2}']
+    assert parse.split_command_fragments("call(a, b, c)") == ["call(a, b, c)"]
+
+
+def test_split_fragments_then_separates():
+    assert parse.split_command_fragments("walk then run") == ["walk", "run"]
+
+
+def test_split_fragments_then_is_word_boundary():
+    """``then`` only splits when it stands alone — not inside ``theory`` etc."""
+    assert parse.split_command_fragments("examine theory") == ["examine theory"]
+    assert parse.split_command_fragments("northen path") == ["northen path"]
+
+
+def test_split_fragments_then_is_case_insensitive():
+    assert parse.split_command_fragments("walk THEN run") == ["walk", "run"]
+    assert parse.split_command_fragments("walk Then run") == ["walk", "run"]
+
+
+def test_split_fragments_quoted_periods_preserved():
+    """Periods inside quoted strings must not split the command."""
+    assert parse.split_command_fragments('say "hello sailor."') == ['say "hello sailor."']
+    assert parse.split_command_fragments("say 'a. b. c.'") == ["say 'a. b. c.'"]
+
+
+def test_split_fragments_quoted_then_preserved():
+    """``then`` inside quotes is just text, not a separator."""
+    assert parse.split_command_fragments('say "first then second"') == ['say "first then second"']
+
+
+def test_split_fragments_leading_then_dropped():
+    """A leading ``then`` produces only the following fragment."""
+    assert parse.split_command_fragments("then go north") == ["go north"]
+
+
+def test_split_fragments_all_separators_falls_back():
+    """An input of pure separators round-trips so the parser raises its usual error."""
+    assert parse.split_command_fragments("...") == ["..."]
+    assert parse.split_command_fragments(",,,") == [",,,"]
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_interpret_runs_each_fragment(t_init, t_wizard):
+    """``walk. run`` invokes the parser twice in sequence (trailing
+    period on the last fragment stays as text — see
+    test_split_fragments_trailing_period_kept)."""
+    t_wizard.add_verb("walk", code="print('walking')")
+    t_wizard.add_verb("run", code="print('running')")
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, "walk. run")
+    assert "walking" in printed
+    assert "running" in printed
+
+
+# ---------------------------------------------------------------------------
+# Item 5 — dead-object error classification
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_dead_dobj_raises_no_such_object(t_init, t_wizard):
+    """A verb name that exists somewhere + an unresolvable dobj should
+    raise NoSuchObjectError, not NoSuchVerbError — so the player sees
+    ``There is no 'lunch' here.`` instead of ``I don't know how to do that.``"""
+    # ``eat`` exists in the default bootstrap on $food (which is in $nowhere,
+    # not the wizard's location).  Typing ``eat lunch`` here resolves the
+    # verb name but not the dobj — so the classifier should report the dobj.
+    t_wizard.add_verb("eat", code="print('munch')", direct_object="this")
+
+    lex = parse.Lexer("eat lunch")
+    parser = parse.Parser(lex, t_wizard)
+    with pytest.raises(exceptions.NoSuchObjectError, match="lunch"):
+        parser.get_verb()
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_unknown_verb_with_no_dobj_still_raises_no_such_verb(t_init, t_wizard):
+    """Regression: typing nonsense with no dobj still produces NoSuchVerbError."""
+    lex = parse.Lexer("xyzzy")
+    parser = parse.Parser(lex, t_wizard)
+    with pytest.raises(exceptions.NoSuchVerbError):
+        parser.get_verb()
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_unknown_verb_with_dobj_str_raises_no_such_verb(t_init, t_wizard):
+    """If the verb name does not exist anywhere at all, the error stays
+    NoSuchVerbError even when the player typed a dobj."""
+    lex = parse.Lexer("xyzzy something")
+    parser = parse.Parser(lex, t_wizard)
+    with pytest.raises(exceptions.NoSuchVerbError):
+        parser.get_verb()

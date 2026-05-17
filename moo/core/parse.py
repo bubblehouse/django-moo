@@ -55,10 +55,102 @@ def _passes_parse_filters(verb, viewed_by, parser):
     return True
 
 
+def split_command_fragments(line: str) -> list[str]:
+    """
+    Split *line* into independent command fragments on ``.``, ``,``, and
+    the standalone word ``THEN`` (case-insensitive).
+
+    The splitter is intentionally conservative — only commands clearly
+    composed of multiple actions get split:
+
+    - inside quoted strings (``"..."`` / ``'...'``) and bracketed regions
+      (``()``, ``[]``, ``{}``), no separator splits anything;
+    - a ``.`` or ``,`` only splits when followed by whitespace and an
+      alphabetic continuation (so ``emote waves hello.``, ``@set x [1,2]``,
+      and ``Bill's spoon`` all pass through untouched);
+    - ``THEN`` only splits when it stands alone as a word.
+
+    Empty fragments are dropped.  Lines with no separator hits round-trip
+    as a single-element list.
+    """
+    fragments: list[str] = []
+    current: list[str] = []
+    in_quote: str | None = None
+    bracket_depth = 0
+    i = 0
+    n = len(line)
+    while i < n:
+        ch = line[i]
+        if in_quote:
+            current.append(ch)
+            if ch == in_quote and (i == 0 or line[i - 1] != "\\"):
+                in_quote = None
+            i += 1
+            continue
+        if ch in ('"', "'"):
+            in_quote = ch
+            current.append(ch)
+            i += 1
+            continue
+        if ch in "([{":
+            bracket_depth += 1
+            current.append(ch)
+            i += 1
+            continue
+        if ch in ")]}":
+            if bracket_depth > 0:
+                bracket_depth -= 1
+            current.append(ch)
+            i += 1
+            continue
+        if bracket_depth == 0 and ch in (".", ","):
+            # Require ``<sep> <whitespace>+ <alpha>`` to count as a real split.
+            # Trailing punctuation (``emote waves hello.``) and bracketed
+            # content (``[1, 2, 3]``) pass through untouched.
+            j = i + 1
+            while j < n and line[j] == " ":
+                j += 1
+            if j > i + 1 and j < n and line[j].isalpha():
+                frag = "".join(current).strip()
+                if frag:
+                    fragments.append(frag)
+                current = []
+                i = j
+                continue
+        # Standalone "then" (case-insensitive) as a fragment separator.
+        if bracket_depth == 0 and ch in ("t", "T") and line[i : i + 4].lower() == "then":
+            before_ok = i == 0 or not line[i - 1].isalnum()
+            after_ok = i + 4 == n or not line[i + 4].isalnum()
+            if before_ok and after_ok:
+                frag = "".join(current).strip()
+                if frag:
+                    fragments.append(frag)
+                current = []
+                i += 4
+                continue
+        current.append(ch)
+        i += 1
+    tail = "".join(current).strip()
+    if tail:
+        fragments.append(tail)
+    return fragments or [line]
+
+
 def interpret(ctx, line):
     """
     For a given user, execute a command.
+
+    The raw line is first split on period/comma/THEN separators (outside
+    quoted spans); each fragment is dispatched as its own command, matching
+    canonical adventure-game behaviour where ``take sword. kill troll.``
+    runs two turns.
     """
+    for fragment in split_command_fragments(line):
+        _interpret_one(ctx, fragment)
+
+
+def _interpret_one(ctx, line):
+    """Execute a single, already-split command fragment."""
     from . import context, lookup
 
     lex = Lexer(line)
@@ -77,7 +169,13 @@ def interpret(ctx, line):
 
     try:
         verb = parser.get_verb()
-    except NoSuchVerbError:
+    except (NoSuchVerbError, NoSuchObjectError):
+        # Both dispatch failures route through the room's ``huh`` hook when
+        # it exists — bootstraps that define ``huh`` get a chance to
+        # explain.  Without ``huh``, the original error message reaches
+        # the player verbatim (NoSuchObjectError: "There is no 'lunch'
+        # here." for dead dobjs; NoSuchVerbError: "I don't know how to
+        # do that." for unknown verbs).
         if context.player.location and context.player.location.has_verb("huh"):
             verb = context.player.location.get_verb("huh")
         else:
@@ -426,6 +524,10 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             self.verb = winner_verb
 
         if not self.this:
+            # Verb-name exists but dobj didn't resolve: report the dobj, not the verb.
+            if self.dobj_str is not None and self.dobj is None:
+                if Verb.objects.filter(names__name__iexact=self.words[0]).exists():
+                    raise NoSuchObjectError(self.dobj_str)
             raise NoSuchVerbError(self.words[0])
 
         self.verb._invoked_name = self.words[0]  # pylint: disable=protected-access
@@ -443,13 +545,16 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         """
         pk_to_rank = {obj.pk: i for i, obj in enumerate(search_order_list)}
         pk_to_obj = {obj.pk: obj for obj in search_order_list}
+        # Case-insensitive lookup: bootstrap verbs are stored in a mix of
+        # cases (`look`, `OUTPUTSUFFIX`, `@create`); the player should be
+        # able to type any case and have it match.
         verb_name = self.words[0]
 
         # Query 1: verbs defined directly on search-order objects.
         direct = list(
             Verb.objects.filter(
                 origin_id__in=pk_to_rank,
-                names__name=verb_name,
+                names__name__iexact=verb_name,
             )
             .values("id", "direct_object")
             .annotate(
@@ -463,7 +568,7 @@ class Parser:  # pylint: disable=too-many-instance-attributes
         inherited = list(
             Verb.objects.filter(
                 origin__ancestor_descendants__descendant_id__in=pk_to_rank,
-                names__name=verb_name,
+                names__name__iexact=verb_name,
             )
             .values("id", "direct_object")
             .annotate(
