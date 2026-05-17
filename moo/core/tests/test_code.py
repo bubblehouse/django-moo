@@ -396,8 +396,10 @@ def test_print_and_print_factory_both_present():
 
     Both keys must be present:
 
-    - ``_print_`` -- factory callable, receives the current collector, returns a new one
-    - ``_print`` -- initial collector instance; its _call_print() routes to the writer
+    - ``_print_`` -- factory callable; returns the same singleton collector
+      every call so its buffer persists across ``print()`` calls within a
+      verb (so ``print("a", end=""); print("b")`` coalesces).
+    - ``_print`` -- the singleton collector; its _call_print() routes to the writer
     """
     collected = []
     env = code.get_restricted_environment("test", collected.append)
@@ -405,9 +407,10 @@ def test_print_and_print_factory_both_present():
     assert "_print_" in env
     assert "_print" in env
 
-    # Factory: callable with the current collector as arg → new object with _call_print
-    new_collector = env["_print_"](env["_print"])
-    assert callable(getattr(new_collector, "_call_print", None))
+    # Factory returns the same collector every call so the buffer accumulates.
+    assert env["_print_"](env["_print"]) is env["_print"]
+    assert env["_print_"](None) is env["_print"]
+    assert callable(getattr(env["_print"], "_call_print", None))
 
     # Initial collector: _call_print routes output to the writer
     env["_print"]._call_print("routed")  # pylint: disable=protected-access
@@ -543,6 +546,93 @@ def test_r_exec_print_calls_writer(t_init: Object, t_wizard: Object):
         g = _make_globals(printed.append)
         code.r_exec("print('hello')", {}, g)
     assert "hello" in printed
+
+
+# ---------------------------------------------------------------------------
+# 7b. Print collector buffering across multiple print() calls (item 4)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_print_default_end_emits_one_writer_call_per_print(t_init, t_wizard):
+    """``print("a"); print("b")`` produces two writer calls — one per line."""
+    printed: list[str] = []
+    with _ctx(t_wizard, printed.append):
+        g = _make_globals(printed.append)
+        code.r_exec("print('a'); print('b')", {}, g)
+    assert printed == ["a", "b"]
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_print_end_empty_coalesces_with_next_print(t_init, t_wizard):
+    """``print("a", end=""); print("b")`` is a single line — the writer
+    is called once with the concatenated text."""
+    printed: list[str] = []
+    with _ctx(t_wizard, printed.append):
+        g = _make_globals(printed.append)
+        code.r_exec("print('a', end=''); print('b')", {}, g)
+    assert printed == ["ab"]
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_print_three_fragments_coalesce(t_init, t_wizard):
+    """The exact pattern the ZIL translator emits — three fragments with
+    no newlines between — collapses into one writer call."""
+    printed: list[str] = []
+    with _ctx(t_wizard, printed.append):
+        g = _make_globals(printed.append)
+        code.r_exec(
+            "print('Opening the small mailbox reveals ', end='')\nprint('a leaflet', end='')\nprint('.')\n",
+            {},
+            g,
+        )
+    assert printed == ["Opening the small mailbox reveals a leaflet."]
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_print_embedded_newline_preserved_in_writer_entry(t_init, t_wizard):
+    """Internal ``\\n`` in a single print stays inside one writer call —
+    multi-line content (letters, room descriptions) reaches the renderer
+    intact so the shell can render the embedded newlines as line breaks."""
+    printed: list[str] = []
+    with _ctx(t_wizard, printed.append):
+        g = _make_globals(printed.append)
+        code.r_exec("print('foo\\nbar')", {}, g)
+    assert printed == ["foo\nbar"]
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_print_trailing_end_empty_flushes_at_verb_exit(t_init, t_wizard):
+    """A verb ending mid-buffer (``print("x", end="")`` with no follow-up)
+    flushes the pending fragment as a final writer call."""
+    printed: list[str] = []
+    with _ctx(t_wizard, printed.append):
+        g = _make_globals(printed.append)
+        code.r_exec("print('prompt> ', end='')", {}, g)
+    assert printed == ["prompt> "]
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_print_sep_kwarg_honored(t_init, t_wizard):
+    """``sep=`` joins multiple positional args within a single print."""
+    printed: list[str] = []
+    with _ctx(t_wizard, printed.append):
+        g = _make_globals(printed.append)
+        code.r_exec("print('a', 'b', 'c', sep='-')", {}, g)
+    assert printed == ["a-b-c"]
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_print_collector_buffer_does_not_leak_between_invocations(t_init, t_wizard):
+    """Each ``r_exec`` builds a fresh environment with a fresh collector —
+    a stranded buffer from one invocation never appears in the next."""
+    printed: list[str] = []
+    with _ctx(t_wizard, printed.append):
+        g1 = _make_globals(printed.append)
+        code.r_exec("print('a', end='')", {}, g1)  # flushes via do_eval
+        g2 = _make_globals(printed.append)
+        code.r_exec("print('b')", {}, g2)
+    assert printed == ["a", "b"]
 
 
 # ---------------------------------------------------------------------------

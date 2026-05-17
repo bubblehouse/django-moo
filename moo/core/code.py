@@ -98,18 +98,27 @@ def r_exec(src, locals, globals, *args, filename="<string>", **kwargs):  # pylin
 def do_eval(code, locals, globals, *args, filename="<string>", runtype="eval", **kwargs):  # pylint: disable=redefined-builtin
     """
     Execute an expression in the provided environment.
-    """
-    if isinstance(code, str):
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=SyntaxWarning)
-            code = compile_restricted(code, filename, runtype)
 
-        value = eval(code, globals, locals)  # pylint: disable=eval-used
-    else:
-        exec(code.code, globals, locals)  # pylint: disable=exec-used
-        compiled_function = locals["verb"]
-        value = compiled_function(*args, **kwargs)
-    return value
+    Flushes the sandbox print collector on return so any trailing
+    ``print(..., end="")`` fragment reaches the writer instead of being
+    discarded with the verb's globals.
+    """
+    collector = globals.get("_print")
+    try:
+        if isinstance(code, str):
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=SyntaxWarning)
+                code = compile_restricted(code, filename, runtype)
+
+            value = eval(code, globals, locals)  # pylint: disable=eval-used
+        else:
+            exec(code.code, globals, locals)  # pylint: disable=exec-used
+            compiled_function = locals["verb"]
+            value = compiled_function(*args, **kwargs)
+        return value
+    finally:
+        if collector is not None:
+            collector._flush()  # pylint: disable=protected-access
 
 
 def get_default_globals():
@@ -124,11 +133,26 @@ def get_restricted_environment(name, writer):
     from moo.core.models.property import Property
 
     class _print_:
-        def _call_print(self, *args, sep=" ", end=""):
-            # Default ``end=""`` preserves the long-standing no-newline-added
-            # behavior of verb prints; ``sep``/``end`` are accepted for
-            # stdlib-``print`` compatibility (RestrictedPython forwards both).
-            writer(sep.join(str(a) for a in args) + end)
+        # Stdlib-compatible defaults: ``print("x")`` ends with ``\n``,
+        # ``print("x", end="")`` does not.  The shell writer is a println —
+        # one call per writer entry, with its own trailing ``\n`` added —
+        # so we buffer until a print's ``end`` carries us across a newline,
+        # then emit one writer call with the trailing ``\n`` stripped
+        # (writer adds it back).  Embedded newlines in args are preserved
+        # verbatim so multi-line text reaches the writer as one call.
+        def __init__(self):
+            self._buffer = ""
+
+        def _call_print(self, *args, sep=" ", end="\n"):
+            self._buffer += sep.join(str(a) for a in args) + end
+            if self._buffer.endswith("\n"):
+                writer(self._buffer[:-1])
+                self._buffer = ""
+
+        def _flush(self):
+            if self._buffer:
+                writer(self._buffer)
+                self._buffer = ""
 
     class _write_:
         def __init__(self, obj):
@@ -258,10 +282,17 @@ def get_restricted_environment(name, writer):
     restricted_builtins["getattr"] = safe_getattr
     restricted_builtins["hasattr"] = safe_hasattr
 
+    _print_collector = _print_()
     env = dict(
         _apply_=lambda f, *a, **kw: f(*a, **kw),
-        _print_=lambda x: _print_(),
-        _print=_print_(),
+        # RestrictedPython transforms ``print(x)`` into
+        # ``_print_(_print)._call_print(x)``.  Return the same collector
+        # instance every time so its buffer persists across calls and
+        # ``print(..., end="")`` can coalesce fragments into one writer
+        # call.  The ``x`` arg (the current collector) is intentionally
+        # ignored — we already own it.
+        _print_=lambda x: _print_collector,
+        _print=_print_collector,
         _write_=_write_,
         _getattr_=get_protected_attribute,
         _getitem_=guarded_getitem,
