@@ -1,3 +1,17 @@
+## [1.8.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.7.2...v1.8.0) (2026-05-17)
+
+### Features
+
+* **verbs:** [@dig](https://gitlab.com/dig) and [@burrow](https://gitlab.com/burrow) create rooms and exits owned by the caller ([fe3372f](https://gitlab.com/bubblehouse/django-moo/commit/fe3372f3b2e1038affac53a0d49356403c567862))
+
+### Bug Fixes
+
+* **core:** keep cross-site object refs intact when moojson deserializes outside a site context ([64980a1](https://gitlab.com/bubblehouse/django-moo/commit/64980a162b67760d7a9d94260e65ead1b5954580))
+* **core:** route enterfunc/exitfunc output back to the originating caller ([91fa100](https://gitlab.com/bubblehouse/django-moo/commit/91fa10066a5aabbfd8f867abbcdcd807b649e791))
+* **shell:** provision wizard avatar with Generic Wizard parent and start location ([91f78b7](https://gitlab.com/bubblehouse/django-moo/commit/91f78b7fb869668f15a167f9c9a941e7897bc934))
+* **verbs:** drop unreliable backslash-letter escape repair in [@edit](https://gitlab.com/edit) ([9cd4633](https://gitlab.com/bubblehouse/django-moo/commit/9cd4633ac468c98e0179fba091a143f4b10dc38e))
+* **verbs:** look up System Object by name instead of pk=1 ([c330a0a](https://gitlab.com/bubblehouse/django-moo/commit/c330a0a4314136aee8f081ca55f4a9663c295518))
+
 ## [1.7.2](https://gitlab.com/bubblehouse/django-moo/compare/v1.7.1...v1.7.2) (2026-05-11)
 
 ### Bug Fixes
