@@ -19,7 +19,7 @@ Output:
     You are now in The Watchtower (#81).
 """
 
-from moo.sdk import context, create, OPPOSITE_DIRECTIONS
+from moo.sdk import context, create, set_task_perms, OPPOSITE_DIRECTIONS
 
 OPPOSITES = OPPOSITE_DIRECTIONS
 
@@ -35,9 +35,10 @@ if source.match_exit(direction):
     return
 
 # Create forward door and destination room (same logic as @dig)
-forward_door = create(f"{direction} from {source.name}", parents=[_.exit], location=None)
-forward_door.add_alias(direction)
-dest = create(dest_name, parents=[_.room], location=None)
+with set_task_perms(context.player):
+    forward_door = create(f"{direction} from {source.name}", parents=[_.exit], location=None, owner=context.player)
+    forward_door.add_alias(direction)
+    dest = create(dest_name, parents=[_.room], location=None, owner=context.player)
 forward_door.set_property("source", source)
 forward_door.set_property("dest", dest)
 source.add_exit(forward_door)
@@ -62,7 +63,8 @@ if dest.match_exit(return_direction):
     return
 
 # Create return door (same logic as @tunnel)
-return_door = create(f"{return_direction} from {dest.name}", parents=[_.exit], location=None)
+with set_task_perms(context.player):
+    return_door = create(f"{return_direction} from {dest.name}", parents=[_.exit], location=None, owner=context.player)
 return_door.add_alias(return_direction)
 return_door.set_property("source", dest)
 return_door.set_property("dest", source)

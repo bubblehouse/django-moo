@@ -9,7 +9,7 @@ with `$room` as a parent to create a room. Note that you can only use the `@dig`
 room.
 """
 
-from moo.sdk import context, create, lookup, DIRECTIONS
+from moo.sdk import context, create, lookup, set_task_perms, DIRECTIONS
 
 directions = DIRECTIONS
 direction = context.parser.get_dobj_str()
@@ -26,12 +26,14 @@ if context.parser.has_pobj("through"):
         return
     door.add_alias(direction)
 else:
-    door = create(f"{direction} from {source.name}", parents=[_.exit], location=None)
+    with set_task_perms(context.player):
+        door = create(f"{direction} from {source.name}", parents=[_.exit], location=None, owner=context.player)
     door.add_alias(direction)
 
 if verb_name == "@dig":
     action = "Dug"
-    dest = create(context.parser.get_pobj_str("to"), parents=[_.room], location=None)
+    with set_task_perms(context.player):
+        dest = create(context.parser.get_pobj_str("to"), parents=[_.room], location=None, owner=context.player)
 else:
     action = "Tunnelled"
     dest = context.parser.get_pobj("to", lookup=True)
