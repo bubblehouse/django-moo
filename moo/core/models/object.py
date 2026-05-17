@@ -987,7 +987,14 @@ class Object(models.Model, AccessibleMixin):
                         raise PermissionError(f"{self.location} did not accept {self}")
                 else:
                     raise PermissionError(f"{self.location} did not accept {self}")
-                # the optional `exitfunc` Verb will be called asyncronously
+                # Snapshot caller/player now — on_commit fires after the
+                # ContextManager exits and its contextvars are cleared.
+                from moo.core import context as _moo_context  # pylint: disable=import-outside-toplevel
+
+                _ctx_caller = _moo_context.caller
+                _ctx_player = _moo_context.player
+                # Default args bind at lambda-creation; closing over the
+                # names would let a later save() overwrite both lambdas.
                 if original_location_id:
                     # Use global_objects so the lookup doesn't fail when the
                     # save runs without the previous location's site context
@@ -995,13 +1002,18 @@ class Object(models.Model, AccessibleMixin):
                     _prev_location = Object.global_objects.get(pk=original_location_id)
                     if _prev_location.has_verb("exitfunc"):
                         _exitfunc = _prev_location.get_verb("exitfunc")
-                        _self = self
-                        transaction.on_commit(lambda: invoke(_self, verb=_exitfunc))
-                # the optional `enterfunc` Verb will be called asyncronously
+                        transaction.on_commit(
+                            lambda _thing=self, _verb=_exitfunc, _c=_ctx_caller, _p=_ctx_player: invoke(
+                                _thing, verb=_verb, _caller=_c, _player=_p
+                            )
+                        )
                 if self.location and self.location.has_verb("enterfunc"):
                     _enterfunc = self.location.get_verb("enterfunc")
-                    _self = self
-                    transaction.on_commit(lambda: invoke(_self, verb=_enterfunc))
+                    transaction.on_commit(
+                        lambda _thing=self, _verb=_enterfunc, _c=_ctx_caller, _p=_ctx_player: invoke(
+                            _thing, verb=_verb, _caller=_c, _player=_p
+                        )
+                    )
             # Re-baseline change-tracking so subsequent saves on the same Python
             # instance compare against the just-persisted state. Without this, a
             # freshly created object (which never passes through from_db) keeps

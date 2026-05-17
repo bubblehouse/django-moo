@@ -44,7 +44,10 @@ def parse_command(self, caller_id: int, line: str) -> tuple[list[Any], int]:
         log.warning(f"Skipping command {line!r}: caller {caller_id} recycled or disconnected")
         return [], 0
     site = caller.site if caller.site_id else None
-    with code.ContextManager(caller, output.append, task_id=task_id, track_events=True, site=site) as ctx:
+    # Set player=caller so on_commit verbs route output to this player's queue.
+    with code.ContextManager(
+        caller, output.append, task_id=task_id, track_events=True, site=site, player=caller
+    ) as ctx:
         prefix = "[ERROR] " if get_session_setting("prefixes_mode", False) else ""
         with transaction.atomic():
             try:

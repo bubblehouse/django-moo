@@ -11,7 +11,17 @@ from ..core.exceptions import UserError
 from .context import context
 
 
-def invoke(*args, verb=None, callback=None, delay: int = 0, periodic: bool = False, cron: str | None = None, **kwargs):
+def invoke(
+    *args,
+    verb=None,
+    callback=None,
+    delay: int = 0,
+    periodic: bool = False,
+    cron: str | None = None,
+    _caller=None,
+    _player=None,
+    **kwargs,
+):
     """
     Asynchronously execute a Verb, optionally returning the result to another Verb.
     This is often a better alternative than using `__call__`-syntax to invoke
@@ -24,14 +34,21 @@ def invoke(*args, verb=None, callback=None, delay: int = 0, periodic: bool = Fal
     :param delay: seconds to wait before executing, cannot be used with `cron`
     :param periodic: should this task continue to repeat? cannot be used with `cron`
     :param cron: a crontab expression to schedule Verb execution
+    :param _caller: explicit caller override; falls back to ``context.caller``.
+        Used by ``transaction.on_commit`` callbacks that fire after the
+        :class:`ContextManager` has exited and cleared the contextvars.
+    :param _player: explicit player override; falls back to ``context.player``.
+        Same reason as ``_caller``.
     :param args: positional arguments for the Verb, if any
     :param kwargs: keyword arguments for the Verb, if any
     :returns: a :class:`.PeriodicTask` instance or `None` if the task is a one-shot
     :rtype: Optional[:class:`.PeriodicTask`]
     """
-    if (periodic or cron) and context.caller and not context.caller.is_wizard():
+    eff_caller = _caller if _caller is not None else context.caller
+    eff_player = _player if _player is not None else context.player
+    if (periodic or cron) and eff_caller and not eff_caller.is_wizard():
         raise UserError("Only verbs owned by wizards can create persistent scheduled tasks.")
-    if verb is not None and context.caller:
+    if verb is not None and eff_caller:
         exec_obj = (
             verb._invoked_object  # pylint: disable=protected-access
             if verb._invoked_object is not None  # pylint: disable=protected-access
@@ -44,8 +61,8 @@ def invoke(*args, verb=None, callback=None, delay: int = 0, periodic: bool = Fal
 
     kwargs.update(
         dict(
-            caller_id=context.caller.pk if context.caller else None,
-            player_id=context.player.pk if context.player else None,
+            caller_id=eff_caller.pk if eff_caller else None,
+            player_id=eff_player.pk if eff_player else None,
             this_id=verb._invoked_object.pk,  # pylint: disable=protected-access
             verb_name=verb._invoked_name,  # pylint: disable=protected-access
             callback_this_id=callback._invoked_object.pk if callback else None,  # pylint: disable=protected-access
