@@ -69,17 +69,36 @@ def invoke(
             callback_verb_name=callback._invoked_name if callback else None,  # pylint: disable=protected-access
         )
     )
+    # PeriodicTask.args / .kwargs are JSON-serialized strings; django-celery-beat
+    # disables the schedule on deserialization failure, so we encode them here
+    # rather than letting the default repr() leak through. ``name`` must be
+    # unique. Object refs in args are converted to their pks (callers should
+    # accept pks at the receiving end). Computed unconditionally — cheap, and
+    # silences "possibly-used-before-assignment" warnings on the PT branches.
+    import json
+    import uuid
+
+    def _jsonable(x):
+        if hasattr(x, "pk"):
+            return x.pk
+        return x
+
+    args_json = json.dumps([_jsonable(a) for a in args])
+    kwargs_json = json.dumps({k: _jsonable(v) for k, v in kwargs.items()})
+    task_name = f"moo:invoke:{verb._invoked_object.pk}:{verb._invoked_name}:{uuid.uuid4().hex[:8]}"  # pylint: disable=protected-access
+
     if delay and periodic:
         schedule, _ = IntervalSchedule.objects.get_or_create(
             every=delay,
             period=IntervalSchedule.SECONDS,
         )
         return PeriodicTask.objects.create(
+            name=task_name,
             interval=schedule,
             description=f"{context.caller.pk}:{verb}",
             task="moo.core.tasks.invoke_verb",
-            args=args,
-            kwargs=kwargs,
+            args=args_json,
+            kwargs=kwargs_json,
         )
     elif cron:
         cronparts = cron.split()
@@ -91,15 +110,80 @@ def invoke(
             month_of_year=cronparts[4],
         )
         return PeriodicTask.objects.create(
-            interval=schedule,
+            name=task_name,
+            crontab=schedule,
             description=f"{context.caller.pk}:{verb}",
             task="moo.core.tasks.invoke_verb",
-            args=args,
-            kwargs=kwargs,
+            args=args_json,
+            kwargs=kwargs_json,
         )
     else:
         tasks.invoke_verb.apply_async(args, kwargs, countdown=delay)
         return None
+
+
+def cancel_scheduled_task(pk: int) -> bool:
+    """
+    Delete a ``django_celery_beat.PeriodicTask`` row by primary key.
+
+    Used by daemon lifecycle verbs (``$daemon.disable``, ``$daemon.recycle``)
+    to remove the PT created by :func:`invoke` ``(periodic=True)``. Idempotent:
+    returns ``False`` if no PT with that pk exists.
+
+    :param pk: the ``PeriodicTask.pk`` returned by :func:`invoke`
+    :return: ``True`` if a row was deleted, ``False`` if not found
+    :raises UserError: if the current caller is not a wizard
+    """
+    eff_caller = context.caller
+    if eff_caller and not eff_caller.is_wizard():
+        raise UserError("Only verbs owned by wizards can cancel scheduled tasks.")
+    from django_celery_beat.models import PeriodicTask  # pylint: disable=import-outside-toplevel
+
+    deleted, _ = PeriodicTask.objects.filter(pk=pk).delete()
+    return bool(deleted)
+
+
+def get_scheduled_task_info(pk: int) -> dict | None:
+    """
+    Look up runtime stats for a scheduled task created by :func:`invoke`.
+
+    Returns ``None`` if no ``PeriodicTask`` exists with the given pk
+    (useful for orphan-pointer detection on daemon Objects).
+
+    :param pk: the ``PeriodicTask.pk`` to inspect
+    :return: dict with ``enabled``, ``last_run_at``, ``total_run_count``,
+        ``interval_seconds`` (or ``None``), and ``task`` (the Celery task
+        name) — or ``None`` if not found.
+    :raises UserError: if the current caller is not a wizard
+    """
+    eff_caller = context.caller
+    if eff_caller and not eff_caller.is_wizard():
+        raise UserError("Only verbs owned by wizards can read scheduled-task info.")
+    from django_celery_beat.models import PeriodicTask  # pylint: disable=import-outside-toplevel
+
+    try:
+        pt = PeriodicTask.objects.select_related("interval").get(pk=pk)
+    except PeriodicTask.DoesNotExist:
+        return None
+    interval_seconds = None
+    if pt.interval_id is not None:
+        every = pt.interval.every
+        period = pt.interval.period
+        if period == "seconds":
+            interval_seconds = every
+        elif period == "minutes":
+            interval_seconds = every * 60
+        elif period == "hours":
+            interval_seconds = every * 3600
+        elif period == "days":
+            interval_seconds = every * 86400
+    return dict(
+        enabled=pt.enabled,
+        last_run_at=pt.last_run_at.isoformat() if pt.last_run_at else None,
+        total_run_count=pt.total_run_count,
+        interval_seconds=interval_seconds,
+        task=pt.task,
+    )
 
 
 @_contextmanager

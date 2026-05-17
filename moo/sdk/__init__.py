@@ -33,6 +33,8 @@ from .output import (
 )
 from .tasks import (
     invoke,
+    cancel_scheduled_task,
+    get_scheduled_task_info,
     set_task_perms,
     task_time_low,
     schedule_continuation,
@@ -126,6 +128,8 @@ __all__ = [
     "open_editor",
     "open_paginator",
     "invoke",
+    "cancel_scheduled_task",
+    "get_scheduled_task_info",
     "set_task_perms",
     "context",
     "moojson",
