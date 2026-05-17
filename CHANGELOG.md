@@ -1,3 +1,19 @@
+## [1.10.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.9.0...v1.10.0) (2026-05-17)
+
+### Features
+
+* **bootstrap:** add $daemon class with scheduled-tick verbs and [@daemon](https://gitlab.com/daemon) wizard command ([2dccefe](https://gitlab.com/bubblehouse/django-moo/commit/2dccefef2dbbb7eaa714f9db821aa7847b991ffc))
+* **bootstrap:** add $npc and $wanderer classes with personality daemon hook and [@npc](https://gitlab.com/npc) wizard command ([27c707a](https://gitlab.com/bubblehouse/django-moo/commit/27c707a491d8a7694b2c6b26de23fd1d32ac07db))
+* **logging:** inject #<this>.<verb> into invoke_verb celery trace lines ([467123a](https://gitlab.com/bubblehouse/django-moo/commit/467123ac089655c160c4a07922ca908936ef3c23))
+* **parser:** split compound commands on ';' and accept '@'-prefixed verb heads ([ea4ee8b](https://gitlab.com/bubblehouse/django-moo/commit/ea4ee8b29fb861818a99af1be597f4493dd598d1))
+* **sdk:** add Player-record helpers and fix create() initialize-hook invoke() call ([4a3839d](https://gitlab.com/bubblehouse/django-moo/commit/4a3839dc473fa96ebdca8bbeb4322cb77ed31849))
+* **sdk:** add scheduled-task lifecycle helpers and JSON-encode PeriodicTask args ([4ed3676](https://gitlab.com/bubblehouse/django-moo/commit/4ed367661a37b21a1204c3966a6aeff0d6dad4f2))
+
+### Bug Fixes
+
+* **builder:** [@create](https://gitlab.com/create) uses global lookup to resolve 'from <parent>' ([f61c506](https://gitlab.com/bubblehouse/django-moo/commit/f61c5067d464a50b389259ff5c61c436a2070daf))
+* **core:** recycle hook walks inherited verbs ([4955a99](https://gitlab.com/bubblehouse/django-moo/commit/4955a9921135870ab3d200b214f883d05c02f19d))
+
 ## [1.9.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.8.0...v1.9.0) (2026-05-17)
 
 ### Features
