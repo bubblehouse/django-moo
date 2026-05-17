@@ -1,5 +1,18 @@
 """
-Encode/decode MOO JSON
+Encode/decode MOO JSON.
+
+This module is *also* the registered Celery task serializer (``moojson`` in
+``celeryconfig.py``), not just the storage format for ``Property.value``.
+Anything that crosses a Celery boundary — task args, kwargs, results,
+``invoke_verb`` payloads queued from ``transaction.on_commit`` — round-trips
+through ``dumps`` and ``loads``. Two consequences flow from this:
+
+1. ``loads`` runs *before* the worker's :class:`ContextManager` is entered.
+   Logic that reads ``ContextManager.get_site()`` must tolerate ``None`` and
+   not silently rewrite refs against the default site, or every cross-site
+   Object arg gets clobbered to ``$nothing`` on its way into a task.
+2. Anything that goes into ``Property.value`` *also* travels through Celery,
+   so the two encodings must stay reversible without a site context.
 """
 
 import base64
@@ -39,6 +52,8 @@ def loads(j):
     from .models.property import Property
     from .models.verb import Verb
 
+    from .code import ContextManager
+
     def to_entity(d):
         if len(d) != 1:
             return d
@@ -55,10 +70,14 @@ def loads(j):
             if key[0] == "o":
                 try:
                     obj = Object.global_objects.get(pk=int(key[2:]))
-                    # If the object belongs to a different universe, treat as nothing
-                    nothing = _get_nothing()
-                    if nothing is not None and obj.site_id != nothing.site_id:
-                        return nothing
+                    # Cross-universe filtering only applies when a site context
+                    # is active. Outside one — e.g. while Celery deserializes
+                    # task args before invoke_verb's ContextManager is entered
+                    # — pass the object through unchanged; the task body will
+                    # establish its own site.
+                    site = ContextManager.get_site()
+                    if site is not None and obj.site_id != site.pk:
+                        return _get_nothing()
                     return obj
                 except Object.DoesNotExist:
                     return _get_nothing()

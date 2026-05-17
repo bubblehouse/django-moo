@@ -166,6 +166,31 @@ def test_moojson_cross_site_ref_decodes_as_nothing(t_two_sites):
     assert decoded.pk == nothing2.pk
 
 
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_moojson_decode_without_site_context_preserves_object(t_two_sites):
+    """
+    Deserializing an Object ref outside any site context returns the original
+    object, not ``$nothing``. Celery deserializes task args before the
+    worker's :class:`ContextManager` is entered, so ``invoke_verb`` payloads
+    queued from a non-default site (e.g. ``transaction.on_commit`` firing
+    ``enterfunc`` for a player on site 2) must survive the round-trip — else
+    ``args[0]`` to ``enterfunc`` is the wrong-site ``$nothing`` and the
+    ``is_player()`` branch that auto-renders ``look_self`` on arrival never
+    fires.
+    """
+    from moo.core import moojson
+
+    _, site2 = t_two_sites
+    site2_obj = Object.global_objects.filter(site=site2).exclude(name="nothing").first()
+    assert site2_obj is not None
+
+    clear_nothing_cache()
+    # No ContextManager — simulates Celery's pre-task deserialization.
+    decoded = moojson.loads(moojson.dumps(site2_obj))
+    assert decoded.pk == site2_obj.pk
+    assert decoded.name != "nothing"
+
+
 # ---------------------------------------------------------------------------
 # SiteManager filtering
 # ---------------------------------------------------------------------------
