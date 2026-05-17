@@ -14,6 +14,8 @@ from .objects import (
     prefetch_property,
     owned_objects,
     owned_objects_by_pks,
+    ensure_player_record,
+    remove_player_record,
 )
 from .output import (
     write,
@@ -148,6 +150,8 @@ __all__ = [
     "open_input",
     "owned_objects",
     "owned_objects_by_pks",
+    "ensure_player_record",
+    "remove_player_record",
     "task_time_low",
     "schedule_continuation",
     "server_info",

@@ -178,6 +178,55 @@ def players():
     return [p.avatar for p in Player.objects.select_related("avatar").filter(avatar__isnull=False)]
 
 
+def ensure_player_record(obj):
+    """
+    Ensure a :class:`Player` row exists for *obj* with ``user=None``.
+
+    Used by NPC initialization so the avatar reports ``is_player() == True``
+    to the parser while ``is_connected() == False`` causes ``tell()`` to
+    silently drop (no connection). Idempotent: returns the existing Player
+    if one already references this avatar.
+
+    :param obj: the avatar Object
+    :return: the Player row (created or pre-existing)
+    :raises UserError: if the current caller is not a wizard
+    """
+    from ..core.exceptions import UserError
+    from ..core.models.auth import Player
+
+    eff_caller = context.caller
+    if eff_caller and not eff_caller.is_wizard():
+        raise UserError("Only wizards can create Player records.")
+
+    existing = Player.objects.filter(avatar=obj).first()
+    if existing is not None:
+        return existing
+    return Player.objects.create(avatar=obj)
+
+
+def remove_player_record(obj):
+    """
+    Delete any anonymous (``user=None``) :class:`Player` rows pointing at *obj*.
+
+    Counterpart to :func:`ensure_player_record`; used by the ``$npc.recycle``
+    verb. Rows tied to a real ``User`` are left alone — those belong to a
+    human player and removing them is not this helper's job.
+
+    :param obj: the avatar Object
+    :return: number of Player rows deleted
+    :raises UserError: if the current caller is not a wizard
+    """
+    from ..core.exceptions import UserError
+    from ..core.models.auth import Player
+
+    eff_caller = context.caller
+    if eff_caller and not eff_caller.is_wizard():
+        raise UserError("Only wizards can remove Player records.")
+
+    deleted, _ = Player.objects.filter(avatar=obj, user__isnull=True).delete()
+    return deleted
+
+
 def create(name, *a, **kw):
     """
     Creates and returns a new object whose parents are `parents` and whose owner is as described below.
@@ -238,7 +287,7 @@ def create(name, *a, **kw):
     if parents:
         obj.parents.add(*parents)
     if obj.has_verb("initialize"):
-        invoke(obj.get_verb("initialize"))
+        invoke(verb=obj.get_verb("initialize"))
     return obj
 
 
