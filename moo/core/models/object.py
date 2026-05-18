@@ -209,12 +209,24 @@ class Object(models.Model, AccessibleMixin):
 
     _original_owner = None
     _original_location = None
+    _original_name = None
+    _original_unique_name = None
+    _original_obvious = None
+    _original_placement_target_id = None
+    _original_placement_prep = None
+    _original_site_id = None
 
     @classmethod
     def from_db(cls, db, field_names, values):
         instance = super().from_db(db, field_names, values)
         instance._original_owner = values[field_names.index("owner_id")]  # pylint: disable=protected-access
         instance._original_location = values[field_names.index("location_id")]  # pylint: disable=protected-access
+        instance._original_name = values[field_names.index("name")]  # pylint: disable=protected-access
+        instance._original_unique_name = values[field_names.index("unique_name")]  # pylint: disable=protected-access
+        instance._original_obvious = values[field_names.index("obvious")]  # pylint: disable=protected-access
+        instance._original_placement_target_id = values[field_names.index("placement_target_id")]  # pylint: disable=protected-access
+        instance._original_placement_prep = values[field_names.index("placement_prep")]  # pylint: disable=protected-access
+        instance._original_site_id = values[field_names.index("site_id")]  # pylint: disable=protected-access
         return instance
 
     def __str__(self):
@@ -517,22 +529,28 @@ class Object(models.Model, AccessibleMixin):
         """
         Add a parent to this object's inheritance chain.
 
+        The underlying ``m2m_changed`` signal handler enforces ``transmute`` on
+        the child and ``derive`` on the parent, so no additional check is needed
+        here.
+
         :param parent: the parent Object to add
-        :raises PermissionError: if the caller does not have derive permission on the parent
+        :raises PermissionError: if the caller lacks ``transmute`` on this object
+            or ``derive`` on the parent.
         """
-        self.can_caller("write", self)
-        parent.can_caller("derive", parent)
         self.parents.add(parent)
 
     def remove_parent(self, parent: "Object"):
         """
         Remove a parent from this object's inheritance chain.
 
+        The underlying ``m2m_changed`` signal handler enforces ``transmute`` on
+        the child and ``derive`` on the parent, so no additional check is needed
+        here.
+
         :param parent: the parent Object to remove
-        :raises PermissionError: if the caller does not have write permission on this object
+        :raises PermissionError: if the caller lacks ``transmute`` on this object
+            or ``derive`` on the parent.
         """
-        self.can_caller("write", self)
-        parent.can_caller("derive", parent)
         self.parents.remove(parent)
 
     def invoke_verb(self, name, *args, **kwargs):
@@ -975,8 +993,19 @@ class Object(models.Model, AccessibleMixin):
                     for k in evict:
                         del perm_cache[k]
                 self.can_caller("entrust", self)
-            # ACL Check: to change anything else about the object you at least need `write`
-            self.can_caller("write", self)
+            # ACL Check: `write` is only required when a non-ACL field changed. Owner/location
+            # have their own granular checks (entrust/move) above and below; for those fields
+            # alone, `write` is not required.
+            non_acl_field_changed = unsaved or (
+                self.name != self._original_name
+                or self.unique_name != self._original_unique_name
+                or self.obvious != self._original_obvious
+                or self.placement_target_id != self._original_placement_target_id
+                or self.placement_prep != self._original_placement_prep
+                or self.site_id != self._original_site_id
+            )
+            if non_acl_field_changed:
+                self.can_caller("write", self)
             # ACL Check: to change the location, caller must be allowed to `move` on this object
             original_location_id = self._original_location
             if original_location_id != self.location_id and self.location_id:
@@ -1021,6 +1050,12 @@ class Object(models.Model, AccessibleMixin):
             # a spurious entrust check.
             self._original_owner = self.owner_id
             self._original_location = self.location_id
+            self._original_name = self.name
+            self._original_unique_name = self.unique_name
+            self._original_obvious = self.obvious
+            self._original_placement_target_id = self.placement_target_id
+            self._original_placement_prep = self.placement_prep
+            self._original_site_id = self.site_id
 
     # Django gets upset if this meddles with anything in RESERVED_NAMES
     # but otherwise this seems to work, including in the admin interface

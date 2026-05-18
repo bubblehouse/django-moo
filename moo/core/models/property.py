@@ -40,12 +40,21 @@ class Property(models.Model, AccessibleMixin):
 
     __original_inherit_owner = None
     _original_owner_id = None
+    _original_value = None
+    _original_type = None
+    _original_name = None
 
     @classmethod
     def from_db(cls, db, field_names, values):
         instance = super().from_db(db, field_names, values)
         if "owner_id" in field_names:
             instance._original_owner_id = values[field_names.index("owner_id")]  # pylint: disable=protected-access
+        if "value" in field_names:
+            instance._original_value = values[field_names.index("value")]  # pylint: disable=protected-access
+        if "type" in field_names:
+            instance._original_type = values[field_names.index("type")]  # pylint: disable=protected-access
+        if "name" in field_names:
+            instance._original_name = values[field_names.index("name")]  # pylint: disable=protected-access
         return instance
 
     def __init__(self, *args, **kwargs):
@@ -65,7 +74,17 @@ class Property(models.Model, AccessibleMixin):
             # New property: check write on the origin object (no ACL rows exist yet for self)
             self.origin.can_caller("write", self.origin)  # pylint: disable=no-member
         else:
-            self.origin.can_caller("write", self)  # pylint: disable=no-member
+            # `write` is only required when a non-owner field changed. Owner changes have
+            # their own granular `entrust` check; with that alone, a caller can transfer
+            # ownership without needing `write` on the property.
+            non_owner_changed = (
+                self.value != self._original_value
+                or self.type != self._original_type
+                or self.name != self._original_name
+                or self.inherit_owner != self.__original_inherit_owner
+            )
+            if non_owner_changed:
+                self.origin.can_caller("write", self)  # pylint: disable=no-member
             if self._original_owner_id != self.owner_id:
                 self.origin.can_caller("entrust", self)  # pylint: disable=no-member
         super().save(*args, **kwargs)
@@ -85,6 +104,12 @@ class Property(models.Model, AccessibleMixin):
                         type=self.type,
                     ),
                 )
+        # Re-baseline change-tracking after a successful save.
+        self._original_owner_id = self.owner_id
+        self._original_value = self.value
+        self._original_type = self.type
+        self._original_name = self.name
+        self.__original_inherit_owner = self.inherit_owner
         if not needs_default_permissions:
             return
         utils.apply_default_permissions(self)
