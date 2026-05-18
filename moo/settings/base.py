@@ -318,5 +318,29 @@ LOGGING = {
             "level": os.environ.get("MOO_SHELL_LOGLEVEL", "INFO"),
             "propagate": False,
         },
+        # Celery's per-task lifecycle traces ("Task X received",
+        # "X succeeded in Ys") and the beat scheduler's "Sending due
+        # task" line are routine framework noise at INFO.  Demote them
+        # to WARNING so the global INFO level surfaces real
+        # application output instead of one-line-per-tick celery
+        # bookkeeping (the realtime zork daemons fire every second and
+        # generate three lines per tick at INFO).  Switch back to INFO
+        # via ``CELERY_TASK_LOGLEVEL=INFO`` or similar override when
+        # debugging task scheduling.
+        "celery.worker.strategy": {
+            "handlers": ["console"],
+            "level": os.environ.get("CELERY_TASK_LOGLEVEL", "WARNING"),
+            "propagate": False,
+        },
+        "celery.app.trace": {
+            "handlers": ["console"],
+            "level": os.environ.get("CELERY_TASK_LOGLEVEL", "WARNING"),
+            "propagate": False,
+        },
+        "celery.beat": {
+            "handlers": ["console"],
+            "level": os.environ.get("CELERY_BEAT_LOGLEVEL", "WARNING"),
+            "propagate": False,
+        },
     },
 }

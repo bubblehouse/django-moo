@@ -894,7 +894,7 @@ class MooPrompt:
             with code.ContextManager(caller, lambda x: None, site=self.site):
                 caller.set_property("last_connected_time", now)
             self.last_property_write = now
-        log.info(f"{caller}: {line}")
+        log.debug(f"{caller}: {line}")
 
         user_pk = self.user.pk
         settings = _session_settings.get(user_pk, {})
