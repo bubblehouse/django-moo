@@ -1,3 +1,9 @@
+## [1.10.1](https://gitlab.com/bubblehouse/django-moo/compare/v1.10.0...v1.10.1) (2026-05-18)
+
+### Bug Fixes
+
+* log levels ([085c3d3](https://gitlab.com/bubblehouse/django-moo/commit/085c3d38b756af0bf8d08c96c6257c17669d1caf))
+
 ## [1.10.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.9.0...v1.10.0) (2026-05-17)
 
 ### Features
