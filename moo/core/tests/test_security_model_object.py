@@ -169,13 +169,18 @@ def test_remove_parent_works(t_init: Object, t_wizard: Object):
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
-def test_remove_parent_requires_write(t_init: Object, t_wizard: Object):
+def test_remove_parent_requires_transmute_and_derive(t_init: Object, t_wizard: Object):
     """
 
-    remove_parent() calls can_caller("write") on the child object before
-    removing the parent. A caller with only read access must not be able to
-    strip parents from an object, which could alter verb dispatch and break
-    permission inheritance.
+    remove_parent() goes through the m2m_changed signal handler, which
+    enforces ``transmute`` on the child and ``derive`` on the parent. A
+    caller with only ``read`` access must not be able to strip parents
+    from an object, which could alter verb dispatch and break permission
+    inheritance.
+
+    Note: as of the granular-ACL pass, the helper no longer requires
+    ``write`` on the child — ``transmute``+``derive`` are sufficient,
+    matching the signal handler's own checks.
     """
     from moo.sdk import create
     from moo.core.exceptions import AccessError
@@ -195,6 +200,52 @@ def test_remove_parent_requires_write(t_init: Object, t_wizard: Object):
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_remove_parent_with_transmute_and_derive_only(t_init: Object, t_wizard: Object):
+    """
+
+    A caller with ``transmute`` on the child and ``derive`` on the parent
+    (but no ``write`` on either) can successfully remove the parent.
+    Confirms the granular-ACL loosening of ``add_parent``/``remove_parent``.
+    """
+    from moo.sdk import create
+
+    with ctx(t_wizard):
+        base = create("granular_remove_base")
+        child = create("granular_remove_child")
+        child.add_parent(base)
+        plain = create("granular_remove_caller")
+        child.allow(plain, "transmute")
+        base.allow(plain, "derive")
+
+    with ctx(plain):
+        child.remove_parent(base)
+
+    assert not child.parents.filter(pk=base.pk).exists()
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_add_parent_with_transmute_and_derive_only(t_init: Object, t_wizard: Object):
+    """
+
+    Mirror of the remove test: ``add_parent`` only requires ``transmute``
+    on the child and ``derive`` on the parent.
+    """
+    from moo.sdk import create
+
+    with ctx(t_wizard):
+        base = create("granular_add_base")
+        child = create("granular_add_child")
+        plain = create("granular_add_caller")
+        child.allow(plain, "transmute")
+        base.allow(plain, "derive")
+
+    with ctx(plain):
+        child.add_parent(base)
+
+    assert child.parents.filter(pk=base.pk).exists()
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_add_parent_regression(t_init: Object, t_wizard: Object):
     """add_parent() still works correctly after remove_parent() was added — regression."""
     from moo.sdk import create
@@ -205,6 +256,143 @@ def test_add_parent_regression(t_init: Object, t_wizard: Object):
         child.add_parent(base)
 
     assert child.parents.filter(pk=base.pk).exists()
+
+
+# ---------------------------------------------------------------------------
+# Object.save(): granular ACLs replace the unconditional `write` floor
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_save_location_only_requires_move(t_init: Object, t_wizard: Object):
+    """
+
+    A caller with ``move`` permission on an object (but not ``write``)
+    can change ``location`` and save. Before the granular-ACL pass, the
+    unconditional ``write`` check at the top of Object.save() blocked
+    every save, making ``move`` effectively unusable for non-owners.
+    """
+    from moo.sdk import create
+    from .utils import add_verb
+
+    with ctx(t_wizard):
+        thing = create("move_only_thing")
+        dest = create("move_only_dest")
+        # add_verb bypasses ACL — give dest an accept verb that always returns True.
+        add_verb(dest, "accept", "return True", owner=t_wizard)
+        plain = create("move_only_caller")
+        thing.allow(plain, "move")
+
+    with ctx(plain):
+        thing.location = dest
+        thing.save()
+
+    thing.refresh_from_db()
+    assert thing.location_id == dest.pk
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_save_name_change_still_requires_write(t_init: Object, t_wizard: Object):
+    """
+
+    A caller with ``move`` and ``entrust`` but not ``write`` cannot change
+    a non-ACL field like ``name``. The ``write`` check now fires only when
+    a non-location/non-owner field changed, but it MUST fire then.
+    """
+    from moo.sdk import create
+    from moo.core.exceptions import AccessError
+
+    with ctx(t_wizard):
+        thing = create("name_change_thing")
+        plain = create("name_change_caller")
+        thing.allow(plain, "move")
+        thing.allow(plain, "entrust")
+
+    with ctx(plain):
+        thing.name = "renamed_by_attacker"
+        with pytest.raises((PermissionError, AccessError)):
+            thing.save()
+
+    thing.refresh_from_db()
+    assert thing.name == "name_change_thing"
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_save_combined_change_requires_all_relevant_perms(t_init: Object, t_wizard: Object):
+    """
+
+    When both ``location`` and a non-ACL field change in the same save,
+    both ``move`` AND ``write`` are required. A caller with only ``move``
+    cannot smuggle in a name change alongside a relocation.
+    """
+    from moo.sdk import create
+    from moo.core.exceptions import AccessError
+    from .utils import add_verb
+
+    with ctx(t_wizard):
+        thing = create("combined_change_thing")
+        dest = create("combined_change_dest")
+        add_verb(dest, "accept", "return True", owner=t_wizard)
+        plain = create("combined_change_caller")
+        thing.allow(plain, "move")
+
+    with ctx(plain):
+        thing.location = dest
+        thing.name = "smuggled_rename"
+        with pytest.raises((PermissionError, AccessError)):
+            thing.save()
+
+    thing.refresh_from_db()
+    assert thing.name == "combined_change_thing"
+    assert thing.location_id != dest.pk
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_save_owner_only_requires_entrust(t_init: Object, t_wizard: Object):
+    """
+
+    A caller with ``entrust`` on an object (but not ``write``) can transfer
+    ownership. Before the granular-ACL pass, ``entrust`` was unreachable —
+    the upstream ``write`` check blocked every save first.
+    """
+    from moo.sdk import create
+
+    with ctx(t_wizard):
+        thing = create("entrust_only_thing")
+        new_owner = create("entrust_only_new_owner")
+        plain = create("entrust_only_caller")
+        thing.allow(plain, "entrust")
+
+    with ctx(plain):
+        thing.owner = new_owner
+        thing.save()
+
+    thing.refresh_from_db()
+    assert thing.owner_id == new_owner.pk
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_save_no_change_skips_write_check(t_init: Object, t_wizard: Object):
+    """
+
+    Re-saving an object with no field changes does not require ``write``.
+    Confirms the conditional fires correctly on the equality check.
+    """
+    from moo.sdk import create
+
+    with ctx(t_wizard):
+        thing = create("no_change_thing")
+        plain = create("no_change_caller")
+        # Plain has only `read`. With no field changes, save() must succeed
+        # because no ACL gate is triggered.
+        thing.allow(plain, "read")
+
+    with ctx(plain):
+        # Touch nothing; save() should be a no-op as far as ACL is concerned.
+        thing.save()
+
+    thing.refresh_from_db()
+    assert thing.name == "no_change_thing"
 
 
 # ---------------------------------------------------------------------------

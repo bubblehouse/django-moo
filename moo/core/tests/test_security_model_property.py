@@ -254,3 +254,68 @@ def test_property_value_change_does_not_require_entrust(t_init: Object, t_wizard
 
     prop.refresh_from_db()
     assert prop.value == '"updated"'
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_property_owner_only_requires_entrust(t_init: Object, t_wizard: Object):
+    """
+
+    A caller with ``entrust`` on a Property (but not ``write``) can transfer
+    its ownership. Before the granular-ACL pass, ``Property.save()`` required
+    ``write`` unconditionally, making ``entrust`` unreachable for non-owners.
+    """
+    from moo.sdk import create
+
+    with ctx(t_wizard):
+        target = create("prop_entrust_only_target")
+        target.set_property("transferable_only", "value")
+        plain = create("prop_entrust_only_caller")
+        new_owner = create("prop_entrust_only_new_owner")
+
+    prop = target.properties.filter(name="transferable_only").first()
+    assert prop is not None
+
+    with ctx(t_wizard):
+        prop.allow(plain, "entrust")
+
+    prop_reloaded = prop.__class__.objects.get(pk=prop.pk)
+    prop_reloaded.owner = new_owner
+
+    with ctx(plain):
+        prop_reloaded.save()
+
+    prop.refresh_from_db()
+    assert prop.owner_id == new_owner.pk
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_property_value_change_still_requires_write(t_init: Object, t_wizard: Object):
+    """
+
+    A caller with ``entrust`` but not ``write`` cannot change a property's
+    ``value``. Confirms ``write`` still gates non-owner field changes after
+    the granular-ACL pass.
+    """
+    from moo.sdk import create
+    from moo.core.exceptions import AccessError
+
+    with ctx(t_wizard):
+        target = create("prop_value_entrust_only_target")
+        target.set_property("guarded_value", "original")
+        plain = create("prop_value_entrust_only_caller")
+
+    prop = target.properties.filter(name="guarded_value").first()
+    assert prop is not None
+
+    with ctx(t_wizard):
+        prop.allow(plain, "entrust")
+
+    prop_reloaded = prop.__class__.objects.get(pk=prop.pk)
+    prop_reloaded.value = '"hacked"'
+
+    with ctx(plain):
+        with pytest.raises((PermissionError, AccessError)):
+            prop_reloaded.save()
+
+    prop.refresh_from_db()
+    assert prop.value == '"original"' or prop.value == "original"

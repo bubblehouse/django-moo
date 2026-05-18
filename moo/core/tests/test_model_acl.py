@@ -325,11 +325,10 @@ def test_cant_change_location_unless_allowed_to_move(t_init: Object, t_wizard: O
         obj.location = user
         with pytest.raises(PermissionError) as excinfo:
             obj.save()
-        assert str(excinfo.value) == f"#{user.pk} (Player) is not allowed to 'write' on #{obj.pk} (thing)"
+        assert str(excinfo.value) == f"#{user.pk} (Player) is not allowed to 'move' on #{obj.pk} (thing)"
     with code.ContextManager(t_wizard, _writer):
         obj = lookup("thing")
         obj.allow(user, "move")
-        obj.allow(user, "write")
         user.add_verb("accept", code="return True")
     with code.ContextManager(user, _writer):
         obj = lookup("thing")
