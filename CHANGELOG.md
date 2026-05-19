@@ -1,3 +1,9 @@
+## [1.11.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.10.1...v1.11.0) (2026-05-19)
+
+### Features
+
+* **acl:** make granular permissions usable without unconditional write ([44757bf](https://gitlab.com/bubblehouse/django-moo/commit/44757bfd0db0633638fa5aec1fb11a2714166aeb))
+
 ## [1.10.1](https://gitlab.com/bubblehouse/django-moo/compare/v1.10.0...v1.10.1) (2026-05-18)
 
 ### Bug Fixes
