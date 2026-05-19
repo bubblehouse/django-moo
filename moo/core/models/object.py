@@ -126,6 +126,10 @@ def relationship_changed(sender, instance, action, model, signal, reverse, pk_se
             utils.apply_default_permissions_bulk(created)
         if to_update:
             Property.objects.bulk_update(to_update, ["owner", "inherit_owner"])
+    # Rebuild the ancestor cache before firing `initialize`: has_verb/get_verb
+    # join through AncestorCache, so the verb is invisible to lookup until the
+    # cache reflects the parents added in this transaction.
+    _rebuild_ancestor_cache_for(child)
     # Fire `initialize` once per object. The flag is set unconditionally so
     # subsequent parent additions never re-trigger; ``moo.sdk.create`` used to
     # invoke this manually, that path has been removed in favor of this hook.
@@ -140,7 +144,6 @@ def relationship_changed(sender, instance, action, model, signal, reverse, pk_se
         # we only want to flip one boolean, not re-trigger M2M / save signals.
         Object.global_objects.filter(pk=child.pk).update(_initialized=True)
         child._initialized = True  # pylint: disable=protected-access
-    _rebuild_ancestor_cache_for(child)
 
 
 class Object(models.Model, AccessibleMixin):
