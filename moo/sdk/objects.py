@@ -258,7 +258,6 @@ def create(name, *a, **kw):
     :raises QuotaError: if the caller has a quota and it has been exceeded
     """
     from ..core.models.object import Object, Property  # noqa: F401
-    from .tasks import invoke  # deferred to avoid circular import
 
     _SYSTEM_KEY = "__system_object__"
     cache = _ContextManager.get_perm_cache()
@@ -286,8 +285,6 @@ def create(name, *a, **kw):
     obj = Object.objects.create(name=name, *a, **kw)
     if parents:
         obj.parents.add(*parents)
-    if obj.has_verb("initialize"):
-        invoke(verb=obj.get_verb("initialize"))
     return obj
 
 

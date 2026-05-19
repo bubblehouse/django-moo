@@ -126,6 +126,20 @@ def relationship_changed(sender, instance, action, model, signal, reverse, pk_se
             utils.apply_default_permissions_bulk(created)
         if to_update:
             Property.objects.bulk_update(to_update, ["owner", "inherit_owner"])
+    # Fire `initialize` once per object. The flag is set unconditionally so
+    # subsequent parent additions never re-trigger; ``moo.sdk.create`` used to
+    # invoke this manually, that path has been removed in favor of this hook.
+    # Call the verb synchronously via ``Verb.__call__`` rather than ``invoke()``:
+    # we're already inside the parents.add() transaction, so queueing 140+
+    # Celery tasks at bootstrap time deadlocks on ``core_object`` locks. The
+    # synchronous path runs in the same transaction with no extra contention.
+    if not child._initialized:  # pylint: disable=protected-access
+        if child.has_verb("initialize"):
+            child.get_verb("initialize")()
+        # Direct UPDATE bypasses ``save()``'s ACL hooks and signal cascade —
+        # we only want to flip one boolean, not re-trigger M2M / save signals.
+        Object.global_objects.filter(pk=child.pk).update(_initialized=True)
+        child._initialized = True  # pylint: disable=protected-access
     _rebuild_ancestor_cache_for(child)
 
 
@@ -197,6 +211,12 @@ class Object(models.Model, AccessibleMixin):
     """
 
     site = models.ForeignKey(Site, null=True, blank=True, on_delete=models.SET_NULL, db_index=True)
+
+    #: Set to True after the ``initialize`` verb has had its chance to fire
+    #: (on the first ``parents.add()`` after creation). Used by the M2M signal
+    #: handler to ensure ``initialize`` fires once per object regardless of
+    #: subsequent parent changes.
+    _initialized = models.BooleanField(default=False)
 
     class Meta:
         constraints = [
