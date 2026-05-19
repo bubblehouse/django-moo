@@ -126,7 +126,8 @@
           "package.json",
           "package-lock.json",
           "CHANGELOG.md",
-          "requirements.txt"
+          "requirements.txt",
+          "uv.lock"
         ]
       }
     ],
