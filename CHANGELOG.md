@@ -1,3 +1,10 @@
+## [1.11.1](https://gitlab.com/bubblehouse/django-moo/compare/v1.11.0...v1.11.1) (2026-05-19)
+
+### Bug Fixes
+
+* **core:** rebuild ancestor cache before firing initialize verb ([da46bc4](https://gitlab.com/bubblehouse/django-moo/commit/da46bc4b57cac3f3f8e78d26bd5fc86482c2e246))
+* **docs:** correct coverage badge job name in README ([d13e750](https://gitlab.com/bubblehouse/django-moo/commit/d13e75068dedb74b671a8b83be0b3ab0190279e3))
+
 ## [1.11.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.10.1...v1.11.0) (2026-05-19)
 
 ### Features
