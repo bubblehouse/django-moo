@@ -1,3 +1,9 @@
+## [1.11.2](https://gitlab.com/bubblehouse/django-moo/compare/v1.11.1...v1.11.2) (2026-05-23)
+
+### Bug Fixes
+
+* **core:** publish via producer pool only and drain MooSSH buffer before send ([3a61663](https://gitlab.com/bubblehouse/django-moo/commit/3a6166376fd68229f067f906f179bb11f29d4998))
+
 ## [1.11.1](https://gitlab.com/bubblehouse/django-moo/compare/v1.11.0...v1.11.1) (2026-05-19)
 
 ### Bug Fixes
