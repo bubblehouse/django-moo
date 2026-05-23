@@ -184,6 +184,21 @@ class MooSSH:
         if not command or command.startswith("#"):
             return ""
 
+        # Drain any async output buffered since the last command.  Ambient
+        # room daemons emit tell()s between commands (e.g. the forest
+        # songbird's "chirping of a song bird"); if that text is still in
+        # the pipe it lands ahead of this command's PREFIX marker and
+        # _extract_delimited_output latches onto the wrong window, shifting
+        # every subsequent command's response by one (and producing the
+        # mangled ">>> �" marker).  Discard it so each command's
+        # PREFIX/SUFFIX pair is unambiguous.
+        if hasattr(self, "suffix_marker") and self.suffix_marker:
+            try:
+                while self.child.read_nonblocking(size=8192, timeout=0.05):
+                    pass
+            except (pexpect.TIMEOUT, pexpect.EOF):
+                pass
+
         self.child.sendline(command)
 
         # If delimiters are enabled, wait for suffix marker

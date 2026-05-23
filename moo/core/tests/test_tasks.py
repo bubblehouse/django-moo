@@ -154,22 +154,20 @@ def test_publish_to_player_skips_recording_when_context_untracked(t_init: Object
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
-def test_publish_to_player_closes_channel(t_init: Object, t_wizard: Object):
+def test_publish_to_player_uses_producer_pool_only(t_init: Object, t_wizard: Object):
     """
-    The channel acquired from the pooled connection must be closed after each
-    publish; otherwise it leaks back to the broker and eventually exhausts
-    the per-connection channel pool.
+    _publish_to_player must allocate a channel only through the producer pool —
+    never via a separate ``app.default_connection().channel()``. The prior
+    pattern allocated two pooled resources (a connection and an independent
+    producer) and the connection pool could hand back a stale entry under
+    sustained load, leading to ``AttributeError: 'NoneType' object has no
+    attribute '_used_channel_ids'`` during ``conn.channel()``. The producer
+    pool reconnects on transport errors via ``retry=True`` on ``publish()``,
+    so a single producer is the correct primitive.
     """
     from unittest.mock import MagicMock, patch
 
     from moo.core import _publish_to_player  # pylint: disable=import-outside-toplevel
-
-    fake_channel = MagicMock()
-    fake_conn = MagicMock()
-    fake_conn.channel.return_value = fake_channel
-    conn_cm = MagicMock()
-    conn_cm.__enter__.return_value = fake_conn
-    conn_cm.__exit__.return_value = False
 
     fake_producer = MagicMock()
     producer_cm = MagicMock()
@@ -181,14 +179,21 @@ def test_publish_to_player_closes_channel(t_init: Object, t_wizard: Object):
     original_broker = app.conf.broker_url
     app.conf.broker_url = "redis://fake"  # bypass the memory:// short-circuit
     try:
-        with patch.object(app, "default_connection", return_value=conn_cm):
+        with patch.object(app, "default_connection") as default_conn:
             with patch.object(app, "producer_or_acquire", return_value=producer_cm):
                 with code.ContextManager(t_wizard, lambda _: None):
                     _publish_to_player(t_wizard, {"event": "input_prompt", "prompt": "ok"})
+        # No separate connection allocation — only the producer pool.
+        default_conn.assert_not_called()
     finally:
         app.conf.broker_url = original_broker
 
-    fake_channel.close.assert_called_once()
+    fake_producer.publish.assert_called_once()
+    # Must request reconnect-on-transport-error so the producer pool can
+    # recover from stale entries instead of bubbling a hard error.
+    _, kwargs = fake_producer.publish.call_args
+    assert kwargs.get("retry") is True
+    assert kwargs.get("declare"), "declare=[queue] is required for queue creation"
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
