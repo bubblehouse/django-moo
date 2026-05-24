@@ -1,3 +1,9 @@
+## [1.12.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.11.2...v1.12.0) (2026-05-24)
+
+### Features
+
+* **sdk:** export invoked_verb_name, moo_eval, get_wrap_column, boot_player ([c1cbf7f](https://gitlab.com/bubblehouse/django-moo/commit/c1cbf7f58b7f95c6b57a81e7e8e2e524fb4ec374))
+
 ## [1.11.2](https://gitlab.com/bubblehouse/django-moo/compare/v1.11.1...v1.11.2) (2026-05-23)
 
 ### Bug Fixes
