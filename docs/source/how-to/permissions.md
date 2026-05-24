@@ -209,6 +209,42 @@ These calls are subject to the usual permission checks — the caller
 needs the `grant` permission on the target object, which by default
 is held by wizards and the object's owner.
 
+## Delegating just one capability
+
+Granular permissions (`move`, `entrust`, `transmute`, `derive`) are
+checked independently of `write`. That means you can grant exactly
+one capability on an object without handing over full edit rights.
+Two situations where this pays off:
+
+**Letting an automation account move NPCs.** A daemon-driven
+movement helper running as a non-wizard user needs to call
+`obj.moveto(target)` but should not be able to rename or reparent
+the NPC. Grant the helper's avatar `move` on each NPC; nothing else.
+
+```python
+# bootstrap or admin tool — not verb code
+mover = Permission.objects.get(name="move")
+for npc in lookup("Generic NPC").get_descendents():
+    Access.objects.get_or_create(
+        object=npc,
+        permission=mover,
+        type="accessor",
+        accessor=mover_account,
+        rule="allow",
+    )
+```
+
+**Reparenting without write.** A class-curator role can be granted
+`transmute` on their target objects and `derive` on the parent
+classes, letting them shape the inheritance hierarchy without
+touching descriptions or properties. `obj.parents.add(parent)` and
+`parents.remove(parent)` are gated on those two permissions alone.
+
+`write` is still required for any non-ACL field change — `name`,
+`unique_name`, `obvious`, the `placement_*` pair, and `site`. So a
+caller with just `move` can teleport an object but cannot rename it
+in the same `save()`.
+
 ## Default permissions on new objects
 
 When an Object, Verb, or Property is created, three ACL rows are

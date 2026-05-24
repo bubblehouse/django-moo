@@ -23,6 +23,20 @@ customisable list of named permissions. The full list is declared in
 wizards or the owner of the object — they're escalated permissions
 that protect the permission system itself.
 
+### Granular permissions are independent of `write`
+
+Each granular permission (`move`, `entrust`, `transmute`, `derive`)
+is checked on its own. A caller granted `move` on an object can call
+`obj.moveto(target)` without also holding `write` — and likewise for
+`entrust` (change the owner), `transmute` (add a parent), and
+`derive` (be added as a parent). `write` is only required when a
+non-ACL field changes during the same save: `name`, `unique_name`,
+`obvious`, `placement_*`, or `site`.
+
+This lets you, for example, hand an automation account `move` rights
+on a fleet of NPC objects so it can teleport them without giving it
+permission to rename or reparent them.
+
 ## Permission groups
 
 ACL rows match against three group names. Resolution checks the

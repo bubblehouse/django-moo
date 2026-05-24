@@ -336,11 +336,14 @@ If `surface_types` is absent, all placement prepositions are accepted.
 {doc}`creating-verbs`. The functions you'll reach for most often
 beyond `lookup`/`create`/`write`:
 
-- **Tasks**: `invoke`, `task_time_low`, `schedule_continuation`,
-  `set_task_perms`.
-- **Full-screen UIs**: `open_editor`, `open_paginator`.
+- **Tasks**: `invoke`, `cancel_scheduled_task`,
+  `get_scheduled_task_info`, `task_time_low`, `schedule_continuation`,
+  `set_task_perms`, `invoked_verb_name`.
+- **Full-screen UIs**: `open_editor`, `open_paginator`,
+  `can_open_editor`.
 - **Players**: `players`, `connected_players`, `owned_objects`,
-  `owned_objects_by_pks`.
+  `owned_objects_by_pks`, `ensure_player_record`,
+  `remove_player_record`.
 - **Client capabilities**: `get_client_mode`, `get_wrap_column`,
   `get_session_setting`, `set_session_setting`.
 - **Out-of-band protocols**: `send_gmcp`, `play_sound`,

@@ -63,7 +63,10 @@ Verb code is compiled by RestrictedPython and executed inside a
 controlled globals dict. Practical effects on what verb code can do:
 
 - The `print()` builtin routes through `context.writer` and ends up on
-  the initiator's connection.
+  the initiator's connection. Output is buffered for the duration of
+  the verb task; consecutive `print(..., end="")` calls are coalesced
+  into one writer invocation so a verb can stream a phrase with
+  multiple calls without producing fragmented lines on the client.
 - Attribute names beginning with `_` raise `AttributeError` (the global
   `_` reference to the System Object is the single allowed exception).
 - Augmented assignment to a *subscript* (`d["k"] += 1`) is rejected —

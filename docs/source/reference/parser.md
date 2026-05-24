@@ -6,6 +6,25 @@ synonym table, and the verb search order. For the conceptual overview
 (grammar, BNF, lexer behaviour, the `$do_command` hook), see
 {doc}`../explanation/parser`.
 
+## Command splitting and verb-head conventions
+
+Before tokenisation, the lexer scans the raw input for two structural
+rules:
+
+| Input feature | Effect |
+|---------------|--------|
+| `;` (unescaped, outside quotes) | Splits the line into multiple commands; each is parsed and dispatched in turn. |
+| First token begins with `@` | Treated as part of the verb name. `@dig`, `@npc`, `@edit` etc. are ordinary verbs whose names happen to start with `@`. |
+
+Verb names, object names, and aliases are all matched
+case-insensitively. The player can type `LOOK`, `look`, or `Look` and
+the same verb dispatches.
+
+A dead-object reference (e.g. `#5` for an Object that has been
+recycled) raises `NoSuchObjectError`. The task runner classifies this
+as a player-visible `UserError` and shows a clean "There is no #5"
+message rather than a generic execution error.
+
 ## Lexer
 
 The lexer turns a raw command string into a structured `Lexer`

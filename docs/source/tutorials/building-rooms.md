@@ -111,6 +111,23 @@ You arrive at #897 (The Studio).
 
 If a direction is already used you'll get `There is already an exit in that direction.` — pick a free one.
 
+### `@burrow`: dig, walk, tunnel in one shot
+
+`@burrow` runs the full sequence above as a single atomic command — forward exit, new room, move you into it, return exit:
+
+```
+$ @burrow north to "The Watchtower"
+Dug north to The Watchtower (#81).
+Tunnelled south back to The Laboratory (#19).
+You are now in The Watchtower (#81).
+```
+
+The return direction is inferred from the forward direction's opposite (`north`/`south`, `east`/`west`, etc.). If one direction is already used, `@burrow` reports the conflict and bails out cleanly — no partial wiring left behind.
+
+### Ownership of created rooms and exits
+
+Rooms and exits created by `@dig`, `@tunnel`, and `@burrow` are owned by **you** (the caller), not by the wizard who happens to be running the session and not by whichever player class the verb is attached to. This matters because owners are the only ones who can freely modify a room's description, name, or aliases — so a builder who runs `@dig` ends up with a room they can edit immediately, without a follow-up `@chown`. The same rule applies to `@create`.
+
 ## Step 5: Create an object
 
 `@create` makes a new object from a parent class. The syntax is:

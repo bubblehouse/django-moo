@@ -39,6 +39,24 @@ DjangoMOO's parser adds a few capabilities over the LambdaMOO original:
   preposition appearing inside a quoted string (`"bag of holding"`)
   doesn't accidentally split the argument. Quote-stripping and
   preposition recognition happen in the same pass.
+- **Compound commands.** A single input line can carry multiple
+  commands separated by `;`. Each segment runs through the full
+  parser pipeline in order — useful when automating a setup
+  sequence, scripting an agent's response to a token, or just
+  chaining two related operations from one prompt. Errors in one
+  segment do not stop the next.
+- **`@`-prefix verb heads.** The first token of a command may begin
+  with `@`. The lexer treats `@dig`, `@npc`, `@edit`, etc. as a
+  single verb name — no special meaning attaches to the `@` itself,
+  it's just an ordinary character in the verb name. The shipping
+  verbs use it to flag administrative or world-building commands so
+  they stand out from in-character verbs.
+- **Case-insensitive verb dispatch.** Verb names match without
+  regard to the case the player typed. `LOOK`, `look`, and `Look`
+  all dispatch the same verb. Object and property names are matched
+  case-insensitively too. This is documented elsewhere as well —
+  the rule is single and uniform across every name the parser
+  resolves.
 
 This area was most influenced by the parser in Twisted Reality, the
 MUD-like game Glyph and friends built a million years ago.
@@ -79,6 +97,20 @@ preposition from being treated as a phrase boundary.
 The `Lexer` instance gets passed to a `Parser` along with a
 reference to the calling user (the "caller"). For the full Lexer
 attribute reference, see {doc}`../reference/parser`.
+
+## Routing output back to the originating caller
+
+When a verb teleports another object — say a wizard verb that moves a
+player into a new room — the destination room's `enterfunc` and the
+source room's `exitfunc` produce output. That output is routed back
+to the *originating caller* (the player who typed the command), not
+to the object being moved. The rule keeps wizards visible into the
+side-effects of remote moves and prevents output from disappearing
+into a disconnected NPC.
+
+Verbs running inside `enterfunc` / `exitfunc` reach the originating
+caller through `context.player`. `this` is the room and the moved
+object is passed as the first argument.
 
 ## `$do_command` hook
 

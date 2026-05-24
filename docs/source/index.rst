@@ -31,6 +31,7 @@
    how-to/permissions
    how-to/bootstrapping
    how-to/multi-universe
+   how-to/npcs-and-daemons
    how-to/development
    how-to/connection-control
    how-to/accessibility

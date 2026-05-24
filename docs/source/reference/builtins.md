@@ -22,12 +22,20 @@ see {doc}`objects`. For `Property` and `Verb` field reference, see
    :no-index:
 .. autofunction:: moo.sdk.owned_objects_by_pks
    :no-index:
+.. autofunction:: moo.sdk.ensure_player_record
+   :no-index:
+.. autofunction:: moo.sdk.remove_player_record
+   :no-index:
 ```
 
 ## Tasks and continuations
 
 ```{eval-rst}
 .. autofunction:: moo.sdk.invoke
+   :no-index:
+.. autofunction:: moo.sdk.cancel_scheduled_task
+   :no-index:
+.. autofunction:: moo.sdk.get_scheduled_task_info
    :no-index:
 .. autofunction:: moo.sdk.task_time_low
    :no-index:
@@ -36,6 +44,8 @@ see {doc}`objects`. For `Property` and `Verb` field reference, see
 .. autofunction:: moo.sdk.set_task_perms
    :no-index:
 .. autofunction:: moo.sdk.moo_eval
+   :no-index:
+.. autofunction:: moo.sdk.invoked_verb_name
    :no-index:
 ```
 
@@ -47,6 +57,8 @@ see {doc}`objects`. For `Property` and `Verb` field reference, see
 .. autofunction:: moo.sdk.open_editor
    :no-index:
 .. autofunction:: moo.sdk.open_paginator
+   :no-index:
+.. autofunction:: moo.sdk.can_open_editor
    :no-index:
 ```
 

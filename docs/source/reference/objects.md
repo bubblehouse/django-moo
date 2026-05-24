@@ -21,6 +21,13 @@ reused.
 `unique_name`, `obvious`, `owner`). `set_property()` saves its own
 row; you do not need to call `save()` after it.
 
+`Object.delete()` (which `@recycle` calls) walks the full inherited
+verb chain looking for a `recycle` verb and runs the first match.
+That means a subclass's `recycle` fires automatically — `$daemon`,
+`$npc`, and `$wanderer` all rely on this to disable their scheduled
+ticks and drop their anonymous `Player` rows before the row is
+removed.
+
 ## Fundamental attributes
 
 ```{eval-rst}
@@ -188,3 +195,50 @@ Object — `Player` itself is plumbing for authentication and role.
 
 To find an avatar from a username, query the `Player` model from
 non-sandbox code, or call `lookup("<player name>")` from verb code.
+
+## Built-in classes
+
+The `default` bootstrap installs a small hierarchy of generic classes
+as direct children of `$root_class`. Every game object in `default`
+inherits from one of these, and your own creations should too. Each
+class is also stored as a property on the System Object (`_`) for
+convenient `$name` shorthand in verb shebangs (`--on $thing`).
+
+| Class | System alias | Use for | Notable verbs |
+|-------|--------------|---------|---------------|
+| Generic Thing | `$thing` | Movable items players can take, drop, or place | `take`, `drop`, `look`, `place`, `examine` |
+| Generic Room | `$room` | Locations players occupy | `look`, `look_self`, `accept`, `confunc`, `enterfunc`, `exitfunc` |
+| Generic Exit | `$exit` | Connections between rooms (`go north`) | `go`, `move` |
+| Generic Container | `$container` | Things that hold other things | `accept`, contents listing |
+| Generic Player | `$player` | Connected human players (everyday commands) | `say`, `look`, `tell`, `inventory`, `@password`, `a11y`, `WRAP` |
+| Generic Builder | `$builder` | World-building player class | `@create`, `@dig`, `@describe`, `@alias`, `@burrow` |
+| Generic Programmer | `$programmer` | Verb-authoring player class | `@edit`, `@eval`, `@reload` |
+| Generic Wizard | `$wizard` | Administrative player class | `@version`, `@npc`, `@daemon`, anything else requiring full rights |
+| Generic Daemon | `$daemon` | Scheduled-tick actors with no player presence | `enable`, `disable`, `trigger`, `tick`, `on_tick`, `recycle` |
+| Generic NPC | `$npc` | Autonomous, parser-visible characters | inherits from `$player` *and* `$daemon`; `act` is the personality hook |
+| Generic Wanderer | `$wanderer` | NPC that moves between rooms on a tick | `act` (overrides `$npc.act`) plus `wander_rooms`, `wander_leave_msg`, `wander_arrive_msg` |
+
+The player-class chain (`$player` → `$builder` → `$programmer` →
+`$wizard`) is cumulative — `$wizard` inherits every verb attached to
+`$player`. Place each new player-facing verb on the lowest class that
+should be allowed to use it.
+
+`$daemon`, `$npc`, and `$wanderer` are covered in detail in
+{doc}`../how-to/npcs-and-daemons`. The relevant lifecycle for verb
+authors:
+
+- `$daemon` carries `interval`, `periodic_task_id`, `tick_count`,
+  `last_tick_at`, and `target`. Override the `on_tick` verb on a
+  subclass to define what happens each cycle. `enable`/`disable`
+  toggle a `django_celery_beat.PeriodicTask` row through
+  {func}`~moo.sdk.invoke` ``(periodic=True)`` and
+  {func}`~moo.sdk.cancel_scheduled_task`. `recycle` walks inherited
+  verbs to disable the schedule before deletion.
+- `$npc` has two parents (`$player` for parser identity and
+  `tell()`/`look_self`/gender, `$daemon` for scheduling). Its
+  `on_tick` calls `this.act()`; subclasses override `act` to decide
+  movement, speech, or idling.
+- `$wanderer` keeps `wander_rooms` (a list of room PKs); its `act`
+  override teleports to a random destination and broadcasts the
+  `wander_leave_msg` / `wander_arrive_msg` strings in the
+  `$player.tell` format (with `%N` substituted for the NPC's name).
