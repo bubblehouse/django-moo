@@ -140,13 +140,3 @@ DjangoMOO could not have happened without the work of the following authors:
 
 - *LambdaMOO Programmer's Manual* (LambdaMOO 1.8.0p6, March 1997)
   Pavel Curtis (Haakon / Lambda)
-
-### Zork 1
-
-The optional `zork1` bootstrap (`moo/bootstrap/zork1/`) is a derivative work
-of the Zork 1 source released under the MIT License by Microsoft / Activision
-Publishing, Inc. in 2025. Its license and full attribution live in
-`moo/bootstrap/zork1/LICENSE`; the rest of this project is AGPL-3.0.
-Upstream source: <https://github.com/the-infocom-files/zork1>. Zork is a
-registered trademark of Activision Publishing, Inc.; django-moo is not
-affiliated with, endorsed by, or sponsored by Microsoft or Activision.

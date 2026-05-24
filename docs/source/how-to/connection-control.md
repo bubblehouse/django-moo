@@ -132,7 +132,7 @@ See {doc}`accessibility` for the full `a11y` verb reference. The earlier
 
 ## Automation Mode
 
-The `MooSSH` automation client in `extras/skills/game-designer/tools/moo_ssh.py` wires the common setup into a single helper:
+The `MooSSH` automation client (shipped with the companion moo-agent repo) wires the common setup into a single helper:
 
 ```python
 with MooSSH() as moo:

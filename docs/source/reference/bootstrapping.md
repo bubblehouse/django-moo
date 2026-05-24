@@ -27,23 +27,12 @@ orchestrator is invoked explicitly by `moo_init` via `bootstrap.py`.
 Verb sources live in the sibling `moo/bootstrap/default/verbs/` package,
 organised by root-class name; tests live in `moo/bootstrap/default/tests/`.
 
-`zork1` — an example bootstrap derived from the original Infocom
-*Zork I: The Great Underground Empire* source (released by
-Microsoft / Activision under the MIT License in 2025). It is provided
-as a reference implementation, not a recommended starting point for a
-new world. Loaded with:
-
-```bash
-docker compose run webapp manage.py moo_init --bootstrap zork1
-```
-
-Lives at `moo/bootstrap/zork1/`. The package contains the orchestrator
-`bootstrap.py`, numbered `010_classes.py` … `040_exits.py` setup
-scripts, ~200 verb files implementing the original ZIL routines, a
-`$zork_sdk` runtime under `verbs/zork_sdk/`, and player-facing
-commands under `verbs/commands/`. The translator that produced this
-dataset lives in the moo-agent project; see its `reference/zil-importer`
-for how the dataset relates to the upstream Zork I source.
+A second example bootstrap, derived from the original Infocom *Zork I*
+source, ships separately with the companion moo-agent project. That
+package contributes `moo.bootstrap.zork1` via the same `moo.*`
+namespace and is loadable through `moo_init --bootstrap zork1` when
+moo-agent is installed alongside django-moo; the translator that
+produced the dataset and the importer reference docs live there too.
 
 `test` — a minimal dataset used by the pytest `t_init` fixture in
 `moo/conftest.py`. It is *not* loadable via `moo_init`. It exists as a

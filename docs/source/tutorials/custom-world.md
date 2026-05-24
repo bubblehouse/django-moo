@@ -13,14 +13,14 @@
 > of the MOO substrate, or a non-MOO theme that should not share any
 > state with the standard player commands.
 >
-> A working precedent for the latter ships with the project: the
-> `zork1` dataset (`moo/bootstrap/zork1/`) is a complete from-scratch
-> bootstrap that defines its own root classes (`Zork Room`,
-> `Zork Thing`, `Zork Container`, `Zork Actor`), its own verbs
-> (`take`, `drop`, `examine`, etc., none of them inherited from
-> `default`), and its own runtime helpers via a `$zork_sdk` system
-> object. The package shape is exactly what this tutorial walks you
-> through.
+> A working precedent for the latter ships with the companion moo-agent
+> project: its `zork1` dataset is a complete from-scratch bootstrap that
+> defines its own root classes (`Zork Room`, `Zork Thing`, `Zork
+> Container`, `Zork Actor`), its own verbs (`take`, `drop`, `examine`,
+> etc., none of them inherited from `default`), and its own runtime
+> helpers via a `$zork_sdk` system object. The package shape — and the
+> namespace-package contribution model that lets it live in a separate
+> repo — is exactly what this tutorial walks you through.
 
 This tutorial walks through building a standalone bootstrap dataset as a
 Python package. After you're done, somebody can install your package and
@@ -427,23 +427,24 @@ uv run pytest -n auto moo/bootstrap/mygame/tests/
   root-class name. Even though your world doesn't reuse the verbs, the
   directory layout, shebang conventions, and SDK usage are all worth
   copying.
-- `moo/bootstrap/zork1/` — a second from-scratch bootstrap. Its
-  `010_classes.py` shows a parallel root-class hierarchy
-  (`Zork Room`, `Zork Thing`, `Zork Container`, `Zork Actor`) that
-  does not inherit from `default`'s classes; `verbs/commands/` shows
-  player commands (`take`, `drop`, `examine`, …) that target a custom
-  `$player` alias rather than the LambdaCore one. Read this for a
-  concrete example of supporting an alternate command vocabulary.
+- The companion moo-agent project — ships a second from-scratch
+  bootstrap (`zork1`) contributed via the same `moo.bootstrap.*`
+  namespace as `default`. Its parallel root-class hierarchy (`Zork
+  Room`, `Zork Thing`, `Zork Container`, `Zork Actor`) does not inherit
+  from `default`'s classes; its player commands (`take`, `drop`,
+  `examine`, …) target a custom `$player` alias rather than the
+  LambdaCore one. Read it for a concrete example of supporting an
+  alternate command vocabulary, and of out-of-tree bootstrap packaging
+  via namespace packages.
 - {doc}`../reference/bootstrapping` — function reference for
   `initialize_dataset`, `get_or_create_object`, `load_verbs`,
   `load_verb_source`, and `parse_shebang`.
 - {doc}`../how-to/bootstrapping` — additional bootstrap patterns:
   property inheritance flags, ACL setup, multi-file organisation.
-- The `zil_import` package in the moo-agent project (see its
-  `reference/zil-importer`) — if your world is itself a translation from
-  another text-adventure source language, that package shows one
-  approach (parser + IR + translator + generator) to producing a
-  bootstrap from foreign data.
+- moo-agent's `extras/zil_import/` translator — if your world is itself
+  a translation from another text-adventure source language, this
+  package shows one approach (parser + IR + translator + generator) to
+  producing a bootstrap from foreign data.
 
 ## Out-of-tree packaging (future direction)
 

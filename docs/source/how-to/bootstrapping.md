@@ -168,42 +168,6 @@ If you need to move a verb from one class to another:
 `moo/bootstrap/default/999_finalize.py` contains a real example of this
 cleanup pattern (the `_moved_from_player` block).
 
-## Snapshot and reset world state
-
-For game datasets where players accumulate state over time (treasures
-moved, doors opened, score, turn counters), the `moo_save_state` and
-`moo_reset` management commands let you capture a known-good world and
-restore to it without re-bootstrapping from scratch.
-
-Capture a snapshot of the current world to a fixture:
-
-```bash
-docker compose run webapp manage.py moo_save_state \
-    --bootstrap zork1 --output zork1_world.json
-```
-
-The snapshot serializes object rows, properties, verb names, and aliases
-for the active site. Per-player `zstate_*` properties (per-player game
-progress) are excluded; bootstrap-level `zstate_*` data on world objects
-(for example, ZIL `<LTABLE>` content on `$zork_sdk`) is included so the
-restored world is fully playable. The fixture is portable — `site_id` is
-stripped on save and re-applied on load.
-
-Restore to that snapshot:
-
-```bash
-docker compose run webapp manage.py moo_reset --bootstrap zork1
-```
-
-`moo_reset` loads the most recent fixture for the dataset (or pass
-`--fixture path` for a specific one), then clears `zstate_*` properties
-on **player avatars only** so per-player game state goes back to zero
-without disturbing the bootstrap-level state. Player accounts and
-non-zstate player properties are preserved.
-
-Both commands accept `--hostname` to scope to a specific Site in
-multi-universe deployments; without it they use the default site.
-
 ## Debug a failing bootstrap
 
 `moo_init` wraps the orchestrator in a single transaction, so any

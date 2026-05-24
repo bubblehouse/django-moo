@@ -21,11 +21,11 @@ interactive picker shown after authentication.
 
 Each Site has its own copy of the System Object, Wizard, root classes,
 and game state. To add a second universe pointing at hostname
-``zork.example.com``:
+``test.example.com``:
 
 ```bash
 docker compose run webapp manage.py moo_init \
-    --bootstrap zork1 --hostname zork.example.com
+    --bootstrap default --hostname test.example.com
 ```
 
 `--hostname` looks up (or creates) a `Site` row with that domain and
@@ -125,7 +125,8 @@ Multi-universe is overkill for:
   parented appropriately.
 
 It earns its complexity when you genuinely need separate persistent
-worlds — one for `default`, one for `zork1`, one for a private
+worlds — one production game, one external dataset (the `zork1`
+bootstrap shipped with moo-agent is one example), one private
 playtest — each with independent objects and players.
 
 ## Diagnostic commands

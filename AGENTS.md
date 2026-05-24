@@ -2,21 +2,19 @@
 
 > # 🛑 STOP — READ THIS BEFORE TOUCHING `moo/`
 >
-> ## **DO NOT MODIFY django-moo CORE TO MAKE THE ZORK BOOTSTRAP WORK.**
+> ## **DO NOT MODIFY django-moo CORE TO ACCOMMODATE A SPECIFIC DATASET.**
 >
-> This is a hard rule, not a guideline. It applies to **every file under `moo/`** that is not inside `moo/bootstrap/zork1/`.
+> This is a hard rule, not a guideline. It applies to **every file under `moo/`**. The engine must stay dataset-agnostic — including with respect to out-of-tree datasets like `zork1` that ship with the companion moo-agent project and contribute through the `moo.bootstrap.*` namespace package.
 >
 > **Forbidden — no matter how convenient:**
 >
-> - Adding ZIL-aware logic to `moo/core/`, `moo/sdk/`, `moo/shell/`, or any model/parser/manager.
-> - Hard-coding Zork class names (`Zork Root`, `Zork Thing`, etc.) anywhere in `moo/`.
-> - Adding `zstate_*`, `global_scenery`, `player_verb`, `PRSO/PRSI`, `M-BEG/M-LOOK/M-END`, or any other ZIL primitive into core code or comments.
-> - Creating management commands, helpers, or features whose only purpose is the Zork dataset.
-> - Editing `moo/bootstrap/__init__.py` or default-bootstrap verbs to accommodate the ZIL importer.
+> - Adding dataset-aware logic (ZIL or otherwise) to `moo/core/`, `moo/sdk/`, `moo/shell/`, or any model/parser/manager.
+> - Hard-coding a foreign dataset's class, property, or verb names anywhere in `moo/`.
+> - Adding adapter shims for foreign source languages (ZIL, MUF, LPC, …) into core code or comments. Those belong in the dataset's own package.
+> - Creating management commands, helpers, or features whose only purpose is one dataset.
+> - Editing `moo/bootstrap/__init__.py` or default-bootstrap verbs to accommodate a foreign dataset's import pipeline.
 >
-> **The right place for ZIL adapter code is `extras/zil_import/` (translator + generator) and `extras/zil_import/verbs/zil_sdk/` (runtime shims that get copied into the generated bootstrap).** If a translation gap can't be expressed there, the answer is to fix `extras/zil_import/`, not to grow `moo/`.
->
-> If you find yourself thinking *"just this one tiny change to core will make Zork pass another command"* — **stop and ask the user first.** The default answer is no.
+> If a foreign dataset can't be expressed without core changes, fix the dataset's bootstrap or extend the SDK with a clean general-purpose helper. If even that isn't possible, **stop and ask the user first.** The default answer is no.
 >
 > Violating this rule has cost the user real time and trust. Don't do it.
 
@@ -157,27 +155,15 @@ in Sphinx for the operational walkthrough.
 | Dataset | Source | Purpose |
 |---------|--------|---------|
 | `default` | `moo/bootstrap/default/` | Production game world; LambdaCore-style classes and verbs |
-| `zork1` | `moo/bootstrap/zork1/` | Example bootstrap mirroring Infocom *Zork I*; demonstrates a from-scratch class hierarchy and command vocabulary independent of `default` |
 | `test` | `moo/bootstrap/test.py` | Minimal flat module used by `t_init` fixture in `moo/conftest.py`; not loadable via `moo_init` |
 
-### Save / Reset World State
-
-For datasets where players accumulate runtime state (turn counters, doors
-opened, score, inventory placement), `moo_save_state` snapshots the world
-to a Django fixture, and `moo_reset` restores from that fixture and clears
-per-player `zstate_*` properties on Player avatars. Bootstrap-level
-`zstate_*` (e.g. ZIL `<LTABLE>` data on `$zork_sdk`) is preserved across
-resets so the world remains playable without a follow-up `--sync`.
-
-### ZIL Importer
-
-`extras/zil_import/` parses Infocom ZIL source and emits a DjangoMOO
-bootstrap; the `zork1` dataset is its output. The package is a four-stage
-pipeline (parser → converter → translator → generator) under
-`extras/zil_import/{parser,converter,translator,generator}.py`. See
-{doc}`reference/zil-importer` and {doc}`explanation/zil-importer` in Sphinx
-for the API surface and rationale. Tests live in
-`extras/zil_import/tests/test_translator.py`.
+Out-of-tree datasets contribute through the `moo.bootstrap.*` namespace
+package. The companion moo-agent project ships `moo.bootstrap.zork1`,
+an example dataset derived from the Infocom *Zork I* source (released
+under the MIT License by Microsoft / Activision in 2025); when moo-agent
+is installed alongside django-moo it becomes loadable through
+`moo_init --bootstrap zork1`. The moo-agent project also hosts the
+`extras/zil_import/` translator that produced that dataset.
 
 ## 4. Coding Conventions & Style Guide
 
@@ -485,12 +471,6 @@ docker compose run webapp manage.py moo_enableuser --wizard wizard Wizard
 
 # Create a non-wizard user and avatar in one step (test accounts, regular players)
 docker compose run webapp manage.py moo_createuser username AvatarName --password secret
-
-# Snapshot world state (objects, properties, verb names, aliases) for a dataset
-docker compose run webapp manage.py moo_save_state --bootstrap zork1 --output zork1_world.json
-
-# Reset a dataset to its snapshot fixture (clears per-player zstate_* state)
-docker compose run webapp manage.py moo_reset --bootstrap zork1
 
 # Mark a Django user as wizard on every Site (multi-universe deployments)
 docker compose run webapp manage.py moo_make_universal alice

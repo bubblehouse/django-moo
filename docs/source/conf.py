@@ -42,7 +42,7 @@ templates_path = ["_templates"]
 exclude_patterns: list[str] = []
 
 autosummary_generate = True
-autodoc_mock_imports = ["moo.bootstrap.default", "moo.bootstrap.test", "moo.bootstrap.zork1"]
+autodoc_mock_imports = ["moo.bootstrap.default", "moo.bootstrap.test"]
 autodoc_default_options = {
     # asyncssh internal connection hooks — not public API
     "exclude-members": (
