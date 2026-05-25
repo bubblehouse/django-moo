@@ -443,7 +443,7 @@ def test_split_fragments_no_separators_round_trips():
 
 
 def test_split_fragments_period_separates_with_alpha_continuation():
-    """``take sword. kill troll`` splits — Zork-style multi-action input."""
+    """Period+space splits a Zork-style multi-action input into fragments."""
     assert parse.split_command_fragments("take sword. kill troll with sword.") == [
         "take sword",
         "kill troll with sword.",
@@ -557,8 +557,8 @@ def test_split_fragments_all_separators_falls_back():
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_interpret_runs_each_fragment(t_init, t_wizard):
-    """``walk. run`` invokes the parser twice in sequence (trailing
-    period on the last fragment stays as text — see
+    """A period+space-separated command invokes the parser once per fragment
+    (trailing period on the last fragment stays as text — see
     test_split_fragments_trailing_period_kept)."""
     t_wizard.add_verb("walk", code="print('walking')")
     t_wizard.add_verb("run", code="print('running')")
