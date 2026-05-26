@@ -1,3 +1,9 @@
+## [1.12.1](https://gitlab.com/bubblehouse/django-moo/compare/v1.12.0...v1.12.1) (2026-05-26)
+
+### Bug Fixes
+
+* **verbs:** allow up/down as both directions and prepositions in @dig/[@burrow](https://gitlab.com/burrow) ([4fa396f](https://gitlab.com/bubblehouse/django-moo/commit/4fa396f741c119813ca87fa61b3948f59c9e9698))
+
 ## [1.12.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.11.2...v1.12.0) (2026-05-24)
 
 ### Features
