@@ -43,6 +43,13 @@ exclude_patterns: list[str] = []
 
 autosummary_generate = True
 autodoc_mock_imports = ["moo.bootstrap.default", "moo.bootstrap.test"]
+# asyncssh ships forward-reference annotations that aren't importable at the
+# point Sphinx evaluates them on inherited SSHServer methods. Map the bare
+# names to their qualified paths so get_type_hints() can resolve them.
+autodoc_type_aliases = {
+    "SSHReader": "asyncssh.SSHReader",
+    "SSHWriter": "asyncssh.SSHWriter",
+}
 autodoc_default_options = {
     # asyncssh internal connection hooks — not public API
     "exclude-members": (
@@ -64,12 +71,6 @@ intersphinx_mapping = {
 # See also:
 # https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html#confval-intersphinx_disabled_reftypes
 intersphinx_disabled_reftypes = ["*"]
-
-# Suppress unresolvable forward references in asyncssh's own type annotations.
-# NOTE: sphinx_autodoc_typehints emits unresolvable-forward-reference warnings
-# for asyncssh's SSHReader type (used in inherited SSHServer methods). These
-# are upstream asyncssh annotations and cannot be suppressed via suppress_warnings
-# because they use the Python logging system directly. Ignored for now.
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
