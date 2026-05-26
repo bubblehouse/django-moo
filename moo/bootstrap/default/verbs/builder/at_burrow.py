@@ -1,4 +1,4 @@
-#!moo verb @burrow --on $builder --dspec any --ispec "to:any"
+#!moo verb @burrow --on $builder --dspec either --ispec "to:any"
 
 # pylint: disable=return-outside-function,undefined-variable
 
@@ -19,12 +19,15 @@ Output:
     You are now in The Watchtower (#81).
 """
 
-from moo.sdk import context, create, set_task_perms, OPPOSITE_DIRECTIONS
+from moo.sdk import context, create, direction_argument, set_task_perms, OPPOSITE_DIRECTIONS
 
 OPPOSITES = OPPOSITE_DIRECTIONS
 
 parser = context.parser
-direction = parser.get_dobj_str()
+# Use ``direction_argument`` so ``@burrow up to X`` works even though ``up``
+# is also a registered preposition — the parser consumes it as a prep with
+# no iobj, leaving ``get_dobj_str()`` empty.
+direction = direction_argument(parser)
 dest_name = parser.get_pobj_str("to")
 return_direction = OPPOSITES.get(direction.lower())
 

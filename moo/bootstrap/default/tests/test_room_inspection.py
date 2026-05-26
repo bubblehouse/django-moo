@@ -203,5 +203,5 @@ def test_look_through_missing_direction(t_init: Object, t_wizard: Object):
     printed = []
     with code.ContextManager(t_wizard, printed.append) as ctx:
         setup_room(t_wizard)
-        parse.interpret(ctx, "look through up")
+        parse.interpret(ctx, "look through north")
     assert any("no exit" in line.lower() for line in printed)

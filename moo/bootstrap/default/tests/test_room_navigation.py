@@ -150,8 +150,11 @@ def test_explain_verb_requires_dobj(t_init: Object, t_wizard: Object):
     """explain tells the player a verb requires a direct object when none is given."""
     printed = []
     with code.ContextManager(t_wizard, printed.append) as ctx:
-        # '@dig' has dspec=any; omitting the dobj triggers explain
-        parse.interpret(ctx, "@dig")
+        # '@divine' has dspec=any with no ispec branches, so omitting the
+        # dobj triggers the generic explain message.  ('@dig' used to fill
+        # this role but switched to dspec=either to accommodate direction
+        # particles consumed as preps in inputs like '@dig up to X'.)
+        parse.interpret(ctx, "@divine")
     assert any("requires a direct object" in line for line in printed)
 
 

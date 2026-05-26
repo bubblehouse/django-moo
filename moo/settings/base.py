@@ -100,6 +100,8 @@ PREPOSITIONS = [
     ["is"],
     ["as"],
     ["off", "off of"],
+    ["up"],
+    ["down"],
 ]
 
 # Prepositions supported by the placement system (canonical forms only)

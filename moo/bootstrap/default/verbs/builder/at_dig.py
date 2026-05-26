@@ -1,4 +1,4 @@
-#!moo verb @dig @tunnel --on $builder --dspec any --ispec "through:any" --ispec "to:any"
+#!moo verb @dig @tunnel --on $builder --dspec either --ispec "through:any" --ispec "to:any"
 
 # pylint: disable=return-outside-function,undefined-variable
 
@@ -9,10 +9,16 @@ with `$room` as a parent to create a room. Note that you can only use the `@dig`
 room.
 """
 
-from moo.sdk import context, create, lookup, set_task_perms, DIRECTIONS
+from moo.sdk import context, create, direction_argument, lookup, set_task_perms, DIRECTIONS
 
 directions = DIRECTIONS
-direction = context.parser.get_dobj_str()
+# Use ``direction_argument`` so ``@dig up to X`` works even though ``up`` is
+# also a registered preposition — the parser consumes it as a prep with no
+# iobj, leaving ``get_dobj_str()`` empty.
+direction = direction_argument(context.parser)
+if not direction:
+    print("[red]Specify a direction, e.g. '@dig north to The Foyer'.[/red]")
+    return
 
 source = context.player.location
 if source.match_exit(direction):
