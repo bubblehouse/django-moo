@@ -1,3 +1,9 @@
+## [1.12.2](https://gitlab.com/bubblehouse/django-moo/compare/v1.12.1...v1.12.2) (2026-05-28)
+
+### Bug Fixes
+
+* clear redis verb cache after moo_init --sync ([583e67a](https://gitlab.com/bubblehouse/django-moo/commit/583e67a64d25d5fa90f7b7ebe556f4b66c036e7f))
+
 ## [1.12.1](https://gitlab.com/bubblehouse/django-moo/compare/v1.12.0...v1.12.1) (2026-05-26)
 
 ### Bug Fixes
