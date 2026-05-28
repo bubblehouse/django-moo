@@ -68,6 +68,7 @@ class Command(BaseCommand):
 
         from moo.core.code import ContextManager
         from moo.core.managers import get_default_site
+        from moo.core.utils import flush_attribute_caches
 
         if hostname:
             site, _ = Site.objects.get_or_create(domain=hostname, defaults={"name": hostname})
@@ -99,3 +100,10 @@ class Command(BaseCommand):
                     )
                 bootstrap_path = self._find_bootstrap_path(bootstrap)
                 load_python(bootstrap_path)
+
+        # Evict the cross-process verb/property lookup caches once the bootstrap
+        # transaction has committed, so long-running shell/celery processes pick
+        # up relocated or newly-inherited verbs without a restart.
+        flushed = flush_attribute_caches()
+        if flushed:
+            log.info("Flushed %d cached attribute lookups.", flushed)

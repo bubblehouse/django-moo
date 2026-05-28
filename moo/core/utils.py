@@ -73,3 +73,43 @@ def expand_wildcard(name):
     for i in range(len(suffix)):
         result.append(prefix + suffix[: i + 1])
     return result
+
+
+def flush_attribute_caches():
+    """
+    Evict the cross-process verb- and property-lookup caches from Redis.
+
+    The ``moo:verb:*`` and ``moo:prop:*`` keys cache inheritance-resolved
+    lookups (verb PK sets / property values) for ``MOO_ATTRIB_CACHE_TTL``
+    seconds. An object's own entries are evicted on write, but a descendant's
+    cached lookup is not — so after a bulk ``moo_init --sync`` that adds or
+    relocates verbs/properties on an ancestor, descendants can serve stale
+    lookups until the TTL expires. Flushing gives ``--sync`` an immediate
+    refresh across the long-running shell and celery processes without a
+    restart.
+
+    The per-process ``_cached_compile`` lru_cache is deliberately left alone:
+    it is keyed by verb source text, so changed source yields a new key and a
+    fresh compile automatically.
+
+    No-op when the attribute cache is disabled (``MOO_ATTRIB_CACHE_TTL == 0``,
+    e.g. tests) or the active cache backend is not Redis.
+
+    :returns: the number of keys deleted.
+    """
+    from django.conf import settings
+    from django.core.cache import cache
+
+    if getattr(settings, "MOO_ATTRIB_CACHE_TTL", 120) == 0:
+        return 0
+    try:
+        client = cache._cache.get_client(None)  # pylint: disable=protected-access
+    except (AttributeError, NotImplementedError):
+        return 0
+    deleted = 0
+    for namespace in ("moo:verb:", "moo:prop:"):
+        pattern = cache.make_key(namespace) + "*"
+        for key in client.scan_iter(match=pattern):
+            client.delete(key)
+            deleted += 1
+    return deleted
