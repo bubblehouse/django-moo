@@ -1,3 +1,9 @@
+## [1.12.3](https://gitlab.com/bubblehouse/django-moo/compare/v1.12.2...v1.12.3) (2026-05-29)
+
+### Bug Fixes
+
+* allow use of next() and iter() ([6d505e1](https://gitlab.com/bubblehouse/django-moo/commit/6d505e1d02ac38d309daf7643e5652b9d1f5b273))
+
 ## [1.12.2](https://gitlab.com/bubblehouse/django-moo/compare/v1.12.1...v1.12.2) (2026-05-28)
 
 ### Bug Fixes
