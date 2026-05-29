@@ -361,3 +361,110 @@ def test_set_operations_safe():
         "s = set([1, 2, 3])\ns.add(4)\nprint(sorted(list(s)))\n"  # pylint: disable=implicit-str-concat
     )
     assert printed == ["[1, 2, 3, 4]"]
+
+
+# ---------------------------------------------------------------------------
+# next() return value + non-escalation (Pass 22)
+# ---------------------------------------------------------------------------
+
+
+def test_next_returns_safe_element():
+    """
+    next() returns the iterator's next yielded element.
+
+    Attack-surface reasoning: the element type is whatever the verb's own
+    iterable contains — already a sandbox-accessible object.  next() exposes no
+    attribute of its own; it calls the iterator's C-level __next__, the same
+    protocol a for-loop already drives via _getiter_.  Return value here is a
+    plain (int, str) tuple — no chain to ORM instances or framework internals.
+    """
+    printed = exec_verb("print(next(enumerate(['a', 'b'])))")
+    assert printed == ["(0, 'a')"]
+
+
+def test_next_default_on_exhaustion():
+    """next(it, default) returns the default on StopIteration — no leak, no escape."""
+    printed = exec_verb("print(next(enumerate([]), 'fallback'))")
+    assert printed == ["fallback"]
+
+
+def test_next_on_non_iterator_raises_typeerror():
+    """
+    next() on a non-iterator raises TypeError — it cannot be used to coerce an
+    arbitrary object into yielding internals.  Strings are iterable but are not
+    iterators (no __next__), so next('hello') fails cleanly.
+    """
+    raises_in_verb("next('hello')", TypeError)
+
+
+def test_next_does_not_expose_generator_frame():
+    """
+    Advancing a generator with next() yields the value, never the frame.
+
+    Even after next(gen), the frame-walk escape stays sealed: gi_frame is in
+    INSPECT_ATTRIBUTES, so getattr/hasattr both refuse it.  next() adds no path
+    to gi_frame — it returns the yielded element (here, 1).
+    """
+    printed = exec_verb("gen = (x for x in [1, 2])\nfirst = next(gen)\nprint(first)\nprint(hasattr(gen, 'gi_frame'))\n")
+    assert printed == ["1", "False"]
+
+
+def test_next_generator_frame_getattr_still_blocked():
+    """getattr(gen, 'gi_frame') stays blocked even when gen has been advanced by next()."""
+    raises_in_verb(
+        "gen = (x for x in [1, 2])\nnext(gen)\ngetattr(gen, 'gi_frame')",
+        AttributeError,
+    )
+
+
+# ---------------------------------------------------------------------------
+# iter() return value + non-escalation (Pass 22)
+# ---------------------------------------------------------------------------
+
+
+def test_iter_returns_iterator_over_safe_elements():
+    """
+    iter() returns an iterator over the supplied iterable.
+
+    Attack-surface reasoning: iter() *is* the function bound to _getiter_, which
+    RestrictedPython already calls for every for-loop and comprehension.
+    Exposing it as a builtin grants no capability a for-loop doesn't already
+    have.  The iterator yields the iterable's own (sandbox-accessible) elements;
+    its only attributes are underscore-prefixed (__next__/__iter__), already
+    blocked.
+    """
+    printed = exec_verb("it = iter([10, 20])\nprint(next(it))\nprint(next(it))\n")
+    assert printed == ["10", "20"]
+
+
+def test_iter_two_arg_callable_sentinel_bounded():
+    """
+    The two-arg iter(callable, sentinel) form calls a sandbox-defined callable
+    until it returns the sentinel.
+
+    The callable is verb-authored and already invocable by the verb, so calling
+    it repeatedly via iter() opens no new path — it is equivalent to a while
+    loop the verb could already write.  Verified bounded: the counter callable
+    stops at the sentinel.
+    """
+    printed = exec_verb(
+        "box = [0]\ndef step():\n    box[0] = box[0] + 1\n    return box[0]\nvals = list(iter(step, 3))\nprint(vals)\n"
+    )
+    assert printed == ["[1, 2]"]
+
+
+def test_iter_dunder_next_still_blocked():
+    """The iterator from iter() still hides __next__ behind the underscore guard."""
+    raises_in_verb("getattr(iter([1]), '__next__')()", AttributeError)
+
+
+def test_iter_does_not_expose_generator_frame():
+    """
+    iter(gen) returns the generator itself; gi_frame stays sealed.
+
+    iter() introduces no generator surface that genexprs don't already create,
+    and the INSPECT_ATTRIBUTES guard keeps gi_frame unreachable through both
+    getattr and hasattr.
+    """
+    printed = exec_verb("gen = (x for x in [1])\nprint(iter(gen) is gen)\nprint(hasattr(gen, 'gi_frame'))\n")
+    assert printed == ["True", "False"]
