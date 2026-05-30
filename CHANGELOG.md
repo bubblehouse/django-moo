@@ -1,3 +1,9 @@
+## [1.12.4](https://gitlab.com/bubblehouse/django-moo/compare/v1.12.3...v1.12.4) (2026-05-30)
+
+### Bug Fixes
+
+* **parser:** select same-name verbs by ispec specificity and enforce the :this filter ([5714867](https://gitlab.com/bubblehouse/django-moo/commit/5714867d923fcf3c7f00754374d19a6e902451fe))
+
 ## [1.12.3](https://gitlab.com/bubblehouse/django-moo/compare/v1.12.2...v1.12.3) (2026-05-29)
 
 ### Bug Fixes
