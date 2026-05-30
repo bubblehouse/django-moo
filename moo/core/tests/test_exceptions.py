@@ -10,8 +10,8 @@ Section 2: Integration tests confirming that naturally-triggered exceptions
            tasks.parse_command.
 
 Section 3: Integration tests for exceptions raised directly by core framework
-           code: RecursiveError (Object.save), AmbiguousVerbError (Object.get_verb /
-           parse_verb), and AccessError (Object.is_allowed).
+           code: RecursiveError (Object.save), AmbiguousVerbError (Object.get_verb),
+           and AccessError (Object.is_allowed).
 """
 
 import pytest
