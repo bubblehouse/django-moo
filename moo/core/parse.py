@@ -33,9 +33,14 @@ log = logging.getLogger(__name__)
 
 def _passes_parse_filters(verb, viewed_by, parser):
     """
-    Replicates Object.parse_verb() dspec/ispec filtering for a single verb.
-    Returns True if the verb matches the parser's dobj/pobj constraints
-    when the search-order object is `viewed_by`.
+    Apply a verb's dspec/ispec filters against the parser's dobj/pobj
+    constraints. Returns True if the verb matches when the search-order
+    object is `viewed_by`.
+
+    ispec matching is permissive: a verb declaring a preposition still
+    matches a command that omits it. An ispec only constrains the command
+    when its own preposition is actually present, at which point its
+    `specifier` (this/any/none) is enforced.
     """
     if verb.direct_object == "this" and parser.dobj != viewed_by:
         return False
@@ -44,15 +49,33 @@ def _passes_parse_filters(verb, viewed_by, parser):
     if verb.direct_object == "any" and not parser.has_dobj_str():
         return False
     for ispec in verb.indirect_objects.all():
-        for prep, values in parser.prepositions.items():
-            if ispec.preposition_specifier == "none":
-                continue
-            if ispec.preposition_specifier == "this" and values[2] != viewed_by:
+        for prep, records in parser.prepositions.items():
+            # A concrete ispec only governs its own preposition; a wildcard
+            # ispec (preposition_id is None) governs any present preposition.
+            if ispec.preposition_id is not None:
+                if prep not in {pn.name for pn in ispec.preposition.names.all()}:
+                    continue
+            # `this` requires the indirect object to resolve to the verb's
+            # own object. Each prep maps to a list of [spec, name, obj] records.
+            if ispec.specifier == "this" and not any(rec[2] == viewed_by for rec in records):
                 return False
-            if ispec.preposition_specifier != "any":
-                if not ispec.preposition.names.filter(name=prep).exists():
-                    return False
     return True
+
+
+def _ispec_specificity(verb, present_preps):
+    """
+    Score how well a verb's declared concrete prepositions fit the
+    prepositions actually used in the command. Returns (matched, missing).
+    Used only to break ties among same-name verbs on the same object — it
+    never rejects a verb.
+    """
+    declared = set()
+    for ispec in verb.indirect_objects.all():
+        if ispec.preposition_id is None:  # wildcard ispec — no concrete prep
+            continue
+        for pn in ispec.preposition.names.all():
+            declared.add(pn.name)
+    return len(declared & present_preps), len(declared - present_preps)
 
 
 def split_command_fragments(line: str) -> list[str]:
@@ -603,25 +626,34 @@ class Parser:  # pylint: disable=too-many-instance-attributes
             .prefetch_related("indirect_objects__preposition__names")
         }
 
-        # Group by (search_rank, viewing_pk), each group sorted by (depth, -pw).
+        # Group by (search_rank, viewing_pk).
         rank_viewer_verbs = defaultdict(list)
         for (verb_id, viewing_pk), row in best.items():
             rank = pk_to_rank[viewing_pk]
             rank_viewer_verbs[(rank, viewing_pk)].append((row["depth"], -row["pw"], verb_id))
-        for key in rank_viewer_verbs:
-            rank_viewer_verbs[key].sort()
 
-        # Iterate in ascending rank order; last passing match wins.
+        # Iterate in ascending rank order; last viewer with a passing verb wins.
+        # Within a viewer, prefer the verb whose declared prepositions best fit
+        # the command (most matched, fewest unused), then the shallowest match.
+        present_preps = set(self.prepositions)
         winner_this = None
         winner_verb = None
         for rank, viewing_pk in sorted(rank_viewer_verbs.keys()):
             viewed_by = pk_to_obj[viewing_pk]
-            for _depth, _neg_pw, verb_id in rank_viewer_verbs[(rank, viewing_pk)]:
+            best_key = None
+            best_verb = None
+            for depth, neg_pw, verb_id in rank_viewer_verbs[(rank, viewing_pk)]:
                 v = verb_map.get(verb_id)
-                if v is not None and _passes_parse_filters(v, viewed_by, self):
-                    winner_this = viewed_by
-                    winner_verb = v
-                    break  # shallowest passing verb for this viewer
+                if v is None or not _passes_parse_filters(v, viewed_by, self):
+                    continue
+                matched, missing = _ispec_specificity(v, present_preps)
+                key = (-matched, missing, depth, neg_pw, verb_id)
+                if best_key is None or key < best_key:
+                    best_key = key
+                    best_verb = v
+            if best_verb is not None:
+                winner_this = viewed_by
+                winner_verb = best_verb
 
         return winner_this, winner_verb
 

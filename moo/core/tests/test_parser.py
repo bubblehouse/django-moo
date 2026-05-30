@@ -607,3 +607,67 @@ def test_unknown_verb_with_dobj_str_raises_no_such_verb(t_init, t_wizard):
     parser = parse.Parser(lex, t_wizard)
     with pytest.raises(exceptions.NoSuchVerbError):
         parser.get_verb()
+
+
+# ---------------------------------------------------------------------------
+# Same-name verb selection: specificity-aware tiebreak + ispec filter
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_same_name_variants_dispatch_by_preposition(t_init, t_wizard):
+    """Among same-named verbs on one object, the variant whose declared
+    preposition matches the command wins — not the one created first."""
+    # Bare variant created first, so a verb_id tiebreak would always pick it.
+    t_wizard.add_verb("zorch", code="print('BARE')", direct_object="any")
+    t_wizard.add_verb("zorch", code="print('IN')", direct_object="any", indirect_objects={"in": "any"})
+    t_wizard.add_verb("zorch", code="print('ON')", direct_object="any", indirect_objects={"on": "any"})
+
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, "zorch box")
+        parse.interpret(ctx, "zorch ball in box")
+        parse.interpret(ctx, "zorch ball on table")
+    assert printed == ["BARE", "IN", "ON"]
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_multi_prep_verb_still_matches_prepless_command(t_init, t_wizard):
+    """A single verb declaring several prepositions stays permissive: it
+    matches both a prep-less command and one using a declared prep (the
+    behavior `look` and friends rely on)."""
+    t_wizard.add_verb(
+        "zlook",
+        code="print('LOOKED')",
+        direct_object="either",
+        indirect_objects={"at": "any", "through": "any", "in": "any"},
+    )
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, "zlook")
+        parse.interpret(ctx, "zlook at painting")
+    assert printed == ["LOOKED", "LOOKED"]
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_ispec_this_constraint_is_enforced(t_init, t_wizard):
+    """An `--ispec to:this` verb matches only when the `to` indirect object
+    resolves to the verb's own object."""
+    room = Object.objects.create(name="zroom")
+    room.add_verb("accept", code="return True")
+    t_wizard.location = room
+    t_wizard.save()
+    bob = Object.objects.create(name="zbob", location=room)
+    Object.objects.create(name="zstick", location=room)
+    bob.add_verb("zorch2", code="print('GREETED')", direct_object="any", indirect_objects={"to": "this"})
+
+    # Matches: the "to" object IS bob (the verb's object).
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, "zorch2 zstick to zbob")
+    assert printed == ["GREETED"]
+
+    # Rejected: the "to" object is the wizard, not bob — no verb matches.
+    with code.ContextManager(t_wizard, [].append) as ctx:
+        with pytest.raises(exceptions.NoSuchVerbError):
+            parse.interpret(ctx, "zorch2 zstick to wizard")
