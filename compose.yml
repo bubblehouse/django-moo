@@ -34,8 +34,9 @@ services:
     image: philchristensen/moo:latest
     user: www-data
     command: [webssh]
-    ports:
-      - 8422:8422
+    # Reached only via nginx on the Docker network; not published to the host.
+    expose:
+      - 8422
     links:
       - shell
     environment:
@@ -47,8 +48,9 @@ services:
       dockerfile: Dockerfile
     image: registry.gitlab.com/bubblehouse/django-moo:latest
     user: www-data
-    ports:
-      - 8443:8443
+    # Reached only via nginx on the Docker network; not published to the host.
+    expose:
+      - 8443
     links:
       - postgres
       - redis
@@ -83,7 +85,9 @@ services:
     user: www-data
     ports:
       - 8022:8022
-      - 8023:8023
+    # 8023 is the internal healthcheck listener; not published to the host.
+    expose:
+      - 8023
     links:
       - postgres
       - redis
@@ -101,8 +105,8 @@ services:
   # This is a simple deployment, so we're not using a production-ready PostgreSQL container.
   postgres:
     image: postgres
-    ports:
-      - 5432:5432
+    expose:
+      - 5432
     environment:
       POSTGRES_PASSWORD: moo
       POSTGRES_USER: moo
@@ -113,8 +117,8 @@ services:
   # It also provides a cache for the Django application.
   redis:
     image: redis
-    ports:
-      - 6379:6379
+    expose:
+      - 6379
 
 volumes:
   moo_postgres_data:
