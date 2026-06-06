@@ -34,6 +34,7 @@
    how-to/npcs-and-daemons
    how-to/development
    how-to/connection-control
+   how-to/windowed-display
    how-to/accessibility
    how-to/ssh-key-management
 
