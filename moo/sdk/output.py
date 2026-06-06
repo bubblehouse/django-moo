@@ -119,6 +119,167 @@ def open_input(obj, prompt: str, callback_verb, *args, password: bool = False):
     )
 
 
+def _plain_text(markup: str) -> str:
+    """Strip Rich markup to plain text (for GMCP payloads)."""
+    from rich.text import Text  # pylint: disable=import-outside-toplevel
+
+    try:
+        return Text.from_markup(markup).plain
+    except Exception:  # pylint: disable=broad-except
+        return markup
+
+
+def open_window(obj, *args, height: int = 1, title: str | None = None, callback_verb=None):
+    """
+    Switch the player's rich client into windowed display mode.
+
+    Opens a persistent split-screen layout: a fixed top region of ``height``
+    rows (painted with :func:`window_write`, or :func:`window_cursor` +
+    :func:`window_emit`), a scrolling output region, and an input line.
+    The session stays in window mode until :func:`close_window`, the player
+    presses the close key, or they disconnect. Window mode is mutually
+    exclusive with the editor and paginator.
+
+    No-ops for non-rich clients. GMCP-capable clients (e.g. Mudlet) instead
+    receive a ``Window.Open`` event so they can render a native status area.
+
+    :param obj: the player Object whose client should enter window mode
+    :param height: number of rows in the fixed top region
+    :param title: optional title for the top region
+    :param callback_verb: optional Verb invoked when the window closes, with
+        the close reason as ``args[0]`` followed by any extra positional args
+    """
+    from moo.core import _publish_to_player  # pylint: disable=import-outside-toplevel
+
+    if context.caller and not context.caller.is_wizard():
+        raise UserError("Only verbs owned by wizards can open a window.")
+    player = context.player or context.caller
+    _publish_to_player(
+        obj,
+        {
+            "event": "window_open",
+            "height": int(height),
+            "title": title,
+            "args": list(args),
+            "callback_this_id": callback_verb._invoked_object.pk if callback_verb else None,  # pylint: disable=protected-access
+            "callback_verb_name": callback_verb._invoked_name if callback_verb else None,  # pylint: disable=protected-access
+            "caller_id": context.caller.pk if context.caller else None,
+            "player_id": player.pk if player else None,
+        },
+    )
+    send_gmcp(obj, "Window.Open", {"height": int(height), "title": title})
+
+
+def window_write(obj, row: int, col: int, text: str):
+    """
+    Write ``text`` at grid position ``(row, col)`` in the top region.
+
+    ``text`` may contain Rich markup. Equivalent to :func:`window_cursor`
+    followed by :func:`window_emit`. No-ops for non-rich clients; GMCP
+    clients receive a ``Window.Cell`` event.
+
+    :param obj: the player Object whose window to paint
+    :param row: zero-based row in the top region
+    :param col: zero-based column in the top region
+    :param text: Rich-markup text to place at ``(row, col)``
+    """
+    from moo.core import _publish_to_player  # pylint: disable=import-outside-toplevel
+
+    if context.caller and not context.caller.is_wizard():
+        raise UserError("Only verbs owned by wizards can write to a window.")
+    _publish_to_player(obj, {"event": "window_write", "row": int(row), "col": int(col), "text": str(text)})
+    send_gmcp(obj, "Window.Cell", {"row": int(row), "col": int(col), "text": _plain_text(str(text))})
+
+
+def window_cursor(obj, row: int, col: int):
+    """
+    Move the top-region cursor to ``(row, col)`` (for :func:`window_emit`).
+
+    Mirrors the Z-machine ``set_cursor`` opcode. No-ops for non-rich clients;
+    GMCP clients receive a ``Window.Cursor`` event.
+    """
+    from moo.core import _publish_to_player  # pylint: disable=import-outside-toplevel
+
+    if context.caller and not context.caller.is_wizard():
+        raise UserError("Only verbs owned by wizards can move the window cursor.")
+    _publish_to_player(obj, {"event": "window_cursor", "row": int(row), "col": int(col)})
+    send_gmcp(obj, "Window.Cursor", {"row": int(row), "col": int(col)})
+
+
+def window_emit(obj, text: str):
+    """
+    Write ``text`` at the current top-region cursor and advance it.
+
+    The stateful companion to :func:`window_cursor`, used to translate a
+    ``set_cursor`` + ``print`` sequence faithfully. ``text`` may contain Rich
+    markup. No-ops for non-rich clients; GMCP clients receive a
+    ``Window.Text`` event.
+    """
+    from moo.core import _publish_to_player  # pylint: disable=import-outside-toplevel
+
+    if context.caller and not context.caller.is_wizard():
+        raise UserError("Only verbs owned by wizards can write to a window.")
+    _publish_to_player(obj, {"event": "window_emit", "text": str(text)})
+    send_gmcp(obj, "Window.Text", {"text": _plain_text(str(text))})
+
+
+def window_clear(obj, row: int | None = None):
+    """
+    Clear the whole top region, or a single ``row`` when given.
+
+    No-ops for non-rich clients; GMCP clients receive a ``Window.Clear`` event.
+    """
+    from moo.core import _publish_to_player  # pylint: disable=import-outside-toplevel
+
+    if context.caller and not context.caller.is_wizard():
+        raise UserError("Only verbs owned by wizards can clear a window.")
+    _publish_to_player(obj, {"event": "window_clear", "row": None if row is None else int(row)})
+    send_gmcp(obj, "Window.Clear", {"row": None if row is None else int(row)})
+
+
+def window_split(obj, height: int):
+    """
+    Set the top region to ``height`` rows (opening window mode if needed).
+
+    Mirrors the Z-machine ``split_window`` opcode. No-ops for non-rich
+    clients; GMCP clients receive a ``Window.Split`` event.
+    """
+    from moo.core import _publish_to_player  # pylint: disable=import-outside-toplevel
+
+    if context.caller and not context.caller.is_wizard():
+        raise UserError("Only verbs owned by wizards can resize a window.")
+    _publish_to_player(obj, {"event": "window_split", "height": int(height)})
+    send_gmcp(obj, "Window.Split", {"height": int(height)})
+
+
+def close_window(obj):
+    """
+    Leave windowed display mode and return to the normal scrolling shell.
+
+    No-ops for non-rich clients; GMCP clients receive a ``Window.Close`` event.
+    """
+    from moo.core import _publish_to_player  # pylint: disable=import-outside-toplevel
+
+    if context.caller and not context.caller.is_wizard():
+        raise UserError("Only verbs owned by wizards can close a window.")
+    _publish_to_player(obj, {"event": "window_close"})
+    send_gmcp(obj, "Window.Close", None)
+
+
+def window_supported(obj=None) -> bool:
+    """
+    True if the current player's client can display a window (rich mode).
+
+    Mirrors :func:`can_open_editor`'s rich-mode check. Raw / line-based MUD
+    clients return ``False`` (window SDK calls no-op the full-screen UI for
+    them, though GMCP-capable clients still receive ``Window.*`` events).
+
+    :param obj: accepted for call-site symmetry; ignored (state is read from
+        the current player's session).
+    """
+    return get_client_mode() == "rich"
+
+
 def _player_user_pk(obj):
     """
     Resolve a player avatar Object to its Django User PK.
