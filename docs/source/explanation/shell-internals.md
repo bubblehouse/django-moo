@@ -238,11 +238,17 @@ or inline interruption of the REPL:
 | `editor`      | `run_editor_session`       | full-screen text editor (prompt_toolkit TUI)  |
 | `paginator`   | `run_paginator_session`    | full-screen read-only pager (pypager)         |
 | `input_prompt`| `run_input_session`        | inline prompt for a single value              |
+| `window_open` | `run_window_session`       | persistent split-screen display (see below)   |
 
-All three events land on the Kombu queue, are routed to their dedicated
+The first four events land on the Kombu queue, are routed to their dedicated
 `asyncio.Queue` by `_route_event`, and are picked up by `process_commands`
 via `asyncio.wait(..., return_when=FIRST_COMPLETED)` racing the user-input
 task.
+
+The `window_*` update events (`window_write`, `window_cursor`, `window_emit`,
+`window_clear`, `window_split`, `window_close`) are applied in place by
+`_route_window_event` against the live window state rather than queued — see
+[Windowed Display Mode](#windowed-display-mode).
 
 ### Direct dispatch after command completion
 
@@ -270,7 +276,8 @@ callback shell runs outside the verb sandbox.
 Everything the shell cares about per-session lives there: `mode`,
 `quiet_mode`, `output_prefix`, `output_suffix`,
 `output_global_prefix`, `output_global_suffix`, `color_system`,
-`terminal_width`, `osc133_mode`, `prefixes_mode`.
+`terminal_width`, `osc133_mode`, `prefixes_mode`, and the windowed-display
+keys `window_active`, `window_height`, `window_title`.
 
 Verbs running in Celery are in a different process, so they can't read this
 dict directly. The pattern is:
@@ -333,6 +340,55 @@ and two `Condition` filters so that Ctrl-S and Ctrl-C first prompt for
 yes/no confirmation rather than exiting immediately. The paginator disables
 a small set of pypager commands (`_print_filename`, `_examine`, etc.) that
 would expose filesystem operations to players.
+
+## Windowed Display Mode
+
+`moo/shell/window.py` adds a *persistent* full-screen layout — unlike the
+editor and paginator, which suspend the REPL briefly and return, a window
+stays up and becomes the session's interaction surface until it is closed.
+The layout is an `HSplit` of three regions:
+
+1. a fixed, cursor-addressable **top region** (a status bar / ASCII map),
+2. a **scrolling output region** showing normal game/tell output,
+3. a single-line **input region** that feeds the usual command pipeline.
+
+`WindowState` holds the screen model: a sparse `(row, col) → markup` grid for
+the top region (written wholesale by `window_write`, or via a stateful cursor
+with `window_cursor` + `window_emit`) and a bounded list of pre-rendered ANSI
+lines for the scroll region (the visible slice is always the tail that fits).
+`build_window_app` wires this into a prompt_toolkit `Application`; the top
+region's height is a `Dimension` callable so `window_split` resizes it live.
+
+The driver lives in `MooPrompt`:
+
+- **Entry.** `open_window` publishes a `window_open` event; `_route_event`
+  enqueues it on `window_queue`, the `process_commands_rich` race picks it up,
+  and `run_window_session` builds the Application and `await`s `run_async()` —
+  blocking the REPL loop just like `run_editor_session`.
+- **Output rerouting.** While a window is active, `process_messages` appends
+  rendered output to the window's scroll buffer and calls `app.invalidate()`
+  (via `_window_append`) instead of `run_in_terminal`, which would corrupt the
+  alternate screen. When no window is active the path is unchanged.
+- **Input.** The input region's accept handler bridges the typed line to
+  `handle_command` through `get_app().create_background_task`, appending the
+  result to the scroll buffer.
+- **Updates.** `window_write` / `window_cursor` / `window_emit` /
+  `window_clear` / `window_split` mutate `WindowState` in place via
+  `_route_window_event` and invalidate; `window_close` (or the close key, or
+  disconnect) exits the Application and returns to the scrolling REPL.
+
+Window mode opts out of OSC 133 (the alternate screen has no meaningful prompt
+anchors) and is **mutually exclusive** with the editor and paginator: an
+`editor` / `paginator` / `input_prompt` event arriving while a window is
+active is rejected with a one-line notice in the scroll region.
+
+Raw / line-based clients never enter window mode (`_route_window_event` is a
+no-op for them); the SDK functions instead push a GMCP `Window.*` package
+(`Window.Open`, `Window.Cell`, `Window.Cursor`, `Window.Text`, `Window.Clear`,
+`Window.Split`, `Window.Close`) so GMCP-capable clients can render a native
+status area. See [Connection Control](../how-to/connection-control.md) for the
+GMCP capability model and [Windowed Display](../how-to/windowed-display.md) for
+the verb-author API.
 
 ## AsyncSSH Server
 
