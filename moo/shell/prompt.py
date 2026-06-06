@@ -161,6 +161,12 @@ class MooPrompt:
         self.editor_queue: asyncio.Queue = asyncio.Queue()
         self.paginator_queue: asyncio.Queue = asyncio.Queue()
         self.input_queue: asyncio.Queue = asyncio.Queue()
+        self.window_queue: asyncio.Queue = asyncio.Queue()
+        # Persistent windowed-display mode (see moo/shell/window.py). When a
+        # window is active, process_messages routes output into the running
+        # Application's scroll buffer instead of run_in_terminal.
+        self._window_app: Any = None
+        self._window_state: Any = None
         self.disconnect_event = asyncio.Event()
         # Set by _repl_setup once confunc has been published and drained.
         self.startup_drain_complete = asyncio.Event()
@@ -332,6 +338,12 @@ class MooPrompt:
 
         self.is_exiting = True
         self.disconnect_event.set()
+        # Exit a live window Application so it restores the terminal cleanly.
+        if self._window_app is not None:
+            try:
+                self._window_app.exit()
+            except Exception:  # pylint: disable=broad-except
+                pass
         await self._fire_disfunc()
         await self._mark_disconnected()
         user_pk = self.user.pk
@@ -347,6 +359,7 @@ class MooPrompt:
             "output_global_suffix",
             "color_system",
             "iac",
+            "window_active",
         ):
             cache.delete(f"moo:session:{user_pk}:{key}")
         await self._close_session_buffer()
@@ -393,9 +406,10 @@ class MooPrompt:
                 editor_task = asyncio.ensure_future(self.editor_queue.get())
                 paginator_task = asyncio.ensure_future(self.paginator_queue.get())
                 input_task = asyncio.ensure_future(self.input_queue.get())
+                window_task = asyncio.ensure_future(self.window_queue.get())
                 disconnect_task = asyncio.ensure_future(self.disconnect_event.wait())
                 done, pending = await asyncio.wait(
-                    [prompt_task, editor_task, paginator_task, input_task, disconnect_task],
+                    [prompt_task, editor_task, paginator_task, input_task, window_task, disconnect_task],
                     return_when=asyncio.FIRST_COMPLETED,
                 )
                 for task in pending:
@@ -413,6 +427,8 @@ class MooPrompt:
                     await self.run_paginator_session(paginator_task.result())
                 elif input_task in done:
                     await self.run_input_session(input_task.result())
+                elif window_task in done:
+                    await self.run_window_session(window_task.result())
                 elif prompt_task in done:
                     try:
                         line = prompt_task.result()
@@ -723,6 +739,102 @@ class MooPrompt:
         from .paginator import run_paginator
 
         await run_paginator(req.get("content", ""), req.get("content_type", "text"))
+
+    async def run_window_session(self, req: dict):
+        """
+        Enter persistent windowed display mode and run until close/disconnect.
+
+        Launches the full-screen window Application (top region + scrolling
+        output + input line), reroutes async output into its scroll buffer
+        via :meth:`process_messages`, and returns to the scrolling REPL when
+        the window closes. Mirrors :meth:`run_editor_session` for callback
+        dispatch.
+
+        :param req: ``window_open`` request dict with ``height``/``title`` and
+            optional callback fields
+        """
+        from django.core.cache import cache
+
+        from .window import WindowState, build_window_app
+
+        settings = _session_settings.setdefault(self.user.pk, {})
+        quiet = settings.get("quiet_mode", False)
+        state = WindowState(height=req.get("height", 1), title=req.get("title"), quiet=quiet)
+        self._window_state = state
+
+        def _on_accept(buff):
+            text = buff.text
+            get_app().create_background_task(self._window_handle_line(text))
+            return False  # clear the input buffer
+
+        window_app = build_window_app(state, _on_accept, style=self.style)
+        self._window_app = window_app
+
+        # Mark active both in-process (authoritative for the message loop) and
+        # in the cache (so Celery-side verbs can read window state).
+        settings["window_active"] = True
+        settings["window_height"] = state.height
+        settings["window_title"] = state.title
+        cache.set(f"moo:session:{self.user.pk}:window_active", True, timeout=86400)
+
+        async def _watch_disconnect():
+            await self.disconnect_event.wait()
+            try:
+                window_app.exit()
+            except Exception:  # pylint: disable=broad-except
+                pass
+
+        watcher = asyncio.ensure_future(_watch_disconnect())
+        try:
+            await window_app.run_async()
+        finally:
+            watcher.cancel()
+            try:
+                await watcher
+            except asyncio.CancelledError:
+                pass
+            self._window_app = None
+            self._window_state = None
+            settings["window_active"] = False
+            cache.delete(f"moo:session:{self.user.pk}:window_active")
+            await self._dispatch_window_close_callback(req)
+
+    async def _dispatch_window_close_callback(self, req: dict) -> None:
+        """Fire the optional on-close callback verb (wizard-gated)."""
+        if not (req.get("callback_this_id") and req.get("callback_verb_name")):
+            return
+        caller = await sync_to_async(models.Object.objects.get)(pk=req["caller_id"])
+        if not await sync_to_async(caller.is_wizard)():
+            log.warning("run_window_session: rejected callback with non-wizard caller_id=%s", req["caller_id"])
+            return
+        tasks.invoke_verb.delay(
+            "closed",
+            *req.get("args", []),
+            caller_id=req["caller_id"],
+            player_id=req["player_id"],
+            this_id=req["callback_this_id"],
+            verb_name=req["callback_verb_name"],
+        )
+
+    async def _window_handle_line(self, line: str):
+        """
+        Run a line typed in window mode through the command pipeline and append
+        the result to the window's scroll region.
+        """
+        from rich.markup import escape
+
+        from .window import render_markup_to_ansi
+
+        if self._window_state is None:
+            return
+        state = self._window_state
+        if line.strip():
+            state.append_output(render_markup_to_ansi(f"[grey50]>>> [/grey50]{escape(line)}", state.quiet))
+            output_pieces, _events = await self.handle_command(line)
+            for piece in output_pieces or []:
+                state.append_output(render_markup_to_ansi(piece if isinstance(piece, str) else str(piece), state.quiet))
+        if self._window_app is not None:
+            self._window_app.invalidate()
 
     async def _dispatch_pending_event(self, events: list) -> None:
         """
@@ -1071,6 +1183,20 @@ class MooPrompt:
             if isinstance(payload, (bytes, bytearray)):
                 self._chan_write_iac(bytes(payload))
             return
+        if kind and kind.startswith("window"):
+            self._route_window_event(kind, message)
+            return
+        # Editor / paginator / input prompts are mutually exclusive with window
+        # mode (they would fight the full-screen Application for the screen).
+        if self._window_state is not None and kind in ("editor", "paginator", "input_prompt"):
+            from .window import render_markup_to_ansi  # pylint: disable=import-outside-toplevel
+
+            self._window_state.append_output(
+                render_markup_to_ansi("[grey50](not available in window mode)[/grey50]", self._window_state.quiet)
+            )
+            if self._window_app is not None:
+                self._window_app.invalidate()
+            return
         if kind == "editor":
             if self._try_gmcp_editor_handoff(message):
                 return
@@ -1100,6 +1226,63 @@ class MooPrompt:
                 await self.paginator_queue.put(message)
         elif kind == "input_prompt":
             await self.input_queue.put(message)
+
+    def _route_window_event(self, kind: str, message: dict) -> None:
+        """
+        Apply a ``window_*`` broker event.
+
+        ``window_open`` enters window mode via the queue race; the rest mutate
+        the live :class:`~moo.shell.window.WindowState` and invalidate. All
+        no-op for raw clients (which never enter window mode — GMCP-capable
+        MUD clients are served by the ``Window.*`` GMCP push from the SDK).
+        """
+        if _session_settings.get(self.user.pk, {}).get("mode") == MODE_RAW:
+            return
+        if kind == "window_open":
+            if self._window_state is not None:
+                # Already in window mode — treat as a resize.
+                self._window_state.set_height(message.get("height", self._window_state.height))
+            else:
+                self.window_queue.put_nowait(message)
+            self._invalidate_window()
+            return
+        state = self._window_state
+        if state is None:
+            return
+        if kind == "window_write":
+            state.write(message.get("row", 0), message.get("col", 0), message.get("text", ""))
+        elif kind == "window_cursor":
+            state.move_cursor(message.get("row", 0), message.get("col", 0))
+        elif kind == "window_emit":
+            state.emit(message.get("text", ""))
+        elif kind == "window_clear":
+            state.clear(message.get("row"))
+        elif kind == "window_split":
+            state.set_height(message.get("height", state.height))
+        elif kind == "window_close":
+            if self._window_app is not None:
+                self._window_app.exit()
+            return
+        self._invalidate_window()
+
+    def _invalidate_window(self) -> None:
+        """Request a redraw of the window Application if one is running."""
+        if self._window_app is not None:
+            try:
+                self._window_app.invalidate()
+            except Exception:  # pylint: disable=broad-except
+                pass
+
+    def _window_append(self, pieces, quiet: bool) -> None:
+        """Append rendered output pieces to the live window's scroll region."""
+        from .window import render_markup_to_ansi  # pylint: disable=import-outside-toplevel
+
+        if self._window_state is None:
+            return
+        for piece in pieces:
+            text = piece if isinstance(piece, str) else str(piece)
+            self._window_state.append_output(render_markup_to_ansi(text, quiet))
+        self._invalidate_window()
 
     def writer(self, s, is_error=False):
         """
@@ -1189,7 +1372,12 @@ class MooPrompt:
                     gsuffix = settings.get("output_global_suffix")
                     is_raw = settings.get("mode") == MODE_RAW
 
-                    if is_raw:
+                    if self._window_state is not None:
+                        # Window mode owns the screen: append output to its
+                        # scroll buffer and invalidate instead of run_in_terminal
+                        # (which would corrupt the alternate screen).
+                        self._window_append(to_write, settings.get("quiet_mode", False))
+                    elif is_raw:
                         for piece in to_write:
                             if gprefix:
                                 self.writer(gprefix)
