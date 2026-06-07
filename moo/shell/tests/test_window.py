@@ -21,6 +21,15 @@ import moo.shell.prompt as prompt_module
 from moo.shell.prompt import MODE_RAW, MooPrompt
 from moo.shell.window import WindowState, build_window_app
 
+# The session bootstrap fixture (moo/conftest.py) re-runs the default bootstrap,
+# which queries the migrated schema. When this file runs in isolation (no other
+# test requests the db fixture) pytest-django doesn't fully apply migrations
+# before that fixture runs, so the lookup hits a pre-_initialized schema. Mark
+# the whole module django_db so the DB is set up for real — matching how these
+# pass in the full suite. The pure WindowState tests don't touch the DB; the mark
+# is harmless for them.
+pytestmark = pytest.mark.django_db
+
 
 @pytest.fixture(autouse=True)
 def _clean_session_settings():
@@ -114,6 +123,9 @@ def test_build_window_app_constructs():
     app = build_window_app(state, lambda buff: False)
     assert app is not None
     assert hasattr(app, "window_input_area")
+    # ^D-quit support: the flag starts clear; run_window_session reads it to turn
+    # a window-mode EOF into a full session disconnect.
+    assert app.window_eof is False
 
 
 # ---------------------------------------------------------------------------
@@ -185,6 +197,31 @@ def test_run_window_session_no_callback_without_fields():
         with patch("moo.shell.prompt.tasks.invoke_verb") as mock_task:
             asyncio.run(prompt.run_window_session({"height": 2}))
     mock_task.delay.assert_not_called()
+
+
+def test_run_window_session_eof_signals_disconnect():
+    """^D in window mode (window_eof set) quits the session: run_window_session
+    sets is_exiting and the disconnect_event so the main loop breaks."""
+    prompt = MooPrompt(_user())
+    mock_app = MagicMock()
+    mock_app.run_async = AsyncMock()
+    mock_app.window_eof = True
+    with patch("moo.shell.window.build_window_app", return_value=mock_app):
+        asyncio.run(prompt.run_window_session({"height": 2}))
+    assert prompt.is_exiting is True
+    assert prompt.disconnect_event.is_set()
+
+
+def test_run_window_session_close_does_not_disconnect():
+    """c-q / c-c (window_eof clear) just closes the window — the session stays up."""
+    prompt = MooPrompt(_user())
+    mock_app = MagicMock()
+    mock_app.run_async = AsyncMock()
+    mock_app.window_eof = False
+    with patch("moo.shell.window.build_window_app", return_value=mock_app):
+        asyncio.run(prompt.run_window_session({"height": 2}))
+    assert prompt.is_exiting is False
+    assert not prompt.disconnect_event.is_set()
 
 
 # ---------------------------------------------------------------------------
