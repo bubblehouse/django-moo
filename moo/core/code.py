@@ -332,6 +332,11 @@ _CONTEXT_VARS: dict[str, contextvars.ContextVar] = {
     "perm_cache": contextvars.ContextVar("perm_cache", default=None),
     "verb_lookup_cache": contextvars.ContextVar("verb_lookup_cache", default=None),
     "prop_lookup_cache": contextvars.ContextVar("prop_lookup_cache", default=None),
+    # Generic per-task scratch dict for transient state that must be shared
+    # across the verb calls within a single command/invocation but never
+    # persisted. Lifecycle matches the caches above (fresh per session, reset
+    # on __exit__). Game-neutral: callers namespace their own keys.
+    "scratch": contextvars.ContextVar("scratch", default=None),
     # When set to a list by parse_command, _publish_to_player appends each
     # published event type so the shell can read what events to expect.
     # Default None means "not tracking" — most sessions don't need this.
@@ -393,6 +398,12 @@ class ContextManager:
         return cls.get("prop_lookup_cache")
 
     @classmethod
+    def get_scratch(cls) -> dict | None:
+        """Per-task scratch dict for transient cross-verb state (see ``scratch``
+        in ``_CONTEXT_VARS``). ``None`` outside an active session."""
+        return cls.get("scratch")
+
+    @classmethod
     def is_active(cls):
         # True only when __enter__ has been called and __exit__ has not yet run.
         # Verb.__call__ uses this to skip stack tracking for utility verb calls
@@ -450,6 +461,7 @@ class ContextManager:
             "perm_cache": {},
             "verb_lookup_cache": {},
             "prop_lookup_cache": {},
+            "scratch": {},
             "published_events": [] if track_events else None,
             "site": site,
         }
