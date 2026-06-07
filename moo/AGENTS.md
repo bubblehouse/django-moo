@@ -138,13 +138,53 @@ When executing a verb:
   - `kwargs` - if the verb is invoked as a function, this contains any named arguments
   - `verb_name` - a verb can have multiple names; this is the particular name used to invoke this verb.
 - Many verbs include `from moo.sdk import context`; the `context` object has a number of helpful properties:
-  - `caller` - When a verb begins to execute, `caller` is set to the owner of the verb; calls to `set_task_perms` can change this.
+  - `caller` - the **owner of the currently executing verb** (see the callout below). Permission checks evaluate against this.
   - `player` - This is always a reference to the current player who should receive all output from the running verb. Use this (not `this`) to identify who initiated a command.
   - `writer()` - This callable is used to write directly to an object's player terminal, if connected.
   - `parser` - If a verb was invoked by the command parser, the `moo.core.parse.Parser` instance can be retreived here.
   - `task_id` - The current executing Celery task ID, for informational purposes
 - The verb has access only to whitelisted modules and builtins (see settings)
 - Errors in verb execution are caught and reported to the player
+
+#### ⚠️ `context.caller` is the verb's OWNER — not `this`, not the player, not the System Object
+
+This is the single most-misunderstood part of the execution model. On every verb
+invocation, `Verb.__call__` does `ContextManager.override_caller(self.owner, this=…)`,
+so for the duration of that verb's body:
+
+> **`context.caller` == the Object that *owns* the verb being executed.**
+
+It is therefore the "who is acting, for permission purposes" identity, and it
+**shifts on every nested verb call** to that callee verb's owner.
+
+What `caller` is NOT:
+
+- **NOT `this`.** `this` is the object the verb was *found on* (the receiver);
+  `caller` is the object that *owns the code*. They're frequently different — e.g.
+  a player runs a Wizard-owned verb defined on `$room`: `this` = the room,
+  `caller` = the Wizard.
+- **NOT the player / command initiator.** Use `context.player` for "who typed the
+  command". `caller` changes as sub-verbs run; `player` stays anchored.
+- **NOT the System Object.** `_` (the System Object) **owns no verbs**, so it is
+  *never* `context.caller`. Calling `_.foo()` runs a verb whose `caller` becomes
+  *that verb's owner* (typically the Wizard), not the System Object.
+
+Why it matters — **privilege flows from the owner**:
+
+- `can_caller(perm, obj)` and the ACL system check `context.caller`.
+- Wizard-only SDK calls (`write()`, the whole windowed-display surface —
+  `open_window`/`window_*`, etc.) raise `UserError` unless `context.caller.is_wizard()`.
+  Because the generated/substrate verbs are **Wizard-owned**, those calls succeed
+  *when invoked through a verb* (caller = Wizard owner) even though the acting
+  player is a non-wizard avatar. The same call made directly outside a verb (or
+  from a non-wizard-owned verb) is denied.
+- To act with a different identity, use `set_task_perms` — it rewrites `caller`.
+
+Common mistake: testing a privileged SDK call (e.g. `output.open_window`) by
+calling it directly in a `ContextManager` with the player as caller — it'll raise
+`UserError`, but that does **not** mean it fails in real gameplay, where a
+Wizard-owned verb is on the stack and `caller` is the Wizard. Reproduce through an
+actual verb invocation (or `override_caller(<wizard>, …)`) to see true behaviour.
 
 ### Sending Messages to Players
 
