@@ -203,7 +203,8 @@ is installed alongside django-moo it becomes loadable through
 - **Common Patterns & Idioms:**
   - **Inheritance & Properties**: Objects inherit from parent objects. Properties are created via `Object.set_property()` and retrieved via `Object.get_property()` or model access. Inherited properties are propagated to child objects automatically, optionally inheriting ownership.
   - **Verb Code Execution**: Verbs are Python functions compiled and executed within a restricted environment. The entry point is `def verb(this, passthrough, _, *args, **kwargs)`, but verb source files only contain the body of this function.
-  - **Permissions/ACL**: Access control uses a permission string model (`"read"`, `"write"`, `"execute"`, etc.). Objects check permissions via `can_caller()` methods.
+  - **Permissions/ACL**: Access control uses a permission string model (`"read"`, `"write"`, `"execute"`, etc.). Objects check permissions via `can_caller()` methods, which evaluate against `context.caller`.
+    - **`context.caller` is the executing verb's OWNER** — not `this`, not `context.player`, and never the System Object (which owns no verbs). It is set to `self.owner` on every verb invocation and re-shifts on each nested call, so privilege flows from whoever owns the code. Wizard-only SDK calls (`write()`, the `window_*` display surface) therefore succeed inside Wizard-owned verbs even when a non-wizard avatar typed the command. See `moo/AGENTS.md` → "`context.caller` is the verb's OWNER" for the full rules and the common debugging pitfall.
   - **Async/Concurrency**: SSH server and task processing leverage asyncio and Celery for handling concurrent player sessions and background tasks.
   - **Type Hints**: Modern code uses Python type hints for clarity; some legacy code may lack them.
   - **Django Admin Integration**: Administrative access is primarily through Django's admin interface at `/admin`.
