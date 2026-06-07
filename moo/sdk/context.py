@@ -64,6 +64,12 @@ class _Context:
     #: The returned list is a copy; mutating it does not affect the
     #: live stack.
     caller_stack = descriptor("caller_stack")
+    #: Per-task scratch dict for transient state shared across the verb
+    #: calls within one command/invocation and never persisted. The
+    #: attribute is read-only, but the returned dict is mutable — namespace
+    #: your own keys (e.g. ``context.scratch.setdefault("myfeature", {})``).
+    #: ``None`` outside an active session.
+    scratch = descriptor("scratch")
 
 
 context = _Context()
