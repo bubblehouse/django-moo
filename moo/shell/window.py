@@ -185,11 +185,18 @@ def build_window_app(state: WindowState, on_accept, style=None) -> Application:
     @kb.add("c-q")
     @kb.add("c-c")
     def _close(event):
+        # Leave window mode and return to the scrolling REPL (escape hatch).
         event.app.exit()
 
     @kb.add("c-d")
-    def _close_if_empty(event):
+    def _eof_quit(event):
+        # EOF on an empty line: quit the whole session, not just the window.
+        # In a persistent windowed game the prompt lives inside the window, so
+        # the user pressing ^D means "I'm done" — dropping them to a second
+        # (scrolling) prompt that needs another ^D is surprising. The driver
+        # reads ``window_eof`` after run_async() and signals a disconnect.
         if not input_area.text:
+            event.app.window_eof = True  # type: ignore[attr-defined]
             event.app.exit()
 
     layout = Layout(HSplit([top_window, scroll_window, input_area]), focused_element=input_area)
@@ -202,4 +209,7 @@ def build_window_app(state: WindowState, on_accept, style=None) -> Application:
     )
     # Expose the input area so the driver can clear it after dispatch.
     app.window_input_area = input_area  # type: ignore[attr-defined]
+    # Set by the c-d binding so run_window_session can turn a window-mode EOF
+    # into a full session disconnect rather than a return to the REPL.
+    app.window_eof = False  # type: ignore[attr-defined]
     return app
