@@ -793,11 +793,18 @@ class MooPrompt:
                 await watcher
             except asyncio.CancelledError:
                 pass
+            window_eof = getattr(window_app, "window_eof", False)
             self._window_app = None
             self._window_state = None
             settings["window_active"] = False
             cache.delete(f"moo:session:{self.user.pk}:window_active")
             await self._dispatch_window_close_callback(req)
+            # ^D inside window mode = quit the session, not just the window —
+            # otherwise the user lands on the scrolling prompt and must ^D
+            # again. c-q / c-c still fall through to the REPL (escape hatch).
+            if window_eof:
+                self.is_exiting = True
+                self.disconnect_event.set()
 
     async def _dispatch_window_close_callback(self, req: dict) -> None:
         """Fire the optional on-close callback verb (wizard-gated)."""
@@ -1033,7 +1040,10 @@ class MooPrompt:
         # future and hang process_commands — only wrap real output.
         to_write = []
         if content:
-            osc133 = self._osc133_enabled()
+            # OSC 133 is shell-integration framing for the scrolling REPL; in
+            # window mode the output is appended to the App's scroll region,
+            # where the raw ;C/;D markers would render as literal text. Skip it.
+            osc133 = self._osc133_enabled() and self._window_state is None
             if osc133:
                 to_write.append(_RawAnsi(OSC_133_OUTPUT_START))
             if output_global_prefix:
