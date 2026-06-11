@@ -112,9 +112,9 @@ def direction_argument(parser=None, *, after_prep=None):
     :returns: Lowercase direction string, or ``""`` if none recoverable.
     """
     if parser is None:
-        from moo.sdk import context as _ctx  # pylint: disable=import-outside-toplevel,cyclic-import
+        from moo.sdk.context import context as _ctx  # pylint: disable=import-outside-toplevel,cyclic-import
 
-        parser = _ctx.context.parser
+        parser = _ctx.parser
     if parser is None:
         return ""
     if after_prep:
