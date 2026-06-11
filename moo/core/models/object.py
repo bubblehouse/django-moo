@@ -253,6 +253,8 @@ class Object(models.Model, AccessibleMixin):
         return instance
 
     def __str__(self):
+        if not self.caller_can_read():
+            return "#%s (unreadable)" % self.id
         return "#%s (%s)" % (self.id, self.name)
 
     @property

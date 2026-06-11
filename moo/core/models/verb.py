@@ -13,21 +13,41 @@ from django.db import models
 from moo import bootstrap
 from .. import utils, lookup
 from ..code import interpret, ContextManager
-from .acl import AccessibleMixin
+from .acl import AccessibleMixin, WizardGuardedManager, require_wizard
 
 log = logging.getLogger(__name__)
 
 
 class Preposition(models.Model):
-    pass
+    objects = WizardGuardedManager()
+
+    def save(self, *args, **kwargs):
+        require_wizard("write", self)
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        require_wizard("delete", self)
+        return super().delete(*args, **kwargs)
 
 
 class PrepositionName(models.Model):
+    objects = WizardGuardedManager()
+
     name = models.CharField(max_length=255)
     preposition = models.ForeignKey(Preposition, related_name="names", on_delete=models.CASCADE)
 
+    def save(self, *args, **kwargs):
+        require_wizard("write", self)
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        require_wizard("delete", self)
+        return super().delete(*args, **kwargs)
+
 
 class PrepositionSpecifier(models.Model):
+    objects = WizardGuardedManager()
+
     preposition = models.ForeignKey(Preposition, related_name="+", on_delete=models.SET_NULL, blank=True, null=True)
     preposition_specifier = models.CharField(
         max_length=255,
@@ -37,6 +57,14 @@ class PrepositionSpecifier(models.Model):
     specifier = models.CharField(
         max_length=255, choices=settings.OBJECT_SPECIFIER_CHOICES, db_index=True, default="none"
     )
+
+    def save(self, *args, **kwargs):
+        require_wizard("write", self)
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        require_wizard("delete", self)
+        return super().delete(*args, **kwargs)
 
 
 class Verb(models.Model, AccessibleMixin):
@@ -74,6 +102,8 @@ class Verb(models.Model, AccessibleMixin):
     _invoked_name = None
 
     def __str__(self):
+        if not self.caller_can_read():
+            return "verb {#%s}" % self.id
         return "%s {#%s on %s}" % (self.annotated(), self.id, self.origin)
 
     @property
@@ -266,17 +296,9 @@ class Repository(models.Model):
     prefix = models.CharField(max_length=255)
 
     def save(self, *args, **kwargs):
-        from ..exceptions import AccessError
-
-        caller = ContextManager.get("caller")
-        if caller is not None and not caller.is_wizard():
-            raise AccessError(caller, "modify", self)
+        require_wizard("modify", self)
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        from ..exceptions import AccessError
-
-        caller = ContextManager.get("caller")
-        if caller is not None and not caller.is_wizard():
-            raise AccessError(caller, "delete", self)
+        require_wizard("delete", self)
         super().delete(*args, **kwargs)

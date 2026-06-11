@@ -271,6 +271,27 @@ def test_safe_hasattr_does_not_leak_f_locals():
     assert printed == ["False"]
 
 
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_safe_hasattr_does_not_leak_blocked_sdk_submodule():
+    """hasattr() must use the same module blocklist as getattr()."""
+    printed = exec_verb("import moo.sdk as sdk\nprint(hasattr(sdk, 'tasks'))")
+    assert printed == ["False"]
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_safe_hasattr_does_not_leak_blocked_module_traversal():
+    """Bare import traversal such as moo.core must not be detectable with hasattr()."""
+    printed = exec_verb("import moo.sdk\nprint(hasattr(moo, 'core'))")
+    assert printed == ["False"]
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_safe_hasattr_does_not_leak_blocked_string_format():
+    """String format methods are blocked for getattr() and should be hidden from hasattr()."""
+    printed = exec_verb("print(hasattr('', 'format'))\nprint(hasattr(str, 'format'))")
+    assert printed == ["False", "False"]
+
+
 # ---------------------------------------------------------------------------
 # AttributeError.obj in Python 3.12+
 # ---------------------------------------------------------------------------

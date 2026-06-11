@@ -66,6 +66,8 @@ class Property(models.Model, AccessibleMixin):
         return "property"
 
     def __str__(self):
+        if not self.caller_can_read():
+            return "property {#%s}" % self.id
         return "%s {#%s on %s}" % (self.name, self.id, self.origin)
 
     def save(self, *args, **kwargs):

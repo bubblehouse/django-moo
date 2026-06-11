@@ -13,6 +13,7 @@ from collections import namedtuple
 from types import ModuleType
 
 from django.conf import settings
+from django.db.models import Model
 from django.db.models.manager import BaseManager
 from django.db.models.query import QuerySet
 
@@ -41,6 +42,151 @@ _QUERYSET_ALLOWED = frozenset(
         "prefetch_related",
     }
 )
+
+# Methods/properties on sandbox models whose READ requires the caller to
+# hold "read" on the instance (enforced by guard_read_attribute). Field and
+# reverse-relation names are NOT listed here — they are derived from
+# Model._meta in _sandbox_registry(), so new fields are read-checked
+# automatically. test_security_attribute_coverage.py asserts every public
+# attribute on the models is classified in exactly one of these buckets.
+SANDBOX_READ_METHODS: dict[str, frozenset] = {
+    "object": frozenset(
+        {
+            "kind",
+            "placement",
+            "is_player",
+            "is_wizard",
+            "is_connected",
+            "is_named",
+            "find",
+            "is_placed",
+            "is_hidden_placement",
+            "contains",
+            "is_a",
+            "get_ancestors",
+            "get_descendents",
+            "get_contents",
+            "has_verb",
+            "get_verb",
+            "has_property",
+            "get_property",
+            "get_property_objects",
+        }
+    ),
+    "verb": frozenset({"kind", "is_ability", "is_method", "annotated", "name"}),
+    "property": frozenset({"kind"}),
+}
+
+# Methods exempt from the blanket read check: each performs its own
+# finer-grained ACL enforcement (write/grant/entrust) or returns only
+# booleans derived from the caller's own permissions.
+SANDBOX_EXEMPT_METHODS: dict[str, frozenset] = {
+    "object": frozenset(
+        {
+            "add_verb",
+            "set_property",
+            "add_parent",
+            "remove_parent",
+            "add_alias",
+            "invoke_verb",
+            "set_placement",
+            "clear_placement",
+            "save",
+            "delete",
+            "owns",
+            "is_allowed",
+            "allow",
+            "deny",
+            "can_caller",
+            "caller_can_read",
+        }
+    ),
+    "verb": frozenset(
+        {"save", "delete", "reload", "is_bound", "passthrough", "allow", "deny", "can_caller", "caller_can_read"}
+    ),
+    "property": frozenset({"save", "delete", "allow", "deny", "can_caller", "caller_can_read"}),
+}
+
+# Attribute names with bespoke handling in guard_read_attribute:
+# "acl" is checked with "grant" permission, before the per-kind read sets.
+SANDBOX_SPECIAL_ATTRIBUTES = frozenset({"acl"})
+
+
+def derive_sandbox_field_names(model) -> frozenset:
+    """
+    All field, FK-attname, and reverse-accessor names on *model* whose read
+    requires the "read" permission. ``pk`` is added explicitly (it is a Model
+    property, not in _meta.get_fields()). Underscore-prefixed names are
+    excluded because the sandbox blocks all underscore reads; ``acl`` is
+    excluded — it is grant-checked separately.
+    """
+    names = {"pk"}
+    for f in model._meta.get_fields():  # pylint: disable=protected-access
+        if f.auto_created and not f.concrete:
+            # Reverse relation: the attribute on the instance is the accessor
+            # name (related_name), not f.name. Hidden ("+") relations have none.
+            accessor = f.get_accessor_name()
+            if accessor:
+                names.add(accessor)
+            continue
+        names.add(f.name)
+        attname = getattr(f, "attname", None)
+        if attname:
+            names.add(attname)
+        if getattr(f, "choices", None):
+            # Django adds get_<field>_display() for choice fields; it reads
+            # the field value, so it gets the same read check.
+            names.add("get_%s_display" % f.name)
+    return frozenset(n for n in names if not n.startswith("_") and n not in SANDBOX_SPECIAL_ATTRIBUTES)
+
+
+@functools.lru_cache(maxsize=None)
+def _sandbox_registry():
+    """
+    Memoized sandbox model registry. Models are imported lazily here —
+    moo/core/models/acl.py imports this module at import time, so code.py can
+    never import models at module scope. get_restricted_environment() runs
+    once per task; this makes the imports and set construction once-per-process.
+    """
+    from types import SimpleNamespace  # pylint: disable=import-outside-toplevel
+
+    from moo.core.models.acl import Access, AccessibleMixin, Permission  # pylint: disable=import-outside-toplevel
+    from moo.core.models.object import Alias, Object  # pylint: disable=import-outside-toplevel
+    from moo.core.models.property import Property  # pylint: disable=import-outside-toplevel
+    from moo.core.models.verb import (  # pylint: disable=import-outside-toplevel
+        Preposition,
+        PrepositionName,
+        PrepositionSpecifier,
+        Repository,
+        Verb,
+        VerbName,
+    )
+
+    return SimpleNamespace(
+        AccessibleMixin=AccessibleMixin,
+        Object=Object,
+        Verb=Verb,
+        Property=Property,
+        Alias=Alias,
+        VerbName=VerbName,
+        sandbox_model_types=(
+            Object,
+            Verb,
+            Property,
+            Alias,
+            VerbName,
+            Preposition,
+            PrepositionName,
+            PrepositionSpecifier,
+            Repository,
+            Access,
+            Permission,
+        ),
+        object_read_attributes=derive_sandbox_field_names(Object) | SANDBOX_READ_METHODS["object"],
+        verb_read_attributes=derive_sandbox_field_names(Verb) | SANDBOX_READ_METHODS["verb"],
+        property_read_attributes=derive_sandbox_field_names(Property) | SANDBOX_READ_METHODS["property"],
+    )
+
 
 log = logging.getLogger(__name__)
 
@@ -129,8 +275,64 @@ def get_restricted_environment(name, writer):
     """
     Construct an environment dictionary.
     """
-    from moo.core.models.acl import AccessibleMixin
-    from moo.core.models.property import Property
+    reg = _sandbox_registry()
+    AccessibleMixin = reg.AccessibleMixin
+    Object, Verb, Property = reg.Object, reg.Verb, reg.Property
+    Alias, VerbName = reg.Alias, reg.VerbName
+    sandbox_model_types = reg.sandbox_model_types
+    object_read_attributes = reg.object_read_attributes
+    verb_read_attributes = reg.verb_read_attributes
+    property_read_attributes = reg.property_read_attributes
+
+    def caller_is_wizard():
+        caller = ContextManager.get("caller")
+        return bool(caller and caller.is_wizard())
+
+    def is_sandbox_model_class(model):
+        try:
+            return issubclass(model, sandbox_model_types)
+        except TypeError:
+            return False
+
+    def guard_result(result):
+        if isinstance(result, (QuerySet, BaseManager)):
+            model = getattr(result, "model", None)
+            if model is not None and not is_sandbox_model_class(model) and not caller_is_wizard():
+                raise AttributeError(getattr(model, "__name__", "model"))
+        if isinstance(result, Model) and not is_sandbox_model_class(type(result)) and not caller_is_wizard():
+            raise AttributeError(type(result).__name__)
+        return result
+
+    def guard_read_attribute(obj, attr_name):
+        caller = ContextManager.get("caller")
+        if caller is None:
+            return
+        if attr_name == "acl" and isinstance(obj, AccessibleMixin):
+            obj.can_caller("grant", obj)
+        elif isinstance(obj, Object) and attr_name in object_read_attributes:
+            obj.can_caller("read", obj)
+        elif isinstance(obj, Verb) and attr_name in verb_read_attributes:
+            obj.can_caller("read", obj)
+        elif isinstance(obj, Property) and attr_name in property_read_attributes:
+            obj.can_caller("read", obj)
+        elif isinstance(obj, Alias):
+            obj.object.can_caller("read", obj.object)
+        elif isinstance(obj, VerbName):
+            obj.verb.can_caller("read", obj.verb)
+
+    def _render_print_arg(value):
+        # Third-party models can't override __str__ for redaction the way
+        # Object/Verb/Property do, so restricted instances render as a
+        # placeholder for non-wizards. Top-level args only: ``print([key])``
+        # (container repr), f-strings, and ``",".join(...)`` still hit the
+        # native __str__/__repr__ — known residual gaps.
+        if isinstance(value, (QuerySet, BaseManager)):
+            model = getattr(value, "model", None)
+            if model is not None and not is_sandbox_model_class(model) and not caller_is_wizard():
+                return "<%s queryset (restricted)>" % getattr(model, "__name__", "model")
+        if isinstance(value, Model) and not is_sandbox_model_class(type(value)) and not caller_is_wizard():
+            return "<%s (restricted)>" % type(value).__name__
+        return str(value)
 
     class _print_:
         # Stdlib-compatible defaults: ``print("x")`` ends with ``\n``,
@@ -144,7 +346,7 @@ def get_restricted_environment(name, writer):
             self._buffer = ""
 
         def _call_print(self, *args, sep=" ", end="\n"):
-            self._buffer += sep.join(str(a) for a in args) + end
+            self._buffer += sep.join(_render_print_arg(a) for a in args) + end
             if self._buffer.endswith("\n"):
                 writer(self._buffer[:-1])
                 self._buffer = ""
@@ -188,17 +390,24 @@ def get_restricted_environment(name, writer):
             return __builtins__["__import__"](name, gdict, ldict, fromlist, level)
         raise ImportError("Restricted: %s" % name)
 
-    def get_protected_attribute(obj, name, g=getattr):
-        if name.startswith("_"):
-            raise AttributeError(name)
-        if name in INSPECT_ATTRIBUTES:
-            raise AttributeError(name)
-        if name in ("format", "format_map") and (
+    def validate_attribute_request(obj, attr_name):
+        if isinstance(attr_name, str) and attr_name.startswith("_"):
+            raise AttributeError(attr_name)
+        if isinstance(attr_name, str) and attr_name in INSPECT_ATTRIBUTES:
+            raise AttributeError(attr_name)
+        if attr_name in ("format", "format_map") and (
             isinstance(obj, str) or (isinstance(obj, type) and issubclass(obj, str))
         ):
-            raise AttributeError(name)
-        if isinstance(obj, (QuerySet, BaseManager)) and name not in _QUERYSET_ALLOWED:
-            raise AttributeError(name)
+            raise AttributeError(attr_name)
+        if isinstance(obj, Model) and not is_sandbox_model_class(type(obj)) and not caller_is_wizard():
+            raise AttributeError(attr_name)
+        if isinstance(obj, (QuerySet, BaseManager)):
+            guard_result(obj)
+            if attr_name not in _QUERYSET_ALLOWED:
+                raise AttributeError(attr_name)
+
+    def get_protected_attribute(obj, name, g=getattr):
+        validate_attribute_request(obj, name)
         if isinstance(obj, ModuleType):
             module_name = getattr(obj, "__name__", "")
             if name in settings.BLOCKED_IMPORTS.get(module_name, set()):
@@ -208,19 +417,14 @@ def get_restricted_environment(name, writer):
                 result_name = getattr(result, "__name__", "")
                 if result_name not in settings.ALLOWED_MODULES and result_name not in settings.WIZARD_ALLOWED_MODULES:
                     raise AttributeError(name)
-            return result
-        if name == "acl" and isinstance(obj, AccessibleMixin):
-            caller = ContextManager.get("caller")
-            if caller is not None:
-                obj.can_caller("grant", obj)
-        if name == "value" and isinstance(obj, Property):
-            caller = ContextManager.get("caller")
-            if caller is not None:
-                obj.origin.can_caller("read", obj)
-        return g(obj, name)
+            return guard_result(result)
+        guard_read_attribute(obj, name)
+        return guard_result(g(obj, name))
 
     def set_protected_attribute(obj, name, value, s=setattr):
         if name.startswith("_"):
+            raise AttributeError(name)
+        if isinstance(obj, Model) and not is_sandbox_model_class(type(obj)) and not caller_is_wizard():
             raise AttributeError(name)
         if isinstance(obj, AccessibleMixin):
             obj.can_caller("write", obj)
@@ -229,7 +433,19 @@ def get_restricted_environment(name, writer):
     def guarded_getitem(obj, key):
         if isinstance(key, str) and key.startswith("_"):
             raise KeyError(key)
-        return obj[key]
+        return guard_result(obj[key])
+
+    def guarded_iter(obj):
+        # Eager: reject restricted QuerySets/Managers/instances before any
+        # item flows; then guard each yielded item so a plain container of
+        # restricted model rows can't leak instances either.
+        guard_result(obj)
+
+        def _guarded_items():
+            for item in obj:
+                yield guard_result(item)
+
+        return _guarded_items()
 
     def inplace_var_modification(operator, a, b):
         if operator == "+=":
@@ -237,16 +453,7 @@ def get_restricted_environment(name, writer):
         raise NotImplementedError("In-place modification with %s not supported." % operator)
 
     def safe_getattr(obj, name, *args):
-        if isinstance(name, str) and name.startswith("_"):
-            raise AttributeError(name)
-        if isinstance(name, str) and name in INSPECT_ATTRIBUTES:
-            raise AttributeError(name)
-        if name in ("format", "format_map") and (
-            isinstance(obj, str) or (isinstance(obj, type) and issubclass(obj, str))
-        ):
-            raise AttributeError(name)
-        if isinstance(obj, (QuerySet, BaseManager)) and name not in _QUERYSET_ALLOWED:
-            raise AttributeError(name)
+        validate_attribute_request(obj, name)
         if isinstance(obj, ModuleType):
             module_name = getattr(obj, "__name__", "")
             if name in settings.BLOCKED_IMPORTS.get(module_name, set()):
@@ -256,23 +463,16 @@ def get_restricted_environment(name, writer):
                 result_name = getattr(result, "__name__", "")
                 if result_name not in settings.ALLOWED_MODULES and result_name not in settings.WIZARD_ALLOWED_MODULES:
                     raise AttributeError(name)
-            return result
-        if name == "acl" and isinstance(obj, AccessibleMixin):
-            caller = ContextManager.get("caller")
-            if caller is not None:
-                obj.can_caller("grant", obj)
-        if name == "value" and isinstance(obj, Property):
-            caller = ContextManager.get("caller")
-            if caller is not None:
-                obj.origin.can_caller("read", obj)
-        return getattr(obj, name, *args) if args else getattr(obj, name)
+            return guard_result(result)
+        guard_read_attribute(obj, name)
+        return guard_result(getattr(obj, name, *args) if args else getattr(obj, name))
 
     def safe_hasattr(obj, name):
-        if isinstance(name, str) and name.startswith("_"):
+        try:
+            safe_getattr(obj, name)
+        except (AttributeError, PermissionError):
             return False
-        if isinstance(name, str) and name in INSPECT_ATTRIBUTES:
-            return False
-        return hasattr(obj, name)
+        return True
 
     restricted_builtins = dict(safe_builtins)
     restricted_builtins["__import__"] = restricted_import
@@ -296,7 +496,7 @@ def get_restricted_environment(name, writer):
         _write_=_write_,
         _getattr_=get_protected_attribute,
         _getitem_=guarded_getitem,
-        _getiter_=iter,
+        _getiter_=guarded_iter,
         _inplacevar_=inplace_var_modification,
         _unpack_sequence_=guarded_unpack_sequence,
         _iter_unpack_sequence_=guarded_iter_unpack_sequence,

@@ -7,6 +7,8 @@ from django.contrib.auth.models import User  # pylint: disable=imported-auth-use
 from django.db import models
 from django.db.models import Q
 
+from .acl import WizardGuardedManager, require_wizard
+
 
 class Player(models.Model):
     class Meta:
@@ -23,10 +25,20 @@ class Player(models.Model):
             models.Index(fields=["avatar", "wizard"], name="player_avatar_wizard_idx"),
         ]
 
+    objects = WizardGuardedManager()
+
     user = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
     avatar = models.ForeignKey("Object", null=True, on_delete=models.SET_NULL)
     wizard = models.BooleanField(default=False)
     site = models.ForeignKey("sites.Site", null=True, blank=True, on_delete=models.SET_NULL)
+
+    def save(self, *args, **kwargs):
+        require_wizard("write", self)
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        require_wizard("delete", self)
+        return super().delete(*args, **kwargs)
 
 
 class UniversalWizard(models.Model):
@@ -40,8 +52,18 @@ class UniversalWizard(models.Model):
     privileges; ``User.is_superuser`` alone does not.
     """
 
+    objects = WizardGuardedManager()
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"UniversalWizard({self.user.username})"
+
+    def save(self, *args, **kwargs):
+        require_wizard("write", self)
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        require_wizard("delete", self)
+        return super().delete(*args, **kwargs)
