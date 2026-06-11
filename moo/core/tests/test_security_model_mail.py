@@ -19,9 +19,17 @@ Covers:
 
 import pytest
 
+from moo.core.models.auth import Player
+from moo.core.models.mail import Message, MessageRecipient
 from moo.core.models.object import Object
 
 from .utils import ctx
+
+
+def ensure_player_avatar(obj):
+    """Give an Object a Player row so mail SDK validation treats it as a player."""
+    Player.objects.get_or_create(avatar=obj, defaults={"site": obj.site})
+
 
 # ---------------------------------------------------------------------------
 # Message.save() / Message.delete() must be restricted
@@ -45,11 +53,14 @@ def test_message_save_blocked_for_non_wizard(t_init: Object, t_wizard: Object):
     with ctx(t_wizard):
         plain = create("msg_save_plain")
         target = create("msg_save_target")
+        ensure_player_avatar(plain)
+        ensure_player_avatar(target)
 
     with ctx(plain):
-        msg = send_message(plain, [target], "hello", "world")
+        msg_value = send_message(plain, [target], "hello", "world")
 
     # msg is now an existing row (pk is not None); non-wizard cannot modify it
+    msg = Message.objects.get(pk=msg_value.pk)
     msg.subject = "spoofed"
     with ctx(plain):
         with pytest.raises((PermissionError, AccessError)):
@@ -63,10 +74,12 @@ def test_message_save_allowed_for_wizard(t_init: Object, t_wizard: Object):
 
     with ctx(t_wizard):
         target = create("msg_save_wiz_target")
+        ensure_player_avatar(target)
 
     with ctx(t_wizard):
-        msg = send_message(t_wizard, [target], "original", "body")
+        msg_value = send_message(t_wizard, [target], "original", "body")
 
+    msg = Message.objects.get(pk=msg_value.pk)
     msg.subject = "updated"
     with ctx(t_wizard):
         msg.save()
@@ -88,6 +101,8 @@ def test_send_message_still_works_for_non_wizard(t_init: Object, t_wizard: Objec
     with ctx(t_wizard):
         plain = create("msg_create_plain")
         target = create("msg_create_target")
+        ensure_player_avatar(plain)
+        ensure_player_avatar(target)
 
     with ctx(plain):
         msg = send_message(plain, [target], "test subject", "test body")
@@ -114,34 +129,36 @@ def test_message_delete_blocked_for_non_wizard(t_init: Object, t_wizard: Object)
     with ctx(t_wizard):
         plain = create("msg_del_plain")
         other = create("msg_del_other")
+        ensure_player_avatar(plain)
+        ensure_player_avatar(other)
 
     with ctx(t_wizard):
         send_message(t_wizard, [plain, other], "shared", "body")
 
-    mr = get_message(plain, 1)
-    assert mr is not None
+    mr_value = get_message(plain, 1)
+    assert mr_value is not None
+    msg = Message.objects.get(pk=mr_value.message.pk)
 
     with ctx(plain):
         with pytest.raises((PermissionError, AccessError)):
-            mr.message.delete()
+            msg.delete()
 
     # Message must still exist
-    from moo.core.models.mail import Message
-
-    assert Message.objects.filter(pk=mr.message_id).exists()
+    assert Message.objects.filter(pk=msg.pk).exists()
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 def test_message_delete_allowed_for_wizard(t_init: Object, t_wizard: Object):
     """Wizard can hard-delete a Message (and its cascade)."""
     from moo.sdk import create, send_message
-    from moo.core.models.mail import Message
 
     with ctx(t_wizard):
         target = create("msg_del_wiz_target")
+        ensure_player_avatar(target)
 
     with ctx(t_wizard):
-        msg = send_message(t_wizard, [target], "deleteme", "body")
+        msg_value = send_message(t_wizard, [target], "deleteme", "body")
+    msg = Message.objects.get(pk=msg_value.pk)
     msg_pk = msg.pk
 
     with ctx(t_wizard):
@@ -173,12 +190,15 @@ def test_message_recipient_save_blocks_redirection(t_init: Object, t_wizard: Obj
     with ctx(t_wizard):
         plain = create("mr_redirect_plain")
         victim = create("mr_redirect_victim")
+        ensure_player_avatar(plain)
+        ensure_player_avatar(victim)
 
     with ctx(t_wizard):
         send_message(t_wizard, [plain], "private", "content")
 
-    mr = get_message(plain, 1)
-    assert mr is not None
+    mr_value = get_message(plain, 1)
+    assert mr_value is not None
+    mr = MessageRecipient.objects.get(pk=mr_value.pk)
 
     original_recipient_id = mr.recipient_id
     mr.recipient = victim
@@ -203,6 +223,7 @@ def test_message_recipient_save_allowed_for_recipient(t_init: Object, t_wizard: 
 
     with ctx(t_wizard):
         plain = create("mr_markread_plain")
+        ensure_player_avatar(plain)
 
     with ctx(t_wizard):
         send_message(t_wizard, [plain], "read me", "body")
@@ -229,12 +250,15 @@ def test_message_recipient_save_blocked_for_non_recipient(t_init: Object, t_wiza
     with ctx(t_wizard):
         plain = create("mr_nonrecip_plain")
         attacker = create("mr_nonrecip_attacker")
+        ensure_player_avatar(plain)
+        ensure_player_avatar(attacker)
 
     with ctx(t_wizard):
         send_message(t_wizard, [plain], "private", "content")
 
-    mr = get_message(plain, 1)
-    assert mr is not None
+    mr_value = get_message(plain, 1)
+    assert mr_value is not None
+    mr = MessageRecipient.objects.get(pk=mr_value.pk)
 
     # attacker tries to save the row even without changing recipient
     with ctx(attacker):
@@ -255,17 +279,18 @@ def test_message_recipient_hard_delete_blocked_for_non_wizard(t_init: Object, t_
     the delete_message() SDK function which sets mr.deleted = True.
     """
     from moo.sdk import create, send_message, get_message
-    from moo.core.models.mail import MessageRecipient
     from moo.core.exceptions import AccessError
 
     with ctx(t_wizard):
         plain = create("mr_hd_plain")
+        ensure_player_avatar(plain)
 
     with ctx(t_wizard):
         send_message(t_wizard, [plain], "precious", "body")
 
-    mr = get_message(plain, 1)
-    assert mr is not None
+    mr_value = get_message(plain, 1)
+    assert mr_value is not None
+    mr = MessageRecipient.objects.get(pk=mr_value.pk)
     mr_pk = mr.pk
 
     with ctx(plain):
@@ -279,16 +304,17 @@ def test_message_recipient_hard_delete_blocked_for_non_wizard(t_init: Object, t_
 def test_message_recipient_hard_delete_allowed_for_wizard(t_init: Object, t_wizard: Object):
     """Wizard can hard-delete a MessageRecipient row."""
     from moo.sdk import create, send_message, get_message
-    from moo.core.models.mail import MessageRecipient
 
     with ctx(t_wizard):
         target = create("mr_hd_wiz_target")
+        ensure_player_avatar(target)
 
     with ctx(t_wizard):
         send_message(t_wizard, [target], "deleteme", "body")
 
-    mr = get_message(target, 1)
-    assert mr is not None
+    mr_value = get_message(target, 1)
+    assert mr_value is not None
+    mr = MessageRecipient.objects.get(pk=mr_value.pk)
     mr_pk = mr.pk
 
     with ctx(t_wizard):

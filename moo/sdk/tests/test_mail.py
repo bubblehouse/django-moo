@@ -10,6 +10,7 @@ records and the Object hierarchy are in place.
 import pytest
 
 from moo.core.models import Object
+from moo.core.models.mail import Message, MessageRecipient
 from moo.sdk import lookup
 from moo.sdk.mail import (
     count_unread,
@@ -36,7 +37,7 @@ def test_send_message_creates_message_and_recipient(t_init: Object, t_wizard: Ob
     assert msg.subject == "Hello"
     assert msg.body == "Body text"
     assert msg.sender == t_wizard
-    assert msg.recipients.filter(recipient=player).exists()
+    assert MessageRecipient.objects.filter(message_id=msg.pk, recipient=player).exists()
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -44,9 +45,10 @@ def test_send_message_creates_message_and_recipient(t_init: Object, t_wizard: Ob
 def test_send_message_denormalizes_sent_at(t_init: Object, t_wizard: Object):
     player = lookup("Player")
     msg = send_message(t_wizard, [player], "Subject", "Body")
-    mr = msg.recipients.get(recipient=player)
+    db_msg = Message.objects.get(pk=msg.pk)
+    mr = MessageRecipient.objects.get(message=db_msg, recipient=player)
     assert mr.sent_at is not None
-    assert mr.sent_at == msg.sent_at
+    assert mr.sent_at == db_msg.sent_at
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -54,7 +56,7 @@ def test_send_message_denormalizes_sent_at(t_init: Object, t_wizard: Object):
 def test_send_message_multiple_recipients(t_init: Object, t_wizard: Object):
     player = lookup("Player")
     msg = send_message(t_wizard, [t_wizard, player], "Broadcast", "For everyone")
-    assert msg.recipients.count() == 2
+    assert MessageRecipient.objects.filter(message_id=msg.pk).count() == 2
 
 
 # ---------------------------------------------------------------------------
