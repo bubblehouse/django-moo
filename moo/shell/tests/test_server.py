@@ -9,6 +9,7 @@ and session_requested().
 """
 
 import asyncio
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -376,7 +377,8 @@ def test_data_received_full_mtts_negotiation_flow():
 
 def _make_gmcp_session(user_pk: int = 8801) -> MooPromptToolkitSSHSession:
     """Build a bare session with a mock user.pk for GMCP routing tests."""
-    session = MooPromptToolkitSSHSession.__new__(MooPromptToolkitSSHSession)
+    # Any-typed so the MagicMock attribute stubs don't fight the class types.
+    session: Any = MooPromptToolkitSSHSession.__new__(MooPromptToolkitSSHSession)
     session.user = MagicMock()
     session.user.pk = user_pk
     session._chan = MagicMock()

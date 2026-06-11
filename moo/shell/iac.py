@@ -518,7 +518,8 @@ class IacNegotiator:
     def _finalize_ttype(self) -> None:
         self.capabilities["ttype"] = True
         if self._on_ttype is not None:
-            self._on_ttype(str(self.capabilities.get("client_name", "")), int(self.capabilities.get("mtts", 0) or 0))
+            mtts = self.capabilities.get("mtts", 0)
+            self._on_ttype(str(self.capabilities.get("client_name", "")), mtts if isinstance(mtts, int) else 0)
         self._ttype_stage = 0
 
     def _handle_charset_sb(self, payload: bytes) -> bytes:
