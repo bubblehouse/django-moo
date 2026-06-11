@@ -3,14 +3,37 @@
 SSH key management functions.
 """
 
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class SSHKeyInfo:
+    """Plain verb-facing representation of a UserKey row."""
+
+    pk: int
+    name: str
+    keytype: str
+    fingerprint: str
+    created: object
+
+
+def _key_value(key):
+    return SSHKeyInfo(
+        pk=key.pk,
+        name=key.name,
+        keytype=key.keytype,
+        fingerprint=key.fingerprint,
+        created=key.created,
+    )
+
 
 def list_ssh_keys(player_obj):
     """
-    Return a list of UserKey records for the player's Django User, ordered by creation date.
+    Return SSH key summaries for the player's Django User, ordered by creation date.
 
     :param player_obj: the player Object whose SSH keys to list
     :type player_obj: Object
-    :return: list of UserKey model instances
+    :return: list of SSHKeyInfo values
     :rtype: list
     :raises UserError: if the caller is not wizard-owned, or the player has no account
     """
@@ -27,7 +50,7 @@ def list_ssh_keys(player_obj):
         raise UserError(f"{player_obj.title()} has no player account.") from exc
     if player_record.user is None:
         raise UserError(f"{player_obj.title()} has no Django user account.")
-    return list(UserKey.objects.filter(user=player_record.user).order_by("created"))
+    return [_key_value(key) for key in UserKey.objects.filter(user=player_record.user).order_by("created")]
 
 
 def add_ssh_key(player_obj, key_string):
@@ -41,8 +64,8 @@ def add_ssh_key(player_obj, key_string):
     :type player_obj: Object
     :param key_string: the SSH public key string (e.g. ``ssh-rsa AAAA... comment``)
     :type key_string: str
-    :return: the newly created UserKey instance
-    :rtype: UserKey
+    :return: the newly created SSH key summary
+    :rtype: SSHKeyInfo
     :raises UserError: if the caller is not wizard-owned, the key is invalid, or the player has no account
     """
     from ..core.exceptions import UserError  # pylint: disable=import-outside-toplevel
@@ -65,7 +88,7 @@ def add_ssh_key(player_obj, key_string):
     except ValidationError as e:
         raise UserError(f"Invalid SSH key: {e}") from e
     key.save()
-    return key
+    return _key_value(key)
 
 
 def remove_ssh_key(player_obj, index):
@@ -97,5 +120,6 @@ def remove_ssh_key(player_obj, index):
     if not (1 <= index <= len(keys)):
         raise UserError(f"No key at index {index}. Use @keys to list your keys.")
     key = keys[index - 1]
+    value = _key_value(key)
     key.delete()
-    return key
+    return value
