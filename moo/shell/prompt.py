@@ -9,7 +9,7 @@ modes, Kombu message bus, OSC 133 handling, event queues, and teardown.
 import asyncio
 import logging
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Literal, Optional
 
 from asgiref.sync import sync_to_async
 from kombu import Exchange, Queue, simple
@@ -316,7 +316,7 @@ class MooPrompt:
             await asyncio.sleep(0.05)
         if pieces:
             settings = _session_settings.get(self.user.pk, {})
-            color_system = None if settings.get("quiet_mode", False) else "truecolor"
+            color_system: Optional[Literal["truecolor"]] = None if settings.get("quiet_mode", False) else "truecolor"
             console = Console(color_system=color_system, force_terminal=True)
             with console.capture() as capture:
                 for piece in pieces:
@@ -765,7 +765,7 @@ class MooPrompt:
             prompt_text = req.get("prompt", "")
             is_password = req.get("password", False)
 
-            session = PromptSession()
+            session: PromptSession = PromptSession()
             try:
                 result = await session.prompt_async(
                     ANSI(prompt_text),
@@ -1101,7 +1101,7 @@ class MooPrompt:
         elif kind == "input_prompt":
             await self.input_queue.put(message)
 
-    def writer(self, s, is_error=False):
+    def writer(self, s, is_error=False) -> None:
         """
         Render a Rich markup string to the terminal.
 
@@ -1125,9 +1125,14 @@ class MooPrompt:
                 return
             print_formatted_text(FormattedText([("[ZeroWidthEscape]", s)]), end="")
             return
-        color_system = None if settings.get("quiet_mode", False) else "truecolor"
+        quiet_mode = settings.get("quiet_mode", False)
+        color_system: Optional[Literal["truecolor"]] = None if quiet_mode else "truecolor"
         if mode == MODE_RAW:
-            console = Console(color_system=color_system, force_terminal=True)
+            console = Console(
+                color_system=color_system,
+                force_terminal=True,
+                no_color=quiet_mode,
+            )
             with console.capture() as capture:
                 console.print(s, end="")
             content = capture.get()
@@ -1200,7 +1205,9 @@ class MooPrompt:
                         # Assemble one Rich-rendered blob, emit via a single
                         # run_in_terminal — per-piece writes re-render the prompt
                         # (and re-emit OSC 133 markers) between every line.
-                        color_system = None if settings.get("quiet_mode", False) else "truecolor"
+                        color_system: Optional[Literal["truecolor"]] = (
+                            None if settings.get("quiet_mode", False) else "truecolor"
+                        )
                         console = Console(color_system=color_system)
                         with console.capture() as capture:
                             for piece in to_write:
