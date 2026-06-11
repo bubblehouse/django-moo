@@ -26,6 +26,8 @@ def set_password(player_obj, new_password, old_password=None):
         raise UserError("Only verbs owned by wizards can change passwords.")
     if context.player and not context.player.is_wizard() and player_obj != context.player:
         raise UserError("You can only change your own password.")
+    if context.player and not context.player.is_wizard() and not old_password:
+        raise UserError("Current password is required.")
 
     candidates = [p for p in Player.objects.filter(avatar=player_obj) if p.user is not None]
     if not candidates:

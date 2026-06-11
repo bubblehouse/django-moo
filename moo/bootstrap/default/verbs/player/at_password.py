@@ -38,5 +38,6 @@ elif verb_name == "at_password_confirm":
     if confirm_pw != new_pw:
         print("[red]Passwords do not match.[/red]")
         return
-    set_password(context.player, new_pw, old_pw or None)
+    old_password = None if context.player.is_wizard() and not old_pw else old_pw
+    set_password(context.player, new_pw, old_password)
     print("Password changed.")

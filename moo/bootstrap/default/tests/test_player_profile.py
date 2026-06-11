@@ -126,6 +126,30 @@ def test_password_wizard_bypass_old(t_init, t_wizard, t_player_with_password):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_password_non_wizard_cannot_omit_old_password(t_init, t_wizard):
+    """A normal player invoking the wizard-owned callback must provide the old password."""
+    from django.contrib.auth import get_user_model  # pylint: disable=import-outside-toplevel
+    from moo.core.exceptions import UserError  # pylint: disable=import-outside-toplevel
+    from moo.core.models.auth import Player  # pylint: disable=import-outside-toplevel
+
+    with code.ContextManager(t_wizard, lambda _: None):
+        player_class = lookup("Generic Player")
+        player = create("Password Tester", parents=[player_class])
+
+    user = get_user_model().objects.create_user(username="password-tester", password="OldPassword1!")
+    Player.objects.create(user=user, avatar=player, site=player.site, wizard=False)
+
+    with code.ContextManager(player, lambda _: None):
+        confirm_cb = player.get_verb("at_password_confirm")
+        with pytest.raises(UserError, match="Current password is required"):
+            confirm_cb("NewPassword4$", "", "NewPassword4$")
+
+    user.refresh_from_db()
+    assert user.check_password("OldPassword1!")
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_password_entry_emits_input_prompt(t_init, t_wizard):
     """@password publishes an input_prompt event to open the old-password prompt."""
     with pytest.warns(RuntimeWarning, match="ConnectionError") as caught:
