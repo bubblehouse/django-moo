@@ -116,3 +116,128 @@ see {doc}`objects`. For `Property` and `Verb` field reference, see
 .. autofunction:: moo.sdk.get_mail_stats
    :no-index:
 ```
+
+## Accounts and identity
+
+The {class}`~moo.core.models.auth.Player` row is the durable account behind an
+avatar; these resolve between an avatar and its account.
+
+```{eval-rst}
+.. py:currentmodule:: moo.sdk
+.. autofunction:: moo.sdk.account_for
+   :no-index:
+.. autofunction:: moo.sdk.avatars_of
+   :no-index:
+.. autofunction:: moo.sdk.account_id_for
+   :no-index:
+.. autofunction:: moo.sdk.current_account
+   :no-index:
+```
+
+## Provenance and tagged output
+
+Every published message carries a server-computed provenance triple, recorded
+always; sanctioned output forms carry a structural ``kind`` tag the client
+renders so a user line cannot present as a system line or another actor.
+
+```{eval-rst}
+.. autofunction:: moo.sdk.notify
+   :no-index:
+.. autofunction:: moo.sdk.current_provenance
+   :no-index:
+.. autofunction:: moo.sdk.capture_provenance_stack
+   :no-index:
+.. autofunction:: moo.sdk.resolve_provenance_account
+   :no-index:
+```
+
+## Flood limiting
+
+```{eval-rst}
+.. autofunction:: moo.sdk.broadcast_allowed
+   :no-index:
+.. autofunction:: moo.sdk.broadcast_limit
+   :no-index:
+.. autofunction:: moo.sdk.broadcast_window
+   :no-index:
+```
+
+## Moderation: suspend and ban
+
+Staff-gated sanctions keyed to the durable account; neither can target staff.
+
+```{eval-rst}
+.. autofunction:: moo.sdk.suspend
+   :no-index:
+.. autofunction:: moo.sdk.unsuspend
+   :no-index:
+.. autofunction:: moo.sdk.ban
+   :no-index:
+.. autofunction:: moo.sdk.is_blacklisted
+   :no-index:
+.. autofunction:: moo.sdk.account_login_blocked
+   :no-index:
+```
+
+## Onboarding: guests and registration
+
+```{eval-rst}
+.. autofunction:: moo.sdk.provision_guest
+   :no-index:
+.. autofunction:: moo.sdk.remove_guest
+   :no-index:
+.. autofunction:: moo.sdk.is_guest
+   :no-index:
+.. autofunction:: moo.sdk.register
+   :no-index:
+.. autofunction:: moo.sdk.require_registered
+   :no-index:
+```
+
+## Audit log
+
+```{eval-rst}
+.. autofunction:: moo.sdk.record_action
+   :no-index:
+.. autofunction:: moo.sdk.query_audit
+   :no-index:
+```
+
+## Non-destructive recovery
+
+``@recycle`` is now a reversible soft-recycle; ``@destroy`` is the permanent
+delete. Soft-recycled objects are hidden from the site-scoped manager but keep
+their id and inbound references.
+
+```{eval-rst}
+.. autofunction:: moo.sdk.soft_recycle
+   :no-index:
+.. autofunction:: moo.sdk.restore
+   :no-index:
+.. autofunction:: moo.sdk.destroy
+   :no-index:
+.. autofunction:: moo.sdk.get_recycled
+   :no-index:
+.. autofunction:: moo.sdk.sweep_recycled
+   :no-index:
+```
+
+## Escape guarantee and connectivity
+
+```{eval-rst}
+.. autofunction:: moo.sdk.guaranteed_moveto
+   :no-index:
+.. autofunction:: moo.sdk.send_home
+   :no-index:
+.. autofunction:: moo.sdk.check_room_connectivity
+   :no-index:
+```
+
+## Indexed external keys
+
+```{eval-rst}
+.. autofunction:: moo.sdk.resolve_by_key
+   :no-index:
+.. autofunction:: moo.sdk.get_or_create_by_key
+   :no-index:
+```

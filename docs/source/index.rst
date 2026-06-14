@@ -60,6 +60,7 @@
    explanation/architecture
    explanation/parser
    explanation/sandbox
+   explanation/accountability
    explanation/shell-internals
 
 .. toctree::
