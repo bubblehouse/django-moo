@@ -16,6 +16,8 @@ from .objects import (
     owned_objects_by_pks,
     ensure_player_record,
     remove_player_record,
+    resolve_by_key,
+    get_or_create_by_key,
 )
 from .output import (
     write,
@@ -42,6 +44,43 @@ from .tasks import (
     schedule_continuation,
     moo_eval,
 )
+from .accounts import (
+    account_for,
+    avatars_of,
+    account_id_for,
+    current_account,
+)
+from .provenance import (
+    notify,
+    current_provenance,
+    capture_provenance_stack,
+    resolve_provenance_account,
+    OUTPUT_KINDS,
+)
+from .ratelimit import broadcast_allowed, broadcast_limit, broadcast_window
+from .audit import record_action, query_audit
+from .moderation import (
+    suspend,
+    unsuspend,
+    ban,
+    is_blacklisted,
+    account_login_blocked,
+)
+from .onboarding import (
+    provision_guest,
+    remove_guest,
+    is_guest,
+    register,
+    require_registered,
+)
+from .recovery import (
+    soft_recycle,
+    restore,
+    destroy,
+    get_recycled,
+    sweep_recycled,
+)
+from .escape import guaranteed_moveto, send_home, check_room_connectivity
 from .ssh_keys import list_ssh_keys, add_ssh_key, remove_ssh_key
 from .password import set_password
 from .admin import server_info

@@ -117,6 +117,16 @@ class QuotaError(UserError):
     """
 
 
+class TickLimitError(UserError):
+    """
+    Raised when a verb exceeds the per-task loop/tick budget (spec 200, item N).
+
+    A finer-grained backstop than the Celery wall-clock kill: a runaway loop
+    aborts at ``settings.MOO_TICK_BUDGET`` iterations rather than burning the
+    whole time budget.  The task runner catches ``UserError``.
+    """
+
+
 class NoSuchPrepositionError(UserError):
     """
     Raised by parser methods like :meth:`Parser.get_pobj_str` when the

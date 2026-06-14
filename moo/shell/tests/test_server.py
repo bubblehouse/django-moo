@@ -63,6 +63,61 @@ def test_validate_password_nonexistent_user():
 
 
 # ---------------------------------------------------------------------------
+# SSHServer login enforcement for sanctions (spec 200, item H)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db(transaction=True)
+def test_validate_password_denied_when_banned():
+    """A banned account cannot authenticate, even with the right password."""
+    from moo.core.models.auth import Player
+
+    user = User.objects.create_user(username="banneduser", password="pw")
+    Player.objects.create(user=user, status=Player.STATUS_BANNED)
+    server = SSHServer.__new__(SSHServer)
+
+    result = asyncio.run(server.validate_password("banneduser", "pw"))
+
+    assert result is False
+
+
+@pytest.mark.django_db(transaction=True)
+def test_validate_password_denied_when_suspended():
+    """A currently-suspended account cannot authenticate."""
+    import datetime
+
+    from django.utils import timezone
+
+    from moo.core.models.auth import Player
+
+    user = User.objects.create_user(username="suspendeduser", password="pw")
+    Player.objects.create(
+        user=user,
+        status=Player.STATUS_SUSPENDED,
+        suspended_until=timezone.now() + datetime.timedelta(hours=1),
+    )
+    server = SSHServer.__new__(SSHServer)
+
+    result = asyncio.run(server.validate_password("suspendeduser", "pw"))
+
+    assert result is False
+
+
+@pytest.mark.django_db(transaction=True)
+def test_validate_password_allowed_for_active_account():
+    """An active account authenticates normally (control for the block path)."""
+    from moo.core.models.auth import Player
+
+    user = User.objects.create_user(username="activeuser", password="pw")
+    Player.objects.create(user=user, status=Player.STATUS_ACTIVE)
+    server = SSHServer.__new__(SSHServer)
+
+    result = asyncio.run(server.validate_password("activeuser", "pw"))
+
+    assert result is True
+
+
+# ---------------------------------------------------------------------------
 # SSHServer.session_requested() — session factory
 # ---------------------------------------------------------------------------
 

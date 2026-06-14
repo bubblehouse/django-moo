@@ -624,6 +624,27 @@ class SSHServer(PromptToolkitSSHServer):
             log.warning("SSH username site suffix %s is unknown — deferring to picker", hint)
         self.site = None
 
+    def _login_block_reason(self):
+        """Return a sanction reason blocking this login, or ``None`` (spec 200, H).
+
+        Consulted by both auth paths once ``self.user``/``self.site`` are known.
+        With a resolved site we check that one account; without (picker
+        deferred) we block if *any* of the user's accounts is sanctioned.
+        """
+        from moo.core.models.auth import Player
+        from moo.sdk.moderation import account_login_blocked
+
+        if not self.user:
+            return None
+        accounts = Player.objects.filter(user=self.user)
+        if self.site is not None:
+            accounts = accounts.filter(site=self.site)
+        for account in accounts:
+            reason = account_login_blocked(account)
+            if reason:
+                return reason
+        return None
+
     def _auto_provision_universal_wizard(self):
         """Provision a wizard avatar+Player for a UniversalWizard user on a new site."""
         from moo.core.models.auth import Player, UniversalWizard
@@ -656,6 +677,10 @@ class SSHServer(PromptToolkitSSHServer):
             self._site_hint = site_hint  # pylint: disable=attribute-defined-outside-init
             self._resolve_site()
             self._auto_provision_universal_wizard()
+            reason = self._login_block_reason()
+            if reason:
+                log.warning("Denying login for %s: %s", base_username, reason)
+                return False
             return True
         return False
 
@@ -682,6 +707,10 @@ class SSHServer(PromptToolkitSSHServer):
                 self._site_hint = site_hint  # pylint: disable=attribute-defined-outside-init
                 self._resolve_site()
                 self._auto_provision_universal_wizard()
+                reason = self._login_block_reason()
+                if reason:
+                    log.warning("Denying key login for %s: %s", base_username, reason)
+                    return False
                 return True
         return False
 

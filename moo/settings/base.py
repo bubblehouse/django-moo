@@ -151,6 +151,23 @@ PREPOSITION_SPECIFIER_CHOICES = (("any", "any"), ("none", "none"))
 # in-process and does not reset between test cases).
 MOO_ATTRIB_CACHE_TTL = 120
 
+# Per-account broadcast flood limit (spec 200, item F): the most lines a single
+# account may have published to *other* players within MOO_BROADCAST_RATE_WINDOW
+# seconds before further broadcast lines are dropped.  Deliberately generous —
+# the target is a runaway $spew verb, not a verbose NPC or a long room
+# description (a player's own output is never counted).  Set to 0 to disable.
+# The System Object property ``broadcast_rate_limit`` / ``broadcast_rate_window``
+# overrides these at runtime (the "sys knob").
+MOO_BROADCAST_RATE_LIMIT = 256
+MOO_BROADCAST_RATE_WINDOW = 10
+
+# Per-task loop/tick budget (spec 200, item N): the maximum number of loop
+# iterations a single verb task may run before TickLimitError aborts it — a
+# finer-grained backstop than the Celery wall-clock kill. Deliberately generous
+# (a legitimate sweep over a large world should never trip it); the wall-clock
+# kill remains the outer bound. Set to 0 to disable.
+MOO_TICK_BUDGET = 5_000_000
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",

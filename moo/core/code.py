@@ -441,8 +441,21 @@ def get_restricted_environment(name, writer):
         # restricted model rows can't leak instances either.
         guard_result(obj)
 
+        # N (spec 200): charge each yielded item against the per-task tick
+        # budget so a runaway loop aborts before the Celery wall-clock kill.
+        # Budget and counter are read once per iterator; the loop only mutates
+        # counter[0], keeping per-item overhead to an int increment + compare.
+        budget = getattr(settings, "MOO_TICK_BUDGET", 0)
+        counter = _CONTEXT_VARS["tick_counter"].get() if budget else None
+
         def _guarded_items():
             for item in obj:
+                if counter is not None:
+                    counter[0] += 1
+                    if counter[0] > budget:
+                        from .exceptions import TickLimitError  # pylint: disable=import-outside-toplevel
+
+                        raise TickLimitError(f"Verb exceeded the tick budget ({budget} loop iterations).")
                 yield guard_result(item)
 
         return _guarded_items()
@@ -537,6 +550,10 @@ _CONTEXT_VARS: dict[str, contextvars.ContextVar] = {
     # Default None means "not tracking" — most sessions don't need this.
     "published_events": contextvars.ContextVar("published_events", default=None),
     "site": contextvars.ContextVar("site", default=None),
+    # N (spec 200): per-task loop/tick counter. A single-element list so the
+    # hot path mutates ``counter[0]`` in place rather than doing a contextvar
+    # set per iteration. Fresh per session, reset on __exit__.
+    "tick_counter": contextvars.ContextVar("tick_counter", default=None),
 }
 
 
@@ -652,6 +669,7 @@ class ContextManager:
             "prop_lookup_cache": {},
             "published_events": [] if track_events else None,
             "site": site,
+            "tick_counter": [0],
         }
 
     def set_parser(self, parser):

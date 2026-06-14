@@ -63,6 +63,16 @@ player.set_property("who_location_msg", "%x(location)")
 player.set_property("victim_ejection_msg", "You have been ejected from %s by %s.")
 player.set_property("opaque", 0, inherit_owner=True)
 
+# $guest — the low-commitment funnel mouth (spec 200, item I). A child of
+# $player so it has parser identity / look / tell, but restricted: a guest
+# cannot create or own (own ownership_quota of 0 — read recurse=False by
+# create() — so creation raises QuotaError) and is non-persistent (the login
+# flow reaps the avatar on disconnect). Distinct from a registered $player.
+guests, _ = bootstrap.get_or_create_object("Generic Guest", unique_name=True, parents=[player])
+sys.set_property("guest", guests)
+guests.set_property("description", "A guest, just visiting.")
+guests.set_property("ownership_quota", 0)
+
 builders, _ = bootstrap.get_or_create_object("Generic Builder", unique_name=True, parents=[player])
 sys.set_property("builder", builders)
 

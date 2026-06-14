@@ -23,3 +23,8 @@ CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"
 # does not reset between test cases, which would poison subsequent tests
 # when PKs are reused after sequence resets.
 MOO_ATTRIB_CACHE_TTL = 0
+
+# Disable the broadcast flood limit for the suite by default — the LocMemCache
+# counter does not reset between tests, so a shared budget would drift and trip
+# unrelated tests.  The item-F tests opt in via the ``settings`` fixture.
+MOO_BROADCAST_RATE_LIMIT = 0
