@@ -82,6 +82,9 @@ surfaces = {}  # {target_pk: (target_obj, prep, [placed_items])}
 for item in all_items:
     if item == context.player:
         continue
+    # A (spec 200): a themed room may hide items it renders itself.
+    if this.hide_from_contents(item):
+        continue
     if item.is_player():
         players.append(item)
         continue
@@ -157,3 +160,6 @@ if ctype in (0, 1, 2, 3):
                 ]
             )
         print(line)
+
+# A (spec 200): let a themed room append its own grouped/sectioned listing.
+this.tell_contents_extra()

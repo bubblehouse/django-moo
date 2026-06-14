@@ -39,8 +39,11 @@ ARROWS = {
 GRID_DIR = {v: k for k, v in GRID_POS.items()}
 
 quiet = get_session_setting("quiet_mode", False)
+# A (spec 200): a room may suppress the compass via the show_compass() hook,
+# in addition to the session-level quiet mode.
+show_compass = (not quiet) and this.show_compass()
 
-if not quiet:
+if show_compass:
     existing = set()
     for d in GRID_POS:
         if this.match_exit(d):
@@ -83,7 +86,7 @@ if not quiet:
     if is_dark:
         text_lines = [title_line, "It's too dark to see anything."]
     else:
-        description = this.get_property("description")
+        description = this.look_description()
         if description:
             desc_wrapped = [
                 f"[deep_sky_blue1]{line}[/deep_sky_blue1]"
@@ -110,7 +113,7 @@ else:
         print("It's too dark to see anything.")
         return
     is_dark = False
-    description = this.get_property("description")
+    description = this.look_description()
     if description:
         print(description)
 

@@ -285,7 +285,54 @@ def create(name, *a, **kw):
     obj = Object.objects.create(name=name, *a, **kw)
     if parents:
         obj.parents.add(*parents)
+    # L: record player-initiated creation (skipped for system/bootstrap).
+    from .audit import record_action
+
+    record_action("create", target=obj)
     return obj
+
+
+def resolve_by_key(namespace, key):
+    """Resolve an Object by its indexed external key (spec 200, item B).
+
+    O(1) via the unique ``(namespace, key)`` index — the fast path for
+    data-generated worlds that resolve by a stable external id rather than by
+    a full ``Property.value`` scan.
+
+    :param namespace: the key namespace (e.g. ``"zone_slug"``)
+    :param key: the external key value
+    :return: the mapped Object, or ``None``
+    """
+    from ..core.models import ExternalKey
+
+    row = ExternalKey.objects.filter(namespace=namespace, key=key).select_related("object").first()
+    return row.object if row is not None else None
+
+
+def get_or_create_by_key(namespace, key, **kwargs):
+    """Idempotently resolve-or-create an Object keyed by an external id.
+
+    The common bootstrap pattern made fast and re-runnable: a second run with
+    the same ``(namespace, key)`` returns the existing Object in one indexed
+    query, never a duplicate.  On first sight it creates the Object (via the
+    standard :func:`create`, so quota/ownership/``initialize`` all apply) and
+    records the mapping.
+
+    :param namespace: the key namespace
+    :param key: the external key value
+    :param name: the Object name to create (defaults to ``key``)
+    :param kwargs: forwarded to :func:`create` (``parents``, ``owner``, ...)
+    :return: ``(object, created)``
+    """
+    from ..core.models import ExternalKey
+
+    existing = resolve_by_key(namespace, key)
+    if existing is not None:
+        return existing, False
+    name = kwargs.pop("name", key)
+    obj = create(name, **kwargs)
+    ExternalKey.objects.create(namespace=namespace, key=key, object=obj)
+    return obj, True
 
 
 def owned_objects(player_obj):

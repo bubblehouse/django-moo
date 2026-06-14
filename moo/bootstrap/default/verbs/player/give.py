@@ -33,3 +33,5 @@ if gift.location != recipient:
     print(_.string_utils.pronoun_sub("%I doesn't want %d."))
 else:
     print(_.string_utils.pronoun_sub("You give %d to %i."))
+    # C (spec 200): notify quest/achievement subscribers of the action.
+    player.on_player_action(player, "give", {"object": gift.id, "recipient": recipient.id})

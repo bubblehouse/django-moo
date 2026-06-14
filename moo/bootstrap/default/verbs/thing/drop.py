@@ -24,6 +24,8 @@ elif this.location.accept(this):
     print(this.drop_succeeded_msg(title))
     if msg := this.odrop_succeeded_msg(title):
         this.location.announce(msg)
+    # C (spec 200): notify quest/achievement subscribers of the action.
+    context.player.on_player_action(context.player, "drop", {"object": this.id})
 else:
     print(this.drop_failed_msg(title))
     if msg := this.odrop_failed_msg(title):

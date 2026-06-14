@@ -17,6 +17,9 @@ from moo.sdk import context
 
 player = context.player
 exit_obj = this.match_exit(verb_name)
+# D (spec 200): fall back to a computed/lattice exit if no stored one matches.
+if exit_obj is None:
+    exit_obj = this.procedural_exit(verb_name)
 if exit_obj is None:
     player.tell("You can't go that way.")
 elif isinstance(exit_obj, list):
