@@ -52,7 +52,14 @@ def _current_site():
 
 
 class SiteManager(models.Manager):
-    """Manager that automatically filters Objects to the current site."""
+    """Manager that filters Objects to the current site and hides recycled rows.
+
+    Soft-recycled objects (spec 200, item K) are excluded here so they vanish
+    from rooms, lookups, the parser, and reverse relations the moment they are
+    recycled — while keeping their id and inbound references intact for a later
+    restore.  Code that must see recycled rows (restore, the reaper sweep) uses
+    ``Object.global_objects`` instead.
+    """
 
     def get_queryset(self):
         site = _current_site()
@@ -64,4 +71,4 @@ class SiteManager(models.Manager):
             # Runtime "no site available" — fail closed so a missing
             # default Site can never silently leak rows across universes.
             return super().get_queryset().none()
-        return super().get_queryset().filter(site=site)
+        return super().get_queryset().filter(site=site, recycled=False)

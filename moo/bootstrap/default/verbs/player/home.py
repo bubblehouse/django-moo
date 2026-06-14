@@ -17,7 +17,7 @@ after the move - then for some reason the player's home location has not allowed
 is printed, and no further action is taken.
 """
 
-from moo.sdk import context
+from moo.sdk import context, send_home
 
 player = context.player
 home = player.get_property("home")
@@ -27,9 +27,8 @@ if home == player.location:
 if not home:
     player.set_property("home", _.player_start)
     print("Your home was not set. It has been set to the default location.")
-    return
 
-player.moveto(home)
-
-if home != player.location:
-    print("You cannot go home. Your home location is not allowing you to enter.")
+# M (spec 200): home is a guaranteed engine escape — send_home forces the move,
+# bypassing the destination's accept/locks/verbs, so a player can never be
+# trapped by a room owner. Falls back to $player_start when home is unset.
+send_home(player)

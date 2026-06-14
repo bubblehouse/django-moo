@@ -221,6 +221,14 @@ class Object(models.Model, AccessibleMixin):
     #: subsequent parent changes.
     _initialized = models.BooleanField(default=False)
 
+    #: Soft-delete flag (spec 200, item K). A recycled object keeps its id and
+    #: all inbound references but is hidden from the site-scoped default manager
+    #: (so it vanishes from rooms, lookups, and the parser) until it is restored
+    #: or swept (hard-deleted).  Defaults False, so every existing row stays
+    #: visible — only an explicit soft-recycle hides anything.
+    recycled = models.BooleanField(default=False, db_index=True)
+    recycled_at = models.DateTimeField(null=True, blank=True)
+
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -932,12 +940,20 @@ class Object(models.Model, AccessibleMixin):
         # Clear placement_prep for objects placed on this one.
         # placement_target goes NULL via SET_NULL cascade, but prep would be left dangling.
         self.placed_objects.update(placement_prep=None)
-        try:
-            quota = self.owner.get_property("ownership_quota", recurse=False)
-            if quota is not None:
-                self.owner.set_property("ownership_quota", quota + 1)
-        except NoSuchPropertyError:
-            pass
+        # Refund quota — unless this object was already soft-recycled (K), in
+        # which case the refund happened at recycle time; refunding again here
+        # would credit the owner twice.
+        if not self.recycled:
+            try:
+                quota = self.owner.get_property("ownership_quota", recurse=False)
+                if quota is not None:
+                    self.owner.set_property("ownership_quota", quota + 1)
+            except NoSuchPropertyError:
+                pass
+        # L: record player-initiated hard removal before the row is gone.
+        from ...sdk.audit import record_action  # pylint: disable=import-outside-toplevel
+
+        record_action("destroy", target=self)
         super().delete(*args, **kwargs)
 
     def save(self, *args, **kwargs):
@@ -1001,13 +1017,18 @@ class Object(models.Model, AccessibleMixin):
             # ACL Check: to change the location, caller must be allowed to `move` on this object
             original_location_id = self._original_location
             if original_location_id != self.location_id and self.location_id:
-                self.can_caller("move", self)
-                # the new location must define an `accept` verb that returns True for this obejct
-                if self.location.has_verb("accept"):
-                    if not self.location.invoke_verb("accept", self):
+                # M (spec 200): the engine escape guarantee. A guaranteed move
+                # (``home`` to $player_start) bypasses the move permission and
+                # the destination's ``accept`` so a player can never be trapped
+                # by a room owner's verbs/locks. enterfunc/exitfunc still fire.
+                if not getattr(self, "_guaranteed_move", False):
+                    self.can_caller("move", self)
+                    # the new location must define an `accept` verb that returns True for this obejct
+                    if self.location.has_verb("accept"):
+                        if not self.location.invoke_verb("accept", self):
+                            raise PermissionError(f"{self.location} did not accept {self}")
+                    else:
                         raise PermissionError(f"{self.location} did not accept {self}")
-                else:
-                    raise PermissionError(f"{self.location} did not accept {self}")
                 # Snapshot caller/player now — on_commit fires after the
                 # ContextManager exits and its contextvars are cleared.
                 from moo.core import context as _moo_context  # pylint: disable=import-outside-toplevel

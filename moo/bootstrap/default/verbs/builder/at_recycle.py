@@ -3,12 +3,13 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-This is a player command used to recycle an object. This simply matches the dobjstr with an object, and calls the
-delete() method to recycle the object. The returned value, in the case of an error, is printed to the player. Otherwise,
-a suitable success message is sent.
+Recycle an object.  As of spec 200 (item K) this is a *non-destructive*
+soft-recycle: the object's quota is refunded and it is hidden from the world,
+but its id and inbound references are kept so ``@restore`` can bring it back.
+Use ``@destroy`` for permanent removal.
 """
 
-from moo.sdk import context
+from moo.sdk import context, soft_recycle
 
 if not context.parser.has_dobj_str():
     print("[yellow]What do you want to recycle?[/yellow]")
@@ -17,7 +18,7 @@ if not context.parser.has_dobj_str():
 obj = context.parser.get_dobj(lookup=True)
 name = obj.title()
 try:
-    obj.delete()
-    print(f"[yellow]Recycled {name}.[/yellow]")
+    soft_recycle(obj)
+    print(f"[yellow]Recycled {name}. Use @restore to recover it.[/yellow]")
 except Exception:  # pylint: disable=broad-exception-caught
     print(f"[red]Error recycling {name}.[/red]")
