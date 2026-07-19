@@ -1,3 +1,29 @@
+## [1.13.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.12.4...v1.13.0) (2026-07-19)
+
+### Features
+
+* **core:** add a generic per-task scratch dict to ContextManager ([c35ce45](https://gitlab.com/bubblehouse/django-moo/commit/c35ce4592c1dcfc093ada55721d25405b5a6bdc4))
+* **core:** add account model, provenance, moderation, and compute-bound safety primitives (spec 200 E/F/G/H/I/J/L/N) ([d8f7c01](https://gitlab.com/bubblehouse/django-moo/commit/d8f7c015af87e5a05e7af488a7194169b55ffa30))
+* **core:** add non-destructive soft-delete recovery and the home escape guarantee (spec 200 K/M) ([896c50a](https://gitlab.com/bubblehouse/django-moo/commit/896c50ae2132377ea7147fc8905e7ca5e6cdbf33))
+* **default:** add room-rendering hooks, indexed external keys, on_player_action, and procedural exits (spec 200 A/B/C/D) ([2247fd0](https://gitlab.com/bubblehouse/django-moo/commit/2247fd0fea084783ebe9368136339564eeb9dab6))
+* **onboarding:** enforce unique registered identity per site ([d364fb4](https://gitlab.com/bubblehouse/django-moo/commit/d364fb4931229d6704848d6cb5077bf60cf14964))
+* **safety:** enforce append-only audit log and wizard-guard the sanction tables ([656e9dd](https://gitlab.com/bubblehouse/django-moo/commit/656e9dd38152b63e3d1ea58af177d70a6d231a7a))
+* **sdk:** return plain mail values and bind mailbox access to the active player ([c070d2c](https://gitlab.com/bubblehouse/django-moo/commit/c070d2c77382b6c329402cc95aadfdfdd604d5c0))
+* **sdk:** return plain SSH key summaries from key management functions ([6fb6499](https://gitlab.com/bubblehouse/django-moo/commit/6fb64991598a54228de84dd8718d8c2c216e1b2a))
+* **security:** enforce model containment and read ACLs in the verb sandbox ([eeeeeb4](https://gitlab.com/bubblehouse/django-moo/commit/eeeeeb4e591157098d5f1be9a1f30b10340d491d))
+* **shell:** add persistent windowed display mode with cursor-addressed top region ([9f34070](https://gitlab.com/bubblehouse/django-moo/commit/9f34070c76ed767caac341793f47b67b36964ed4))
+
+### Bug Fixes
+
+* **moderation:** treat suspend hours=0 as immediate and clear lapsed suspensions at login ([2547fb5](https://gitlab.com/bubblehouse/django-moo/commit/2547fb54b6ad78d4ca4bd708c513c8b83f7acd08))
+* **ratelimit:** log dropped broadcast lines and correct the window docstring ([57651ca](https://gitlab.com/bubblehouse/django-moo/commit/57651cac05069cb08b99b9e62f6a995dbc74cd11))
+* **sdk:** require the current password for non-wizard password changes ([e6401cd](https://gitlab.com/bubblehouse/django-moo/commit/e6401cd7fb38d73e8f9773675b726bcf20af2ad7))
+* **sdk:** resolve the parser via the context singleton in direction_argument ([9dff929](https://gitlab.com/bubblehouse/django-moo/commit/9dff929a5be330491e06d26aad22461d7616ae37))
+* **sdk:** wrap get_or_create_by_key in a transaction so a lost key race never orphans an object ([5078489](https://gitlab.com/bubblehouse/django-moo/commit/50784894f7faaa18a5dff59bb62843a6f82bc59f))
+* **shell:** disable color output in quiet mode for raw-mode consoles ([b311b9b](https://gitlab.com/bubblehouse/django-moo/commit/b311b9bbf42154f4d9408e4e64909cd7a50cdea3))
+* **shell:** quit on ^D and suppress OSC 133 in windowed display mode ([91cb8f6](https://gitlab.com/bubblehouse/django-moo/commit/91cb8f67bb4fc42c8dcc5d1bb7d96c9c83ecfcff))
+* **verbs:** surface recovery-verb errors, scope [@restore](https://gitlab.com/restore) to the caller, and fix go direction handling ([3d3a431](https://gitlab.com/bubblehouse/django-moo/commit/3d3a431a9f1405dc5a705593bbab9d91cf873fd5))
+
 ## [1.12.4](https://gitlab.com/bubblehouse/django-moo/compare/v1.12.3...v1.12.4) (2026-05-30)
 
 ### Bug Fixes
