@@ -11,6 +11,11 @@ verb searches them explicitly.
 
 from moo.sdk import context, get_recycled, restore
 
+# A wizard may restore anyone's recycled object; a regular builder is scoped to
+# their own, so naming another builder's recycled object neither leaks its
+# existence nor produces a permission-denied traceback from restore().
+scope = None if context.player.is_wizard() else context.player
+
 if not context.parser.has_dobj_str():
     recycled = get_recycled(owner=context.player)
     if not recycled:
@@ -23,7 +28,7 @@ if not context.parser.has_dobj_str():
 
 target = context.parser.get_dobj_str()
 match = None
-for o in get_recycled():
+for o in get_recycled(owner=scope):
     if target.startswith("#") and target[1:].isdigit() and o.id == int(target[1:]):
         match = o
         break

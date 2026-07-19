@@ -16,8 +16,8 @@ if not context.parser.has_dobj_str():
 
 obj = context.parser.get_dobj(lookup=True)
 name = obj.title()
-try:
-    destroy(obj)
-    print(f"[red]Destroyed {name} permanently.[/red]")
-except Exception:  # pylint: disable=broad-exception-caught
-    print(f"[red]Error destroying {name}.[/red]")
+# Let destroy's own errors surface — a permission denial (AccessError is a
+# PermissionError) is rendered by the task runner with its real reason, rather
+# than masked behind a generic "Error destroying".
+destroy(obj)
+print(f"[red]Destroyed {name} permanently.[/red]")

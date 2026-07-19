@@ -17,8 +17,8 @@ if not context.parser.has_dobj_str():
 
 obj = context.parser.get_dobj(lookup=True)
 name = obj.title()
-try:
-    soft_recycle(obj)
-    print(f"[yellow]Recycled {name}. Use @restore to recover it.[/yellow]")
-except Exception:  # pylint: disable=broad-exception-caught
-    print(f"[red]Error recycling {name}.[/red]")
+# Let soft_recycle's own errors surface — a permission denial (AccessError is a
+# PermissionError) is rendered by the task runner with its real reason, rather
+# than masked behind a generic "Error recycling".
+soft_recycle(obj)
+print(f"[yellow]Recycled {name}. Use @restore to recover it.[/yellow]")
