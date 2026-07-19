@@ -18,7 +18,9 @@ with {func}`moo.sdk.account_for` and {func}`moo.sdk.avatars_of`.
 
 An account carries a `status` (`active`, `guest`, `suspended`, `banned`), an
 optional `registered_identity` (a durable identifier bound at registration), and
-a `suspended_until` deadline.
+a `suspended_until` deadline. A bound `registered_identity` is unique per site,
+so one human's identifier cannot be claimed by two accounts — which matters
+because a ban blacklists by identity and must key to exactly one account.
 
 ## Provenance is always on
 
@@ -47,25 +49,36 @@ Staff sanctions sit above `@gag` and `@eject`: a reversible
 {func}`moo.sdk.suspend` and a scarring {func}`moo.sdk.ban` that blacklists the
 account's durable identity so the same human cannot simply re-register. Both key
 to the account and neither can target staff; the SSH login path consults
-{func}`moo.sdk.account_login_blocked`.
+{func}`moo.sdk.account_login_blocked`, which also clears a suspension whose
+deadline has passed so a lapsed account does not read as suspended forever.
 
 Onboarding runs guest → registered: {func}`moo.sdk.provision_guest` creates a
 non-persistent `$guest` who can explore and talk but not build or own, and
 {func}`moo.sdk.register` binds a durable identity through a pluggable verifier
 (`MOO_REGISTRATION_VERIFIER`) before build rights are granted
-({func}`moo.sdk.require_registered`).
+({func}`moo.sdk.require_registered`). The built-in verifier is deliberately
+permissive — it normalizes the identity but does not prove the registrant
+controls it — so a deployment that exposes `@register` and relies on bans
+holding must point `MOO_REGISTRATION_VERIFIER` at a real verifier (email
+round-trip, SSO) first.
 
 Consequential actions (create, recycle, destroy, owner/permission change,
 sanctions) are recorded to an append-only audit log via
 {func}`moo.sdk.record_action`; only player-initiated actions are logged, so
-bootstrap and system activity never floods it. Staff query it with `@auditlog`.
+bootstrap and system activity never floods it. The log is enforced append-only —
+a row cannot be modified or deleted through the ORM (the attempt raises
+`AppendOnlyError`), so the trail stays tamper-evident. Staff query it with
+`@auditlog`.
 
 ## Recovery and the escape guarantee
 
 `@recycle` is a reversible **soft-recycle**: the object is hidden from the
 site-scoped manager but keeps its id and inbound references, so `@restore` can
 bring it back; `@destroy` remains for permanent removal, and
-{func}`moo.sdk.sweep_recycled` purges anything left past the retention window.
+{func}`moo.sdk.sweep_recycled` purges anything left past the retention window. A
+regular builder's `@restore` is scoped to their own recycled objects (a wizard
+may restore any), so naming another builder's object neither reveals it nor
+forces a permission error.
 
 `home` is an engine escape guarantee: {func}`moo.sdk.send_home` forces the move
 to the player's home (or `$player_start`), bypassing the destination's
@@ -101,7 +114,3 @@ the owner's `ownership_quota`, and recycling refunds it (a soft-recycle refunds
 once, and a later hard-destroy of an already-recycled object does not
 double-refund). A future *measured* (byte) quota in addition to the object count
 is a possible later refinement, not a requirement.
-
-```
-EOF
-echo "written"

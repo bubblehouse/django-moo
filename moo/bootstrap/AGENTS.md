@@ -34,10 +34,12 @@ The default dataset bootstraps four player classes, each inheriting from the pre
 
 | Class         | Location             | Verbs they own                                                       |
 |---------------|----------------------|----------------------------------------------------------------------|
-| `$player`     | `default/verbs/player/`     | Everyday commands (`say`, `look`, `tell`, `inventory`, `@password`, `@keys`, `@add-key`, `@remove-key`, PREFIX/SUFFIX, `a11y`, `WRAP`) |
-| `$builder`    | `default/verbs/builder/`    | World-building commands (`@create`, `@dig`, `@describe`, `@alias`, `@burrow`) |
+| `$player`     | `default/verbs/player/`     | Everyday commands (`say`, `look`, `tell`, `inventory`, `home`, `@password`, `@keys`, `@add-key`, `@remove-key`, `@register`, PREFIX/SUFFIX, `a11y`, `WRAP`) |
+| `$builder`    | `default/verbs/builder/`    | World-building commands (`@create`, `@dig`, `@describe`, `@alias`, `@burrow`, `@recycle`, `@restore`, `@destroy`, `@checkexits`) |
 | `$programmer` | `default/verbs/programmer/` | Verb authoring (`@edit`, `@eval`, `@reload`)                         |
-| `$wizard`     | `default/verbs/wizard/`     | Administrative (`@version` and whatever else requires full rights)   |
+| `$wizard`     | `default/verbs/wizard/`     | Administrative (`@version`, `@suspend`, `@unsuspend`, `@ban`, `@auditlog`, and whatever else requires full rights) |
+
+The safety verbs (`@suspend`/`@ban`/`@auditlog`, the `@recycle`→`@restore`/`@destroy` recovery pair, `@register`) delegate to the `moo.sdk` safety primitives — the SDK enforces the authorization (staff-only, can't-target-staff), not the verb. `$room` also gained overridable rendering hooks (`look_description`, `show_compass`, `hide_from_contents`, `tell_contents_extra`, `procedural_exit`) and `$player` an `on_player_action` observer hook; see the Sphinx *Accountability* explanation and `reference/builtins.md`.
 
 When adding a new verb, place it on the lowest class that ought to run it. Putting `@edit` on `$player` would let any connected user open a verb in the editor, which is not what we want.
 

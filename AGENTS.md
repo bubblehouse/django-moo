@@ -127,6 +127,30 @@ rows (`read`, `deleted` fields). Verb authors should use SDK functions exclusive
 object (`_`). A wizard must set this to a list of player Objects before `@gripe` is
 usable.
 
+### Safety & Accountability Primitives
+
+A set of engine and `default`-level primitives for a public, user-programmable
+world. Each is generically useful to any `default` game. Verb code reaches them
+through `moo.sdk`; the SDK enforces authorization, not the calling verb.
+
+| Area | SDK entry points | Key facts |
+|------|------------------|-----------|
+| Account model | `account_for`, `avatars_of`, `account_id_for`, `current_account` | The `Player` row is the durable account; `pk` is the stable account id. `registered_identity` is **unique per site**. |
+| Provenance / tagged output | `current_provenance`, `capture_provenance_stack`, `notify` | Every published message carries a server-computed `{origin, verb, owner}` triple, always. The `system` output `kind` requires a wizard *initiator*. |
+| Moderation | `suspend`, `unsuspend`, `ban`, `is_blacklisted`, `account_login_blocked` | Staff-gated, can't target staff, keyed to the account. `suspend(hours=0)` is immediate, not open-ended; an expired suspension clears at login. |
+| Onboarding | `provision_guest`, `register`, `require_registered` | The default `MOO_REGISTRATION_VERIFIER` proves nothing — replace it before exposing `@register` where bans must hold. |
+| Audit log | `record_action`, `query_audit` | `AuditLog` is **append-only**: any modify/delete through the ORM raises `AppendOnlyError`. Only player-initiated actions are recorded. |
+| Recovery | `soft_recycle`, `restore`, `destroy`, `get_recycled`, `sweep_recycled` | `@recycle` is a reversible soft-delete; soft-recycled rows are hidden by `SiteManager` but keep id + inbound refs. |
+| Escape guarantee | `send_home`, `guaranteed_moveto`, `check_room_connectivity` | `home` bypasses the destination's `accept`/locks so a player can't be trapped. |
+| External keys | `resolve_by_key`, `get_or_create_by_key` | O(1) idempotent resolve-or-create via an indexed `(namespace, key)` table; wrapped in a transaction so a lost race never orphans an Object. |
+| Compute bounds | — | `MOO_TICK_BUDGET` caps per-task loop iterations (`TickLimitError`), finer than the Celery wall-clock kill. |
+
+New model-guard posture for a sandbox audit: `AuditLog` is append-only
+(`AppendOnlyManager`); `Player`/`Blacklist` are fully wizard-guarded
+(`WizardGuardedManager` + guarded `save`/`delete`); `ExternalKey` guards only
+bulk mutation (row creation follows normal object ownership). See the Sphinx
+*Accountability* explanation and `reference/builtins.md`.
+
 ### Multi-Universe Support
 
 A single deployment can host independent worlds. Each universe is a Django
@@ -135,8 +159,9 @@ either encode the Site domain in the username (`ssh user+sitedomain@host`)
 or are routed via the post-auth picker; webssh injects the suffix from the
 browser `Host` header automatically. Queries through `Object.objects` /
 `Property.objects` / `Verb.objects` are silently filtered to the active
-site by `SiteManager` (`moo/core/managers.py`). Use `Object.global_objects`
-for cross-site queries (diagnostics, migrations).
+site by `SiteManager` (`moo/core/managers.py`), which also hides soft-recycled
+Objects (`recycled=True`). Use `Object.global_objects` for cross-site queries
+or to see recycled rows (diagnostics, migrations, `@restore`).
 
 | Mechanism | Purpose |
 |-----------|---------|
