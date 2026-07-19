@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Non-destructive object recovery (spec 200, item K).
+Non-destructive object recovery.
 
 ``@recycle`` is destructive — a permanent Django delete with no recovery.
 Author recovery of a griefed building and the reaper's "freeze, don't delete"

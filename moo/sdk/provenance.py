@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Provenance and structurally-tagged output (spec 200, item E).
+Provenance and structurally-tagged output.
 
 Every message published to a player carries a server-computed provenance triple
 (``origin``, ``verb``, ``owner``) — recorded always, independent of the

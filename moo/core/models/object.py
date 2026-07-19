@@ -221,7 +221,7 @@ class Object(models.Model, AccessibleMixin):
     #: subsequent parent changes.
     _initialized = models.BooleanField(default=False)
 
-    #: Soft-delete flag (spec 200, item K). A recycled object keeps its id and
+    #: Soft-delete flag. A recycled object keeps its id and
     #: all inbound references but is hidden from the site-scoped default manager
     #: (so it vanishes from rooms, lookups, and the parser) until it is restored
     #: or swept (hard-deleted).  Defaults False, so every existing row stays

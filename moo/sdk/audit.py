@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Action audit log helpers (spec 200, item L).
+Action audit log helpers.
 
 :func:`record_action` is the single write point for the append-only
 :class:`~moo.core.models.audit.AuditLog`.  Core paths (create, recycle,

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Escape guarantee and connectivity guard (spec 200, item M).
+Escape guarantee and connectivity guard.
 
 Programmer-built interiors can become black holes — one-way exits, no way back,
 ``accept`` verbs that refuse everyone.  :func:`guaranteed_moveto` is the engine
@@ -57,7 +57,7 @@ def send_home(player):
 
 
 def check_room_connectivity(room):
-    """Report whether a room is a potential trap (spec 200, item M).
+    """Report whether a room is a potential trap.
 
     A build-completion guard: flags a room with no way out, and any exit whose
     destination has no exit leading back (a one-way trip).

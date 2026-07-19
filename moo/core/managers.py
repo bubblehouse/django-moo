@@ -54,7 +54,7 @@ def _current_site():
 class SiteManager(models.Manager):
     """Manager that filters Objects to the current site and hides recycled rows.
 
-    Soft-recycled objects (spec 200, item K) are excluded here so they vanish
+    Soft-recycled objects are excluded here so they vanish
     from rooms, lookups, the parser, and reverse relations the moment they are
     recycled — while keeping their id and inbound references intact for a later
     restore.  Code that must see recycled rows (restore, the reaper sweep) uses
