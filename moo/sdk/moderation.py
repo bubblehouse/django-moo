@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Staff sanction primitives (spec 200, item H).
+Staff sanction primitives.
 
 The high rungs of the moderation ladder above ``@gag`` (self-defense) and
 ``@eject`` (room owner): a reversible :func:`suspend` (LambdaMOO's "newt", blocks
@@ -50,7 +50,9 @@ def suspend(account, duration=None, hours=None, reason=""):
 
     _require_staff()
     _refuse_if_staff(account)
-    if duration is None and hours:
+    if duration is None and hours is not None:
+        # ``hours=0`` is an immediate (already-expired) suspension, not the
+        # open-ended one a falsy ``and hours`` check would have produced.
         duration = datetime.timedelta(hours=float(hours))
     account.status = Player.STATUS_SUSPENDED
     account.suspended_until = (timezone.now() + duration) if duration is not None else None
@@ -132,11 +134,21 @@ def account_login_blocked(account):
 
     :param account: the Player account attempting to log in
     """
+    from ..core.models.auth import Player
+
     if account is None:
         return None
     reason = account.login_blocked_reason()
     if reason:
         return reason
+    # Login is allowed — but if a suspension has lapsed, clear the stale flag so
+    # the account does not read as "suspended" forever in staff reports. Runs at
+    # the login chokepoint, where there is no active caller, so the guarded
+    # ``save()`` is permitted.
+    if account.status == Player.STATUS_SUSPENDED and not account.is_suspended():
+        account.status = Player.STATUS_ACTIVE
+        account.suspended_until = None
+        account.save()
     if account.registered_identity and is_blacklisted(account.registered_identity, account.site):
         return "This identity has been banned."
     return None

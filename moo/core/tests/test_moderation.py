@@ -78,6 +78,37 @@ def test_non_staff_caller_refused(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_suspend_zero_hours_is_immediate_not_open_ended(t_init: Object, t_wizard: Object):
+    # ``hours=0`` must mean an already-expired suspension, not a permanent one.
+    with code.ContextManager(t_wizard, lambda _: None):
+        account = account_for(lookup("Player"))
+        suspend(account, hours=0)
+        account.refresh_from_db()
+        assert account.suspended_until is not None
+        assert account.is_suspended() is False
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_expired_suspension_cleared_at_login(t_init: Object, t_wizard: Object):
+    import datetime
+
+    from django.utils import timezone
+
+    with code.ContextManager(t_wizard, lambda _: None):
+        account = account_for(lookup("Player"))
+        account.status = Player.STATUS_SUSPENDED
+        account.suspended_until = timezone.now() - datetime.timedelta(hours=1)
+        account.save()
+    # The login chokepoint allows the lapsed account and clears the stale flag.
+    assert account_login_blocked(account) is None
+    account.refresh_from_db()
+    assert account.status == Player.STATUS_ACTIVE
+    assert account.suspended_until is None
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_login_blocked_composes_status_and_blacklist(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, lambda _: None):
         account = account_for(lookup("Player"))

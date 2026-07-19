@@ -36,7 +36,7 @@ except Exception as err:  # pylint: disable=broad-exception-caught
     print(str(err))
     return
 
-if hours:
+if hours is not None:
     print(f"Suspended {target.name} for {hours} hour(s).")
 else:
     print(f"Suspended {target.name} indefinitely.")
