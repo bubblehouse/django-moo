@@ -40,6 +40,15 @@ class Player(models.Model):
                 condition=Q(user__isnull=False),
                 name="player_unique_user_per_site",
             ),
+            # A bound durable identity is unique per site, so one human's
+            # registered identity cannot be claimed by two accounts (and a ban,
+            # which blacklists by identity, keys to exactly one account). NULL
+            # identities (unregistered/guest accounts) are exempt.
+            models.UniqueConstraint(
+                fields=["registered_identity", "site"],
+                condition=Q(registered_identity__isnull=False),
+                name="player_unique_identity_per_site",
+            ),
         ]
         indexes = [
             models.Index(fields=["avatar", "wizard"], name="player_avatar_wizard_idx"),

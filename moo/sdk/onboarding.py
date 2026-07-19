@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Guest tier and registration gate (spec 200, items I and J).
+Guest tier and registration gate.
 
 The onboarding funnel: a :func:`provision_guest` low-commitment entry that can
 explore and talk but not build or own, and a :func:`register` step that binds a
@@ -95,6 +95,16 @@ def default_identity_verifier(identity):
     default; deployments point ``MOO_REGISTRATION_VERIFIER`` at a stricter one
     (email round-trip, SSO, etc.).
 
+    .. warning::
+
+       This default proves **nothing**: it normalizes the string but does not
+       confirm the registrant controls the identity. Because a ban blacklists
+       by identity (H), an unverified registration lets one user claim
+       another's identifier. The ``(registered_identity, site)`` uniqueness
+       constraint stops two accounts from holding the same identity, but only a
+       real verifier stops a *first* false claim. Replace this before exposing
+       ``@register`` on any deployment where bans must hold.
+
     :param identity: the candidate identifier
     :return: ``(ok, normalized, error)``
     """
@@ -122,8 +132,11 @@ def register(account, identity):
 
     :param account: the Player account to register
     :param identity: the candidate durable identifier
-    :raises UserError: on a missing account, a rejected identity, or a banned one
+    :raises UserError: on a missing account, a rejected identity, a banned one,
+        or an identity already claimed on this site
     """
+    from django.db import IntegrityError, transaction
+
     from ..core.models.auth import Player
     from .moderation import is_blacklisted
 
@@ -137,7 +150,13 @@ def register(account, identity):
     account.registered_identity = normalized
     if account.status == Player.STATUS_GUEST:
         account.status = Player.STATUS_ACTIVE
-    account.save()
+    try:
+        # Savepoint so the (registered_identity, site) uniqueness violation
+        # rolls back cleanly and leaves the surrounding transaction usable.
+        with transaction.atomic():
+            account.save()
+    except IntegrityError as exc:
+        raise UserError("That identity is already registered.") from exc
     return account
 
 

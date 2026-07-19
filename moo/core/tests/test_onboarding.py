@@ -92,6 +92,27 @@ def test_register_refuses_blacklisted_identity(t_init: Object, t_wizard: Object)
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_register_refuses_identity_already_claimed_on_site(t_init: Object, t_wizard: Object):
+    # The (registered_identity, site) uniqueness constraint stops a second
+    # account from claiming an identity already bound on the same site.
+    from django.contrib.sites.models import Site
+
+    site = Site.objects.first()
+    with code.ContextManager(t_wizard, lambda _: None):
+        first, _ = provision_guest("First")
+        first.site = site
+        first.save()
+        register(first, "shared@example.org")
+
+        second, _ = provision_guest("Second")
+        second.site = site
+        second.save()
+        with pytest.raises(UserError, match="already registered"):
+            register(second, "shared@example.org")
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_require_registered_gate(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, lambda _: None):
         account, _ = provision_guest("Visitor")
