@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Per-account broadcast flood limiting (spec 200, item F).
+Per-account broadcast flood limiting.
 
 RestrictedPython here uses a plain iterator and the only runaway backstop is the
 Celery wall-clock kill — neither bounds a verb that spams everyone present
@@ -45,7 +45,7 @@ def broadcast_limit() -> int:
 
 
 def broadcast_window() -> int:
-    """The effective sliding-window length in seconds."""
+    """The effective fixed-window length in seconds."""
     return max(1, int(_knob("broadcast_rate_window", getattr(_settings, "MOO_BROADCAST_RATE_WINDOW", 10))))
 
 

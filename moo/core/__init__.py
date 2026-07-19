@@ -58,7 +58,7 @@ def current_provenance():
     """Return the always-on provenance triple for the running task, server-side.
 
     The triple is ``{"origin", "verb", "owner"}`` taken from the top of the
-    caller stack (spec 200, item E): ``origin`` is the object the running verb
+    caller stack: ``origin`` is the object the running verb
     is acting on, ``verb`` the responsible verb name, and ``owner`` the pk of
     the verb's permission owner (its ``context.caller``).  All three are read
     from the in-memory caller stack — **no database query** — so attaching this
@@ -130,7 +130,16 @@ def _publish_to_player(obj, message, kind="text"):
             from ..sdk.ratelimit import broadcast_allowed
             from ..sdk.accounts import account_id_for
 
-            if not broadcast_allowed(account_id_for(initiator)):
+            account_id = account_id_for(initiator)
+            if not broadcast_allowed(account_id):
+                # Debug, not warning: once an account is over budget *every*
+                # subsequent line is dropped, so a warning per line would itself
+                # flood the log — but a silent drop leaves no trace at all.
+                log.debug(
+                    "Dropped broadcast line to #%s from account %s (over flood budget)",
+                    getattr(obj, "pk", None),
+                    account_id,
+                )
                 return
     if app.conf.broker_url == "memory://":
         warnings.warn(RuntimeWarning(f"ConnectionError({obj}): {message}"))
