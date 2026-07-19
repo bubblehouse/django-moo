@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Append-only action audit log (spec 200, item L).
+Append-only action audit log.
 
 A trail of *consequential* actions — create, recycle/destroy, owner and
 permission changes, and sanctions — keyed to the actor's durable account (G).
@@ -12,9 +12,16 @@ actions are recorded, never every verb call, and bootstrap/system activity
 
 from django.db import models
 
+from .acl import AppendOnlyManager
+
 
 class AuditLog(models.Model):
     """One recorded consequential action."""
+
+    # Append-only: the manager refuses bulk update()/delete() and save()/delete()
+    # below refuse in-place modification, so the trail cannot be rewritten or
+    # erased through the ORM — not even by a wizard-owned verb.
+    objects = AppendOnlyManager()
 
     CREATE = "create"
     RECYCLE = "recycle"
@@ -58,6 +65,20 @@ class AuditLog(models.Model):
     detail = models.TextField(blank=True, default="")
     site = models.ForeignKey("sites.Site", null=True, blank=True, on_delete=models.SET_NULL)
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        # Inserts are fine (pk is None until the first save); re-saving an
+        # existing row would mutate the record, which append-only forbids.
+        if self.pk is not None:
+            from ..exceptions import AppendOnlyError  # pylint: disable=import-outside-toplevel
+
+            raise AppendOnlyError("AuditLog")
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        from ..exceptions import AppendOnlyError  # pylint: disable=import-outside-toplevel
+
+        raise AppendOnlyError("AuditLog")
 
     def __str__(self):
         who = str(self.actor) if self.actor_id else "system"

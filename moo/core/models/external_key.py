@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Indexed external-key resolution (spec 200, item B).
+Indexed external-key resolution.
 
 Bootstrap generation resolves objects by a stable external key
 (``zone_slug``, ``location_slug``, a ZIL object id).  ``Property.value`` is
@@ -12,6 +12,8 @@ value.
 
 from django.db import models
 
+from .acl import WizardGuardedManager
+
 
 class ExternalKey(models.Model):
     """A stable external identifier mapped to an Object, unique per namespace."""
@@ -20,6 +22,12 @@ class ExternalKey(models.Model):
         constraints = [
             models.UniqueConstraint(fields=["namespace", "key"], name="externalkey_namespace_key_unique"),
         ]
+
+    # Defense-in-depth parity with the other safety tables: non-wizard bulk
+    # update/delete is refused. Row creation still follows normal object
+    # ownership (a builder generating a keyed world is fine), so save() is not
+    # wizard-gated — only the bulk-mutation paths are.
+    objects = WizardGuardedManager()
 
     namespace = models.CharField(max_length=128)
     key = models.CharField(max_length=255)

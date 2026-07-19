@@ -3,6 +3,7 @@
 import pytest
 
 from .. import code, create
+from ..exceptions import AppendOnlyError
 from ..models import Object, AuditLog
 from ...sdk import record_action, query_audit, account_for
 
@@ -45,6 +46,33 @@ def test_force_records_without_actor():
     assert row is not None
     assert row.actor is None
     assert row.action == "ban"
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_audit_log_is_append_only():
+    # The trail is tamper-evident: once written, a row can be neither rewritten
+    # nor erased through the ORM — not even by privileged code.
+    row = record_action("ban", detail="original", force=True)
+    assert row is not None
+
+    # Re-saving an existing row is refused.
+    row.detail = "tampered"
+    with pytest.raises(AppendOnlyError):
+        row.save()
+
+    # Instance delete is refused.
+    with pytest.raises(AppendOnlyError):
+        row.delete()
+
+    # Bulk update / delete are refused.
+    with pytest.raises(AppendOnlyError):
+        AuditLog.objects.filter(pk=row.pk).update(detail="bulk")
+    with pytest.raises(AppendOnlyError):
+        AuditLog.objects.filter(pk=row.pk).delete()
+
+    # The original row is intact.
+    fresh = AuditLog.objects.get(pk=row.pk)
+    assert fresh.detail == "original"
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)

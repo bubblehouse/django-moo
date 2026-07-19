@@ -100,6 +100,19 @@ class AccessError(PermissionError):
         PermissionError.__init__(self, "%s is not allowed to '%s' on %s" % (str(accessor), access_str, str(subject)))
 
 
+class AppendOnlyError(Exception):
+    """
+    Raised on an attempt to modify or delete a row in an append-only table
+    (the audit log). These tables only ever accept new rows;
+    once written, a row is never changed or removed through the ORM, so the
+    trail stays tamper-evident. Not a ``UserError`` — reaching this is a
+    programming error or a tampering attempt, not normal player input.
+    """
+
+    def __init__(self, model_name):
+        super().__init__("%s rows are append-only and cannot be modified or deleted." % model_name)
+
+
 class RecursiveError(UserError):
     """
     Raised if the user attempts to put a container inside one of its contents,
@@ -119,7 +132,7 @@ class QuotaError(UserError):
 
 class TickLimitError(UserError):
     """
-    Raised when a verb exceeds the per-task loop/tick budget (spec 200, item N).
+    Raised when a verb exceeds the per-task loop/tick budget.
 
     A finer-grained backstop than the Celery wall-clock kill: a runaway loop
     aborts at ``settings.MOO_TICK_BUDGET`` iterations rather than burning the

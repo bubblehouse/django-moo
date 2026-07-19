@@ -77,6 +77,31 @@ class WizardGuardedQuerySet(models.QuerySet):
 WizardGuardedManager = models.Manager.from_queryset(WizardGuardedQuerySet)
 
 
+class AppendOnlyQuerySet(models.QuerySet):
+    """
+    QuerySet for an append-only table: rows may be inserted but never
+    bulk-updated or deleted through the ORM. Pairs with save()/delete()
+    overrides on the owning model that block in-place modification once a row
+    has a pk. The audit log uses this so its trail stays
+    tamper-evident even against a wizard-owned verb. SET_NULL cascades run
+    through the deletion Collector's UpdateQuery, not QuerySet.update(), so a
+    referenced account/site can still be deleted without tripping this.
+    """
+
+    def update(self, **kwargs):
+        from ..exceptions import AppendOnlyError  # pylint: disable=import-outside-toplevel
+
+        raise AppendOnlyError(self.model.__name__)
+
+    def delete(self):
+        from ..exceptions import AppendOnlyError  # pylint: disable=import-outside-toplevel
+
+        raise AppendOnlyError(self.model.__name__)
+
+
+AppendOnlyManager = models.Manager.from_queryset(AppendOnlyQuerySet)
+
+
 class AccessibleMixin:
     """
     The base class for all Objects, Verbs, and Properties.
