@@ -293,7 +293,7 @@ def create(name, *a, **kw):
 
 
 def resolve_by_key(namespace, key):
-    """Resolve an Object by its indexed external key (spec 200, item B).
+    """Resolve an Object by its indexed external key.
 
     O(1) via the unique ``(namespace, key)`` index — the fast path for
     data-generated worlds that resolve by a stable external id rather than by
@@ -324,15 +324,29 @@ def get_or_create_by_key(namespace, key, **kwargs):
     :param kwargs: forwarded to :func:`create` (``parents``, ``owner``, ...)
     :return: ``(object, created)``
     """
+    from django.db import IntegrityError, transaction
+
     from ..core.models import ExternalKey
 
     existing = resolve_by_key(namespace, key)
     if existing is not None:
         return existing, False
     name = kwargs.pop("name", key)
-    obj = create(name, **kwargs)
-    ExternalKey.objects.create(namespace=namespace, key=key, object=obj)
-    return obj, True
+    try:
+        # The object create and the key insert must commit together: the unique
+        # (namespace, key) index is the arbiter, so a concurrent first-run that
+        # loses the race rolls back its just-created Object instead of orphaning
+        # it. ``atomic`` ensures that rollback when the insert raises.
+        with transaction.atomic():
+            obj = create(name, **kwargs)
+            ExternalKey.objects.create(namespace=namespace, key=key, object=obj)
+        return obj, True
+    except IntegrityError:
+        # Another writer registered the same key first; return theirs.
+        existing = resolve_by_key(namespace, key)
+        if existing is not None:
+            return existing, False
+        raise
 
 
 def owned_objects(player_obj):
