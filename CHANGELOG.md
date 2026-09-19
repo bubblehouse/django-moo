@@ -1,3 +1,9 @@
+## [1.14.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.13.1...v1.14.0) (2026-09-19)
+
+### Features
+
+* **helm:** replace the Bitnami subcharts with CloudPirates Valkey and Postgres ([52afdce](https://gitlab.com/bubblehouse/django-moo/commit/52afdce18ba9ac661cd734b4c0b3c4e2c676675c))
+
 ## [1.13.1](https://gitlab.com/bubblehouse/django-moo/compare/v1.13.0...v1.13.1) (2026-09-19)
 
 ### Bug Fixes
