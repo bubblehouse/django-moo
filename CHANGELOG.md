@@ -1,3 +1,9 @@
+## [1.13.1](https://gitlab.com/bubblehouse/django-moo/compare/v1.13.0...v1.13.1) (2026-09-19)
+
+### Bug Fixes
+
+* **helm:** let the post-upgrade hook job finish ([ae4d3a2](https://gitlab.com/bubblehouse/django-moo/commit/ae4d3a2567e0ab19985332f0de2f705fa010ae1e))
+
 ## [1.13.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.12.4...v1.13.0) (2026-07-19)
 
 ### Features
