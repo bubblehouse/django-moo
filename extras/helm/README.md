@@ -1,6 +1,6 @@
 # django-moo-chart
 
-![Version: 1.5.2](https://img.shields.io/badge/Version-1.5.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.5.2](https://img.shields.io/badge/AppVersion-1.5.2-informational?style=flat-square)
+![Version: 1.13.0](https://img.shields.io/badge/Version-1.13.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.13.0](https://img.shields.io/badge/AppVersion-1.13.0-informational?style=flat-square)
 
 A Helm chart for Kubernetes
 
@@ -8,8 +8,8 @@ A Helm chart for Kubernetes
 
 | Repository | Name | Version |
 |------------|------|---------|
-| oci://registry-1.docker.io/bitnamicharts | postgresql | 18.5.6 |
-| oci://registry-1.docker.io/bitnamicharts | redis | 25.3.2 |
+| oci://registry-1.docker.io/cloudpirates | postgres | 0.20.5 |
+| oci://registry-1.docker.io/cloudpirates | valkey | 0.25.11 |
 
 ## Values
 
@@ -39,10 +39,8 @@ A Helm chart for Kubernetes
 | nodeSelector | object | `{}` |  |
 | podAnnotations | object | `{}` |  |
 | podSecurityContext.fsGroup | int | `33` |  |
-| postgresql.enabled | bool | `false` |  |
-| redis.architecture | string | `"standalone"` |  |
-| redis.auth.enabled | bool | `false` |  |
-| redis.enabled | bool | `true` |  |
+| postgres.enabled | bool | `false` |  |
+| postgres.fullnameOverride | string | `"django-moo-postgresql"` |  |
 | replicaCount.beat | int | `1` |  |
 | replicaCount.shell | int | `2` |  |
 | replicaCount.webapp | int | `2` |  |
@@ -59,6 +57,11 @@ A Helm chart for Kubernetes
 | sshService.port | int | `8022` |  |
 | sshService.type | string | `"ClusterIP"` |  |
 | tolerations | list | `[]` |  |
+| valkey.architecture | string | `"standalone"` |  |
+| valkey.auth.enabled | bool | `false` |  |
+| valkey.enabled | bool | `true` |  |
+| valkey.fullnameOverride | string | `"django-moo-redis-master"` |  |
+| valkey.persistence.enabled | bool | `false` |  |
 | webssh.hostname | string | `"shell"` |  |
 | websshService.port | int | `8422` |  |
 | websshService.type | string | `"ClusterIP"` |  |

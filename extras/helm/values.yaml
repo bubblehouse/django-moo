@@ -12,14 +12,23 @@ moo:
 webssh:
   hostname: shell
 
-redis:
+valkey:
   enabled: true
+  # Held at the old Bitnami service name so REDIS_HOSTNAME in the deployment
+  # values keeps resolving without a matching change in the gitops repo.
+  fullnameOverride: django-moo-redis-master
   architecture: standalone
   auth:
     enabled: false
+  # Django cache plus the Celery broker. Neither needs to survive a restart,
+  # and emptyDir avoids provisioning a hostPath PVC for it.
+  persistence:
+    enabled: false
 
-postgresql:
+postgres:
   enabled: false
+  # Same reasoning as valkey above, for POSTGRES_HOSTNAME.
+  fullnameOverride: django-moo-postgresql
 
 replicaCount:
   webapp: 2
