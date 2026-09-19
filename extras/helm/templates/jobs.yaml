@@ -9,10 +9,14 @@ metadata:
 spec:
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- /* The Vault agent runs as a sidecar that never exits. In a Job pod
+               that blocks completion forever, so the post-upgrade hook times
+               out even when migrate and collectstatic both succeed.
+               pre-populate-only injects just the init container, which still
+               writes /vault/secrets/aws before the app containers start. */}}
+        {{- $ann := merge (dict "vault.hashicorp.com/agent-pre-populate-only" "true") (.Values.podAnnotations | default dict) }}
+        {{- toYaml $ann | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
