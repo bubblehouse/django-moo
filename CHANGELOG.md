@@ -1,3 +1,10 @@
+## [1.14.1](https://gitlab.com/bubblehouse/django-moo/compare/v1.14.0...v1.14.1) (2026-09-20)
+
+### Bug Fixes
+
+* **core:** stop resolving the Site while the app registry populates ([194d7be](https://gitlab.com/bubblehouse/django-moo/commit/194d7beb22743e4e1ab8b762ae1c53e74c8e4570))
+* **helm:** migrate before the upgrade rolls, not after it ([b29ba67](https://gitlab.com/bubblehouse/django-moo/commit/b29ba67c7654918ad0cfc8e5bff7810c5950cffd))
+
 ## [1.14.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.13.1...v1.14.0) (2026-09-19)
 
 ### Features
