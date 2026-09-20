@@ -1,64 +1,70 @@
+{{- /* Two hooks, because the two commands have opposite requirements.
+
+       migrate has to run BEFORE the upgrade rolls. Helm waits for the
+       Deployments to report Ready, and every one of them needs a schema: the
+       webapp queries django_site on its probe URL and beat queries
+       django_celery_beat_crontabschedule at startup. Against an empty database
+       a post-upgrade migration can therefore never run -- the wait times out
+       first, so the migration that would have released the wait is exactly what
+       the timeout prevents.
+
+       collectstatic must NOT run there. It uploads to S3, so no pod is waiting
+       on it, and it is slow: ~790 files and over four minutes against migrate's
+       two seconds. Holding the rollout open for it is what pushed the 1.14.1
+       upgrade three seconds past its timeout and failed a release whose hook
+       had actually succeeded.
+
+       Install stays post- for both, because the postgres subchart does not
+       exist yet when pre-install hooks fire; a first install still needs a
+       reachable database and a manual moo_init. */}}
+{{- $root := . }}
+{{- $ann := merge (dict "vault.hashicorp.com/agent-pre-populate-only" "true") (.Values.podAnnotations | default dict) }}
+{{- $jobs := list
+      (dict "name" "migrate"
+            "hook" "post-install,pre-upgrade"
+            "args" (list "manage.py" "migrate" "--no-input"))
+      (dict "name" "collectstatic"
+            "hook" "post-install,post-upgrade"
+            "args" (list "manage.py" "collectstatic" "--no-input")) }}
+{{- range $job := $jobs }}
+---
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "moo.fullname" . }}-jobs
+  name: {{ include "moo.fullname" $root }}-{{ $job.name }}
   labels:
-    {{- include "moo.labels" . | nindent 4 }}
+    {{- include "moo.labels" $root | nindent 4 }}
   annotations:
-    {{- /* Migrations run BEFORE the upgrade rolls, not after. Helm waits for
-           the Deployments to report Ready, and every one of them needs a
-           schema: the webapp queries django_site on its probe URL and beat
-           queries django_celery_beat_crontabschedule at startup. Against an
-           empty database a post-upgrade hook can therefore never run -- the
-           wait times out first, so the migration that would have unblocked
-           the wait is exactly what the timeout prevents. Running it as
-           pre-upgrade breaks that cycle, and is the right order for Django
-           anyway. Install stays post-, because the postgres subchart does not
-           exist yet when pre-install hooks fire; a first install still needs
-           a reachable database and a manual moo_init. */}}
-    helm.sh/hook: post-install,pre-upgrade
+    helm.sh/hook: {{ $job.hook }}
 spec:
   template:
     metadata:
       annotations:
         {{- /* The Vault agent runs as a sidecar that never exits. In a Job pod
-               that blocks completion forever, so the post-upgrade hook times
-               out even when migrate and collectstatic both succeed.
-               pre-populate-only injects just the init container, which still
-               writes /vault/secrets/aws before the app containers start. */}}
-        {{- $ann := merge (dict "vault.hashicorp.com/agent-pre-populate-only" "true") (.Values.podAnnotations | default dict) }}
+               that blocks completion forever, so the hook times out even when
+               the command itself succeeded. pre-populate-only injects just the
+               init container, which still writes /vault/secrets/aws before the
+               app container starts. */}}
         {{- toYaml $ann | nindent 8 }}
     spec:
-      {{- with .Values.imagePullSecrets }}
+      {{- with $root.Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       restartPolicy: Never
-      serviceAccountName: {{ include "moo.serviceAccountName" . }}
+      serviceAccountName: {{ include "moo.serviceAccountName" $root }}
       containers:
-        - name: migrate
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          args: [manage.py, migrate, --no-input]
+        - name: {{ $job.name }}
+          image: "{{ $root.Values.image.repository }}:{{ $root.Values.image.tag | default $root.Chart.AppVersion }}"
+          args: {{ toJson $job.args }}
           env:
           - name: DJANGO_SETTINGS_MODULE
-            value: {{ .Values.moo.django.settings }}
+            value: {{ $root.Values.moo.django.settings }}
           - name: AWS_DEFAULT_REGION
-            value: {{ .Values.moo.aws.region }}
+            value: {{ $root.Values.moo.aws.region }}
           - name: AWS_STS_REGIONAL_ENDPOINTS
             value: regional
-          {{- with .Values.env }}
+          {{- with $root.Values.env }}
             {{- toYaml . | nindent 10 }}
           {{- end }}
-        - name: collectstatic
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          args: [manage.py, collectstatic, --no-input]
-          env:
-          - name: DJANGO_SETTINGS_MODULE
-            value: {{ .Values.moo.django.settings }}
-          - name: AWS_DEFAULT_REGION
-            value: {{ .Values.moo.aws.region }}
-          - name: AWS_STS_REGIONAL_ENDPOINTS
-            value: regional
-          {{- with .Values.env }}
-            {{- toYaml . | nindent 10 }}
-          {{- end }}
+{{- end }}
