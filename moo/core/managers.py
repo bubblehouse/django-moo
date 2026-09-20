@@ -29,11 +29,12 @@ def get_default_site():
 def _current_site():
     """
     Return the active Site for the current context, the configured default
-    Site, ``_DB_NOT_READY`` if the DB isn't available, or ``None`` if the
-    default Site row is missing.
+    Site, ``_DB_NOT_READY`` while the app registry is still populating or the
+    DB isn't available, or ``None`` if the default Site row is missing.
     """
     # Imports inside the function to dodge circular-import issues during
     # Django app initialization.
+    from django.apps import apps
     from django.contrib.sites.models import Site
 
     from .code import ContextManager
@@ -41,6 +42,15 @@ def _current_site():
     site = ContextManager.get_site()
     if site is not None:
         return site
+    # Django is still populating the app registry. Admin autodiscovery builds
+    # VerbAdminForm here, and a ModelForm over "__all__" asks every ForeignKey
+    # for a formfield, which reaches this manager. Resolving the Site now would
+    # query the database mid-populate -- what Django's APPS_NOT_READY warning is
+    # about -- and would also pin that row in the per-process Site cache before
+    # anything can have corrected it. There is no request in flight to scope, so
+    # defer exactly as the not-ready branch below does.
+    if not apps.ready:
+        return _DB_NOT_READY
     try:
         return get_default_site()
     except (OperationalError, ProgrammingError):
