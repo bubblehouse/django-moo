@@ -1,3 +1,10 @@
+## [1.14.2](https://gitlab.com/bubblehouse/django-moo/compare/v1.14.1...v1.14.2) (2026-09-20)
+
+### Bug Fixes
+
+* **build:** pin hatchling below the Metadata-Version 2.5 switch ([1cb5fc5](https://gitlab.com/bubblehouse/django-moo/commit/1cb5fc5bb24cb0afc73e46c8b9e3f62385c1bc3f))
+* **helm:** keep collectstatic out of the blocking upgrade path ([5fdbc19](https://gitlab.com/bubblehouse/django-moo/commit/5fdbc19296a659b331610ab467c3fec7c96fd4af))
+
 ## [1.14.1](https://gitlab.com/bubblehouse/django-moo/compare/v1.14.0...v1.14.1) (2026-09-20)
 
 ### Bug Fixes
