@@ -5,7 +5,18 @@ metadata:
   labels:
     {{- include "moo.labels" . | nindent 4 }}
   annotations:
-    helm.sh/hook: post-install,post-upgrade
+    {{- /* Migrations run BEFORE the upgrade rolls, not after. Helm waits for
+           the Deployments to report Ready, and every one of them needs a
+           schema: the webapp queries django_site on its probe URL and beat
+           queries django_celery_beat_crontabschedule at startup. Against an
+           empty database a post-upgrade hook can therefore never run -- the
+           wait times out first, so the migration that would have unblocked
+           the wait is exactly what the timeout prevents. Running it as
+           pre-upgrade breaks that cycle, and is the right order for Django
+           anyway. Install stays post-, because the postgres subchart does not
+           exist yet when pre-install hooks fire; a first install still needs
+           a reachable database and a manual moo_init. */}}
+    helm.sh/hook: post-install,pre-upgrade
 spec:
   template:
     metadata:
