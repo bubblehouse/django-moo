@@ -5,6 +5,19 @@ stages:
   - release
   - deploy
 
+# A runner-side failure is not a test result. The runner-base image is ~630MB
+# and the runner is configured for 10 concurrent jobs, so a burst landing on a
+# node without the layers cached can queue the image pulls past the executor's
+# pod-start budget; the job then dies in "prepare environment" having run no
+# script at all, and takes the pipeline red with it. Only these two classes are
+# retried, so a job whose script genuinely fails still fails on the first try.
+default:
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+
 # Always-on gate so MR pipelines are never empty when only docs/extras
 # changed. Without this, any commit that doesn't touch moo/**/*.py would
 # fail GitLab's "ci_must_pass" merge check with a "skipped" pipeline.
