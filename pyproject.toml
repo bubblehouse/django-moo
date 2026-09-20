@@ -48,7 +48,17 @@ dependencies = [
 Repository = "https://gitlab.com/bubblehouse/django-moo"
 
 [build-system]
-requires = ["hatchling"]
+# Upper bound because semantic-release-pypi force-installs its own pinned
+# toolchain before publishing, and that set includes packaging~=24.0. Build
+# isolation, being unpinned, was meanwhile pulling hatchling 1.30+, which emits
+# Metadata-Version 2.5 -- a version packaging 24.2 does not recognise. twine
+# then rejected every upload with "InvalidDistribution: '2.5' is not a valid
+# metadata version", which is why 1.13.1, 1.14.0 and 1.14.1 all tagged and
+# deployed but never reached PyPI. hatchling 1.28 and earlier emit 2.4.
+# Verified by building against 1.27/1.28 (2.4) and 1.30/1.32 (2.5).
+# Lift this once semantic-release-pypi raises its packaging pin; 5.3.0, the
+# current release, still pins ~=24.0.
+requires = ["hatchling>=1.27,<1.29"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.sdist]
