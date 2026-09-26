@@ -1,3 +1,9 @@
+## [1.15.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.14.2...v1.15.0) (2026-09-26)
+
+### Features
+
+* **helm:** route the front end to Django, not webssh ([3aaa749](https://gitlab.com/bubblehouse/django-moo/commit/3aaa749bf3a921eb1183f0b9a8c53bc158c8b0c3))
+
 ## [1.14.2](https://gitlab.com/bubblehouse/django-moo/compare/v1.14.1...v1.14.2) (2026-09-20)
 
 ### Bug Fixes
