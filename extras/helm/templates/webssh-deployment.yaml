@@ -40,7 +40,7 @@ spec:
           - name: AWS_STS_REGIONAL_ENDPOINTS
             value: regional
           - name: WEBSSH_HOSTNAME
-            value: {{ .Values.webssh.hostname }}
+            value: {{ include "moo.shellHostname" . }}
           {{- with .Values.env }}
             {{- toYaml . | nindent 10 }}
           {{- end }}

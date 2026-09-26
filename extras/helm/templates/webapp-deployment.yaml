@@ -42,6 +42,14 @@ spec:
             value: regional
           - name: OTEL_SERVICE_NAME
             value: django-moo-webapp
+          # The terminal view proxies the connect POST to webssh server-side
+          # and tells the browser which SSH host webssh should dial.
+          - name: WEBSSH_INTERNAL_URL
+            value: http://{{ include "moo.fullname" . }}-webssh:{{ .Values.websshService.port }}
+          - name: WEBSSH_HOSTNAME
+            value: {{ include "moo.shellHostname" . }}
+          - name: WEBSSH_PORT
+            value: {{ .Values.sshService.port | quote }}
           {{- with .Values.env }}
             {{- toYaml . | nindent 10 }}
           {{- end }}

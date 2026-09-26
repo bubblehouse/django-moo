@@ -1,34 +1,42 @@
 {{- if .Values.ingress.enabled -}}
 {{- $fullName := include "moo.fullname" . -}}
-{{- $svcPort := .Values.service.port -}}
-{{- if and .Values.ingress.className (not (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion)) }}
-  {{- if not (hasKey .Values.ingress.annotations "kubernetes.io/ingress.class") }}
-  {{- $_ := set .Values.ingress.annotations "kubernetes.io/ingress.class" .Values.ingress.className}}
-  {{- end }}
-{{- end }}
-{{- if semverCompare ">=1.19-0" .Capabilities.KubeVersion.GitVersion -}}
+{{- /*
+Mirrors extras/nginx/nginx.conf. Django serves the whole front end over HTTPS;
+webssh contributes only its websocket (/ws) and the xterm.js assets the
+terminal page loads from /static/. ingress-nginx applies backend-protocol to an
+entire Ingress, so the two backends need an Ingress each. Both carry the same
+hosts and TLS, and nginx merges them into one server block per host.
+*/ -}}
+{{- $routes := list
+      (dict "name" $fullName
+            "annotations" .Values.ingress.annotations
+            "service" $fullName
+            "port" .Values.service.port
+            "paths" (list "/"))
+      (dict "name" (printf "%s-webssh" $fullName)
+            "annotations" .Values.ingress.webssh.annotations
+            "service" (printf "%s-webssh" $fullName)
+            "port" .Values.websshService.port
+            "paths" (list "/ws" "/static")) }}
+{{- range $routes }}
+---
 apiVersion: networking.k8s.io/v1
-{{- else if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion -}}
-apiVersion: networking.k8s.io/v1beta1
-{{- else -}}
-apiVersion: extensions/v1beta1
-{{- end }}
 kind: Ingress
 metadata:
-  name: {{ $fullName }}
+  name: {{ .name }}
   labels:
-    {{- include "moo.labels" . | nindent 4 }}
-  {{- with .Values.ingress.annotations }}
+    {{- include "moo.labels" $ | nindent 4 }}
+  {{- with .annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  {{- if and .Values.ingress.className (semverCompare ">=1.18-0" .Capabilities.KubeVersion.GitVersion) }}
-  ingressClassName: {{ .Values.ingress.className }}
+  {{- with $.Values.ingress.className }}
+  ingressClassName: {{ . }}
   {{- end }}
-  {{- if .Values.ingress.tls }}
+  {{- with $.Values.ingress.tls }}
   tls:
-    {{- range .Values.ingress.tls }}
+    {{- range . }}
     - hosts:
         {{- range .hosts }}
         - {{ . | quote }}
@@ -36,26 +44,21 @@ spec:
       secretName: {{ .secretName }}
     {{- end }}
   {{- end }}
+  {{- $route := . }}
   rules:
-    {{- range .Values.ingress.hosts }}
+    {{- range $.Values.ingress.hosts }}
     - host: {{ .host | quote }}
       http:
         paths:
-          {{- range .paths }}
-          - path: {{ .path }}
-            {{- if and .pathType (semverCompare ">=1.18-0" $.Capabilities.KubeVersion.GitVersion) }}
-            pathType: {{ .pathType }}
-            {{- end }}
+          {{- range $route.paths }}
+          - path: {{ . }}
+            pathType: Prefix
             backend:
-              {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
               service:
-                name: {{ .backend.service.name }}
+                name: {{ $route.service }}
                 port:
-                  number: {{ .backend.service.port.number }}
-              {{- else }}
-              serviceName: {{ .backend.service.name }}
-              servicePort: {{ .backend.service.port.number }}
-              {{- end }}
+                  number: {{ $route.port }}
           {{- end }}
     {{- end }}
+{{- end }}
 {{- end }}

@@ -10,7 +10,9 @@ moo:
     settings: moo.settings.dev
 
 webssh:
-  hostname: shell
+  # SSH host webssh dials. Empty means this release's shell Service. Any name
+  # set here must also be in the image's pregenerated_known_hosts.
+  hostname: ''
 
 valkey:
   enabled: true
@@ -92,18 +94,24 @@ websshService:
   type: ClusterIP
   port: 8422
 
+# Paths are fixed by the template to match extras/nginx/nginx.conf: `/` goes to
+# the Django webapp, `/ws` and `/static` to webssh. Only hosts are configurable.
 ingress:
   enabled: false
   className: ''
+  # Annotations for the webapp Ingress. uWSGI terminates TLS itself.
   annotations:
     nginx.ingress.kubernetes.io/backend-protocol: HTTPS
-    nginx.org/redirect-to-https: 'true'
-    # kubernetes.io/tls-acme: "true"
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+  webssh:
+    # Annotations for the webssh Ingress. webssh speaks plain HTTP, and the
+    # read timeout matches nginx.conf so an idle terminal is not cut at 60s.
+    annotations:
+      nginx.ingress.kubernetes.io/backend-protocol: HTTP
+      nginx.ingress.kubernetes.io/proxy-read-timeout: '300'
+      nginx.ingress.kubernetes.io/proxy-send-timeout: '300'
   hosts:
     - host: chart-example.local
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:

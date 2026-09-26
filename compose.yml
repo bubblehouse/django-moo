@@ -3,11 +3,13 @@
 # covers everything needed for a typical deployment, the components can also be deployed in a
 # more typically high-availability cloud environment.
 services:
-  # The `nginx` container provides trivial routing to three different things:
+  # The `nginx` container provides trivial routing:
   #
-  # * Routing `/` to the `webssh` container
-  # * Routing `/admin/` to the `webapp` container
-  # * Static assets (`/static/`) generated for the Django application
+  # * `/ws` (the terminal websocket) and `/static/` (the xterm.js assets) to `webssh`
+  # * Everything else, including the terminal page and `/admin/`, to `webapp`
+  # * Django's collected static assets (`/admin/static/`) straight from disk
+  #
+  # The Helm chart's two Ingresses reproduce the same split.
   #
   # In a fully productionalized deployment, this tier would likely be replaced with an S3 bucket
   # for static assets, and some kind of load balancer for routing.
@@ -22,8 +24,9 @@ services:
       - 443:443
     links:
       - webapp
-  # The `webssh` container runs a deployment of the [webssh](https://github.com/huashengdun/webssh) UI.
-  # This has a modified configuration that can only connect to the local `shell` container.
+  # The `webssh` container runs [webssh](https://github.com/huashengdun/webssh), which bridges the
+  # browser terminal's websocket to the `shell` container. Django renders the terminal page and
+  # proxies the connect POST; only the websocket and xterm.js assets are served from here.
   #
   # While it's not strictly necessary to use this interface, it provides access to users who may not
   # be able to connect over non-web ports.
@@ -41,7 +44,7 @@ services:
       - shell
     environment:
       WEBSSH_HOSTNAME: shell
-  # The `webapp` container is where the Django front-end runs. So far this is only needed for access to the Django admin.
+  # The `webapp` container is where the Django front-end runs: the terminal page, registration, and the admin.
   webapp:
     build:
       context: .

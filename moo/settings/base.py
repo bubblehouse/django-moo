@@ -285,10 +285,11 @@ STATIC_URL = "admin/static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# WebSSH internal proxy settings
-WEBSSH_INTERNAL_URL = "http://webssh:8422"
-WEBSSH_HOSTNAME = "shell"
-WEBSSH_PORT = 8022
+# WebSSH internal proxy settings. The defaults are the compose service names;
+# the Helm chart overrides them with its own release-prefixed Service names.
+WEBSSH_INTERNAL_URL = os.environ.get("WEBSSH_INTERNAL_URL", "http://webssh:8422")
+WEBSSH_HOSTNAME = os.environ.get("WEBSSH_HOSTNAME", "shell")
+WEBSSH_PORT = int(os.environ.get("WEBSSH_PORT", "8022"))
 
 SITE_ID = 1
 

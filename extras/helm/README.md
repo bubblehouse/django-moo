@@ -1,6 +1,6 @@
 # django-moo-chart
 
-![Version: 1.13.0](https://img.shields.io/badge/Version-1.13.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.13.0](https://img.shields.io/badge/AppVersion-1.13.0-informational?style=flat-square)
+![Version: 1.14.2](https://img.shields.io/badge/Version-1.14.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.14.2](https://img.shields.io/badge/AppVersion-1.14.2-informational?style=flat-square)
 
 A Helm chart for Kubernetes
 
@@ -26,13 +26,13 @@ A Helm chart for Kubernetes
 | image.tag | string | `""` |  |
 | imagePullSecrets | list | `[]` |  |
 | ingress.annotations."nginx.ingress.kubernetes.io/backend-protocol" | string | `"HTTPS"` |  |
-| ingress.annotations."nginx.org/redirect-to-https" | string | `"true"` |  |
 | ingress.className | string | `""` |  |
 | ingress.enabled | bool | `false` |  |
 | ingress.hosts[0].host | string | `"chart-example.local"` |  |
-| ingress.hosts[0].paths[0].path | string | `"/"` |  |
-| ingress.hosts[0].paths[0].pathType | string | `"ImplementationSpecific"` |  |
 | ingress.tls | list | `[]` |  |
+| ingress.webssh.annotations."nginx.ingress.kubernetes.io/backend-protocol" | string | `"HTTP"` |  |
+| ingress.webssh.annotations."nginx.ingress.kubernetes.io/proxy-read-timeout" | string | `"300"` |  |
+| ingress.webssh.annotations."nginx.ingress.kubernetes.io/proxy-send-timeout" | string | `"300"` |  |
 | moo.aws.region | string | `"us-east-2"` |  |
 | moo.django.settings | string | `"moo.settings.dev"` |  |
 | nameOverride | string | `""` |  |
@@ -62,7 +62,7 @@ A Helm chart for Kubernetes
 | valkey.enabled | bool | `true` |  |
 | valkey.fullnameOverride | string | `"django-moo-redis-master"` |  |
 | valkey.persistence.enabled | bool | `false` |  |
-| webssh.hostname | string | `"shell"` |  |
+| webssh.hostname | string | `""` |  |
 | websshService.port | int | `8422` |  |
 | websshService.type | string | `"ClusterIP"` |  |
 

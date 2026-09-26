@@ -24,6 +24,15 @@ If release name contains chart name it will be used as a full name.
 {{- end }}
 
 {{/*
+Hostname webssh dials for the SSH connection. Defaults to this release's shell
+Service. The name must also appear in the image's pregenerated_known_hosts, or
+webssh rejects the host key.
+*/}}
+{{- define "moo.shellHostname" -}}
+{{- .Values.webssh.hostname | default (printf "%s-shell" (include "moo.fullname" .)) }}
+{{- end }}
+
+{{/*
 Create chart name and version as used by the chart label.
 */}}
 {{- define "moo.chart" -}}
