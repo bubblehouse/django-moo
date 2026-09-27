@@ -166,8 +166,9 @@ release:
   script:
     - npm install
     - docker buildx install
-    - docker buildx create --bootstrap --use --name=$CI_PROJECT_NAME --driver=kubernetes '--driver-opt="nodeselector=kubernetes.io/arch=amd64"'
-    - docker buildx create --bootstrap --append --name=$CI_PROJECT_NAME --driver=kubernetes '--driver-opt="nodeselector=kubernetes.io/arch=arm64","tolerations=key=kubernetes.io/arch,value=arm64,operator=Equal,effect=NoSchedule"'
+    # Shared per-arch buildkitd, managed in the gitops repo (apps/base/buildkit).
+    - docker buildx create --bootstrap --use --name=zapp --driver=remote --platform=linux/amd64 tcp://buildkit-amd64.buildkit.svc.cluster.local:1234
+    - docker buildx create --bootstrap --append --name=zapp --driver=remote --platform=linux/arm64 tcp://buildkit-arm64.buildkit.svc.cluster.local:1234
     # semantic-release-pypi always uses `python3` but doing this anywhere else breaks the image
     - ln -sf python3.11 /usr/bin/python3
     - npx semantic-release
