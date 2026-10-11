@@ -1,3 +1,10 @@
+## [1.16.1](https://gitlab.com/bubblehouse/django-moo/compare/v1.16.0...v1.16.1) (2026-10-11)
+
+### Bug Fixes
+
+* **core:** scope dataset loads and external keys to a Site ([fe712d2](https://gitlab.com/bubblehouse/django-moo/commit/fe712d259a11109265f4d11494cdb35e7da1e658))
+* **settings:** accept universe subdomains on the dev deployment ([7da5a2c](https://gitlab.com/bubblehouse/django-moo/commit/7da5a2c7a0887bb1ff05a96bade40d2f9fd791f1))
+
 ## [1.16.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.15.0...v1.16.0) (2026-10-11)
 
 ### Features
