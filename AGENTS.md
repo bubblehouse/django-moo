@@ -190,6 +190,13 @@ is installed alongside django-moo it becomes loadable through
 `moo_init --bootstrap zork1`. The moo-agent project also hosts the
 `extras/zil_import/` translator that produced that dataset.
 
+An out-of-tree dataset reaches the runtime by putting its root on
+`PYTHONPATH`: a read-only bind mount in `compose.override.yml` locally, or
+the Helm chart's `extraInitContainers` / `extraVolumes` /
+`extraVolumeMounts` values on Kubernetes (an init container copies the
+package into a shared volume). The chart values are generic; never name a
+specific dataset in the chart.
+
 ## 4. Coding Conventions & Style Guide
 
 - **Formatting:**

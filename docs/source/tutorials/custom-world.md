@@ -73,19 +73,15 @@ shebang determines where the verb is attached.
 
 ## A note on packaging
 
-Today, `moo_init` only discovers bootstrap packages that are siblings of
-`moo/bootstrap/default/`. There is no `pip install`-and-go path for an
-out-of-tree package yet. The practical workflow is:
+`moo_init --bootstrap <name>` resolves `moo.bootstrap.<name>` and runs its
+`bootstrap.py`. `moo/bootstrap/__init__.py` calls `pkgutil.extend_path`, so
+that package can live in django-moo's own tree or in any other directory on
+`PYTHONPATH` that contains a `moo/bootstrap/<name>/` tree. There is no list
+of allowed names to edit.
 
-1. Develop your package in-tree by placing it under
-   `moo/bootstrap/mygame/` and `moo/bootstrap/mygame/`.
-2. Add `"mygame"` to the `builtin_templates` list in
-   `moo/core/management/commands/moo_init.py`.
-
-The directory structure and code shown below are identical to what an
-out-of-tree pip-installable package will eventually need. The closing
-section of this tutorial sketches the future shape; for now, the
-tutorial itself shows the in-tree variant.
+This tutorial builds the package in-tree, under `moo/bootstrap/mygame/`,
+because that is the shortest path. The closing section shows how to move
+it into its own repository without changing any of its code.
 
 ## Step 1: Create the package skeleton
 
@@ -132,7 +128,7 @@ _namespace = {
     "repo": _repo,
 }
 
-_pkg = importlib.resources.files("moo.bootstrap") / "mygame"
+_pkg = importlib.resources.files("moo.bootstrap.mygame")
 _scripts = sorted(
     (f for f in _pkg.iterdir() if f.name.endswith(".py") and f.name[0].isdigit()),
     key=lambda f: f.name,
@@ -332,19 +328,15 @@ Putting `load_verbs` in `999_finalize.py` (rather than directly in
 `__init__.py` after the script loop) matches the `default` package's
 convention and keeps the orchestrator focused on running scripts.
 
-## Step 8: Register the dataset
+## Step 8: Check that the dataset is discoverable
 
-Edit `moo/core/management/commands/moo_init.py` and append `"mygame"` to
-the `builtin_templates` list near the top of the file:
+There is nothing to register. `moo_init` finds any importable
+`moo.bootstrap.<name>` package that has a `bootstrap.py`. To check the
+package before you run it:
 
-```python
-builtin_templates = ["default", "mygame"]
+```bash
+docker compose run webapp manage.py shell -c "import moo.bootstrap.mygame"
 ```
-
-Today this whitelist is the only way to make a custom dataset selectable
-via `--bootstrap`. Removing the whitelist in favour of filesystem
-discovery is a separate follow-up; until that lands, this manual step is
-required.
 
 ## Step 9: Run the bootstrap
 
@@ -446,22 +438,58 @@ uv run pytest -n auto moo/bootstrap/mygame/tests/
   package shows one approach (parser + IR + translator + generator) to
   producing a bootstrap from foreign data.
 
-## Out-of-tree packaging (future direction)
+## Out-of-tree packaging
 
-The pattern shown above keeps your bootstrap inside django-moo's tree
-because that's what `moo_init` supports today. The package shape —
-orchestrator, numbered scripts, sibling verb directory — is identical to
-what a pip-installable out-of-tree package would need. When entry-point
-discovery lands, the change will be straightforward:
+A bootstrap package does not have to live in django-moo's repository. Move
+`moo/bootstrap/mygame/` into a repository of its own, keeping the same
+`moo/bootstrap/mygame/` path inside it. Do not add `__init__.py` files at
+`moo/` or `moo/bootstrap/` in that repository: those directories are shared
+with django-moo, and the package path merges them.
 
-- Move `mygame/` and `mygame/verbs/` out of `moo/bootstrap/` into their
-  own repository.
-- Add an entry-point row to your `pyproject.toml` along the lines of
-  `[project.entry-points."moo.bootstrap"]` declaring the bootstrap
-  package.
-- `moo_init --bootstrap mygame` then resolves the package via
-  `importlib.metadata.entry_points` instead of the in-tree filesystem
-  scan, and the whitelist in `moo_init.py` goes away.
+The django-moo processes then need that repository's root on
+`PYTHONPATH`. There are two ways to get it there.
 
-Until that infrastructure ships, the in-tree path described in this
-tutorial is the supported route.
+With Docker Compose, bind-mount the `moo/` directory into the webapp,
+shell, and celery services and extend `PYTHONPATH` in
+`compose.override.yml`:
+
+```yaml
+webapp:   # and the same on shell and celery
+  environment:
+    PYTHONPATH: /usr/app/src:/usr/app/mygame
+  volumes:
+    - ../mygame/moo:/usr/app/mygame/moo:ro
+```
+
+With the Helm chart in `extras/helm/`, publish an image that contains the
+`moo/` directory, and copy it into the pods with an init container. The
+chart's `extraInitContainers`, `extraVolumes`, and `extraVolumeMounts`
+values apply to every pod that runs Django code, including the
+migrate and collectstatic Jobs:
+
+```yaml
+extraInitContainers:
+  - name: copy-mygame
+    image: registry.example.com/mygame-bootstrap:1.0.0
+    command: ["cp", "-r", "/src/moo", "/extra/"]
+    volumeMounts:
+      - name: mygame
+        mountPath: /extra
+extraVolumes:
+  - name: mygame
+    emptyDir: {}
+extraVolumeMounts:
+  - name: mygame
+    mountPath: /usr/app/mygame
+    readOnly: true
+env:
+  - name: PYTHONPATH
+    value: /usr/app/src:/usr/app/mygame
+```
+
+Helm replaces a list value as a whole, so if your values already set
+`env`, add the `PYTHONPATH` entry to that list rather than writing a
+second `env` key.
+
+New code reaches the pods only when they restart, so roll the
+Deployments before you run `moo_init --bootstrap mygame --sync`.
