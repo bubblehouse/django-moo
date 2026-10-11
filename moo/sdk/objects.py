@@ -292,12 +292,33 @@ def create(name, *a, **kw):
     return obj
 
 
-def resolve_by_key(namespace, key):
-    """Resolve an Object by its indexed external key.
+def _key_site_id():
+    """Return the id of the Site that external keys resolve in.
 
-    O(1) via the unique ``(namespace, key)`` index — the fast path for
+    The same order ``Object.save`` uses to place a new Object: the active Site,
+    then the caller's Site, then the configured ``SITE_ID``. Reading ids only
+    keeps :func:`resolve_by_key` to a single query.
+    """
+    from django.conf import settings
+
+    from ..core.code import ContextManager
+
+    site = ContextManager.get_site()
+    if site is not None:
+        return site.pk
+    caller_site_id = getattr(ContextManager.get("caller"), "site_id", None)
+    if caller_site_id is not None:
+        return caller_site_id
+    return getattr(settings, "SITE_ID", 1)
+
+
+def resolve_by_key(namespace, key):
+    """Resolve an Object by its indexed external key in the active Site.
+
+    O(1) via the unique ``(site, namespace, key)`` index — the fast path for
     data-generated worlds that resolve by a stable external id rather than by
-    a full ``Property.value`` scan.
+    a full ``Property.value`` scan. Each universe has its own keys, so the same
+    dataset bootstrapped onto two Sites resolves to each Site's own Objects.
 
     :param namespace: the key namespace (e.g. ``"zone_slug"``)
     :param key: the external key value
@@ -305,18 +326,22 @@ def resolve_by_key(namespace, key):
     """
     from ..core.models import ExternalKey
 
-    row = ExternalKey.objects.filter(namespace=namespace, key=key).select_related("object").first()
+    row = (
+        ExternalKey.objects.filter(site_id=_key_site_id(), namespace=namespace, key=key)
+        .select_related("object")
+        .first()
+    )
     return row.object if row is not None else None
 
 
 def get_or_create_by_key(namespace, key, **kwargs):
-    """Idempotently resolve-or-create an Object keyed by an external id.
+    """Idempotently resolve-or-create an Object keyed by an external id in the active Site.
 
     The common bootstrap pattern made fast and re-runnable: a second run with
-    the same ``(namespace, key)`` returns the existing Object in one indexed
-    query, never a duplicate.  On first sight it creates the Object (via the
-    standard :func:`create`, so quota/ownership/``initialize`` all apply) and
-    records the mapping.
+    the same ``(namespace, key)`` on the same Site returns the existing Object
+    in one indexed query, never a duplicate.  On first sight it creates the
+    Object (via the standard :func:`create`, so quota/ownership/``initialize``
+    all apply) and records the mapping under the new Object's Site.
 
     :param namespace: the key namespace
     :param key: the external key value
@@ -334,12 +359,12 @@ def get_or_create_by_key(namespace, key, **kwargs):
     name = kwargs.pop("name", key)
     try:
         # The object create and the key insert must commit together: the unique
-        # (namespace, key) index is the arbiter, so a concurrent first-run that
-        # loses the race rolls back its just-created Object instead of orphaning
-        # it. ``atomic`` ensures that rollback when the insert raises.
+        # (site, namespace, key) index is the arbiter, so a concurrent first-run
+        # that loses the race rolls back its just-created Object instead of
+        # orphaning it. ``atomic`` ensures that rollback when the insert raises.
         with transaction.atomic():
             obj = create(name, **kwargs)
-            ExternalKey.objects.create(namespace=namespace, key=key, object=obj)
+            ExternalKey.objects.create(site=obj.site, namespace=namespace, key=key, object=obj)
         return obj, True
     except IntegrityError:
         # Another writer registered the same key first; return theirs.

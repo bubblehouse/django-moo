@@ -60,3 +60,23 @@ def test_key_removed_with_object(t_init: Object, t_wizard: Object):
         obj, _ = get_or_create_by_key("loc", "doomed", name="Doomed")
         obj.delete()
         assert resolve_by_key("loc", "doomed") is None
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_keys_are_scoped_per_site(t_two_sites):
+    """The same namespace and key on two Sites map to two Objects, and each Site resolves its own."""
+    site1, site2 = t_two_sites
+    found = {}
+    for site in (site1, site2):
+        code.ContextManager.set_site(site)
+        wizard = Object.objects.get(name="Wizard")
+        with code.ContextManager(wizard, lambda _: None, site=site):
+            obj, created = get_or_create_by_key("zone_slug", "shared", name="Shared")
+            assert created is True
+            assert obj.site == site
+            found[site.pk] = obj
+    assert found[site1.pk].pk != found[site2.pk].pk
+    for site in (site1, site2):
+        code.ContextManager.set_site(site)
+        assert resolve_by_key("zone_slug", "shared").pk == found[site.pk].pk
+        assert ExternalKey.objects.get(site=site, namespace="zone_slug", key="shared").object == found[site.pk]

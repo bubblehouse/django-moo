@@ -10,17 +10,18 @@ resolve without bulk-loading — opt-in, rather than indexing every property
 value.
 """
 
+from django.contrib.sites.models import Site
 from django.db import models
 
 from .acl import WizardGuardedManager
 
 
 class ExternalKey(models.Model):
-    """A stable external identifier mapped to an Object, unique per namespace."""
+    """A stable external identifier mapped to an Object, unique per Site and namespace."""
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["namespace", "key"], name="externalkey_namespace_key_unique"),
+            models.UniqueConstraint(fields=["site", "namespace", "key"], name="externalkey_site_namespace_key_unique"),
         ]
 
     # Defense-in-depth parity with the other safety tables: non-wizard bulk
@@ -29,6 +30,9 @@ class ExternalKey(models.Model):
     # wizard-gated — only the bulk-mutation paths are.
     objects = WizardGuardedManager()
 
+    #: The universe the key belongs to: always the Site of ``object``. Two
+    #: universes that bootstrap the same dataset each get their own keys.
+    site = models.ForeignKey(Site, related_name="external_keys", on_delete=models.CASCADE)
     namespace = models.CharField(max_length=128)
     key = models.CharField(max_length=255)
     object = models.ForeignKey("Object", related_name="external_keys", on_delete=models.CASCADE)

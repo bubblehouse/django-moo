@@ -294,6 +294,10 @@ class Repository(models.Model):
     slug = models.SlugField()
     url = URLField(max_length=255)
     prefix = models.CharField(max_length=255)
+    #: The Sites this dataset has been loaded onto. One Repository row serves
+    #: every universe that uses the dataset; ``initialize_dataset`` records each
+    #: Site, and ``moo_init`` refuses a non-sync load only for a recorded Site.
+    sites = models.ManyToManyField("sites.Site", related_name="repositories", blank=True)
 
     def save(self, *args, **kwargs):
         require_wizard("modify", self)

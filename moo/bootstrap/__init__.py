@@ -163,6 +163,7 @@ def initialize_dataset(dataset="default", site=None):
             url=settings.DEFAULT_GIT_REPO_URL,
         ),
     )
+    repo.sites.add(site)
     system, _ = models.Object.global_objects.get_or_create(name="System Object", unique_name=True, site=site)
     # LambdaMOO-style sentinel objects — created immediately after the system object
     # so they receive the lowest possible PKs (2, 3, 4).

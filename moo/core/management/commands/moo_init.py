@@ -89,15 +89,16 @@ class Command(BaseCommand):
                 load_python(bootstrap_path)
                 log.info("Syncing complete for bootstrap '%s'.", bootstrap)
             else:
-                try:
-                    Repository.objects.get(slug=bootstrap)
-                    raise RuntimeError("Looks like this database has already been initialized.")
-                except Repository.DoesNotExist:
-                    Repository.objects.create(
-                        slug=bootstrap,
-                        prefix=f"moo/bootstrap/{bootstrap}/verbs",
-                        url=settings.DEFAULT_GIT_REPO_URL,
+                # One Repository row serves every Site that loads the dataset, so
+                # "already initialized" means already loaded onto this Site.
+                if Repository.objects.filter(slug=bootstrap, sites=site).exists():
+                    raise RuntimeError(
+                        f"Dataset '{bootstrap}' is already loaded on {site.domain}. Use --sync to update it."
                     )
+                Repository.objects.get_or_create(
+                    slug=bootstrap,
+                    defaults=dict(prefix=f"moo/bootstrap/{bootstrap}/verbs", url=settings.DEFAULT_GIT_REPO_URL),
+                )
                 bootstrap_path = self._find_bootstrap_path(bootstrap)
                 load_python(bootstrap_path)
 

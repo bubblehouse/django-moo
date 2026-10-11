@@ -337,3 +337,29 @@ def test_moo_init_hostname_creates_site():
     call_command("moo_init", bootstrap="default", hostname="foo.local")
     site = Site.objects.get(domain="foo.local")
     assert Object.global_objects.filter(name="System Object", site=site).count() == 1
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_moo_init_loads_installed_dataset_on_second_site():
+    """A dataset already loaded on one Site loads onto a second Site without ``--sync``."""
+    from django.core.management import call_command
+
+    from moo.core.models import Repository
+
+    call_command("moo_init", bootstrap="default", hostname="foo.local")
+    call_command("moo_init", bootstrap="default", hostname="bar.local")
+    for domain in ("foo.local", "bar.local"):
+        site = Site.objects.get(domain=domain)
+        assert Object.global_objects.filter(name="System Object", site=site).count() == 1
+    repo = Repository.objects.get(slug="default")
+    assert set(repo.sites.values_list("domain", flat=True)) >= {"foo.local", "bar.local"}
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_moo_init_refuses_reload_on_same_site():
+    """A non-sync load of a dataset already on the target Site is refused with a hint to use --sync."""
+    from django.core.management import call_command
+
+    call_command("moo_init", bootstrap="default", hostname="foo.local")
+    with pytest.raises(RuntimeError, match=r"already loaded on foo\.local.*--sync"):
+        call_command("moo_init", bootstrap="default", hostname="foo.local")
