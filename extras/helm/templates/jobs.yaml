@@ -53,6 +53,14 @@ spec:
       {{- end }}
       restartPolicy: Never
       serviceAccountName: {{ include "moo.serviceAccountName" $root }}
+      {{- with $root.Values.extraInitContainers }}
+      initContainers:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $root.Values.extraVolumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ $job.name }}
           image: "{{ $root.Values.image.repository }}:{{ $root.Values.image.tag | default $root.Chart.AppVersion }}"
@@ -66,5 +74,9 @@ spec:
             value: regional
           {{- with $root.Values.env }}
             {{- toYaml . | nindent 10 }}
+          {{- end }}
+          {{- with $root.Values.extraVolumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
           {{- end }}
 {{- end }}

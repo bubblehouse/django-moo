@@ -1,6 +1,6 @@
 # django-moo-chart
 
-![Version: 1.14.2](https://img.shields.io/badge/Version-1.14.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.14.2](https://img.shields.io/badge/AppVersion-1.14.2-informational?style=flat-square)
+![Version: 1.15.0](https://img.shields.io/badge/Version-1.15.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.15.0](https://img.shields.io/badge/AppVersion-1.15.0-informational?style=flat-square)
 
 A Helm chart for Kubernetes
 
@@ -20,6 +20,9 @@ A Helm chart for Kubernetes
 | autoscaling.maxReplicas | int | `100` |  |
 | autoscaling.minReplicas | int | `1` |  |
 | autoscaling.targetCPUUtilizationPercentage | int | `80` |  |
+| extraInitContainers | list | `[]` | Init containers added to every pod that runs Django code: webapp, shell, worker, beat, and the migrate/collectstatic hook Jobs. webssh does not get them. Use with extraVolumes and extraVolumeMounts to bring code the image does not contain, such as an out-of-tree bootstrap package, into the pods. |
+| extraVolumeMounts | list | `[]` | Volume mounts added to the main container of the same pods as extraInitContainers. To make a bootstrap package importable, also add its root to PYTHONPATH through `env`, e.g. `/usr/app/src:/usr/app/extra`. |
+| extraVolumes | list | `[]` | Volumes added to the same pods as extraInitContainers. |
 | fullnameOverride | string | `""` |  |
 | image.pullPolicy | string | `"IfNotPresent"` |  |
 | image.repository | string | `"registry.gitlab.com/bubblehouse/django-moo"` |  |

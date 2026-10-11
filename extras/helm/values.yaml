@@ -69,6 +69,31 @@ serviceAccount:
 #   - name: OTEL_SERVICE_NAME
 #     value: "django-moo"
 
+# -- Init containers added to every pod that runs Django code: webapp, shell,
+# worker, beat, and the migrate/collectstatic hook Jobs. webssh does not get
+# them. Use with extraVolumes and extraVolumeMounts to bring code the image
+# does not contain, such as an out-of-tree bootstrap package, into the pods.
+extraInitContainers: []
+#   - name: copy-mygame
+#     image: registry.example.com/mygame-bootstrap:1.0.0
+#     command: ["cp", "-r", "/src/moo", "/extra/"]
+#     volumeMounts:
+#       - name: mygame
+#         mountPath: /extra
+
+# -- Volumes added to the same pods as extraInitContainers.
+extraVolumes: []
+#   - name: mygame
+#     emptyDir: {}
+
+# -- Volume mounts added to the main container of the same pods as
+# extraInitContainers. To make a bootstrap package importable, also add its
+# root to PYTHONPATH through `env`, e.g. `/usr/app/src:/usr/app/extra`.
+extraVolumeMounts: []
+#   - name: mygame
+#     mountPath: /usr/app/extra
+#     readOnly: true
+
 podAnnotations: {}
 
 podSecurityContext:
