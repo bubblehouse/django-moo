@@ -1,3 +1,9 @@
+## [1.16.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.15.0...v1.16.0) (2026-10-11)
+
+### Features
+
+* **helm:** add extra init containers, volumes, and mounts ([a91c736](https://gitlab.com/bubblehouse/django-moo/commit/a91c73692e2938e02dcd72dc3ed8ae82b2d55c98))
+
 ## [1.15.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.14.2...v1.15.0) (2026-09-26)
 
 ### Features
