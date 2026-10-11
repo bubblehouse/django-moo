@@ -9,8 +9,14 @@ SECRET_KEY = "django-insecure-06xo%2f39ohlfrgu&)%1lsrlx6jqy)s%#_-$rc5l_z1+p6w(=r
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["moo.dev.shacklyn.net", "probe.cluster.local"]
-CSRF_TRUSTED_ORIGINS = ["https://moo.dev.shacklyn.net", "https://probe.cluster.local"]
+# Each universe is a Site served on its own hostname under moo.dev.shacklyn.net, so
+# accept the subdomains too. A leading dot matches the domain and every subdomain.
+ALLOWED_HOSTS = [".moo.dev.shacklyn.net", "probe.cluster.local"]
+CSRF_TRUSTED_ORIGINS = [
+    "https://moo.dev.shacklyn.net",
+    "https://*.moo.dev.shacklyn.net",
+    "https://probe.cluster.local",
+]
 
 STORAGES = {
     "default": {
