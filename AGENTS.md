@@ -142,7 +142,7 @@ through `moo.sdk`; the SDK enforces authorization, not the calling verb.
 | Audit log | `record_action`, `query_audit` | `AuditLog` is **append-only**: any modify/delete through the ORM raises `AppendOnlyError`. Only player-initiated actions are recorded. |
 | Recovery | `soft_recycle`, `restore`, `destroy`, `get_recycled`, `sweep_recycled` | `@recycle` is a reversible soft-delete; soft-recycled rows are hidden by `SiteManager` but keep id + inbound refs. |
 | Escape guarantee | `send_home`, `guaranteed_moveto`, `check_room_connectivity` | `home` bypasses the destination's `accept`/locks so a player can't be trapped. |
-| External keys | `resolve_by_key`, `get_or_create_by_key` | O(1) idempotent resolve-or-create via an indexed `(namespace, key)` table; wrapped in a transaction so a lost race never orphans an Object. |
+| External keys | `resolve_by_key`, `get_or_create_by_key` | O(1) idempotent resolve-or-create via an indexed `(site, namespace, key)` table, scoped to the active Site; wrapped in a transaction so a lost race never orphans an Object. |
 | Compute bounds | — | `MOO_TICK_BUDGET` caps per-task loop iterations (`TickLimitError`), finer than the Celery wall-clock kill. |
 
 New model-guard posture for a sandbox audit: `AuditLog` is append-only

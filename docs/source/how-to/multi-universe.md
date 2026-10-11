@@ -31,7 +31,9 @@ docker compose run webapp manage.py moo_init \
 `--hostname` looks up (or creates) a `Site` row with that domain and
 makes it the active site for the bootstrap run. Run `moo_init` again
 with a different hostname (and a different `--bootstrap` if desired)
-to add a third, fourth, etc.
+to add a third, fourth, etc. The same dataset can be loaded onto any
+number of sites. `moo_init` refuses a second load of a dataset only on a
+site that already has it; use `--sync` to update an existing site.
 
 The default site is `localhost` unless `SITE_ID` is set in Django
 settings. Connections without an explicit hostname (or to a hostname

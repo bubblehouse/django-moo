@@ -97,7 +97,8 @@ so they behave identically to stored exits. Quest, achievement, and tutorial
 systems observe gameplay through the `on_player_action(player, action, data)`
 hook the common player verbs emit after they succeed. Data-generated worlds
 resolve objects by a stable external key in O(1) with
-{func}`moo.sdk.get_or_create_by_key`.
+{func}`moo.sdk.get_or_create_by_key`. Keys belong to a Site, so two universes
+that bootstrap the same dataset each resolve to their own objects.
 
 ## Compute bounds
 
