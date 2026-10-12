@@ -1,3 +1,9 @@
+## [1.16.2](https://gitlab.com/bubblehouse/django-moo/compare/v1.16.1...v1.16.2) (2026-10-12)
+
+### Bug Fixes
+
+* **shell:** provision universal wizards on any site ([5703941](https://gitlab.com/bubblehouse/django-moo/commit/57039418646df1fb69cb7ee1af09ed30e175a92c))
+
 ## [1.16.1](https://gitlab.com/bubblehouse/django-moo/compare/v1.16.0...v1.16.1) (2026-10-11)
 
 ### Bug Fixes
