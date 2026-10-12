@@ -14,7 +14,7 @@ from django.contrib.sites.models import Site
 
 from moo.core import code, exceptions
 from moo.core.managers import get_default_site
-from moo.core.models import Object, Player
+from moo.core.models import Object, Player, Property
 from moo.core.models.auth import UniversalWizard
 from moo.core.moojson import clear_nothing_cache
 from moo.sdk import lookup
@@ -249,6 +249,33 @@ def test_universal_wizard_auto_provisions_idempotently(t_two_sites):
     assert player.avatar.site_id == site2.pk
     assert Player.objects.filter(user=user, site=site2).count() == 1
     assert Object.global_objects.filter(name="phil", site=site2).count() == 1
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_universal_wizard_provisions_on_a_bootstrapped_second_site(t_two_sites_default):
+    """Provisioning on a second ``default`` Site works while another Site is active.
+
+    An SSH login provisions before any session sets the site, so the active site is
+    the default one. The avatar must still get the second Site's Generic Wizard as
+    its parent, inherit its properties, and stand at that Site's player start.
+    """
+    site1, site2 = t_two_sites_default
+    user = User.objects.create_user(username="phil", password="x")
+    UniversalWizard.objects.create(user=user)
+    code.ContextManager.set_site(site1)
+
+    server = _ssh_server_with_user(user, site2)
+    server._auto_provision_universal_wizard()  # pylint: disable=protected-access
+
+    assert code.ContextManager.get_site() == site1
+    code.ContextManager.set_site(site2)  # Related managers filter by the active site too.
+    player = Player.objects.get(user=user, site=site2)
+    avatar = Object.global_objects.get(pk=player.avatar_id)
+    generic_wizard = Object.global_objects.get(site=site2, name="Generic Wizard", unique_name=True)
+    assert list(avatar.parents.all()) == [generic_wizard]
+    assert avatar.location is not None and avatar.location.site_id == site2.pk
+    inherited = set(Property.objects.filter(origin=generic_wizard).values_list("name", flat=True))
+    assert inherited <= set(Property.objects.filter(origin=avatar).values_list("name", flat=True))
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)

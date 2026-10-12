@@ -79,7 +79,9 @@ def relationship_changed(sender, instance, action, model, signal, reverse, pk_se
     elif action in ("pre_add", "pre_remove"):
         child.can_caller("transmute", instance)
         for pk in pk_set:
-            parent = model.objects.get(pk=pk)
+            # By pk, across Sites: the active site context may not be the child's
+            # (an SSH login provisioning an avatar before any session starts).
+            parent = model.global_objects.get(pk=pk)
             parent.can_caller("derive", parent)
         return
     elif action == "post_remove":
@@ -93,7 +95,7 @@ def relationship_changed(sender, instance, action, model, signal, reverse, pk_se
     for i, pk in enumerate(sorted(pk_set)):
         Relationship.objects.filter(child=child, parent_id=pk).update(weight=existing_before + i)
     for pk in pk_set:
-        parent = model.objects.get(pk=pk)
+        parent = model.global_objects.get(pk=pk)
         parent_props = list(Property.objects.filter(origin=parent))
         if not parent_props:
             continue

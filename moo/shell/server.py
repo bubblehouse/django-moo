@@ -498,6 +498,20 @@ def _provision_wizard_avatar(user, site):
     The avatar name is the username (not ``"Wizard"``) so it stays unique
     within the site alongside the bootstrap Wizard. Idempotent.
     """
+    from moo.core.code import ContextManager
+
+    # Auth runs before any session sets a site, so the site-filtered managers
+    # would resolve against the default Site. Provision under the target Site.
+    previous = ContextManager.get_site()
+    ContextManager.set_site(site)
+    try:
+        return _provision_wizard_avatar_on_site(user, site)
+    finally:
+        ContextManager.set_site(previous)
+
+
+def _provision_wizard_avatar_on_site(user, site):
+    """Do the work of :func:`_provision_wizard_avatar` with ``site`` already active."""
     from moo.core.exceptions import NoSuchPropertyError
     from moo.core.models.object import Object
 
