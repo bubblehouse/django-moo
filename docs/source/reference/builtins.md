@@ -49,6 +49,32 @@ see {doc}`objects`. For `Property` and `Verb` field reference, see
    :no-index:
 ```
 
+## Transaction locks
+
+Verbs run as Celery tasks, and several can run at once. Each task runs in one
+database transaction, but a transaction does not stop two tasks from reading
+the same value: both read the last committed value, both change it, and the
+later write wins. Call `lock_until_commit` before such a read-modify-write.
+Only one transaction at a time holds a given lock name; another one that asks
+for it waits until the holder commits or rolls back. Postgres releases the lock
+at commit or rollback. A lock name is scoped to the Site and to the calling
+verb's owner, so a player's verbs cannot hold a lock that Wizard-owned code
+uses. On SQLite the call does nothing.
+
+```python
+from moo.sdk import lock_until_commit
+
+lock_until_commit(f"ledger:{player.pk}")
+row = ledger.get_property(key)
+row["xp"] = row["xp"] + amount
+ledger.set_property(key, row)
+```
+
+```{eval-rst}
+.. autofunction:: moo.sdk.lock_until_commit
+   :no-index:
+```
+
 ## Output and full-screen UIs
 
 ```{eval-rst}

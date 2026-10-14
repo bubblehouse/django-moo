@@ -144,6 +144,7 @@ through `moo.sdk`; the SDK enforces authorization, not the calling verb.
 | Escape guarantee | `send_home`, `guaranteed_moveto`, `check_room_connectivity` | `home` bypasses the destination's `accept`/locks so a player can't be trapped. |
 | External keys | `resolve_by_key`, `get_or_create_by_key` | O(1) idempotent resolve-or-create via an indexed `(site, namespace, key)` table, scoped to the active Site; wrapped in a transaction so a lost race never orphans an Object. |
 | Compute bounds | — | `MOO_TICK_BUDGET` caps per-task loop iterations (`TickLimitError`), finer than the Celery wall-clock kill. |
+| Transaction locks | `lock_until_commit` | Call before a read-modify-write of shared state. A Postgres advisory lock held until the task's transaction commits or rolls back; re-entrant; scoped to Site + calling verb's owner; raises `LockTimeout` after `wait` (max 10 s). No-op on SQLite. |
 
 New model-guard posture for a sandbox audit: `AuditLog` is append-only
 (`AppendOnlyManager`); `Player`/`Blacklist` are fully wizard-guarded
