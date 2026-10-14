@@ -89,6 +89,7 @@ from .recovery import (
     sweep_recycled,
 )
 from .escape import guaranteed_moveto, send_home, check_room_connectivity
+from .locks import lock_until_commit
 from .ssh_keys import list_ssh_keys, add_ssh_key, remove_ssh_key
 from .password import set_password
 from .admin import server_info
@@ -114,6 +115,7 @@ from ..core.exceptions import (
     NoSuchVerbError,
     NoSuchPropertyError,
     AccessError,
+    LockTimeout,
 )
 
 PLACEMENT_PREPS = ["on", "under", "behind", "before", "beside", "over"]
@@ -245,6 +247,8 @@ __all__ = [
     "cancel_scheduled_task",
     "get_scheduled_task_info",
     "set_task_perms",
+    "lock_until_commit",
+    "LockTimeout",
     "moo_eval",
     "context",
     "invoked_verb_name",

@@ -140,6 +140,13 @@ class TickLimitError(UserError):
     """
 
 
+class LockTimeout(UserError):
+    """
+    Raised when :func:`moo.sdk.lock_until_commit` cannot take a lock before its
+    wait runs out, because another transaction holds it.
+    """
+
+
 class NoSuchPrepositionError(UserError):
     """
     Raised by parser methods like :meth:`Parser.get_pobj_str` when the
