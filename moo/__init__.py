@@ -15,7 +15,7 @@ from .celery import app as celery_app
 
 __all__ = ("celery_app", "get_version")
 
-__version__ = "1.16.2"
+__version__ = "1.17.0"
 
 
 def get_version():

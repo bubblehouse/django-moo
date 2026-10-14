@@ -1,3 +1,9 @@
+## [1.17.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.16.2...v1.17.0) (2026-10-14)
+
+### Features
+
+* **sdk:** add transaction locks for verb code ([9016e41](https://gitlab.com/bubblehouse/django-moo/commit/9016e410338e25b22b959aa40cc453256efc8d26))
+
 ## [1.16.2](https://gitlab.com/bubblehouse/django-moo/compare/v1.16.1...v1.16.2) (2026-10-12)
 
 ### Bug Fixes
