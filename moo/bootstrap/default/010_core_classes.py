@@ -37,7 +37,8 @@ player, _ = bootstrap.get_or_create_object("Generic Player", unique_name=True, p
 sys.set_property("player", player)
 player.set_property("last_connect_time", time())
 player.set_property("last_connected_time", None)
-player.set_property("ownership_quota", 1000)
+# Avatars keep the Wizard as owner of their quota row, so a player cannot @set it.
+player.set_property("ownership_quota", 1000, inherit_owner=True)
 player.set_property("ps", "they", inherit_owner=True)
 player.set_property("po", "them", inherit_owner=True)
 player.set_property("pp", "their", inherit_owner=True)
