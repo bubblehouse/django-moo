@@ -149,7 +149,7 @@ Core tests exercise models and the verb execution engine without needing a full 
 ```python
 import pytest
 from moo.sdk import create, lookup
-from moo.core.exceptions import PermissionDenied
+from moo.core.exceptions import AccessError
 
 @pytest.mark.django_db
 def test_object_creation_and_properties():
@@ -165,7 +165,7 @@ def test_permission_denial():
     obj.owner = lookup("Wizard")
     obj.save()
 
-    with pytest.raises(PermissionDenied):
+    with pytest.raises(AccessError):
         obj.can_caller("write")
 ```
 
