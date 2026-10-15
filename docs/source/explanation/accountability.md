@@ -108,10 +108,11 @@ per-task loop budget (`MOO_TICK_BUDGET`): a runaway loop aborts with
 deliberately generous — a legitimate sweep over a large world should never trip
 it.
 
-## Object quota (already enforced)
+## Object quota
 
-Object quota needs no new work: `create()` raises `QuotaError` and decrements
-the owner's `ownership_quota`, and recycling refunds it (a soft-recycle refunds
-once, and a later hard-destroy of an already-recycled object does not
-double-refund). A future *measured* (byte) quota in addition to the object count
+`create()` raises `QuotaError` and decrements the owner's `ownership_quota`,
+and recycling refunds it (a soft-recycle refunds once, and a later hard-destroy
+of an already-recycled object does not double-refund). Each avatar's quota row
+belongs to the Wizard (`inherit_owner=True` on `Generic Player`), so a player
+cannot raise their own quota with `@set`. The engine adjusts the row directly. A future *measured* (byte) quota in addition to the object count
 is a possible later refinement, not a requirement.

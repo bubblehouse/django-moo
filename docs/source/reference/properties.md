@@ -60,6 +60,11 @@ obj.set_property("ps", "they", inherit_owner=True)
 
 See "Inheritance" below for what that flag actually changes.
 
+An update changes only the value. The row keeps its owner and its
+`inherit_owner` flag, and the `write` check runs against that owner,
+so writing a value never transfers a row to the writer. Pass
+`inherit_owner` on an update only to change the flag.
+
 ## Permissions
 
 Adding a new property to an object requires `write` permission on the
@@ -130,6 +135,12 @@ the wizard verb would hit `AccessError`.
 # In a bootstrap script:
 player_class.set_property("ps", "they", inherit_owner=True)
 ```
+
+The same flag keeps a value out of a player's hands. `Generic Player`
+sets `ownership_quota` with `inherit_owner=True`, so every avatar's
+quota row belongs to the Wizard. A player owns their avatar, but they
+cannot `@set` their own quota; the engine adjusts it on `create()`,
+recycle, and restore.
 
 For the LambdaMOO origin of this design (the `c` permission bit), see
 the LambdaMOO Programmer's Manual.
