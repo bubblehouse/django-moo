@@ -21,12 +21,14 @@ if not direction:
     return
 
 source = context.player.location
+context.player.is_allowed("write", source, fatal=True)
 if source.match_exit(direction):
     print("[red]There is already an exit in that direction.[/red]")
     return
 
 if context.parser.has_pobj("through"):
     door = context.parser.get_pobj("through")
+    context.player.is_allowed("write", door, fatal=True)
     if not door.is_a(_.exit):
         print("[red]The specified object is not an exit.[/red]")
         return
@@ -43,6 +45,7 @@ if verb_name == "@dig":
 else:
     action = "Tunnelled"
     dest = context.parser.get_pobj("to", lookup=True)
+    context.player.is_allowed("write", dest, fatal=True)
 
 door.set_property("source", source)
 door.set_property("dest", dest)

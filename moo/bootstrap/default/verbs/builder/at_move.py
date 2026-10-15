@@ -33,6 +33,8 @@ else:
         raise UsageError(f"Usage: {verb_name} <object> to <destination>")
     obj = lookup(obj_str.strip())
     destination = context.player.location
+if obj != context.player:
+    context.player.is_allowed("move", obj, fatal=True)
 if obj.is_player():
     obj.announce(f"{obj.title().capitalize()} disappears suddenly for parts {destination.title()}.")
 result = obj.moveto(destination)

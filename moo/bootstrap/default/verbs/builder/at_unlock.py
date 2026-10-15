@@ -12,4 +12,5 @@ from moo.sdk import context
 parser = context.parser
 
 obj = parser.get_dobj()
+context.player.is_allowed("write", obj, fatal=True)
 obj.set_property("key", None)

@@ -14,6 +14,7 @@ from moo.sdk import context
 parser = context.parser
 
 obj = parser.get_dobj()
+context.player.is_allowed("write", obj, fatal=True)
 expr = parser.get_pobj_str("with")
 
 key = _.lock_utils.parse_keyexp(expr)

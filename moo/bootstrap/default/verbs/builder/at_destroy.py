@@ -15,6 +15,7 @@ if not context.parser.has_dobj_str():
     return
 
 obj = context.parser.get_dobj(lookup=True)
+context.player.is_allowed("write", obj, fatal=True)
 name = obj.title()
 # Let destroy's own errors surface — a permission denial (AccessError is a
 # PermissionError) is rendered by the task runner with its real reason, rather

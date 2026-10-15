@@ -21,6 +21,7 @@ if verb_name == "@describe":
         return
 
     subject = context.parser.get_dobj()
+    context.player.is_allowed("write", subject, fatal=True)
 
     if context.parser.has_pobj_str("as"):
         desc = context.parser.get_pobj_str("as").replace("\\n", "\n")
@@ -41,5 +42,6 @@ if verb_name == "@describe":
 elif verb_name == "describe_callback":
     desc = args[0]
     subject = lookup(args[1])
+    context.player.is_allowed("write", subject, fatal=True)
     subject.describe(desc)
     print("[yellow]Description set for %s[/yellow]" % subject)

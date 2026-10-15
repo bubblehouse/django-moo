@@ -33,6 +33,7 @@ except NoSuchObjectError:
     obj = context.parser.get_dobj(lookup=True)
 
 # Get the alias string
+context.player.is_allowed("write", obj, fatal=True)
 alias = context.parser.get_pobj_str("as")
 
 # Add the alias - permissions are checked by the object model

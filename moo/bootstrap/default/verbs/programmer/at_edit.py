@@ -109,6 +109,9 @@ if verb_name == "@edit":
             print(f"{attribute} is not a verb or property on {target}. Use 'verb' or 'property' prefix to create new.")
             return
 
+    # This verb runs as its Wizard owner, so check the player who typed it.
+    context.player.is_allowed("write", obj if obj is not None else target, fatal=True)
+
     # Either open editor or directly set content
     if use_editor:
         callback = this.get_verb("edit_callback")
@@ -176,6 +179,7 @@ elif verb_name == "edit_callback":
     obj_kind = args[2]
     if obj_kind == "verb":
         obj = Verb.objects.get(pk=obj_pk)
+        context.player.is_allowed("write", obj, fatal=True)
         obj.code = content
         # Parse shebang metadata if present
         import moo.bootstrap
@@ -192,5 +196,6 @@ elif verb_name == "edit_callback":
             set_indirect_objects(obj, ispec)
     elif obj_kind == "property":
         obj = Property.objects.get(pk=obj_pk)
+        context.player.is_allowed("write", obj, fatal=True)
         obj.value = content
     obj.save()

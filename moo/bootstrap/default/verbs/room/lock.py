@@ -26,6 +26,8 @@ if not door:
     print(f"There is no exit called {door_description} here.")
     return
 
+context.player.is_allowed("write", door, fatal=True)
+
 if verb_name == "lock":
     if door.is_locked():
         print("The door is already locked.")

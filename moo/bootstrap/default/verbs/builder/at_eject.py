@@ -21,6 +21,7 @@ parser = context.parser
 player = context.player
 if parser.has_pobj("from"):
     container = parser.get_pobj("from")
+    context.player.is_allowed("write", container, fatal=True)
     victims = container.find(parser.get_dobj_str())
     if not victims:
         print(f"Couldn't find {parser.get_dobj_str()} in {container.name}.")

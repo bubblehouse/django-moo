@@ -32,6 +32,7 @@ dest_name = parser.get_pobj_str("to")
 return_direction = OPPOSITES.get(direction.lower())
 
 source = context.player.location
+context.player.is_allowed("write", source, fatal=True)
 
 if source.match_exit(direction):
     print(f"[red]There is already an exit {direction} from this room.[/red]")
