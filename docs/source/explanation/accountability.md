@@ -114,5 +114,6 @@ it.
 and recycling refunds it (a soft-recycle refunds once, and a later hard-destroy
 of an already-recycled object does not double-refund). Each avatar's quota row
 belongs to the Wizard (`inherit_owner=True` on `Generic Player`), so a player
-cannot raise their own quota with `@set`. The engine adjusts the row directly. A future *measured* (byte) quota in addition to the object count
-is a possible later refinement, not a requirement.
+cannot raise their own quota with `@set`. The engine adjusts the row directly
+on `create()`, recycle, and restore. A future *measured* (byte) quota in
+addition to the object count is a possible later refinement, not a requirement.

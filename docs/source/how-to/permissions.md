@@ -215,7 +215,7 @@ tools, not in-line verb code.
 Bootstrap scripts run outside the RestrictedPython sandbox, so they
 can import Django ORM models directly and bulk-create ACL rows.
 `default/999_finalize.py` grants the `derive` permission to every
-player on every standard system class so that anyone can run
+player on the standard content classes so that anyone can run
 `@create "name" from $thing` without needing wizard privileges:
 
 ```python
@@ -223,7 +223,7 @@ player on every standard system class so that anyone can run
 from moo.core.models.acl import Access, Permission
 
 derive_perm = Permission.objects.get(name="derive")
-for _cls in [root, thing, rooms, exits, player, builders, programmers, ...]:
+for _cls in [root, thing, rooms, exits, player, furniture, containers, ...]:
     Access.objects.get_or_create(
         object=_cls,
         permission=derive_perm,
@@ -235,6 +235,12 @@ for _cls in [root, thing, rooms, exits, player, builders, programmers, ...]:
 
 `get_or_create` makes the loop idempotent so `moo_init --sync` can
 re-run it cleanly.
+
+`$builder` and `$programmer` are left out on purpose. `derive` on a
+class also lets a player add that class as a parent, and every player
+owns their own avatar, so `derive` on a rung class would let anyone
+promote themselves. Only a wizard, or a wizard-owned verb such as a
+quest reward, can add those parents.
 
 The `Permission` and `Access` ORM models used here are **not
 importable from verb code** — `moo.core.models.acl` is outside

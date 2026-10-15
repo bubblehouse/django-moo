@@ -101,6 +101,16 @@ property on a child whose owner is a different player. Without
 on every player who isn't a wizard. See
 `moo/bootstrap/default/010_core_classes.py` for many examples.
 
+The same flag keeps a value away from the child's owner.
+`ownership_quota` on `Generic Player` uses it, so each player's quota
+row stays with the Wizard and the player cannot `@set` it.
+
+Setting `inherit_owner=True` on a row that already has descendants
+hands every existing child row to the parent row's owner, and child
+rows keep their values. A `moo_init --sync` that adds the flag to an
+existing class therefore fixes the ownership of every row already
+copied to its children.
+
 ## Allow non-wizards to create instances of a class
 
 By default, only the owner and wizards can create children of an
@@ -121,8 +131,12 @@ Access.objects.get_or_create(
 ```
 
 `get_or_create` makes the grant idempotent. `moo/bootstrap/default/999_finalize.py`
-applies this to every standard system class (`root`, `thing`, `room`,
-`exit`, `player`, etc.) in a single loop.
+applies this to the standard content classes (`root`, `thing`, `room`,
+`exit`, `player`, `container`, etc.) in a single loop.
+
+Do not grant `derive` to everyone on a class whose verbs are a
+privilege, such as `$builder` or `$programmer`. A player owns their own
+avatar, so `derive` on such a class lets them add it to themselves.
 
 ## Update an object's properties idempotently
 

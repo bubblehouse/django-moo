@@ -19,9 +19,12 @@ customisable list of named permissions. The full list is declared in
 | `entrust` | Change an object's, property's, or verb's `owner`. |
 | `grant` | Set or modify ACL rows on an object. Implicitly held by wizards and the object's owner. |
 
-`grant`, `entrust`, `transmute`, and `derive` only ever apply to
-wizards or the owner of the object — they're escalated permissions
-that protect the permission system itself.
+`grant`, `entrust`, `transmute`, and `derive` apply only to wizards
+and the owner of the object unless an ACL row grants them — they're
+escalated permissions that protect the permission system itself. The
+`default` dataset grants everyone `derive` on its content classes so
+that any builder can `@create` from them, but not on `$builder` or
+`$programmer`.
 
 ### Granular permissions are independent of `write`
 
@@ -55,15 +58,15 @@ narrow the audience.
 
 Permissions fire automatically at the model layer. Verb code does not
 need to check first; an `AccessError` propagates and the player sees a
-clean error. (See {doc}`../how-to/permissions` for the just-attempt-it
-pattern.)
+clean error. A wizard-owned verb passes all of them, so it checks the
+actor itself; see {doc}`../how-to/permissions` ("Checking who acted").
 
 | Operation | Permission | Object the check is against |
 |-----------|------------|-----------------------------|
 | `Object.delete()` | `write` | the object |
-| `Object.set_property(name, value)` | `write` | the object |
+| `Object.set_property(name, value)` | `write` on the object, then `write` on the existing row (an update keeps the row's owner) | the object, then the property |
 | `Object.add_verb(...)` | `write` | the object |
-| `Object.moveto(target)` | `move` | the moving object |
+| `$root_class:moveto(target)` | `move`, checked for {func}`~moo.sdk.caller_perms` (skipped when the moving object is `context.player`) | the moving object |
 | `Object.parents.add(parent)` | `transmute` + `derive` | child needs `transmute`; parent needs `derive` |
 | `Object.find(name)` | `read` | the object being searched |
 | `Property.save()` (new row) | `write` | the origin object |
