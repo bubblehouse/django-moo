@@ -91,16 +91,17 @@ class Property(models.Model, AccessibleMixin):
                 self.origin.can_caller("entrust", self)  # pylint: disable=no-member
         super().save(*args, **kwargs)
         if self.inherit_owner and not self.__original_inherit_owner:
+            # Descendants now keep this row's owner, as a parent-add copy would give them.
             for child in self.origin.get_descendents():  # pylint: disable=no-member
                 Property.objects.update_or_create(
                     name=self.name,
                     origin=child,
                     defaults=dict(
-                        owner=child.owner,
+                        owner=self.owner,
                         inherit_owner=self.inherit_owner,
                     ),
                     create_defaults=dict(
-                        owner=child.owner,
+                        owner=self.owner,
                         inherit_owner=self.inherit_owner,
                         value=self.value,
                         type=self.type,

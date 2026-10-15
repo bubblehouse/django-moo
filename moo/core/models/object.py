@@ -723,44 +723,92 @@ class Object(models.Model, AccessibleMixin):
             cache.set(redis_key, ",".join(str(v.pk) for v in result), timeout=_cache_ttl)
         return result
 
-    def set_property(self, name, value, inherit_owner=False, owner=None):
+    def set_property(self, name, value, inherit_owner=None, owner=None):
         """
         Create or update a :class:`.Property` on this object.
+
+        An update changes only the value. The row keeps its owner and its
+        ``inherit_owner`` flag, and ``Property.save`` checks ``write`` against
+        that owner, so writing a value never transfers the row to the writer.
 
         :param name: the property name (unique per object)
         :param value: the property value; serialised via moojson
         :param inherit_owner: if ``True``, descendants keep this property's
-            ``owner`` when they inherit it. If ``False`` (the default),
-            descendants rebase ownership to the descendant's own owner.
-        :param owner: the owner of the Property row. Ignored when a
-            ``ContextManager`` is active — the originating player wins.
+            ``owner`` when they inherit it; if ``False``, descendants rebase
+            ownership to their own owner. ``None`` (the default) keeps the flag
+            of an existing row and means ``False`` for a new one.
+        :param owner: the owner of a new Property row. Ignored when a
+            ``ContextManager`` is active — the originating player wins. Ignored
+            for an existing row.
         """
         from .. import moojson
 
         self.can_caller("write", self)
-        owner = ContextManager.get("player") or ContextManager.get("caller") or owner or self
-        Property.objects.update_or_create(
-            name=name,
-            origin=self,
-            defaults=dict(
+        existing = Property.objects.filter(name=name, origin=self).first()
+        if existing is not None:
+            existing.value = moojson.dumps(value)
+            existing.type = "string"
+            if inherit_owner is not None:
+                existing.inherit_owner = inherit_owner
+            existing.save()
+        else:
+            owner = ContextManager.get("player") or ContextManager.get("caller") or owner or self
+            Property.objects.create(
+                name=name,
+                origin=self,
                 value=moojson.dumps(value),
                 owner=owner,
                 type="string",
-                inherit_owner=inherit_owner,
-            ),
-        )
-        # Evict cached property values for this object so subsequent reads in
-        # the same session see the freshly written value.
+                inherit_owner=bool(inherit_owner),
+            )
+        self._evict_property_cache(name)
+
+    def _evict_property_cache(self, name):
+        """
+        Drop the cached values of property `name` on this object, in this session and in Redis.
+        """
         pcache = ContextManager.get_prop_lookup_cache()
         if pcache is not None:
             for recurse_flag in (True, False):
                 pcache.pop((self.pk, name, recurse_flag), None)
-        # Evict the cross-session cache for this object's property.
-        # Descendant caches are intentionally not invalidated here — they will
-        # expire naturally within MOO_ATTRIB_CACHE_TTL, which is acceptable for gameplay.
+        # Descendant caches are not invalidated here. They expire within
+        # MOO_ATTRIB_CACHE_TTL, which is acceptable for gameplay.
         if getattr(settings, "MOO_ATTRIB_CACHE_TTL", 120) > 0:
             for recurse_flag in (True, False):
                 cache.delete(f"moo:prop:{self.pk}:{name}:{int(recurse_flag)}")
+
+    def _quota(self):
+        """
+        Return this object's own ``ownership_quota`` as an int, or ``None`` when it has none.
+
+        The engine reads the row directly. The quota row belongs to a wizard, and
+        quota accounting must not depend on the permissions of the task.
+        """
+        from .. import moojson
+
+        row = Property.objects.filter(name="ownership_quota", origin=self).first()
+        if row is None:
+            return None
+        value = moojson.loads(row.value)
+        return value if isinstance(value, int) else None
+
+    def _adjust_quota(self, delta):
+        """
+        Add `delta` to this object's own ``ownership_quota`` and return the new value.
+
+        This is the engine's quota accounting for ``create()``, ``delete()``,
+        ``soft_recycle()`` and ``restore()``. It writes the row with no
+        permission check and does nothing when the object has no quota. Verb code
+        cannot reach it, because the sandbox blocks underscore names.
+        """
+        from .. import moojson
+
+        current = self._quota()
+        if current is None:
+            return None
+        Property.objects.filter(name="ownership_quota", origin=self).update(value=moojson.dumps(current + delta))
+        self._evict_property_cache("ownership_quota")
+        return current + delta
 
     def get_property(self, name, recurse=True, original=False):
         """
@@ -945,13 +993,8 @@ class Object(models.Model, AccessibleMixin):
         # Refund quota — unless this object was already soft-recycled (K), in
         # which case the refund happened at recycle time; refunding again here
         # would credit the owner twice.
-        if not self.recycled:
-            try:
-                quota = self.owner.get_property("ownership_quota", recurse=False)
-                if quota is not None:
-                    self.owner.set_property("ownership_quota", quota + 1)
-            except NoSuchPropertyError:
-                pass
+        if not self.recycled and self.owner is not None:
+            self.owner._adjust_quota(1)  # pylint: disable=protected-access
         # L: record player-initiated hard removal before the row is gone.
         from ...sdk.audit import record_action  # pylint: disable=import-outside-toplevel
 

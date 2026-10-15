@@ -13,7 +13,6 @@ recycled past the retention window.
 
 from django.utils import timezone
 
-from ..core.exceptions import NoSuchPropertyError
 from .context import context
 
 
@@ -32,14 +31,8 @@ def soft_recycle(obj):
         return obj
     obj.can_caller("write", obj)
     # Refund quota now; the eventual hard purge will not refund again.
-    try:
-        owner = obj.owner
-        if owner is not None:
-            quota = owner.get_property("ownership_quota", recurse=False)
-            if quota is not None:
-                owner.set_property("ownership_quota", quota + 1)
-    except NoSuchPropertyError:
-        pass
+    if obj.owner is not None:
+        obj.owner._adjust_quota(+1)  # pylint: disable=protected-access
     obj.recycled = True
     obj.recycled_at = timezone.now()
     obj.location = None
@@ -60,14 +53,8 @@ def restore(obj, location=None):
     if not obj.recycled:
         return obj
     obj.can_caller("write", obj)
-    try:
-        owner = obj.owner
-        if owner is not None:
-            quota = owner.get_property("ownership_quota", recurse=False)
-            if quota is not None:
-                owner.set_property("ownership_quota", quota - 1)
-    except NoSuchPropertyError:
-        pass
+    if obj.owner is not None:
+        obj.owner._adjust_quota(-1)  # pylint: disable=protected-access
     obj.recycled = False
     obj.recycled_at = None
     if location is None and obj.owner is not None:

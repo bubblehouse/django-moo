@@ -269,14 +269,12 @@ def create(name, *a, **kw):
             cache[_SYSTEM_KEY] = system
     default_parents = [system.root_class] if system.has_property("root_class") else []
     if context.caller:
-        try:
-            quota = context.caller.get_property("ownership_quota", recurse=False)
-            if quota > 0:
-                context.caller.set_property("ownership_quota", quota - 1)
-            else:
+        # The quota row belongs to a wizard, so the engine adjusts it directly.
+        quota = context.caller._quota()  # pylint: disable=protected-access
+        if quota is not None:
+            if quota <= 0:
                 raise QuotaError(f"{context.caller} has run out of quota.")
-        except NoSuchPropertyError:
-            pass
+            context.caller._adjust_quota(-1)  # pylint: disable=protected-access
         if "owner" not in kw:
             kw["owner"] = context.caller
     if "location" not in kw and "owner" in kw:
