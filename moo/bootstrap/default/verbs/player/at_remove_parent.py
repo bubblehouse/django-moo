@@ -9,7 +9,7 @@ the indirect object (after "from") is the object to modify.
 Usage: @remove_parent "$furniture" from #N
        @remove_parent "$container" from "oak desk"
 
-Requires write permission on the object and derive permission on the parent.
+Requires transmute permission on the object and derive permission on the parent.
 """
 
 from moo.sdk import context, lookup

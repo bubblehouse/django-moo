@@ -18,8 +18,8 @@ Examples:
     @alias #45 as "stool"
     @alias jukebox as "juke"
 
-Permissions are enforced by the object model - you can only add aliases to
-objects you own or have appropriate permissions for.
+You can only add aliases to objects you have `write` permission on. This
+verb runs as the Wizard, so it checks the player before it adds the alias.
 """
 
 from moo.sdk import context, NoSuchObjectError
@@ -36,7 +36,7 @@ except NoSuchObjectError:
 context.player.is_allowed("write", obj, fatal=True)
 alias = context.parser.get_pobj_str("as")
 
-# Add the alias - permissions are checked by the object model
+# Add the alias; the write check above covers the player.
 if obj.add_alias(alias):
     print(f"[yellow]Added alias '{alias}' to {obj}[/yellow]")
 else:

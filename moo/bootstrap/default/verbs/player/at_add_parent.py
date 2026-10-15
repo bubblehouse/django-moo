@@ -9,7 +9,8 @@ the indirect object (after "to") is the object to modify.
 Usage: @add_parent "$furniture" to #N
        @add_parent "$container" to "oak desk"
 
-Requires write permission on the object and derive permission on the parent.
+Requires transmute permission on the object and derive permission on the parent.
+Only wizards can add `$builder` or `$programmer`; nobody else has derive on them.
 """
 
 from moo.sdk import context, lookup
