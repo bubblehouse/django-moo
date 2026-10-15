@@ -17,5 +17,7 @@ from moo.sdk import context, lookup
 parser = context.parser
 parent = parser.get_dobj(lookup=True)
 obj = parser.get_pobj("to", lookup=True)
+context.player.is_allowed("transmute", obj, fatal=True)
+context.player.is_allowed("derive", parent, fatal=True)
 obj.add_parent(parent)
 print(f"Added {parent} as a parent of {obj}.")

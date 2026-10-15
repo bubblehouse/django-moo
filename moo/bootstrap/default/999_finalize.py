@@ -8,8 +8,6 @@ for _cls in [
     rooms,
     exits,
     player,
-    builders,
-    programmers,
     furniture,
     containers,
     notes,
@@ -25,6 +23,17 @@ for _cls in [
         group="everyone",
         rule="allow",
     )
+
+# $builder and $programmer are capability rungs, not content classes. Anyone
+# who can derive from one can add it to their own avatar and gain its verbs,
+# so only wizards may grant them. Remove any grant an earlier sync made.
+Access.objects.filter(
+    object__in=[builders, programmers],
+    permission=derive_perm,
+    type="group",
+    group="everyone",
+    rule="allow",
+).delete()
 
 # Remove the temporary bootstrap accept verbs — verb files provide the real ones.
 if root.has_verb("accept"):
