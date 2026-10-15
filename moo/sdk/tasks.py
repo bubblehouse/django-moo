@@ -186,6 +186,56 @@ def get_scheduled_task_info(pk: int) -> dict | None:
     )
 
 
+def caller_perms():
+    """
+    Return the Object whose permissions called the running verb.
+
+    Inside a verb, ``context.caller`` is the verb's own owner. This function
+    returns the caller one frame out: the owner of the verb that called this
+    one, or the player for a verb the parser dispatched. It is the equivalent
+    of LambdaMOO's ``caller_perms()``.
+
+    :return: the calling Object, or ``None`` outside a session
+    :rtype: Object
+    """
+    return _ContextManager.get_previous_caller()
+
+
+def require_caller_perms(permission, subject):
+    """
+    Raise :class:`.PermissionError` unless :func:`caller_perms` has `permission` on `subject`.
+
+    Use this at the top of a helper verb that changes `this` on behalf of whoever
+    called it, such as ``describe`` or ``add_exit``. Without the check, a
+    Wizard-owned helper changes any object for any caller.
+
+    The check passes without a query when the caller owns `subject`, and it
+    queries wizard status at most once for each session. Outside a session, it
+    always passes.
+
+    :param permission: the permission name, for example ``"write"`` or ``"move"``
+    :type permission: str
+    :param subject: the Object, Verb, or Property to check
+    :raises PermissionError: if the calling permissions lack `permission`
+    """
+    caller = _ContextManager.get_previous_caller()
+    if caller is None or not hasattr(caller, "is_allowed"):
+        return
+    if caller.pk == subject.owner_id:
+        return
+    cache = _ContextManager.get_perm_cache()
+    wizard_key = ("wizard", caller.pk)
+    if cache is not None and wizard_key in cache:
+        is_wizard = cache[wizard_key]
+    else:
+        is_wizard = caller.is_wizard()
+        if cache is not None:
+            cache[wizard_key] = is_wizard
+    if is_wizard:
+        return
+    caller.is_allowed(permission, subject, fatal=True)
+
+
 @_contextmanager
 def set_task_perms(who):
     """

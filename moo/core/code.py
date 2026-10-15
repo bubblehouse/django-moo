@@ -628,6 +628,22 @@ class ContextManager:
         return _CONTEXT_VARS["caller_stack"].get() is not _UNSET
 
     @classmethod
+    def get_previous_caller(cls):
+        """
+        Return the caller that was active when the running verb frame started.
+
+        This reads the last frame of the live stack and makes no copy, so it is
+        cheap enough for hot verbs such as ``moveto``. With no frame on the stack,
+        it returns the current caller.
+        """
+        stack = _CONTEXT_VARS["caller_stack"].get()
+        if stack is _UNSET:
+            return None
+        if not stack:
+            return _CONTEXT_VARS["caller"].get()
+        return stack[-1]["previous_caller"]
+
+    @classmethod
     def override_caller(cls, caller, this=None, verb_name=None, origin=None, player=None):
         attributes = {
             "this": this,
