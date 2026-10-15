@@ -112,6 +112,53 @@ evaluates user-supplied code with `set_task_perms(context.player)` so
 the snippet runs with the player's permissions rather than the
 wizard owner's — closing the obvious privilege-escalation hole.
 
+Keep `set_task_perms` narrow. Use it to drop to `context.player` for
+writes made directly inside the block. It does not reach into a verb
+the block calls: every verb call sets `context.caller` to that verb's
+own owner, so `with set_task_perms(context.player): obj.describe(text)`
+still writes the description as the Wizard.
+
+## Checking who acted
+
+A wizard-owned verb passes every model-layer check, so it has to check
+the actor itself before it changes anything on someone else's behalf.
+
+A **command verb** checks the player who typed it:
+
+```python
+obj = context.parser.get_dobj()
+context.player.is_allowed("write", obj, fatal=True)
+obj.set_property("key", key)
+```
+
+`default/verbs/builder/at_lock.py`, `at_describe.py`, `at_dig.py`, and
+the other building commands follow this pattern. Use `"move"` for a
+move, `"write"` for any other change, and `"transmute"`/`"derive"` for
+a parent change.
+
+A **helper verb** that changes `this` checks the code that called it.
+Helpers such as `describe`, `add_exit`, and `moveto` are wizard-owned
+and executable by everyone, so without a check a programmer could
+call `lookup(5).describe("...")` from `@eval` and write as the Wizard.
+`require_caller_perms` checks {func}`moo.sdk.caller_perms`, the owner
+of the calling verb (or the player, for a verb the parser dispatched):
+
+```python
+from moo.sdk import require_caller_perms
+
+require_caller_perms("write", this)
+this.set_property("description", args[0])
+```
+
+A helper called from another wizard-owned verb sees the Wizard as its
+caller and passes, so the command verb that called it must still check
+the player. `require_caller_perms` passes without a query when the
+caller owns `this`, and it looks up wizard status at most once for
+each session, so it is cheap enough for hot verbs such as `moveto`.
+
+`moveto` makes one exception: a player may always move themselves.
+That lets a builder's slide or teleporter move the player who used it.
+
 ## Role and ownership branching
 
 A handful of verbs need to take *different actions* based on who's

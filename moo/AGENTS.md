@@ -179,6 +179,21 @@ Why it matters — **privilege flows from the owner**:
   player is a non-wizard avatar. The same call made directly outside a verb (or
   from a non-wizard-owned verb) is denied.
 - To act with a different identity, use `set_task_perms` — it rewrites `caller`.
+  Use it only to drop to `context.player` for writes made directly in the block;
+  a verb called inside the block resets `caller` to its own owner.
+
+The flip side: **a Wizard-owned verb passes every model-layer check**, so it must
+check the actor before it changes anything for someone else.
+
+- A **command verb** checks the typist:
+  `context.player.is_allowed("write", obj, fatal=True)` (`"move"` for moves,
+  `"transmute"`/`"derive"` for parent changes). See `builder/at_lock.py`.
+- A **helper verb** that changes `this` (`describe`, `add_exit`, `moveto`, …) is
+  executable by everyone, so it checks the code that called it:
+  `require_caller_perms("write", this)`. `caller_perms()` returns that caller (the
+  previous frame's caller), cheaply — never copy `context.caller_stack` for this.
+- `$builder` and `$programmer` must never be derivable by everyone: a player owns
+  their avatar, so `derive` on a rung class is self-promotion.
 
 Common mistake: testing a privileged SDK call (e.g. `output.open_window`) by
 calling it directly in a `ContextManager` with the player as caller — it'll raise

@@ -43,6 +43,10 @@ see {doc}`objects`. For `Property` and `Verb` field reference, see
    :no-index:
 .. autofunction:: moo.sdk.set_task_perms
    :no-index:
+.. autofunction:: moo.sdk.caller_perms
+   :no-index:
+.. autofunction:: moo.sdk.require_caller_perms
+   :no-index:
 .. autofunction:: moo.sdk.moo_eval
    :no-index:
 .. autofunction:: moo.sdk.invoked_verb_name
