@@ -100,7 +100,7 @@ This document provides essential context for AI models interacting with the Djan
     - **SSH Server** (`moo.shell.server`): AsyncSSH server implementation
     - **Bootstrap** (`moo.bootstrap`): Database initialization and default object creation
     - **Mail** (`moo.core.models.mail`): `Message` and `MessageRecipient` Django models; all verb-facing operations are in `moo.sdk` (`send_message`, `get_mailbox`, etc.)
-    - **Public SDK** (`moo.sdk`): Canonical import location for all verb authors — `lookup`, `create`, `write`, `open_editor`, `open_paginator`, mail functions, and exceptions
+    - **Public SDK** (`moo.sdk`): Canonical import location for all verb authors — `lookup`, `create`, `write`, `open_editor`, `open_paginator`, `set_task_perms`, `caller_perms`, `require_caller_perms`, mail functions, and exceptions
   - Modules follow Django conventions with `models.py`, `admin.py`, `apps.py` for each app
 
 ### Mail System
@@ -131,7 +131,9 @@ usable.
 
 A set of engine and `default`-level primitives for a public, user-programmable
 world. Each is generically useful to any `default` game. Verb code reaches them
-through `moo.sdk`; the SDK enforces authorization, not the calling verb.
+through `moo.sdk`; these SDK entry points enforce their own authorization. Ordinary
+model writes are different: a Wizard-owned verb passes every model check, so it
+must check the actor itself (see "Permissions/ACL" below).
 
 | Area | SDK entry points | Key facts |
 |------|------------------|-----------|
@@ -144,6 +146,8 @@ through `moo.sdk`; the SDK enforces authorization, not the calling verb.
 | Escape guarantee | `send_home`, `guaranteed_moveto`, `check_room_connectivity` | `home` bypasses the destination's `accept`/locks so a player can't be trapped. |
 | External keys | `resolve_by_key`, `get_or_create_by_key` | O(1) idempotent resolve-or-create via an indexed `(site, namespace, key)` table, scoped to the active Site; wrapped in a transaction so a lost race never orphans an Object. |
 | Compute bounds | — | `MOO_TICK_BUDGET` caps per-task loop iterations (`TickLimitError`), finer than the Celery wall-clock kill. |
+| Object quota | `create` | `create()` raises `QuotaError` at zero; recycle refunds. Each avatar's `ownership_quota` row is Wizard-owned (`inherit_owner=True`), so a player cannot `@set` it. |
+| Actor checks | `caller_perms`, `require_caller_perms` | A command verb checks `context.player.is_allowed(...)`; a helper verb that changes `this` calls `require_caller_perms`. `$builder`/`$programmer` are not derivable by everyone. |
 | Transaction locks | `lock_until_commit` | Call before a read-modify-write of shared state. A Postgres advisory lock held until the task's transaction commits or rolls back; re-entrant; scoped to Site + calling verb's owner; raises `LockTimeout` after `wait` (max 10 s). No-op on SQLite. |
 
 New model-guard posture for a sandbox audit: `AuditLog` is append-only
@@ -234,16 +238,16 @@ specific dataset in the chart.
     - **Attribute Lookup Caching**: Verb and property lookups use a three-tier cache: (1) a per-`ContextManager` session dict, (2) a Redis cross-session store keyed by `moo:verb:…` / `moo:prop:…`, and (3) the `AncestorCache` denormalized table that replaces recursive CTEs on the hot dispatch path. The Redis TTL is controlled by `MOO_ATTRIB_CACHE_TTL` (default 120 s; set to 0 in tests).
 
 - **Common Patterns & Idioms:**
-  - **Inheritance & Properties**: Objects inherit from parent objects. Properties are created via `Object.set_property()` and retrieved via `Object.get_property()` or model access. Inherited properties are propagated to child objects automatically, optionally inheriting ownership.
+  - **Inheritance & Properties**: Objects inherit from parent objects. Properties are created via `Object.set_property()` and retrieved via `Object.get_property()` or model access. Inherited properties are propagated to child objects automatically, optionally inheriting ownership. Updating an existing row keeps its owner; `write` on an object does not grant `write` on its existing property rows.
   - **Verb Code Execution**: Verbs are Python functions compiled and executed within a restricted environment. The entry point is `def verb(this, passthrough, _, *args, **kwargs)`, but verb source files only contain the body of this function.
-  - **Permissions/ACL**: Access control uses a permission string model (`"read"`, `"write"`, `"execute"`, etc.). Objects check permissions via `can_caller()` methods, which evaluate against `context.caller`.
+  - **Permissions/ACL**: Access control uses a permission string model (`"read"`, `"write"`, `"execute"`, etc.). Objects check permissions via `can_caller()` methods, which evaluate against `context.caller`. Inside a Wizard-owned verb that check always passes, so command verbs check `context.player.is_allowed(perm, obj, fatal=True)` and helper verbs call `require_caller_perms(perm, this)`.
     - **`context.caller` is the executing verb's OWNER** — not `this`, not `context.player`, and never the System Object (which owns no verbs). It is set to `self.owner` on every verb invocation and re-shifts on each nested call, so privilege flows from whoever owns the code. Wizard-only SDK calls (`write()`, the `window_*` display surface) therefore succeed inside Wizard-owned verbs even when a non-wizard avatar typed the command. See `moo/AGENTS.md` → "`context.caller` is the verb's OWNER" for the full rules and the common debugging pitfall.
   - **Async/Concurrency**: SSH server and task processing leverage asyncio and Celery for handling concurrent player sessions and background tasks.
   - **Type Hints**: Modern code uses Python type hints for clarity; some legacy code may lack them.
   - **Django Admin Integration**: Administrative access is primarily through Django's admin interface at `/admin`.
 
 - **Error Handling:**
-  - Exceptions are used for error signaling (e.g., `PermissionDenied`, `Object.DoesNotExist`)
+  - Exceptions are used for error signaling (e.g., `AccessError`, a `PermissionError` subclass, and `Object.DoesNotExist`)
   - Django ValidationError is used for model validation
   - RestrictedPython compile errors are caught and reported to players
   - Verb execution errors are caught and reported to the player executing the verb

@@ -188,10 +188,22 @@ check the actor before it changes anything for someone else.
 - A **command verb** checks the typist:
   `context.player.is_allowed("write", obj, fatal=True)` (`"move"` for moves,
   `"transmute"`/`"derive"` for parent changes). See `builder/at_lock.py`.
-- A **helper verb** that changes `this` (`describe`, `add_exit`, `moveto`, …) is
+- A **helper verb** that changes `this` (`describe`, `add_exit`, `eject`, …) is
   executable by everyone, so it checks the code that called it:
   `require_caller_perms("write", this)`. `caller_perms()` returns that caller (the
   previous frame's caller), cheaply — never copy `context.caller_stack` for this.
+  The `moveto` verbs check `"move"` instead, and skip the check when `this` is
+  `context.player`, so a player can always move themselves through anyone's code.
+  A Wizard-owned override that calls `passthrough()` needs its own check: the
+  parent verb sees the Wizard as its caller.
+- **`set_property` never transfers a row.** An update keeps the row's owner and
+  `inherit_owner`, and the `write` check runs against that owner. `write` on an
+  object does not grant `write` on its existing property rows. A *new* row is
+  still owned by `context.player` while a session is active, so a Wizard verb
+  that creates a row for a player must reassign it if the player should not own it.
+- **Quota rows belong to the Wizard.** `$player.ownership_quota` has
+  `inherit_owner=True`; players cannot `@set` it. Engine code adjusts it with
+  `Object._quota()` / `Object._adjust_quota(delta)` (unreachable from verbs).
 - `$builder` and `$programmer` must never be derivable by everyone: a player owns
   their avatar, so `derive` on a rung class is self-promotion.
 
@@ -240,7 +252,7 @@ These test models and the verb execution engine directly, without a full bootstr
 ```python
 import pytest
 from moo.sdk import create, lookup
-from moo.core.exceptions import PermissionDenied
+from moo.core.exceptions import AccessError
 
 @pytest.mark.django_db
 def test_object_creation():
@@ -252,7 +264,7 @@ def test_permission_check():
     obj = create("Protected Object")
     obj.owner = lookup("Wizard")
     obj.save()
-    with pytest.raises(PermissionDenied):
+    with pytest.raises(AccessError):
         obj.can_caller("write")
 ```
 

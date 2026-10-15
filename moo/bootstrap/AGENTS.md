@@ -41,6 +41,8 @@ The default dataset bootstraps four player classes, each inheriting from the pre
 
 The safety verbs (`@suspend`/`@ban`/`@auditlog`, the `@recycle`→`@restore`/`@destroy` recovery pair, `@register`) delegate to the `moo.sdk` safety primitives — the SDK enforces the authorization (staff-only, can't-target-staff), not the verb. `$room` also gained overridable rendering hooks (`look_description`, `show_compass`, `hide_from_contents`, `tell_contents_extra`, `procedural_exit`) and `$player` an `on_player_action` observer hook; see the Sphinx *Accountability* explanation and `reference/builtins.md`.
 
+Only wizards (or Wizard-owned verbs) can add `$builder` or `$programmer` as a parent; `999_finalize.py` grants everyone `derive` on the content classes only.
+
 When adding a new verb, place it on the lowest class that ought to run it. Putting `@edit` on `$player` would let any connected user open a verb in the editor, which is not what we want.
 
 Agents running on the Tradesmen mux (`mason`, `joiner`, `tinker`, `harbinger`) are assigned avatars of the appropriate class — so `joiner` (a `$builder`) cannot use `@edit`, while `tinker` (a `$programmer`) can.
@@ -157,7 +159,7 @@ Access is limited to (from settings):
 
 **`ALLOWED_MODULES`**:
 
-- `moo.sdk` - Public verb API (lookup, create, context, invoke, exceptions, etc.)
+- `moo.sdk` - Public verb API (lookup, create, context, invoke, caller_perms, require_caller_perms, exceptions, etc.)
 - `hashlib` - Hashing functions
 - `re` - Regular expressions
 - `datetime` - Date and time utilities
@@ -430,13 +432,25 @@ Verbs in `default/verbs/` are loaded by `bootstrap.load_verbs()` at the end of `
 
 ## Best Practices for Verb Development
 
-### 1. Just Attempt the Operation
+### 1. Check the Actor, Then Attempt the Operation
 
-The permission system fires automatically at the model layer. Verbs should attempt
-the operation and let `AccessError` propagate — the task runner catches
-`PermissionError` and shows the player a clean red message. Do not write
-`if not obj.can_caller("write"): print("Permission denied.")` ahead of `obj.save()`;
-the model-layer guard about to fire produces a better message than a hand-rolled one.
+The model layer checks `context.caller`, which is the verb's owner. In a verb you
+own, that guard fires for you: attempt the operation and let `AccessError`
+propagate — the task runner catches `PermissionError` and shows the player a clean
+red message. Do not hand-roll `if not obj.can_caller("write"): print(...)`.
+
+Every verb in `default/verbs/` is **Wizard-owned**, so there the model guard always
+passes. A Wizard-owned verb that changes something on someone else's behalf must
+check first, with `fatal=True` so the same clean message appears:
+
+- A command verb checks the typist: `context.player.is_allowed("write", obj, fatal=True)`
+  (`"move"` for moves, `"transmute"` on the object and `"derive"` on the parent for
+  parent changes).
+- A helper verb that changes `this` checks the code that called it:
+  `require_caller_perms("write", this)` (from `moo.sdk`).
+
+`set_task_perms(context.player)` covers only the writes made directly in its
+block; a verb called inside the block runs as its own owner again.
 
 `can_caller(perm)` is for *output shaping* (e.g. an `examine` verb that hides an
 "edit this" hint from non-owners), not for guarding writes. Use `is_wizard()` or
@@ -585,7 +599,7 @@ obj.add_verb("my_verb", code='return "verb result"')
 - Use `lookup()` or properties to find objects
 - Let `UserError` subclasses propagate — the task runner will display them to the player automatically
 - Raise `UsageError` for bad input/syntax errors; raise `NoSuchObjectError` / `NoSuchPropertyError` when appropriate rather than printing the message manually
-- Use permission checks (`can_caller()`)
+- Check the actor in Wizard-owned verbs (`context.player.is_allowed(..., fatal=True)` or `require_caller_perms`)
 - Test verbs with multiple argument combinations
 - Document complex verb logic with comments
 - Use type hints in Python code (not in verbs, they're restricted)
