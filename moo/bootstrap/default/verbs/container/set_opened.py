@@ -7,6 +7,10 @@ Called by open and close, with the arguments `True` and `False` respectively. Th
 to either `True` (opened) or `False` (closed).
 """
 
+from moo.sdk import require_caller_perms
+
+require_caller_perms("write", this)
+
 is_open_flag = bool(args[0])
 
 this.set_property("open", is_open_flag)

@@ -8,7 +8,9 @@ not possible to remove `exit`` from the room``s exit list (normally because the 
 the required permission) then the verb returns `False`. Otherwise, a successful addition returns `True`.
 """
 
-from moo.sdk import NoSuchPropertyError
+from moo.sdk import NoSuchPropertyError, require_caller_perms
+
+require_caller_perms("write", this)
 
 exit_obj = args[0]
 

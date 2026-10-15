@@ -8,6 +8,10 @@ this verb to eject a victim from inside the object. The victim is sent to `None`
 `$player_start` if the victim is a player.
 """
 
+from moo.sdk import require_caller_perms
+
+require_caller_perms("write", this)
+
 something = args[0]
 if this.contains(something):
     if something.is_player():

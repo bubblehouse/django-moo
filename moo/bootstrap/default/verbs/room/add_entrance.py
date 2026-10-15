@@ -12,7 +12,9 @@ If it is not possible to add entrance to the room's entrance list (normally beca
 does not have the required permission) then the verb returns ``0``. Otherwise, a successful addition returns ``1``.
 """
 
-from moo.sdk import NoSuchPropertyError
+from moo.sdk import NoSuchPropertyError, require_caller_perms
+
+require_caller_perms("write", this)
 
 entrance = args[0]
 

@@ -9,7 +9,9 @@ the interface so that different implementations of the exits concept can be used
 class.
 """
 
-from moo.sdk import NoSuchPropertyError
+from moo.sdk import NoSuchPropertyError, require_caller_perms
+
+require_caller_perms("write", this)
 
 exit_obj = args[0]
 

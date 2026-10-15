@@ -14,9 +14,14 @@ the current room, then honour the destination's lock — and the
 intentional; that walk would hit the same ambiguity.
 """
 
-from moo.sdk import set_task_perms
+from moo.sdk import context, require_caller_perms, set_task_perms
 
 where = args[0]
+
+# A player may move themselves through anyone's code; moving anything else
+# needs "move" permission for the calling verb's owner.
+if context.player is None or this.pk != context.player.pk:
+    require_caller_perms("move", this)
 
 if this.location:
     for placed in list(this.placed_objects.filter(location=this.location).all()):

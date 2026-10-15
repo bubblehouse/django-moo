@@ -11,6 +11,8 @@ representation of an object description. This is done invisibly to anyone outsid
 as long as you adhere to the same interface to `description` and `describe`.
 """
 
-from moo.sdk import context
+from moo.sdk import context, require_caller_perms
+
+require_caller_perms("write", this)
 
 this.set_property("description", args[0])

@@ -8,6 +8,10 @@ otherwise it returns `False`. This verb and the `title` verb are used to control
 object.
 """
 
+from moo.sdk import require_caller_perms
+
+require_caller_perms("write", this)
+
 try:
     this.name = args[0]
     this.save()
