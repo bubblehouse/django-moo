@@ -17,8 +17,10 @@ the room into `$nothing` when the room is recycled.
 
 for x in this.contents.all():
     if x.is_player():
-        if x.has_property("home"):
-            x.moveto(x.home)
+        # Read `home` as a property: `x.home` finds the `home` verb on $player first.
+        home = x.get_property("home") if x.has_property("home") else None
+        if home is not None:
+            x.moveto(home)
         if x.location == this:
             x.location = _.player_start
             x.save()
