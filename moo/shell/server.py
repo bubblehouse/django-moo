@@ -512,14 +512,19 @@ def _provision_wizard_avatar(user, site):
 
 def _provision_wizard_avatar_on_site(user, site):
     """Do the work of :func:`_provision_wizard_avatar` with ``site`` already active."""
-    from moo.core.exceptions import NoSuchPropertyError
+    from moo.core.exceptions import NoSuchPropertyError, UserError
     from moo.core.models.object import Object
 
-    avatar, created = Object.global_objects.get_or_create(
-        name=user.username,
-        unique_name=True,
-        site=site,
-    )
+    # A unique avatar cannot share a name with another Object on this Site, so the
+    # wizard takes the first free name: the username, then "<username>-wizard", and so on.
+    for name in [user.username, f"{user.username}-wizard"] + [f"{user.username}-wizard{n}" for n in range(2, 10)]:
+        try:
+            avatar, created = Object.global_objects.get_or_create(name=name, unique_name=True, site=site)
+            break
+        except UserError:
+            log.warning("%s is taken on %s; trying another name for the wizard avatar.", name, site)
+    else:
+        raise UserError(f"No free name for {user.username}'s wizard avatar on {site}.")
     if not created and avatar.parents.exists() and avatar.location_id is not None:
         return avatar  # already fully provisioned
     if created:

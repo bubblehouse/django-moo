@@ -21,7 +21,8 @@ class Command(BaseCommand):
     def handle(self, username, avatar, password=None, wizard=False, **kwargs):  # pylint: disable=arguments-differ
         if User.objects.filter(username=username).exists():
             raise CommandError(f"Django user '{username}' already exists.")
-        if Object.objects.filter(name=avatar, unique_name=True).exists():
+        # The avatar is unique-named, so no other object may hold its name.
+        if Object.objects.filter(name__iexact=avatar).exists():
             raise CommandError(f"MOO object '{avatar}' already exists.")
 
         if password is None:

@@ -17,7 +17,7 @@ from moo.core.managers import get_default_site
 from moo.core.models import Object, Player, Property
 from moo.core.models.auth import UniversalWizard
 from moo.core.moojson import clear_nothing_cache
-from moo.sdk import lookup
+from moo.sdk import create, lookup
 
 
 # ---------------------------------------------------------------------------
@@ -306,6 +306,7 @@ def test_avatar_hijack_resistance(t_two_sites):
     player = Player.objects.get(user=user, site=site2)
     assert player.avatar.pk != decoy.pk
     assert player.avatar.unique_name is True
+    assert player.avatar.name == "phil-wizard"
 
 
 # ---------------------------------------------------------------------------
@@ -390,3 +391,16 @@ def test_moo_init_refuses_reload_on_same_site():
     call_command("moo_init", bootstrap="default", hostname="foo.local")
     with pytest.raises(RuntimeError, match=r"already loaded on foo\.local.*--sync"):
         call_command("moo_init", bootstrap="default", hostname="foo.local")
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_createuser_refuses_a_held_avatar_name(t_init, t_wizard):
+    """moo_createuser refuses an avatar name another object holds, ignoring case, and creates no user."""
+    from django.core.management import call_command
+    from django.core.management.base import CommandError
+
+    with code.ContextManager(t_wizard, lambda _: None):
+        create("bob the builder")
+    with pytest.raises(CommandError, match="already exists"):
+        call_command("moo_createuser", "bob", "Bob The Builder", password="x")
+    assert not User.objects.filter(username="bob").exists()
