@@ -1,3 +1,18 @@
+## [1.18.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.17.0...v1.18.0) (2026-10-16)
+
+### Features
+
+* **sdk:** add caller_perms and require_caller_perms ([ea157e0](https://gitlab.com/bubblehouse/django-moo/commit/ea157e0a1da437b2acddf36af474273014b327bf))
+
+### Bug Fixes
+
+* **bootstrap:** check caller perms in helper verbs ([6c7b52c](https://gitlab.com/bubblehouse/django-moo/commit/6c7b52c5133be9024df16f045406268c4c02b477))
+* **bootstrap:** check the actor in building commands ([ecb8d7d](https://gitlab.com/bubblehouse/django-moo/commit/ecb8d7ddbbedb0efee3a84f0c097fd1719d9119b))
+* **bootstrap:** grant write on property rows in grant_write ([28f8e15](https://gitlab.com/bubblehouse/django-moo/commit/28f8e15b687f869e79b92ba98604185124e892d1))
+* **bootstrap:** keep avatar quota rows wizard-owned ([794ec30](https://gitlab.com/bubblehouse/django-moo/commit/794ec30fcbfcea774614a885cf02e19bc7bf99ba))
+* **bootstrap:** stop granting derive on rung classes ([45610f7](https://gitlab.com/bubblehouse/django-moo/commit/45610f7ed54942fd37956c7e0faf9eb1de914469))
+* **core:** keep property owners when values change ([9190ee8](https://gitlab.com/bubblehouse/django-moo/commit/9190ee8decec27c17f6df6aca4d12f5822bbebf9))
+
 ## [1.17.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.16.2...v1.17.0) (2026-10-14)
 
 ### Features
