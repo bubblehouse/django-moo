@@ -4,7 +4,7 @@ from moo.core import code, parse
 from moo.sdk import create, lookup
 from moo.core.models import Object
 from moo.core.models.verb import Verb, VerbName
-from moo.core.exceptions import UsageError
+from moo.core.exceptions import UsageError, UserError
 from .utils import save_quietly
 
 # --- @create ---
@@ -101,8 +101,10 @@ def test_create_from_parent_uses_global_lookup(t_init: Object, t_wizard: Object)
         room = create("Test Room", parents=[rooms_cls])
         t_wizard.location = room
         save_quietly(t_wizard)
-        # Put a decoy object in the room named the same as a target class.
-        decoy = create("Generic Container", parents=[system.thing], location=room)
+        # Put a decoy object in the room that answers to a target class's name. The
+        # class name is unique, so the decoy carries it as an alias.
+        decoy = create("decoy", parents=[system.thing], location=room)
+        decoy.add_alias("Generic Container")
         parse.interpret(ctx, '@create "box" from "Generic Container"')
     obj = Object.objects.filter(name="box").first()
     assert obj is not None
@@ -407,6 +409,18 @@ def test_rename_own_object(t_init: Object, t_wizard: Object, setup_item):
         widget.refresh_from_db()
     assert widget.name == "gadget"
     assert any("gadget" in line for line in printed)
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_rename_to_a_unique_name_is_refused(t_init: Object, t_wizard: Object, setup_item):
+    """@rename cannot take a name that a unique-named Object holds."""
+    with code.ContextManager(t_wizard, lambda _: None) as ctx:
+        widget = setup_item(t_wizard.location, "widget")
+        with pytest.raises(UserError, match="already taken"):
+            parse.interpret(ctx, "@rename widget to wizard")
+        widget.refresh_from_db()
+    assert widget.name == "widget"
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)

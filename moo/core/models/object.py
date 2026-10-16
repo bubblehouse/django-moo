@@ -154,7 +154,8 @@ class Object(models.Model, AccessibleMixin):
 
     #: The canonical name of the object
     name = models.CharField(max_length=255, db_index=True)
-    #: If True, this object is the only object with this name
+    #: If True, this object is the only object on its Site with this name, ignoring
+    #: case. ``save()`` refuses another object with the name, unique or not.
     unique_name = models.BooleanField(default=False, db_index=True)
     #: This object should be obvious among a group. The meaning of this value is database-dependent.
     obvious = models.BooleanField(default=False)
@@ -1001,6 +1002,25 @@ class Object(models.Model, AccessibleMixin):
         record_action("destroy", target=self)
         super().delete(*args, **kwargs)
 
+    def _check_name_available(self):
+        """
+        Refuse a name that a unique-named Object on the same Site already holds.
+
+        A unique name belongs to one Object: no other Object may share it, unique or
+        not. When this Object is unique-named, no other Object may already hold its
+        name. The match ignores case, as :func:`moo.sdk.lookup` does. The database
+        constraint ``unique_name_per_site`` covers only the unique-named rows.
+
+        :raises UserError: when the name is taken
+        """
+        others = Object.global_objects.filter(site_id=self.site_id, name__iexact=self.name)
+        if self.pk is not None:
+            others = others.exclude(pk=self.pk)
+        if not self.unique_name:
+            others = others.filter(unique_name=True)
+        if others.exists():
+            raise exceptions.UserError(f"The name {self.name!r} is already taken.")
+
     def save(self, *args, **kwargs):
         unsaved = self.pk is None
         if unsaved:
@@ -1030,6 +1050,8 @@ class Object(models.Model, AccessibleMixin):
         # a new object (unsaved) cannot yet contain anything, so skip it there.
         if not unsaved and self.location and self.contains(self.location):
             raise exceptions.RecursiveError(f"{self} already contains {self.location}")
+        if unsaved or self.name != self._original_name or self.unique_name != self._original_unique_name:
+            self._check_name_available()
         with transaction.atomic():
             super().save(*args, **kwargs)
             # after saving, new objects need default permissions

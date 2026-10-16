@@ -21,6 +21,12 @@ reused.
 `unique_name`, `obvious`, `owner`). `set_property()` saves its own
 row; you do not need to call `save()` after it.
 
+A unique name reserves the name on its Site. `save()` raises `UserError`
+when the name, ignoring case, belongs to a unique-named Object, or when a
+unique-named Object takes a name another Object holds. Two plain Objects
+may share a name. To hand a unique name to another Object, clear
+`unique_name` or rename the holder first, then save the new holder.
+
 `Object.delete()` (which `@recycle` calls) walks the full inherited
 verb chain looking for a `recycle` verb and runs the first match.
 That means a subclass's `recycle` fires automatically — `$daemon`,

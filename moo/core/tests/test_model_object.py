@@ -589,3 +589,100 @@ def test_ancestor_cache_rebuilt_on_parents_remove(t_init, t_wizard):
     with _ctx(t_wizard):
         child.parents.remove(parent)
     assert not AncestorCache.objects.filter(descendant=child, ancestor=parent).exists()
+
+
+# ---------------------------------------------------------------------------
+# Unique names
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_plain_object_cannot_take_a_unique_name(t_init, t_wizard):
+    """A unique name refuses a plain Object too, ignoring case."""
+    with _ctx(t_wizard):
+        held = create("Herman")
+        held.unique_name = True
+        held.save()
+        with pytest.raises(exceptions.UserError, match="already taken"):
+            create("herman")
+        other = create("Someone")
+        other.name = "HERMAN"
+        with pytest.raises(exceptions.UserError, match="already taken"):
+            other.save()
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_unique_object_cannot_take_a_held_name(t_init, t_wizard):
+    """An Object cannot become unique while another Object holds its name."""
+    with _ctx(t_wizard):
+        create("Luigi")
+        obj = create("Luigi")
+        obj.unique_name = True
+        with pytest.raises(exceptions.UserError, match="already taken"):
+            obj.save()
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_unique_object_cannot_take_a_held_name_in_another_case(t_init, t_wizard):
+    """A new unique Object cannot take a held name that differs only in case."""
+    with _ctx(t_wizard):
+        create("luigi")
+        obj = create("Someone")
+        obj.name = "LUIGI"
+        obj.unique_name = True
+        with pytest.raises(exceptions.UserError, match="already taken"):
+            obj.save()
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_plain_objects_may_share_a_name(t_init, t_wizard):
+    """Two plain Objects may share a name."""
+    with _ctx(t_wizard):
+        create("widget")
+        second = create("gadget")
+        second.name = "Widget"
+        second.save()
+    assert Object.objects.filter(name__iexact="widget").count() == 2
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_unique_object_keeps_its_own_name(t_init, t_wizard):
+    """An Object does not collide with itself when it becomes unique or changes case."""
+    with _ctx(t_wizard):
+        obj = create("Herman")
+        obj.unique_name = True
+        obj.save()
+        obj.name = "HERMAN"
+        obj.save()
+    assert Object.objects.get(pk=obj.pk).name == "HERMAN"
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_unique_name_is_per_site(t_init, t_wizard):
+    """A unique name on one Site does not reserve it on another."""
+    from django.contrib.sites.models import Site
+
+    other_site = Site.objects.create(domain="other.example", name="other")
+    with _ctx(t_wizard):
+        held = create("Herman")
+        held.unique_name = True
+        held.save()
+    elsewhere = Object.global_objects.create(name="Herman", site=other_site)
+    assert elsewhere.site_id != held.site_id
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_unique_name_hands_over(t_init, t_wizard):
+    """Clearing unique_name on the holder frees the name for another Object."""
+    with _ctx(t_wizard):
+        holder = create("Herman")
+        holder.unique_name = True
+        holder.save()
+        holder.name = "Herman (resting)"
+        holder.unique_name = False
+        holder.save()
+        taker = create("Someone")
+        taker.name = "Herman"
+        taker.unique_name = True
+        taker.save()
+    assert Object.objects.get(name="Herman", unique_name=True) == taker
