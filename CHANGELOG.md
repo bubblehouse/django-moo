@@ -1,3 +1,9 @@
+## [1.18.1](https://gitlab.com/bubblehouse/django-moo/compare/v1.18.0...v1.18.1) (2026-10-16)
+
+### Bug Fixes
+
+* **bootstrap:** send players home when their room is recycled ([f1b536e](https://gitlab.com/bubblehouse/django-moo/commit/f1b536e0b67e074b4a94d61d8c297864d3cf3e2a))
+
 ## [1.18.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.17.0...v1.18.0) (2026-10-16)
 
 ### Features
