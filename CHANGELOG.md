@@ -1,3 +1,15 @@
+## [1.19.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.18.2...v1.19.0) (2026-10-17)
+
+### Features
+
+* **bootstrap:** let players report abuse and show staff accounts ([7df02d9](https://gitlab.com/bubblehouse/django-moo/commit/7df02d996658c39755ccd0c42de8988dc313f172))
+* **sdk:** add account mutes and a sanction hook ([7fb5b8e](https://gitlab.com/bubblehouse/django-moo/commit/7fb5b8e04dcfe398719d720995b1b7d5516c90bb))
+
+### Bug Fixes
+
+* **bootstrap:** check the typist in staff commands ([9a41dcd](https://gitlab.com/bubblehouse/django-moo/commit/9a41dcdc02ff4f971e8a5f9bc7c7162b3d054a96))
+* **bootstrap:** put the actor's name first in every emote ([2eb60e6](https://gitlab.com/bubblehouse/django-moo/commit/2eb60e62f82370a70ffca54463b4c357f66ef845))
+
 ## [1.18.2](https://gitlab.com/bubblehouse/django-moo/compare/v1.18.1...v1.18.2) (2026-10-17)
 
 ### Bug Fixes
