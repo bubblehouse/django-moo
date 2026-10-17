@@ -8,7 +8,12 @@ Staff command: show the most recent consequential actions from the audit log.
 actions a given account took.
 """
 
-from moo.sdk import context, query_audit, account_for
+from moo.sdk import context, query_audit, account_for, lookup
+
+# This verb runs as its Wizard owner, so it checks the player who typed it.
+if not context.player.is_wizard():
+    print("Permission denied.")
+    return
 
 if context.parser.has_dobj_str():
     target = context.parser.get_dobj(lookup=True)
@@ -26,4 +31,13 @@ if not rows:
 
 print("[bold]Recent actions (newest first):[/bold]")
 for row in rows:
-    print(str(row))
+    line = str(row)
+    # The target's name is a snapshot, which may be a persona; show the account behind it.
+    if row.target_id:
+        try:
+            held = account_for(lookup(row.target_id))
+        except Exception:  # pylint: disable=broad-exception-caught
+            held = None
+        if held is not None:
+            line += f" (acct {held.pk})"
+    print(line)
