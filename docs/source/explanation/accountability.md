@@ -52,6 +52,25 @@ to the account and neither can target staff; the SSH login path consults
 {func}`moo.sdk.account_login_blocked`, which also clears a suspension whose
 deadline has passed so a lapsed account does not read as suspended forever.
 
+Between the gag and the suspension sits {func}`moo.sdk.mute`: the account keeps
+its login, but its `say`, `emote`, `page`, and `whisper` reach no one until the
+mute lapses or staff lift it with `@unmute`. The mute covers those four stock
+commands; mail, `@gripe`, `report`, and verbs a player writes are not muted.
+Each sanction (suspend, ban, mute) then schedules `on_sanction(kind)` on the
+account's avatar. It runs after the sanction commits, as its own task with the
+avatar as the player, so a hook can neither undo the sanction nor act with the
+moderator's authority. The default does nothing; a game overrides it, for
+example to end a role the player was playing. An override must check that the
+caller is staff, because any verb can call it.
+
+Players report abuse with `report <player|here> for <reason>`. The report goes
+to the audit log with the target's account and the reporter's room, and to the
+`gripe_recipients` staff list by mail. Staff reading `@auditlog` or `@whereis`
+see the account id beside each name, because a name can change and the account
+cannot. `emote` always puts the actor's name first, so no player can make
+another appear to act. An override of `emote1` receives that full line in
+`args[0]`; an override that added the name itself now shows it twice.
+
 Onboarding runs guest → registered: {func}`moo.sdk.provision_guest` creates a
 non-persistent `$guest` who can explore and talk but not build or own, and
 {func}`moo.sdk.register` binds a durable identity through a pluggable verifier

@@ -192,9 +192,10 @@ renders so a user line cannot present as a system line or another actor.
    :no-index:
 ```
 
-## Moderation: suspend and ban
+## Moderation: suspend, ban, and mute
 
-Staff-gated sanctions keyed to the durable account; neither can target staff.
+Staff-gated sanctions keyed to the durable account; none can target staff. Each
+calls `on_sanction(kind)` on the account's avatar when the avatar has that verb.
 
 ```{eval-rst}
 .. autofunction:: moo.sdk.suspend
@@ -202,6 +203,12 @@ Staff-gated sanctions keyed to the durable account; neither can target staff.
 .. autofunction:: moo.sdk.unsuspend
    :no-index:
 .. autofunction:: moo.sdk.ban
+   :no-index:
+.. autofunction:: moo.sdk.mute
+   :no-index:
+.. autofunction:: moo.sdk.unmute
+   :no-index:
+.. autofunction:: moo.sdk.is_muted
    :no-index:
 .. autofunction:: moo.sdk.is_blacklisted
    :no-index:
