@@ -1,3 +1,10 @@
+## [1.18.2](https://gitlab.com/bubblehouse/django-moo/compare/v1.18.1...v1.18.2) (2026-10-17)
+
+### Bug Fixes
+
+* **core:** reserve a unique name against every object ([e12586f](https://gitlab.com/bubblehouse/django-moo/commit/e12586ff0d1242789d9c5c9d34f4a2f4c15ec807))
+* **shell:** pick a free name for new wizard and player avatars ([9125fd1](https://gitlab.com/bubblehouse/django-moo/commit/9125fd1a30e51632b087936b3ab5f6ae09cd74fa))
+
 ## [1.18.1](https://gitlab.com/bubblehouse/django-moo/compare/v1.18.0...v1.18.1) (2026-10-16)
 
 ### Bug Fixes
