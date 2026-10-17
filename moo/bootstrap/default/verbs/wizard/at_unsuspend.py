@@ -8,6 +8,11 @@ Staff command: lift a suspension, returning the account to active.
 
 from moo.sdk import context, account_for, unsuspend
 
+# This verb runs as its Wizard owner, so it checks the player who typed it.
+if not context.player.is_wizard():
+    print("Permission denied.")
+    return
+
 if not context.parser.has_dobj_str():
     print("Usage: @unsuspend <player>")
     return
