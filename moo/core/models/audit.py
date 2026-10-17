@@ -32,6 +32,9 @@ class AuditLog(models.Model):
     SUSPEND = "suspend"
     UNSUSPEND = "unsuspend"
     BAN = "ban"
+    MUTE = "mute"
+    UNMUTE = "unmute"
+    REPORT = "report"
     ACTION_CHOICES = [
         (a, a)
         for a in (
@@ -44,6 +47,9 @@ class AuditLog(models.Model):
             SUSPEND,
             UNSUSPEND,
             BAN,
+            MUTE,
+            UNMUTE,
+            REPORT,
         )
     ]
 

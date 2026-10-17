@@ -11,6 +11,9 @@ from ...sdk import (
     suspend,
     unsuspend,
     ban,
+    mute,
+    unmute,
+    is_muted,
     is_blacklisted,
     account_login_blocked,
 )
@@ -119,3 +122,80 @@ def test_login_blocked_composes_status_and_blacklist(t_init: Object, t_wizard: O
         account.save()
         Blacklist.objects.create(identity="shared@example.org", site=account.site)
         assert account_login_blocked(account) == "This identity has been banned."
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_mute_is_staff_only_account_keyed_and_lapses(t_init: Object, t_wizard: Object):
+    """Staff mute an account; a player cannot; staff cannot be muted; an expired mute lapses."""
+    player = lookup("Player")
+    account = account_for(player)
+    with code.ContextManager(player, lambda _: None):
+        with pytest.raises(AccessError):
+            mute(account_for(t_wizard))
+    with code.ContextManager(t_wizard, lambda _: None):
+        with pytest.raises(UserError):
+            mute(account_for(t_wizard))
+        mute(account, hours=1)
+        assert is_muted(account)
+        assert AuditLog.objects.filter(action="mute").exists()
+        unmute(account)
+        account.refresh_from_db()
+        assert not is_muted(account)
+        mute(account)
+        assert is_muted(account)
+        unmute(account)
+        account.refresh_from_db()
+        assert not is_muted(account)
+        assert AuditLog.objects.filter(action="unmute").exists()
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_sanctions_call_the_avatar_hook(t_init: Object, t_wizard: Object):
+    """suspend, ban, and mute call on_sanction on the avatar, as the avatar; a failing hook keeps the sanction."""
+    player = lookup("Player")
+    account = account_for(player)
+
+    def last_sanction():
+        # The hook runs as its own task; read in a fresh session so no cached value hides its write.
+        with code.ContextManager(t_wizard, lambda _: None):
+            return lookup("Player").get_property("last_sanction")
+
+    with code.ContextManager(t_wizard, lambda _: None):
+        player.add_verb(
+            "on_sanction",
+            code="from moo.sdk import context\nthis.set_property('last_sanction', [args[0], context.player.name])\n",
+            replace=True,
+        )
+        mute(account, hours=1)
+    assert last_sanction() == ["mute", "Player"]
+    with code.ContextManager(t_wizard, lambda _: None):
+        suspend(account, hours=1)
+    assert last_sanction() == ["suspend", "Player"]
+    with code.ContextManager(t_wizard, lambda _: None):
+        player.add_verb("on_sanction", code="raise ValueError('broken hook')\n", replace=True)
+        try:
+            ban(account)
+        except ValueError:
+            pass  # An eager test task can surface the hook's error; the ban still stands.
+    account.refresh_from_db()
+    assert account.status == Player.STATUS_BANNED
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_mute_needs_positive_hours_and_expires(t_init: Object, t_wizard: Object):
+    """Zero or negative hours are refused; a mute whose deadline passed reads as lapsed."""
+    import datetime  # pylint: disable=import-outside-toplevel
+
+    from django.utils import timezone  # pylint: disable=import-outside-toplevel
+
+    account = account_for(lookup("Player"))
+    with code.ContextManager(t_wizard, lambda _: None):
+        for hours in (0, -1):
+            with pytest.raises(UserError):
+                mute(account, hours=hours)
+        mute(account, hours=1)
+    account.muted_until = timezone.now() - datetime.timedelta(seconds=1)
+    assert not is_muted(account)

@@ -33,7 +33,7 @@ def backward(apps, schema_editor):  # pylint: disable=unused-argument
 class Migration(migrations.Migration):
     initial = True
     dependencies = [
-        ("core", "0039_site_scoped_repositories_and_keys"),
+        ("core", "0040_player_muted_until"),
         ("sites", "0002_alter_domain_unique"),
         ("auth", "0012_alter_user_first_name_max_length"),
     ]

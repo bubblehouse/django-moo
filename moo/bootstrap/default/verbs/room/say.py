@@ -8,10 +8,15 @@ Provide one of the basic ways in which players communicate. The action of the :s
 all the objects in a room, not just the players, through the `tell` verbs on the objects in the room.
 
 By overriding this verb, it is possible to provide all sorts of effects that work on everything said in the room. For
-example, you could redirect messages to other rooms, or repeat messages to provide cavernous echoes.
+example, you could redirect messages to other rooms, or repeat messages to provide cavernous echoes. A muted player's
+speech reaches no one.
 """
 
-from moo.sdk import connected_players, context, send_gmcp
+from moo.sdk import account_for, connected_players, context, is_muted, send_gmcp
+
+if is_muted(account_for(context.player)):
+    context.player.tell("You are muted.")
+    return
 
 if context.parser.words:
     message = " ".join(context.parser.words[1:])

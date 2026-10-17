@@ -73,6 +73,9 @@ from .moderation import (
     suspend,
     unsuspend,
     ban,
+    mute,
+    unmute,
+    is_muted,
     is_blacklisted,
     account_login_blocked,
 )

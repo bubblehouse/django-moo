@@ -47,7 +47,11 @@ Here, `in`` is used to check if the player``s name occurs in the string we sent 
 does, then we print the player's subjective pronoun, capitalised. If it doesn't, we print the player's name.
 """
 
-from moo.sdk import context, send_gmcp
+from moo.sdk import account_for, context, is_muted, send_gmcp
+
+if is_muted(account_for(context.player)):
+    context.player.tell("You are muted.")
+    return
 
 player = context.player
 who = context.parser.get_dobj(lookup=True)

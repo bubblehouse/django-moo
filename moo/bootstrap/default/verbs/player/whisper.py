@@ -1,5 +1,7 @@
 #!moo verb wh*isper --on $player --dspec any --ispec to:this
 
+# pylint: disable=return-outside-function,undefined-variable
+
 """
 Send secret messages between two players, as if they were whispering to each other. The way this
 works is slightly the reverse of what might be expected, because the `whisper` verb on the person being whispered to is
@@ -7,7 +9,11 @@ the one that is invoked. The message — everything following the verb — is pr
 surrounding it to indicate that is it a whisper.
 """
 
-from moo.sdk import context, send_gmcp
+from moo.sdk import account_for, context, is_muted, send_gmcp
+
+if is_muted(account_for(context.player)):
+    context.player.tell("You are muted.")
+    return
 
 source = context.player.title()
 target = context.parser.get_pobj("to")

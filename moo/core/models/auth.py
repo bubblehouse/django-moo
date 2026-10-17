@@ -70,6 +70,9 @@ class Player(models.Model):
     registered_identity = models.CharField(max_length=255, null=True, blank=True)
     status = models.CharField(max_length=16, choices=STATUS_CHOICES, default=STATUS_ACTIVE)
     suspended_until = models.DateTimeField(null=True, blank=True)
+    # A staff mute: the account keeps its login, but its speech reaches no one
+    # until this passes.  ``None`` is not muted; see :func:`moo.sdk.mute`.
+    muted_until = models.DateTimeField(null=True, blank=True)
 
     @property
     def account_id(self) -> int:
@@ -92,6 +95,10 @@ class Player(models.Model):
         if self.suspended_until is None:
             return True
         return (now or timezone.now()) < self.suspended_until
+
+    def is_muted(self, now=None) -> bool:
+        """True while a staff mute is in force; a mute whose deadline passed has lapsed."""
+        return self.muted_until is not None and (now or timezone.now()) < self.muted_until
 
     def login_blocked_reason(self, now=None):
         """Return a human-readable reason login is blocked, or ``None`` if allowed.

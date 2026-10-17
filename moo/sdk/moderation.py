@@ -7,7 +7,9 @@ The high rungs of the moderation ladder above ``@gag`` (self-defense) and
 login for a period) and a scarring :func:`ban` (blacklists the account's durable
 identity so it cannot simply re-register).  All key to the durable account (G),
 none can target staff, and each is recorded to the audit log (L).  The login
-path consults :func:`account_login_blocked` and :func:`is_blacklisted`.
+path consults :func:`account_login_blocked` and :func:`is_blacklisted`.  A
+:func:`mute` keeps the login but silences the account's speech.  Each sanction
+calls ``on_sanction(kind)`` on the account's avatar, so a game can react.
 """
 
 from django.utils import timezone
@@ -29,6 +31,26 @@ def _refuse_if_staff(account):
         raise UserError("No such account.")
     if account.wizard:
         raise UserError("Staff accounts cannot be sanctioned.")
+
+
+def _notify_avatar(account, kind):
+    """Schedule ``on_sanction(kind)`` on the account's avatar when it has the verb.
+
+    The hook runs after the sanction commits, as its own task: it has its own
+    time limit and transaction, so it can neither delay nor undo the sanction.
+    The sanctioned avatar is the task's player, so code it owns never acts with
+    the moderator's authority; the moderator stays the caller.
+    """
+    from django.db import transaction
+
+    from .tasks import invoke
+
+    avatar = account.avatar
+    if avatar is None or not avatar.has_verb("on_sanction"):
+        return
+    verb = avatar.get_verb("on_sanction")
+    moderator = context.caller
+    transaction.on_commit(lambda: invoke(kind, verb=verb, _caller=moderator, _player=avatar))
 
 
 def suspend(account, duration=None, hours=None, reason=""):
@@ -58,6 +80,7 @@ def suspend(account, duration=None, hours=None, reason=""):
     account.suspended_until = (timezone.now() + duration) if duration is not None else None
     account.save()
     record_action("suspend", target=account.avatar, detail=reason, force=True)
+    _notify_avatar(account, "suspend")
     return account
 
 
@@ -105,7 +128,60 @@ def ban(account, reason=""):
             reason=reason,
         )
     record_action("ban", target=account.avatar, detail=reason, force=True)
+    _notify_avatar(account, "ban")
     return account
+
+
+def mute(account, hours=None, reason=""):
+    """Mute an account: it keeps its login, but its say, emote, page, and whisper reach no one.
+
+    :param account: the Player account to mute
+    :param hours: how long the mute lasts, more than 0; ``None`` is open-ended
+    :param reason: optional free-text reason (recorded in the audit log)
+    :raises PermissionError: if the caller is not staff
+    :raises UserError: if the target is missing or is a staff account, or ``hours`` is not positive
+    """
+    import datetime
+
+    from .audit import record_action
+
+    _require_staff()
+    _refuse_if_staff(account)
+    if hours is not None and not 0 < float(hours) < 24 * 365 * 100:
+        raise UserError("A mute needs a positive number of hours; use unmute to lift one.")
+    # An open-ended mute runs until staff lift it; store a far deadline so one field holds both.
+    span = datetime.timedelta(hours=float(hours)) if hours is not None else datetime.timedelta(days=365 * 100)
+    account.muted_until = timezone.now() + span
+    account.save(update_fields=["muted_until"])
+    record_action("mute", target=account.avatar, detail=reason, force=True)
+    _notify_avatar(account, "mute")
+    return account
+
+
+def unmute(account, reason=""):
+    """Lift a mute.
+
+    :param account: the Player account to unmute
+    :raises PermissionError: if the caller is not staff
+    :raises UserError: if the target is missing
+    """
+    from .audit import record_action
+
+    _require_staff()
+    if account is None:
+        raise UserError("No such account.")
+    account.muted_until = None
+    account.save(update_fields=["muted_until"])
+    record_action("unmute", target=account.avatar, detail=reason, force=True)
+    return account
+
+
+def is_muted(account) -> bool:
+    """True while the account is muted. An account of ``None`` is never muted.
+
+    :param account: the Player account, or ``None``
+    """
+    return account is not None and account.is_muted()
 
 
 def is_blacklisted(identity, site=None) -> bool:
