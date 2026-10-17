@@ -117,7 +117,9 @@ Every command and verb invocation is a Celery task. This gives:
   bounded by the OS.
 - **Atomic transactions** — every task body runs inside
   `transaction.atomic()`. Uncaught exceptions roll back the entire
-  task's database changes.
+  task's database changes, and its `on_commit` hooks never run. The
+  player still sees the error, and any message already sent with
+  `tell()` stays sent.
 - **Hard time limit** — read from the `CELERY_TASK_TIME_LIMIT`
   environment variable in `moo/celeryconfig.py` (default `3`
   seconds). When the limit elapses, Celery terminates the worker.

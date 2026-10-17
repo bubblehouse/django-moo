@@ -120,6 +120,41 @@ raise RuntimeError()
         Object.objects.get(name="ErroredObjectWithAUniqueName")
 
 
+def _create_then_fail(failure: str) -> str:
+    """Return verb code that creates an object, then raises a UserError or a crash."""
+    error = 'UserError("The command failed.")' if failure == "user" else 'RuntimeError("The command crashed.")'
+    return f"""\
+from moo.sdk import create, UserError
+create(name="Doomed", unique_name=True)
+raise {error}
+"""
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("failure", ["user", "crash"])
+def test_parse_command_rolls_back_a_failed_command(t_init: Object, t_wizard: Object, failure: str):
+    """A command that raises keeps none of its writes, whichever error it raises."""
+    v = t_wizard.add_verb("test-doomed-write", code=_create_then_fail(failure))
+    v.owner = t_wizard
+    v.save()
+
+    output, exit_status = tasks.parse_command.apply(args=[t_wizard.pk, "test-doomed-write"]).get()
+    assert exit_status == 1
+    assert any("failed" in line or "error occurred" in line for line in output)
+    assert not Object.objects.filter(name="Doomed").exists()
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("failure", ["user", "crash"])
+def test_invoke_verb_rolls_back_a_failed_verb(t_init: Object, t_wizard: Object, failure: str):
+    """An asynchronous verb that raises keeps none of its writes."""
+    t_wizard.add_verb("test-doomed-write", code=_create_then_fail(failure))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", RuntimeWarning)
+        tasks.invoke_verb(caller_id=t_wizard.pk, this_id=t_wizard.pk, verb_name="test-doomed-write")
+    assert not Object.objects.filter(name="Doomed").exists()
+
+
 # ---------------------------------------------------------------------------
 # published_events tracking (input_prompt / editor / paginator events emitted
 # during a parse_command task are recorded in a per-task list and exposed to the

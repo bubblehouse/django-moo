@@ -49,26 +49,27 @@ def parse_command(self, caller_id: int, line: str) -> tuple[list[Any], int]:
         caller, output.append, task_id=task_id, track_events=True, site=site, player=caller
     ) as ctx:
         prefix = "[ERROR] " if get_session_setting("prefixes_mode", False) else ""
-        with transaction.atomic():
-            try:
+        # The handlers sit outside the atomic block, so a failed command rolls back every write it made.
+        try:
+            with transaction.atomic():
                 log.info(f"{caller}: {line}")
                 parse.interpret(ctx, line)
-            except exceptions.UserError as e:
-                log.error(f"{caller}: {e}")
-                exit_status = 1
-                output.append(f"[bold red]{prefix}{e}[/bold red]")
-            except PermissionError as e:
-                log.error(f"{caller}: PermissionError: {e}")
-                exit_status = 1
-                output.append(f"[bold red]{prefix}PermissionError: {e}[/bold red]")
-            except Exception as e:  # pylint: disable=broad-exception-caught
-                log.exception(f"Error executing command for {caller}: {e}")
-                exit_status = 1
-                output.append(f"[bold red]{prefix}An error occurred while executing the command.[/bold red]")
-                if caller.is_wizard():
-                    import traceback
+        except exceptions.UserError as e:
+            log.error(f"{caller}: {e}")
+            exit_status = 1
+            output.append(f"[bold red]{prefix}{e}[/bold red]")
+        except PermissionError as e:
+            log.error(f"{caller}: PermissionError: {e}")
+            exit_status = 1
+            output.append(f"[bold red]{prefix}PermissionError: {e}[/bold red]")
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            log.exception(f"Error executing command for {caller}: {e}")
+            exit_status = 1
+            output.append(f"[bold red]{prefix}An error occurred while executing the command.[/bold red]")
+            if caller.is_wizard():
+                import traceback
 
-                    output.append(f"[bold red]{prefix}{traceback.format_exc()}[/bold red]")
+                output.append(f"[bold red]{prefix}{traceback.format_exc()}[/bold red]")
         events = code.ContextManager.get("published_events") or []
     if task_id:
         cache.set(f"moo:task_events:{task_id}", list(events), timeout=60)
@@ -152,7 +153,9 @@ def invoke_verb(
         with code.ContextManager(caller, writer, task_id=task_id, player=player, site=site):
             prefix = "[ERROR] " if get_session_setting("prefixes_mode", False) else ""
             try:
-                result = verb_obj(*args, _bypass_execute_check=True, **kwargs)
+                # A savepoint, so a failed verb rolls back every write it made.
+                with transaction.atomic():
+                    result = verb_obj(*args, _bypass_execute_check=True, **kwargs)
             except exceptions.UserError as e:
                 log.error(f"{caller}: {e}")
                 writer(f"[bold red]{prefix}{e}[/bold red]")
