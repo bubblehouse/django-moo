@@ -1,3 +1,13 @@
+## [1.20.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.19.2...v1.20.0) (2026-10-18)
+
+### Features
+
+* **sdk:** add unban and reasons for sanctions ([5e63eb2](https://gitlab.com/bubblehouse/django-moo/commit/5e63eb2333727cf381f52f2701e62c3794354a88))
+
+### Bug Fixes
+
+* **bootstrap:** let classes refuse names and clean pronouns ([f617d4b](https://gitlab.com/bubblehouse/django-moo/commit/f617d4bd8553a92a9321d894eae5b944d41ece0b))
+
 ## [1.19.2](https://gitlab.com/bubblehouse/django-moo/compare/v1.19.1...v1.19.2) (2026-10-18)
 
 ### Bug Fixes
