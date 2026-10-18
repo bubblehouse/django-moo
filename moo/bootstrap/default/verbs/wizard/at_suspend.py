@@ -5,8 +5,9 @@
 """
 Staff command: suspend an account, blocking its login for a period (the
 reversible "newt").  ``@suspend <player>`` is open-ended; ``@suspend <player>
-for <hours>`` sets a deadline after which login is allowed again.  Keys to the
-account, not the avatar, and cannot target staff.
+for <hours>`` sets a deadline after which login is allowed again. Add
+``because <reason>`` to record why in the audit log. Keys to the account, not
+the avatar, and cannot target staff.
 """
 
 from moo.sdk import context, account_for, suspend
@@ -17,18 +18,19 @@ if not context.player.is_wizard():
     return
 
 if not context.parser.has_dobj_str():
-    print("Usage: @suspend <player> [for <hours>]")
+    print("Usage: @suspend <player> [for <hours>] [because <reason>]")
     return
 
-target = context.parser.get_dobj(lookup=True)
+target, raw, reason = _.wizard.sanction_args()
+if target is None:
+    return
 account = account_for(target)
 if account is None:
     print(f"{target.name} has no account to suspend.")
     return
 
 hours = None
-if context.parser.has_pobj_str("for"):
-    raw = context.parser.get_pobj_str("for")
+if raw is not None:
     try:
         hours = float(raw)
     except ValueError:
@@ -36,7 +38,7 @@ if context.parser.has_pobj_str("for"):
         return
 
 try:
-    suspend(account, hours=hours)
+    suspend(account, hours=hours, reason=reason)
 except Exception as err:  # pylint: disable=broad-exception-caught
     print(str(err))
     return

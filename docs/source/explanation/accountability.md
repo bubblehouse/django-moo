@@ -51,6 +51,10 @@ account's durable identity so the same human cannot simply re-register. Both key
 to the account and neither can target staff; the SSH login path consults
 {func}`moo.sdk.account_login_blocked`, which also clears a suspension whose
 deadline has passed so a lapsed account does not read as suspended forever.
+{func}`moo.sdk.unban` (`@unban`) reverses a ban and drops the identity from the
+Site's blacklist. Every sanction command, and the commands that lift one, takes
+an optional `because <reason>`, which the audit entry keeps as its detail, so a
+moderator can cite a house rule on the sanction itself.
 
 Between the gag and the suspension sits {func}`moo.sdk.mute`: the account keeps
 its login, but its `say`, `emote`, `page`, and `whisper` reach no one until the

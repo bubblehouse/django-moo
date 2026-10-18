@@ -32,6 +32,7 @@ class AuditLog(models.Model):
     SUSPEND = "suspend"
     UNSUSPEND = "unsuspend"
     BAN = "ban"
+    UNBAN = "unban"
     MUTE = "mute"
     UNMUTE = "unmute"
     REPORT = "report"
@@ -47,6 +48,7 @@ class AuditLog(models.Model):
             SUSPEND,
             UNSUSPEND,
             BAN,
+            UNBAN,
             MUTE,
             UNMUTE,
             REPORT,

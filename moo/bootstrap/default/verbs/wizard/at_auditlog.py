@@ -5,7 +5,8 @@
 """
 Staff command: show the most recent consequential actions from the audit log.
 ``@auditlog`` lists the latest entries; ``@auditlog <player>`` filters to the
-actions a given account took.
+actions a given account took. Each entry's detail, such as a sanction's
+``because`` reason or a report's text, follows it, indented.
 """
 
 from moo.sdk import context, query_audit, account_for, lookup
@@ -41,3 +42,7 @@ for row in rows:
         if held is not None:
             line += f" (acct {held.pk})"
     print(line)
+    # The detail is free text from players and staff; print it plain and bounded.
+    detail = str(row.detail or "").replace("[", "(").replace("]", ")").strip()[:500]
+    for part in detail.splitlines():
+        print(f"    {part}")

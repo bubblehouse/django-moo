@@ -11,6 +11,7 @@ from ...sdk import (
     suspend,
     unsuspend,
     ban,
+    unban,
     mute,
     unmute,
     is_muted,
@@ -57,6 +58,22 @@ def test_ban_blacklists_identity(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_unban_reinstates_and_clears_the_blacklist(t_init: Object, t_wizard: Object):
+    with code.ContextManager(t_wizard, lambda _: None):
+        account = account_for(lookup("Player"))
+        account.registered_identity = "reformed@example.org"
+        account.save()
+        ban(account, reason="spam")
+        unban(account, reason="appeal granted")
+        account.refresh_from_db()
+        assert account.status == Player.STATUS_ACTIVE
+        assert not Blacklist.objects.filter(identity="reformed@example.org").exists()
+        assert account_login_blocked(account) is None
+        assert AuditLog.objects.filter(action="unban", detail="appeal granted").exists()
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_cannot_sanction_staff(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, lambda _: None):
         wizard_account = account_for(t_wizard)
@@ -65,6 +82,9 @@ def test_cannot_sanction_staff(t_init: Object, t_wizard: Object):
             suspend(wizard_account, hours=1)
         with pytest.raises(UserError, match="Staff"):
             ban(wizard_account)
+        for lift in (unsuspend, unban, unmute):
+            with pytest.raises(UserError, match="Staff"):
+                lift(wizard_account)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)

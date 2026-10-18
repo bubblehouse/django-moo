@@ -204,6 +204,8 @@ calls `on_sanction(kind)` on the account's avatar when the avatar has that verb.
    :no-index:
 .. autofunction:: moo.sdk.ban
    :no-index:
+.. autofunction:: moo.sdk.unban
+   :no-index:
 .. autofunction:: moo.sdk.mute
    :no-index:
 .. autofunction:: moo.sdk.unmute

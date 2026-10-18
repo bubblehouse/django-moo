@@ -3,7 +3,8 @@
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-Staff command: lift a suspension, returning the account to active.
+Staff command: lift a suspension, returning the account to active. Add
+``because <reason>`` to record why in the audit log.
 """
 
 from moo.sdk import context, account_for, unsuspend
@@ -14,17 +15,20 @@ if not context.player.is_wizard():
     return
 
 if not context.parser.has_dobj_str():
-    print("Usage: @unsuspend <player>")
+    print("Usage: @unsuspend <player> [because <reason>]")
     return
 
-target = context.parser.get_dobj(lookup=True)
+parsed = _.wizard.sanction_args()
+target, reason = parsed[0], parsed[2]
+if target is None:
+    return
 account = account_for(target)
 if account is None:
     print(f"{target.name} has no account.")
     return
 
 try:
-    unsuspend(account)
+    unsuspend(account, reason=reason)
 except Exception as err:  # pylint: disable=broad-exception-caught
     print(str(err))
     return

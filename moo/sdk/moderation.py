@@ -5,7 +5,7 @@ Staff sanction primitives.
 The high rungs of the moderation ladder above ``@gag`` (self-defense) and
 ``@eject`` (room owner): a reversible :func:`suspend` (LambdaMOO's "newt", blocks
 login for a period) and a scarring :func:`ban` (blacklists the account's durable
-identity so it cannot simply re-register).  All key to the durable account (G),
+identity so it cannot simply re-register), which :func:`unban` lifts.  All key to the durable account (G),
 none can target staff, and each is recorded to the audit log (L).  The login
 path consults :func:`account_login_blocked` and :func:`is_blacklisted`.  A
 :func:`mute` keeps the login but silences the account's speech.  Each sanction
@@ -89,13 +89,13 @@ def unsuspend(account, reason=""):
 
     :param account: the Player account to reinstate
     :raises PermissionError: if the caller is not staff
+    :raises UserError: if the target is missing or is a staff account
     """
     from ..core.models.auth import Player
     from .audit import record_action
 
     _require_staff()
-    if account is None:
-        raise UserError("No such account.")
+    _refuse_if_staff(account)
     account.status = Player.STATUS_ACTIVE
     account.suspended_until = None
     account.save()
@@ -132,6 +132,31 @@ def ban(account, reason=""):
     return account
 
 
+def unban(account, reason=""):
+    """Lift a ban: return the account to active and drop its identity from the blacklist.
+
+    Only the blacklist row for the account's own Site is removed; a site-wide ban
+    of the same identity stays.
+
+    :param account: the Player account to reinstate
+    :param reason: optional free-text reason (recorded in the audit log)
+    :raises PermissionError: if the caller is not staff
+    :raises UserError: if the target is missing or is a staff account
+    """
+    from ..core.models.auth import Player
+    from ..core.models.moderation import Blacklist
+    from .audit import record_action
+
+    _require_staff()
+    _refuse_if_staff(account)
+    account.status = Player.STATUS_ACTIVE
+    account.save()
+    if account.registered_identity:
+        Blacklist.objects.filter(identity=account.registered_identity, site=account.site).delete()
+    record_action("unban", target=account.avatar, detail=reason, force=True)
+    return account
+
+
 def mute(account, hours=None, reason=""):
     """Mute an account: it keeps its login, but its say, emote, page, and whisper reach no one.
 
@@ -163,13 +188,12 @@ def unmute(account, reason=""):
 
     :param account: the Player account to unmute
     :raises PermissionError: if the caller is not staff
-    :raises UserError: if the target is missing
+    :raises UserError: if the target is missing or is a staff account
     """
     from .audit import record_action
 
     _require_staff()
-    if account is None:
-        raise UserError("No such account.")
+    _refuse_if_staff(account)
     account.muted_until = None
     account.save(update_fields=["muted_until"])
     record_action("unmute", target=account.avatar, detail=reason, force=True)
