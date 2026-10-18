@@ -337,7 +337,7 @@ specific dataset in the chart.
     ```bash
     uv run pytest -n auto --cov
     uv run ruff format moo
-    uv run pylint moo --load-plugins pylint_django --django-settings-module=moo.settings.test
+    DJANGO_SETTINGS_MODULE=moo.settings.test uv run pylint moo --load-plugins pylint_django --django-settings-module=moo.settings.test
     ```
 
     Always run Ruff format, then pylint, after pytest. All three must pass before a change is considered complete. Ruff format runs before pylint at commit time — if it reformats a file, pylint sees the reformatted version, so formatting must be run first when checking manually.
@@ -483,7 +483,7 @@ uv run pytest -n auto --cov
 uv run pytest -n auto moo/core/tests/test_parser.py
 
 # Run linting (always run after pytest)
-uv run pylint moo --load-plugins pylint_django --django-settings-module=moo.settings.test
+DJANGO_SETTINGS_MODULE=moo.settings.test uv run pylint moo --load-plugins pylint_django --django-settings-module=moo.settings.test
 
 # View coverage report
 uv run coverage report
@@ -523,7 +523,7 @@ docker compose run webapp manage.py moo_make_universal alice
 3. Add tests for new functionality
 4. Run tests locally: `uv run pytest -n auto --cov`
 5. Run Ruff format: `uv run ruff format moo`
-6. Run linting: `uv run pylint moo --load-plugins pylint_django --django-settings-module=moo.settings.test`
+6. Run linting: `DJANGO_SETTINGS_MODULE=moo.settings.test uv run pylint moo --load-plugins pylint_django --django-settings-module=moo.settings.test`
 7. Fix any issues — repeat steps 4–6 until all pass cleanly
 8. Commit with Conventional Commits: `git commit -m "feat(core): add new feature"`
 9. Push and create merge request targeting `main`
