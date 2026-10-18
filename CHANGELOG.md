@@ -1,3 +1,10 @@
+## [1.19.1](https://gitlab.com/bubblehouse/django-moo/compare/v1.19.0...v1.19.1) (2026-10-18)
+
+### Bug Fixes
+
+* **core:** roll back a command that raises ([28ac676](https://gitlab.com/bubblehouse/django-moo/commit/28ac6763a4803a8b73f3aecbf201c4e1e3ec8460))
+* **parser:** stop splitting chat text into commands ([d853636](https://gitlab.com/bubblehouse/django-moo/commit/d853636b59e1855901dff99d255ad5ead9c9fadf))
+
 ## [1.19.0](https://gitlab.com/bubblehouse/django-moo/compare/v1.18.2...v1.19.0) (2026-10-17)
 
 ### Features
