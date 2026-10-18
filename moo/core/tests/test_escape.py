@@ -81,4 +81,4 @@ def test_connectivity_ok_for_two_way(t_init: Object, t_wizard: Object):
         a.set_property("exits", [east])
         b.set_property("exits", [west])
         report = check_room_connectivity(a)
-        assert report["issues"] == []
+        assert not report["issues"]

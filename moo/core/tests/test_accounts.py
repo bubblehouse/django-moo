@@ -58,7 +58,7 @@ def test_avatars_of_returns_list(t_init: Object, t_wizard: Object):
     with code.ContextManager(t_wizard, lambda _: None):
         account = account_for(t_wizard)
         assert avatars_of(account) == [t_wizard]
-        assert avatars_of(None) == []
+        assert not avatars_of(None)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
