@@ -48,11 +48,15 @@ lint:score:
     - mkdir -p public/badges public/lint
     - echo undefined > public/badges/lint.score
   script:
-    - uv sync
-    - uv run pylint --fail-under=8 --output-format=text moo | tee /tmp/pylint.txt
+    # uwsgi has no wheel, so every sync compiles it with 8 parallel gcc
+    # threads; a thread that fails to fork is ignored and the link fails
+    # later. Only the image runs uwsgi, and nothing in moo/ imports it.
+    # Every `uv run` below takes --no-sync, or it would install it again.
+    - uv sync --no-install-package uwsgi
+    - uv run --no-sync pylint --fail-under=8 --output-format=text moo | tee /tmp/pylint.txt
     - sed -n 's/^Your code has been rated at \([-0-9.]*\)\/.*/\1/p' /tmp/pylint.txt > public/badges/lint.score
   after_script:
-    - uv run anybadge --overwrite --label lint --value=$(cat public/badges/lint.score) --file=public/badges/lint.svg 4=red 6=orange 8=yellow 10=green
+    - uv run --no-sync anybadge --overwrite --label lint --value=$(cat public/badges/lint.score) --file=public/badges/lint.svg 4=red 6=orange 8=yellow 10=green
     - |
       echo "Your score is: $(cat public/badges/lint.score)"
   artifacts:
@@ -77,8 +81,8 @@ lint:codeclimate:
         - moo/**/*.py
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   script:
-    - uv sync
-    - uv run pylint --fail-under=8 --output-format=pylint_gitlab.GitlabCodeClimateReporter moo > codeclimate.json
+    - uv sync --no-install-package uwsgi
+    - uv run --no-sync pylint --fail-under=8 --output-format=pylint_gitlab.GitlabCodeClimateReporter moo > codeclimate.json
   artifacts:
     reports:
       codequality: codeclimate.json
@@ -103,8 +107,8 @@ lint:html:
   before_script:
     - mkdir -p public/lint
   script:
-    - uv sync
-    - uv run pylint --fail-under=8 --output-format=pylint_gitlab.GitlabPagesHtmlReporter moo > public/lint/index.html
+    - uv sync --no-install-package uwsgi
+    - uv run --no-sync pylint --fail-under=8 --output-format=pylint_gitlab.GitlabPagesHtmlReporter moo > public/lint/index.html
   artifacts:
     paths:
       - public
@@ -128,8 +132,8 @@ test:
         - pyproject.toml
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
   script:
-    - uv sync
-    - uv run pytest -n auto moo/ --junitxml=junit.xml --cov moo --cov-report term --cov-report xml:coverage.xml
+    - uv sync --no-install-package uwsgi
+    - uv run --no-sync pytest -n auto moo/ --junitxml=junit.xml --cov moo --cov-report term --cov-report xml:coverage.xml
   coverage: /(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/
   artifacts:
     when: always
