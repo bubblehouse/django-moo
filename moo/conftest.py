@@ -125,8 +125,17 @@ def pytest_collection_modifyitems(config, items):  # pylint: disable=unused-argu
                 marker.kwargs["serialized_rollback"] = True
 
 
+DB_FIXTURES = {"db", "transactional_db", "django_db_reset_sequences", "django_db_serialized_rollback"}
+
+
+def _uses_db(item):
+    return item.get_closest_marker("django_db") is not None or bool(
+        DB_FIXTURES & set(getattr(item, "fixturenames", ()))
+    )
+
+
 @pytest.fixture(autouse=True, scope="session")
-def _patch_django_test_teardown(django_db_setup, django_db_blocker):
+def _patch_django_test_teardown(request, django_db_setup, django_db_blocker):
     """Stabilize content_type PKs and patch tx-test teardown for snapshot use.
 
     Two collaborating fixes:
@@ -157,6 +166,13 @@ def _patch_django_test_teardown(django_db_setup, django_db_blocker):
     from django.core.management import call_command
     from django.db import connection
     from django.test import testcases
+
+    # pytest-django creates the test database only when a collected test asks
+    # for one. Without it, the flush below would hit the database named in the
+    # settings rather than a test copy.
+    if not any(_uses_db(item) for item in request.session.items):
+        yield
+        return
 
     # Step 1: re-baseline the snapshot to post-flush content_type order.
     with django_db_blocker.unblock():
