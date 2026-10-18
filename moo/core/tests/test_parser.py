@@ -433,18 +433,18 @@ def test_possessive_specifier_stays_as_specifier():
 
 
 # ---------------------------------------------------------------------------
-# Item 3 — period/comma/THEN compound-command splitter
+# Compound-command splitter (";" always; ".", "," and THEN when prose is on)
 # ---------------------------------------------------------------------------
 
 
 def test_split_fragments_no_separators_round_trips():
-    assert parse.split_command_fragments("look") == ["look"]
-    assert parse.split_command_fragments("take the leaflet") == ["take the leaflet"]
+    assert parse.split_command_fragments("look", prose=True) == ["look"]
+    assert parse.split_command_fragments("take the leaflet", prose=True) == ["take the leaflet"]
 
 
 def test_split_fragments_period_separates_with_alpha_continuation():
     """Period+space splits a Zork-style multi-action input into fragments."""
-    assert parse.split_command_fragments("take sword. kill troll with sword.") == [
+    assert parse.split_command_fragments("take sword. kill troll with sword.", prose=True) == [
         "take sword",
         "kill troll with sword.",
     ]
@@ -453,27 +453,27 @@ def test_split_fragments_period_separates_with_alpha_continuation():
 def test_split_fragments_trailing_period_kept():
     """Trailing period with no alpha continuation stays as text — so
     ``emote waves hello.`` reaches the verb intact."""
-    assert parse.split_command_fragments("emote waves hello.") == ["emote waves hello."]
+    assert parse.split_command_fragments("emote waves hello.", prose=True) == ["emote waves hello."]
 
 
 def test_split_fragments_period_no_space_kept():
     """``foo.bar`` (no space after period) is not a split — preserves
     decimals, abbreviations, file paths, etc."""
-    assert parse.split_command_fragments("@set obj prop 3.14") == ["@set obj prop 3.14"]
+    assert parse.split_command_fragments("@set obj prop 3.14", prose=True) == ["@set obj prop 3.14"]
 
 
 def test_split_fragments_comma_separates_with_alpha_continuation():
     """Commas split only when followed by whitespace + alpha."""
-    assert parse.split_command_fragments("walk, run") == ["walk", "run"]
+    assert parse.split_command_fragments("walk, run", prose=True) == ["walk", "run"]
 
 
 def test_split_fragments_at_prefixed_verb_splits():
     """Wizard/builder verbs starting with ``@`` are valid fragment heads."""
-    assert parse.split_command_fragments("@create thing, @set thing prop 1") == [
+    assert parse.split_command_fragments("@create thing, @set thing prop 1", prose=True) == [
         "@create thing",
         "@set thing prop 1",
     ]
-    assert parse.split_command_fragments("@create thing. @daemon list") == [
+    assert parse.split_command_fragments("@create thing. @daemon list", prose=True) == [
         "@create thing",
         "@daemon list",
     ]
@@ -481,8 +481,8 @@ def test_split_fragments_at_prefixed_verb_splits():
 
 def test_split_fragments_semicolon_separates():
     """``;`` is a separator alongside ``.`` and ``,``."""
-    assert parse.split_command_fragments("walk; run") == ["walk", "run"]
-    assert parse.split_command_fragments("@create thing; @set thing prop 1") == [
+    assert parse.split_command_fragments("walk; run", prose=True) == ["walk", "run"]
+    assert parse.split_command_fragments("@create thing; @set thing prop 1", prose=True) == [
         "@create thing",
         "@set thing prop 1",
     ]
@@ -490,13 +490,13 @@ def test_split_fragments_semicolon_separates():
 
 def test_split_fragments_semicolon_no_space_kept():
     """``;`` with no following whitespace+alpha is not a separator."""
-    assert parse.split_command_fragments("say a;b;c") == ["say a;b;c"]
+    assert parse.split_command_fragments("say a;b;c", prose=True) == ["say a;b;c"]
 
 
 def test_split_fragments_mixed_at_and_alpha_chain():
     """A single line can chain ``@``-verbs and plain verbs across separators."""
     line = "@create Generic Daemon named ticker; @set ticker interval 5; enable ticker; @daemon list"
-    assert parse.split_command_fragments(line) == [
+    assert parse.split_command_fragments(line, prose=True) == [
         "@create Generic Daemon named ticker",
         "@set ticker interval 5",
         "enable ticker",
@@ -508,51 +508,55 @@ def test_split_fragments_comma_no_space_kept():
     """``n,n,n`` (no spaces) is NOT split — cardinal-direction shorthand
     that the canonical splitter handled is sacrificed to protect ``[1,2,3]``
     JSON values."""
-    assert parse.split_command_fragments("n,n,n,e") == ["n,n,n,e"]
+    assert parse.split_command_fragments("n,n,n,e", prose=True) == ["n,n,n,e"]
 
 
 def test_split_fragments_inside_brackets_preserved():
     """Commas/periods inside ``()``, ``[]``, ``{}`` never split."""
-    assert parse.split_command_fragments("@set obj prop [1, 2, 3]") == ["@set obj prop [1, 2, 3]"]
-    assert parse.split_command_fragments('@set obj prop {"a": 1, "b": 2}') == ['@set obj prop {"a": 1, "b": 2}']
-    assert parse.split_command_fragments("call(a, b, c)") == ["call(a, b, c)"]
+    assert parse.split_command_fragments("@set obj prop [1, 2, 3]", prose=True) == ["@set obj prop [1, 2, 3]"]
+    assert parse.split_command_fragments('@set obj prop {"a": 1, "b": 2}', prose=True) == [
+        '@set obj prop {"a": 1, "b": 2}'
+    ]
+    assert parse.split_command_fragments("call(a, b, c)", prose=True) == ["call(a, b, c)"]
 
 
 def test_split_fragments_then_separates():
-    assert parse.split_command_fragments("walk then run") == ["walk", "run"]
+    assert parse.split_command_fragments("walk then run", prose=True) == ["walk", "run"]
 
 
 def test_split_fragments_then_is_word_boundary():
-    """``then`` only splits when it stands alone — not inside ``theory`` etc."""
-    assert parse.split_command_fragments("examine theory") == ["examine theory"]
-    assert parse.split_command_fragments("northen path") == ["northen path"]
+    """``then`` only splits when whitespace surrounds it — not inside ``theory`` or a hyphenated name."""
+    assert parse.split_command_fragments("test-create-then-fail", prose=True) == ["test-create-then-fail"]
+    assert parse.split_command_fragments("look at then-sign", prose=True) == ["look at then-sign"]
+    assert parse.split_command_fragments("examine theory", prose=True) == ["examine theory"]
+    assert parse.split_command_fragments("northen path", prose=True) == ["northen path"]
 
 
 def test_split_fragments_then_is_case_insensitive():
-    assert parse.split_command_fragments("walk THEN run") == ["walk", "run"]
-    assert parse.split_command_fragments("walk Then run") == ["walk", "run"]
+    assert parse.split_command_fragments("walk THEN run", prose=True) == ["walk", "run"]
+    assert parse.split_command_fragments("walk Then run", prose=True) == ["walk", "run"]
 
 
 def test_split_fragments_quoted_periods_preserved():
     """Periods inside quoted strings must not split the command."""
-    assert parse.split_command_fragments('say "hello sailor."') == ['say "hello sailor."']
-    assert parse.split_command_fragments("say 'a. b. c.'") == ["say 'a. b. c.'"]
+    assert parse.split_command_fragments('say "hello sailor."', prose=True) == ['say "hello sailor."']
+    assert parse.split_command_fragments("say 'a. b. c.'", prose=True) == ["say 'a. b. c.'"]
 
 
 def test_split_fragments_quoted_then_preserved():
     """``then`` inside quotes is just text, not a separator."""
-    assert parse.split_command_fragments('say "first then second"') == ['say "first then second"']
+    assert parse.split_command_fragments('say "first then second"', prose=True) == ['say "first then second"']
 
 
 def test_split_fragments_leading_then_dropped():
     """A leading ``then`` produces only the following fragment."""
-    assert parse.split_command_fragments("then go north") == ["go north"]
+    assert parse.split_command_fragments("then go north", prose=True) == ["go north"]
 
 
 def test_split_fragments_all_separators_falls_back():
     """An input of pure separators round-trips so the parser raises its usual error."""
-    assert parse.split_command_fragments("...") == ["..."]
-    assert parse.split_command_fragments(",,,") == [",,,"]
+    assert parse.split_command_fragments("...", prose=True) == ["..."]
+    assert parse.split_command_fragments(",,,", prose=True) == [",,,"]
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
@@ -564,9 +568,46 @@ def test_interpret_runs_each_fragment(t_init, t_wizard):
     t_wizard.add_verb("run", code="print('running')")
     printed = []
     with code.ContextManager(t_wizard, printed.append) as ctx:
-        parse.interpret(ctx, "walk. run")
-    assert "walking" in printed
-    assert "running" in printed
+        parse.interpret(ctx, "walk; run")
+    assert printed == ["walking", "running"]
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_interpret_splits_prose_only_when_enabled(t_init, t_wizard):
+    """``.`` splits a command only when the System Object sets ``split_prose_commands``."""
+    t_wizard.add_verb(
+        "walk",
+        code="from moo.sdk import context\nprint('walking ' + context.parser.get_dobj_str())",
+        direct_object="any",
+    )
+    t_wizard.add_verb("run", code="print('running')")
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, "walk fast. run")
+        assert printed == ["walking fast. run"]
+        printed.clear()
+        Object.objects.get(pk=1).set_property(parse.SPLIT_PROSE_PROPERTY, True)
+        parse.interpret(ctx, "walk fast. run")
+    assert printed == ["walking fast", "running"]
+
+
+# ---------------------------------------------------------------------------
+def test_split_fragments_prose_off_by_default():
+    """Without prose splitting, chat text reaches its verb whole; only ``;`` splits."""
+    for line in ("say hello, Bob", "emote nods, then leaves", "say I will go. You stay", "take sword then go north"):
+        assert parse.split_command_fragments(line) == [line]
+    assert parse.split_command_fragments("walk; run") == ["walk", "run"]
+
+
+def test_split_fragments_apostrophe_inside_a_word_is_text():
+    """``Bill's`` does not open a quote, so the separator after it still splits."""
+    assert parse.split_command_fragments("take Bill's spoon. drop it", prose=True) == ["take Bill's spoon", "drop it"]
+    assert parse.split_command_fragments("say don't; look") == ["say don't", "look"]
+
+
+def test_split_fragments_single_quote_spans_a_contraction():
+    """An apostrophe inside a single-quoted span does not close it."""
+    assert parse.split_command_fragments("say 'I'm here, ok' then look", prose=True) == ["say 'I'm here, ok'", "look"]
 
 
 # ---------------------------------------------------------------------------

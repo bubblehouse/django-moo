@@ -40,11 +40,17 @@ DjangoMOO's parser adds a few capabilities over the LambdaMOO original:
   doesn't accidentally split the argument. Quote-stripping and
   preposition recognition happen in the same pass.
 - **Compound commands.** A single input line can carry multiple
-  commands separated by `;`. Each segment runs through the full
-  parser pipeline in order — useful when automating a setup
-  sequence, scripting an agent's response to a token, or just
-  chaining two related operations from one prompt. Errors in one
-  segment do not stop the next.
+  commands separated by `;` followed by a space. Each segment runs
+  through the full parser pipeline in order, as its own transaction.
+  If a segment fails, its changes roll back, the segments before it
+  keep theirs, and the segments after it never run. A `;` inside
+  quotes or brackets is text. An apostrophe inside a word (`Bill's`,
+  `don't`) is text, not a quote.
+- **Adventure-style separators.** A world can also split commands at
+  `.`, `,` and the word `then` (`take sword. kill troll`) by setting
+  the System Object property `split_prose_commands` to true. It is
+  off by default, because those separators appear in ordinary chat:
+  with it on, `say hello, Bob` would run `Bob` as a second command.
 - **`@`-prefix verb heads.** The first token of a command may begin
   with `@`. The lexer treats `@dig`, `@npc`, `@edit`, etc. as a
   single verb name — no special meaning attaches to the `@` itself,

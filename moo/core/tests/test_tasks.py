@@ -145,6 +145,26 @@ def test_parse_command_rolls_back_a_failed_command(t_init: Object, t_wizard: Obj
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_parse_command_keeps_fragments_before_a_failure(t_init: Object, t_wizard: Object):
+    """In a compound line, a failed fragment keeps the fragments before it and stops the ones after."""
+    for name, verb_code in (
+        ("test-kept-write", 'from moo.sdk import create\ncreate(name="Kept", unique_name=True)'),
+        ("test-doomed-write", _create_then_fail("user")),
+        ("test-skipped-write", 'from moo.sdk import create\ncreate(name="Skipped", unique_name=True)'),
+    ):
+        v = t_wizard.add_verb(name, code=verb_code)
+        v.owner = t_wizard
+        v.save()
+
+    line = "test-kept-write; test-doomed-write; test-skipped-write"
+    _, exit_status = tasks.parse_command.apply(args=[t_wizard.pk, line]).get()
+    assert exit_status == 1
+    assert Object.objects.filter(name="Kept").exists()
+    assert not Object.objects.filter(name="Doomed").exists()
+    assert not Object.objects.filter(name="Skipped").exists()
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("failure", ["user", "crash"])
 def test_invoke_verb_rolls_back_a_failed_verb(t_init: Object, t_wizard: Object, failure: str):
     """An asynchronous verb that raises keeps none of its writes."""

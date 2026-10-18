@@ -49,11 +49,13 @@ def parse_command(self, caller_id: int, line: str) -> tuple[list[Any], int]:
         caller, output.append, task_id=task_id, track_events=True, site=site, player=caller
     ) as ctx:
         prefix = "[ERROR] " if get_session_setting("prefixes_mode", False) else ""
-        # The handlers sit outside the atomic block, so a failed command rolls back every write it made.
+        # Each fragment of a compound line is its own transaction. The handlers sit outside it, so a
+        # failed fragment rolls back every write it made, keeps the fragments before it, and stops the rest.
         try:
-            with transaction.atomic():
-                log.info(f"{caller}: {line}")
-                parse.interpret(ctx, line)
+            log.info(f"{caller}: {line}")
+            for fragment in parse.command_fragments(line):
+                with transaction.atomic():
+                    parse.interpret_fragment(ctx, fragment)
         except exceptions.UserError as e:
             log.error(f"{caller}: {e}")
             exit_status = 1

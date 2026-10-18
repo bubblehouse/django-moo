@@ -23,6 +23,7 @@ from .exceptions import (
     AmbiguousObjectError,
     NoSuchObjectError,
     NoSuchPrepositionError,
+    NoSuchPropertyError,
     NoSuchVerbError,
     UsageError,
 )
@@ -78,104 +79,131 @@ def _ispec_specificity(verb, present_preps):
     return len(declared & present_preps), len(declared - present_preps)
 
 
-def split_command_fragments(line: str) -> list[str]:
-    """
-    Split *line* into independent command fragments on ``.``, ``,``, ``;``,
-    and the standalone word ``THEN`` (case-insensitive).
+#: System Object property that turns on splitting at ``.``, ``,`` and ``then``.
+SPLIT_PROSE_PROPERTY = "split_prose_commands"
 
-    The splitter is intentionally conservative — only commands clearly
-    composed of multiple actions get split:
+
+def split_command_fragments(line: str, prose: bool = False) -> list[str]:
+    """
+    Split *line* into independent command fragments.
+
+    A ``;`` always separates commands. When *prose* is true, ``.``, ``,`` and
+    the word ``then`` (case-insensitive) also separate them, as in an
+    adventure game's ``take sword. kill troll``. Prose splitting is off by
+    default because it breaks chat text: ``say hello, Bob`` would run ``Bob``.
+
+    The splitter is conservative:
 
     - inside quoted strings (``"..."`` / ``'...'``) and bracketed regions
       (``()``, ``[]``, ``{}``), no separator splits anything;
-    - a ``.``, ``,``, or ``;`` only splits when followed by whitespace and
-      an alphabetic or ``@`` continuation (so ``emote waves hello.``,
-      ``@set x [1,2]``, and ``Bill's spoon`` all pass through untouched;
-      ``@``-prefixed wizard verbs after a separator do split);
-    - ``THEN`` only splits when it stands alone as a word.
+    - an apostrophe opens a quote only at the start of a word, so ``Bill's``
+      and ``don't`` are plain text;
+    - a ``;``, ``.`` or ``,`` splits only when whitespace and an alphabetic or
+      ``@`` continuation follow it, so ``emote waves hello.``,
+      ``@set x [1,2]`` and ``3.14`` pass through untouched;
+    - ``then`` splits only when whitespace or the line's ends surround it,
+      so ``theory`` and ``create-then-fail`` stay whole.
 
-    Empty fragments are dropped.  Lines with no separator hits round-trip
-    as a single-element list.
+    Empty fragments are dropped. A line with no separator returns as a
+    single-element list.
+
+    :param line: the command line the player typed
+    :param prose: also split at ``.``, ``,`` and ``then``
+    :returns: the command fragments, in order
     """
+    separators = (";", ".", ",") if prose else (";",)
     fragments: list[str] = []
     current: list[str] = []
     in_quote: str | None = None
     bracket_depth = 0
     i = 0
     n = len(line)
+
+    def flush():
+        frag = "".join(current).strip()
+        if frag:
+            fragments.append(frag)
+        current.clear()
+
     while i < n:
         ch = line[i]
         if in_quote:
             current.append(ch)
-            if ch == in_quote and (i == 0 or line[i - 1] != "\\"):
+            escaped = line[i - 1] == "\\"
+            # A closing apostrophe must end its word; ``I'm`` inside 'I'm here' stays open.
+            word_end = ch == '"' or i + 1 == n or not line[i + 1].isalnum()
+            if ch == in_quote and not escaped and word_end:
                 in_quote = None
             i += 1
             continue
-        if ch in ('"', "'"):
+        if ch == '"' or (ch == "'" and (i == 0 or line[i - 1].isspace() or line[i - 1] in "([{")):
             in_quote = ch
             current.append(ch)
             i += 1
             continue
         if ch in "([{":
             bracket_depth += 1
-            current.append(ch)
-            i += 1
-            continue
-        if ch in ")]}":
-            if bracket_depth > 0:
-                bracket_depth -= 1
-            current.append(ch)
-            i += 1
-            continue
-        if bracket_depth == 0 and ch in (".", ",", ";"):
+        elif ch in ")]}" and bracket_depth > 0:
+            bracket_depth -= 1
+        elif bracket_depth == 0 and ch in separators:
             # Require ``<sep> <whitespace>+ <alpha-or-@>`` to count as a real
-            # split. Trailing punctuation (``emote waves hello.``) and
-            # bracketed content (``[1, 2, 3]``) pass through untouched; ``@``
-            # is allowed because MOO wizard/builder verbs start with ``@``.
+            # split; ``@`` is allowed because MOO wizard/builder verbs start with it.
             j = i + 1
             while j < n and line[j] == " ":
                 j += 1
             if j > i + 1 and j < n and (line[j].isalpha() or line[j] == "@"):
-                frag = "".join(current).strip()
-                if frag:
-                    fragments.append(frag)
-                current = []
+                flush()
                 i = j
                 continue
-        # Standalone "then" (case-insensitive) as a fragment separator.
-        if bracket_depth == 0 and ch in ("t", "T") and line[i : i + 4].lower() == "then":
-            before_ok = i == 0 or not line[i - 1].isalnum()
-            after_ok = i + 4 == n or not line[i + 4].isalnum()
+        elif prose and bracket_depth == 0 and line[i : i + 4].lower() == "then":
+            before_ok = i == 0 or line[i - 1].isspace()
+            after_ok = i + 4 == n or line[i + 4].isspace()
             if before_ok and after_ok:
-                frag = "".join(current).strip()
-                if frag:
-                    fragments.append(frag)
-                current = []
+                flush()
                 i += 4
                 continue
         current.append(ch)
         i += 1
-    tail = "".join(current).strip()
-    if tail:
-        fragments.append(tail)
+    flush()
     return fragments or [line]
+
+
+def command_fragments(line: str) -> list[str]:
+    """
+    Split *line* into the commands it holds, as the active world configures it.
+
+    The System Object property ``split_prose_commands`` turns on splitting at
+    ``.``, ``,`` and ``then``; ``;`` always splits.
+
+    :param line: the command line the player typed
+    :returns: the command fragments, in order
+    """
+    system = Object.objects.get(unique_name=True, name="System Object")
+    try:
+        prose = bool(system.get_property(SPLIT_PROSE_PROPERTY, recurse=False))
+    except NoSuchPropertyError:
+        prose = False
+    return split_command_fragments(line, prose=prose)
 
 
 def interpret(ctx, line):
     """
     For a given user, execute a command.
 
-    The raw line is first split on period/comma/THEN separators (outside
-    quoted spans); each fragment is dispatched as its own command, matching
-    canonical adventure-game behaviour where ``take sword. kill troll.``
-    runs two turns.
+    Each fragment from :func:`command_fragments` runs as its own command, in
+    order. An error stops the fragments after it.
     """
-    for fragment in split_command_fragments(line):
-        _interpret_one(ctx, fragment)
+    for fragment in command_fragments(line):
+        interpret_fragment(ctx, fragment)
 
 
-def _interpret_one(ctx, line):
-    """Execute a single, already-split command fragment."""
+def interpret_fragment(ctx, line):
+    """
+    Execute one command fragment that :func:`command_fragments` returned.
+
+    :param ctx: the active :class:`~moo.core.code.ContextManager`
+    :param line: one command, with no separators left in it
+    """
     from . import context, lookup
 
     lex = Lexer(line)
