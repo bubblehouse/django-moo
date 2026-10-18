@@ -30,7 +30,15 @@ passthrough()
 
 now = datetime.datetime.now(datetime.timezone.utc)
 
-pronoun = this.psc
+
+def plain(value):
+    """Return a pronoun the player wrote as plain text: no markup, no control codes, short."""
+    value = str(value).replace("[", "(").replace("]", ")")
+    return "".join([ch for ch in value if ord(ch) >= 0x20 and ord(ch) != 0x7F])[:40]
+
+
+# The player owns their pronoun rows, and this text reaches other players' screens.
+pronoun = plain(this.psc)
 is_plural = this.ps == "they"
 to_be = "are" if is_plural else "is"
 to_have = "have" if is_plural else "has"
@@ -42,4 +50,6 @@ else:
     if idle_time < 60:
         print(f"{pronoun} {to_be} awake and {look_v} alert.")
     else:
-        print(f"{pronoun} {to_be} awake, but {this.ps} {to_have} been staring off into space for {idle_time} seconds.")
+        print(
+            f"{pronoun} {to_be} awake, but {plain(this.ps)} {to_have} been staring off into space for {idle_time} seconds."
+        )

@@ -248,6 +248,28 @@ def test_whereis_finds_player(t_init: Object, t_wizard: Object):
     assert any("in" in line for line in printed)
 
 
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_whereis_without_a_name_lists_connected_players(t_init: Object, t_wizard: Object):
+    """@whereis with no argument lists the connected players, or says nobody is connected."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, "@whereis")
+    assert any(
+        "Found the following players" in line or "No players are currently connected" in line for line in printed
+    ), printed
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_whereis_names_a_miss(t_init: Object, t_wizard: Object):
+    """@whereis says which name matched no one."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append) as ctx:
+        parse.interpret(ctx, "@whereis Nobodyatall")
+    assert any("no player named 'Nobodyatall'" in line for line in printed), printed
+
+
 # --- @sweep ---
 
 
@@ -421,6 +443,24 @@ def test_rename_to_a_unique_name_is_refused(t_init: Object, t_wizard: Object, se
             parse.interpret(ctx, "@rename widget to wizard")
         widget.refresh_from_db()
     assert widget.name == "widget"
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_rename_honours_a_deny_rule(t_init: Object, t_wizard: Object):
+    """An owner whom a rule denies `write` on their own object cannot @rename it."""
+    system = lookup(1)
+    with code.ContextManager(t_wizard, lambda _: None):
+        builder_npc = create("Apprentice", parents=[system.get_property("builder")], location=t_wizard.location)
+        builder_npc.owner = builder_npc
+        builder_npc.save()
+        builder_npc.deny(builder_npc, "write")
+    printed = []
+    with code.ContextManager(builder_npc, printed.append) as ctx:
+        parse.interpret(ctx, "@rename me to Journeyman")
+    builder_npc.refresh_from_db()
+    assert builder_npc.name == "Apprentice"
+    assert any("Permission denied" in line for line in printed)
 
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)

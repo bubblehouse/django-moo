@@ -51,6 +51,15 @@ substitutions = {
     "N": "name",
 }
 
+PRONOUNS = ("ps", "po", "pp", "pr", "psc", "poc", "ppc", "prc")
+
+
+def plain(pronoun):
+    """Return a pronoun the player wrote as plain text: no markup, no control codes, short."""
+    pronoun = str(pronoun).replace("[", "(").replace("]", ")")
+    return "".join([ch for ch in pronoun if ord(ch) >= 0x20 and ord(ch) != 0x7F])[:40]
+
+
 for match in re.finditer(r"%(\w|%)(\((\w+)\))?", text):
     result = match.group(0)
     vartype = match.group(1)
@@ -88,6 +97,9 @@ for match in re.finditer(r"%(\w|%)(\((\w+)\))?", text):
         except NoSuchPropertyError:
             if prop == "name":
                 result = who.name
+        # The player owns their pronoun rows, and the result reaches other players' screens.
+        if prop in PRONOUNS and result:
+            result = plain(result)
     if not result:
         result = f"%{vartype}"
     text = text.replace(match.group(0), result)

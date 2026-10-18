@@ -39,6 +39,18 @@ def test_look_self_shows_sleeping(t_init: Object, t_wizard: Object):
 
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
 @pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_look_self_shows_pronouns_as_plain_text(t_init: Object, t_wizard: Object):
+    """look_self() drops markup and control codes from a pronoun the player wrote."""
+    printed = []
+    with code.ContextManager(t_wizard, printed.append):
+        t_wizard.set_property("psc", "He\x1b[2J")
+        t_wizard.look_self()
+    line = next(str(p) for p in printed if "sleeping" in str(p))
+    assert "\x1b" not in line and line.startswith("He(2J")
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
 def test_look_self_shows_alert(t_init: Object, t_wizard: Object):
     """look_self() on a recently active player prints an alert status message."""
     now = datetime.datetime.now(datetime.timezone.utc)

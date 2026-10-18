@@ -9,8 +9,8 @@ Usage:
     @rename <object> to <new-name>
     @rename <object> as <new-name>
 
-The caller must own the object or be a wizard. Verb names are not
-affected by this command.
+The player must be allowed to `write` the object, which owners and wizards
+are unless a rule denies it. Verb names are not affected by this command.
 """
 
 from moo.sdk import context, UsageError
@@ -24,10 +24,13 @@ else:
     raise UsageError(f"Usage: {verb_name} <object> to|as <new-name>")
 if not new_name:
     raise UsageError("New name cannot be empty.")
-if not (context.player.is_wizard() or obj.owner == context.player):
+# This verb runs as its Wizard owner, so it checks the player who typed it, ACL rules included.
+if not context.player.is_allowed("write", obj):
     print("Permission denied.")
     return
 old_name = obj.title()
-obj.name = new_name
-obj.save()
+# set_name lets a class refuse a name; it raises UserError for a name that is taken or not allowed.
+if obj.set_name(new_name) is False:
+    print("Permission denied.")
+    return
 print(f"Renamed {old_name} to {new_name}.")

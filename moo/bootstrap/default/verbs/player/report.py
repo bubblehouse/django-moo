@@ -44,7 +44,7 @@ else:
     except NoSuchObjectError:
         target = None
 if target is None:
-    print("There is no one by that name here to report. Try `report here for <reason>`.")
+    print("There is no one by that name to report. Try `report here for <reason>`.")
     return
 account = account_for(target)
 reporter = account_for(player)

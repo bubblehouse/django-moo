@@ -257,6 +257,19 @@ def test_set_name_renames_object(t_init: Object, t_wizard: Object):
         assert obj.name == "renamed object"
 
 
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+@pytest.mark.parametrize("t_init", ["default"], indirect=True)
+def test_set_name_raises_for_a_taken_name(t_init: Object, t_wizard: Object):
+    """set_name() raises UserError for a name a unique-named Object holds, and leaves the name alone."""
+    with code.ContextManager(t_wizard, lambda msg: None):
+        obj = setup_obj(t_wizard)
+        before = obj.name
+        with pytest.raises(exceptions.UserError, match="already taken"):
+            obj.set_name("Wizard")
+        obj.refresh_from_db()
+        assert obj.name == before
+
+
 # --- examine ---
 
 

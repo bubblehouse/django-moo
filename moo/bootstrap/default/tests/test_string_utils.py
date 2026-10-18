@@ -27,6 +27,15 @@ def test_subjective_pronouns(t_init: Object, t_wizard: Object):
     assert result == "they said hello. They left."
 
 
+def test_pronouns_are_plain_text(t_init: Object, t_wizard: Object):
+    """A pronoun the player wrote reaches the text without markup or control codes."""
+    with code.ContextManager(t_wizard, lambda msg: None):
+        system = lookup(1)
+        t_wizard.set_property("psc", "He\x1b]0;owned\x07[bold]")
+        result = system.string_utils.pronoun_sub("%S left.")
+    assert result == "He)0;owned(bold) left."
+
+
 def test_objective_pronouns(t_init: Object, t_wizard: Object):
     """'%o' and '%O' are replaced with the plural objective pronouns."""
     with code.ContextManager(t_wizard, lambda msg: None):

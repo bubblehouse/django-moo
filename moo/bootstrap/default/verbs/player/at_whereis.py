@@ -1,33 +1,41 @@
-#!moo verb @whereis whereis --on $player --dspec any
+#!moo verb @whereis whereis --on $player --dspec either
 
 # pylint: disable=return-outside-function,undefined-variable
 
 """
-Locate a player in the virtual world. The code, shown below, allows any player to
-locate any other player. If no argument is given, a list of the locations of all the currently connected players is
-printed.
+Locate players in the virtual world. Any player may locate any other player.
 
-If an argument is given, the verb attempts to match with one or more player names. If no valid matches are found, a
-suitable error message is printed by invoking the verb $command_utils:player_match_result. That verb returns a list.
-The first element indicates whether any of the elements of the argument list didn't match. The rest of the list
-contains the objects references that did match.
-
-The verb runs through the list of object references, and reports the string returned by each player's whereis_location_msg verb.
+With no argument, the verb lists where every connected player is. With an
+argument, it looks up each name and reports the string returned by each match's
+``whereis_location_msg`` verb, then names any that did not match. Called as a
+method, each argument is a name to look up.
 """
 
-from moo.sdk import context, lookup, account_for, NoSuchObjectError
+from moo.sdk import context, lookup, account_for, connected_players, NoSuchObjectError
 
-targets = args if args else [context.parser.get_dobj_str()]
+if args:
+    targets = list(args)
+elif context.parser is not None and context.parser.has_dobj_str():
+    targets = [context.parser.get_dobj_str()]
+else:
+    targets = None
+
 matched = []
 unmatched = []
-for target in targets:
-    try:
-        result = lookup(target)
-        matched.append(result)
-    except NoSuchObjectError:
-        unmatched.append(target)
+if targets is None:
+    matched = list(connected_players())
+    if not matched:
+        print("No players are currently connected.")
+        return
+else:
+    for target in targets:
+        try:
+            matched.append(lookup(target))
+        except NoSuchObjectError:
+            unmatched.append(target)
 
-print("Found the following players:")
+if matched:
+    print("Found the following players:")
 for player in matched:
     line = player.whereis_location_msg()
     # Staff see the account behind a name, which may be a persona.
@@ -35,3 +43,5 @@ for player in matched:
     if account is not None:
         line += f" (acct {account.pk})"
     print(line)
+for name in unmatched:
+    print(f"There is no player named {name!r}.")
