@@ -118,7 +118,14 @@ def invoke(
             kwargs=kwargs_json,
         )
     else:
-        tasks.invoke_verb.apply_async(args, kwargs, countdown=delay)
+        from django.db import transaction  # pylint: disable=import-outside-toplevel
+
+        # Queue the task only once this task's writes commit: a command that raises
+        # rolls back, and the follow-up must not run against state that never existed.
+        if transaction.get_connection().in_atomic_block:
+            transaction.on_commit(lambda: tasks.invoke_verb.apply_async(args, kwargs, countdown=delay))
+        else:
+            tasks.invoke_verb.apply_async(args, kwargs, countdown=delay)
         return None
 
 

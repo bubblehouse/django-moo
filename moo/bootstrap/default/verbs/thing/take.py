@@ -14,7 +14,7 @@ may place a notion of strength onto a player, and add weight to objects. If an o
 then the object cannot be taken by the player. This sort of condition should be added to the `take` verb for the object
 """
 
-from moo.sdk import context, NoSuchObjectError
+from moo.sdk import context, within_reach, NoSuchObjectError
 
 # If "from <target>" was given, verify the object is actually placed on/near that target.
 if context.parser.has_pobj_str("from"):
@@ -33,6 +33,9 @@ if context.parser.has_pobj_str("from"):
 title = this.title()
 if this.location == context.player:
     print(f"You already have {title} in your inventory.")
+elif not within_reach(this):
+    # Called as a method, this verb gets no help from the parser, which only matches nearby things.
+    print(f"You can't reach {title} from here.")
 elif this.moveto(context.player):
     this.clear_placement()
     print(this.take_succeeded_msg(title))

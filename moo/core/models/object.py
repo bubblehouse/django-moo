@@ -43,6 +43,33 @@ _CACHE_VERB_MISSING = "__moo:verb:missing__"
 _CACHE_MISS = object()
 
 
+def _evict_cache_keys(keys):
+    """
+    Delete Redis attribute-cache `keys` now, and again when the transaction commits.
+
+    The write that made the keys stale is not visible to other sessions until the
+    commit. A session that reads before then caches the old value, so the keys are
+    deleted a second time on commit. The keys are also marked dirty for this session:
+    it bypasses Redis for them from now on, so a value that its transaction later
+    rolls back is never written to Redis.
+    """
+    keys = list(keys)
+    cache.delete_many(keys)
+    dirty = ContextManager.get_dirty_cache_keys()
+    if dirty is not None:
+        dirty.update(keys)
+    if transaction.get_connection().in_atomic_block:
+        transaction.on_commit(lambda: cache.delete_many(keys))
+
+
+def _clean_cache_key(key):
+    """Return `key`, or ``None`` when this session wrote it and must not use Redis for it."""
+    dirty = ContextManager.get_dirty_cache_keys()
+    if key is not None and dirty and key in dirty:
+        return None
+    return key
+
+
 def _make_ancestors_cte(self_pk, name="ancestors"):
     """
     Returns a recursive CTE yielding (object_id, depth, path_weight) for the given PK.
@@ -99,24 +126,22 @@ def relationship_changed(sender, instance, action, model, signal, reverse, pk_se
         parent_props = list(Property.objects.filter(origin=parent))
         if not parent_props:
             continue
-        # Identify which properties already exist on the child so we don't
-        # overwrite their values — only update owner/inherit_owner.
-        existing = {p.name: p for p in Property.objects.filter(origin=child, name__in=[p.name for p in parent_props])}
+        # A row the child already has is left alone: its value, owner and inherit_owner stay.
+        # Re-owning it here would let anyone who can add a parent take over the row, for
+        # example a Wizard-owned ownership_quota, with a parent they made for the purpose.
+        existing = set(
+            Property.objects.filter(origin=child, name__in=[p.name for p in parent_props]).values_list(
+                "name", flat=True
+            )
+        )
         to_create = []
-        to_update = []
         for prop in parent_props:
-            new_owner = prop.owner if prop.inherit_owner else child.owner
-            if prop.name in existing:
-                ep = existing[prop.name]
-                ep.owner = new_owner
-                ep.inherit_owner = prop.inherit_owner
-                to_update.append(ep)
-            else:
+            if prop.name not in existing:
                 to_create.append(
                     Property(
                         name=prop.name,
                         origin=child,
-                        owner=new_owner,
+                        owner=prop.owner if prop.inherit_owner else child.owner,
                         inherit_owner=prop.inherit_owner,
                         value=prop.value,
                         type=prop.type,
@@ -126,8 +151,6 @@ def relationship_changed(sender, instance, action, model, signal, reverse, pk_se
             # bulk_create returns objects with PKs populated; apply ACL in one shot.
             created = Property.objects.bulk_create(to_create)
             utils.apply_default_permissions_bulk(created)
-        if to_update:
-            Property.objects.bulk_update(to_update, ["owner", "inherit_owner"])
     # Rebuild the ancestor cache before firing `initialize`: has_verb/get_verb
     # join through AncestorCache, so the verb is invisible to lookup until the
     # cache reflects the parents added in this transaction.
@@ -542,11 +565,13 @@ class Object(models.Model, AccessibleMixin):
                             vcache.pop((self.pk, item, recurse_flag, return_first_flag), None)
         # Evict cross-session Redis verb cache entries for this object.
         if getattr(settings, "MOO_ATTRIB_CACHE_TTL", 120) > 0:
-            for name in names:
-                for item in utils.expand_wildcard(name):
-                    for recurse_flag in (True, False):
-                        for return_first_flag in (True, False):
-                            cache.delete(f"moo:verb:{self.pk}:{item}:{int(recurse_flag)}:{int(return_first_flag)}")
+            _evict_cache_keys(
+                f"moo:verb:{self.pk}:{item}:{int(recurse_flag)}:{int(return_first_flag)}"
+                for name in names
+                for item in utils.expand_wildcard(name)
+                for recurse_flag in (True, False)
+                for return_first_flag in (True, False)
+            )
         return verb
 
     def add_alias(self, alias: str) -> bool:
@@ -651,7 +676,11 @@ class Object(models.Model, AccessibleMixin):
         # expensive AncestorCache JOIN on repeated lookups across requests.
         # Bypassed when MOO_ATTRIB_CACHE_TTL=0 (e.g. tests).
         _cache_ttl = getattr(settings, "MOO_ATTRIB_CACHE_TTL", 120)
-        redis_key = None if _cache_ttl == 0 else f"moo:verb:{self.pk}:{name}:{int(recurse)}:{int(return_first)}"
+        redis_key = (
+            None
+            if _cache_ttl == 0
+            else _clean_cache_key(f"moo:verb:{self.pk}:{name}:{int(recurse)}:{int(return_first)}")
+        )
         if redis_key is not None:
             raw = cache.get(redis_key, _CACHE_MISS)
             if raw is not _CACHE_MISS:
@@ -775,25 +804,32 @@ class Object(models.Model, AccessibleMixin):
         # Descendant caches are not invalidated here. They expire within
         # MOO_ATTRIB_CACHE_TTL, which is acceptable for gameplay.
         if getattr(settings, "MOO_ATTRIB_CACHE_TTL", 120) > 0:
-            for recurse_flag in (True, False):
-                cache.delete(f"moo:prop:{self.pk}:{name}:{int(recurse_flag)}")
+            _evict_cache_keys(f"moo:prop:{self.pk}:{name}:{int(recurse_flag)}" for recurse_flag in (True, False))
 
     def _quota(self):
         """
         Return this object's own ``ownership_quota`` as an int, or ``None`` when it has none.
 
         The engine reads the row directly. The quota row belongs to a wizard, and
-        quota accounting must not depend on the permissions of the task.
+        quota accounting must not depend on the permissions of the task. A row whose
+        value is not an int reads as 0, so a corrupted quota fails closed.
         """
         from .. import moojson
 
         row = Property.objects.filter(name="ownership_quota", origin=self).first()
         if row is None:
             return None
-        value = moojson.loads(row.value)
-        return value if isinstance(value, int) else None
+        return self._quota_value(moojson.loads(row.value))
 
-    def _adjust_quota(self, delta):
+    @staticmethod
+    def _quota_value(value):
+        if value is None:
+            return None
+        if isinstance(value, bool) or not isinstance(value, int):
+            return 0
+        return value
+
+    def _adjust_quota(self, delta, spend=False):
         """
         Add `delta` to this object's own ``ownership_quota`` and return the new value.
 
@@ -801,13 +837,25 @@ class Object(models.Model, AccessibleMixin):
         ``soft_recycle()`` and ``restore()``. It writes the row with no
         permission check and does nothing when the object has no quota. Verb code
         cannot reach it, because the sandbox blocks underscore names.
+
+        The row is locked while it is read and written, so two concurrent tasks
+        cannot both spend the last unit.
+
+        :param spend: raise :class:`.QuotaError` instead of going below zero
+        :raises QuotaError: if `spend` is set and the quota is used up
         """
         from .. import moojson
 
-        current = self._quota()
-        if current is None:
-            return None
-        Property.objects.filter(name="ownership_quota", origin=self).update(value=moojson.dumps(current + delta))
+        with transaction.atomic():
+            row = Property.objects.select_for_update().filter(name="ownership_quota", origin=self).first()
+            if row is None:
+                return None
+            current = self._quota_value(moojson.loads(row.value))
+            if current is None:
+                return None
+            if spend and current + delta < 0:
+                raise exceptions.QuotaError(f"{self} has run out of quota.")
+            Property.objects.filter(pk=row.pk).update(value=moojson.dumps(current + delta))
         self._evict_property_cache("ownership_quota")
         return current + delta
 
@@ -839,7 +887,9 @@ class Object(models.Model, AccessibleMixin):
         # Bypassed when MOO_ATTRIB_CACHE_TTL=0 (e.g. tests, where the in-process cache
         # does not reset between test cases and would poison subsequent tests).
         _cache_ttl = getattr(settings, "MOO_ATTRIB_CACHE_TTL", 120)
-        cache_key = None if (original or _cache_ttl == 0) else f"moo:prop:{self.pk}:{name}:{int(recurse)}"
+        cache_key = (
+            None if (original or _cache_ttl == 0) else _clean_cache_key(f"moo:prop:{self.pk}:{name}:{int(recurse)}")
+        )
         if cache_key is not None:
             raw = cache.get(cache_key, _CACHE_MISS)
             if raw is not _CACHE_MISS:
@@ -1002,6 +1052,20 @@ class Object(models.Model, AccessibleMixin):
         record_action("destroy", target=self)
         super().delete(*args, **kwargs)
 
+    def _check_name_text(self):
+        """
+        Refuse a name that would carry markup or control codes to other players' screens.
+
+        Names are printed unescaped all over the place: room contents, ``say``, ``@who``,
+        announcements. Square brackets start Rich markup, and control characters reach a
+        raw-mode client as terminal escapes, so a name with either could fake a system
+        line or hide text.
+
+        :raises UserError: when the name holds ``[``, ``]`` or a control character
+        """
+        if any(ch in "[]" or ord(ch) < 0x20 or ord(ch) == 0x7F for ch in self.name):
+            raise exceptions.UserError("A name can't contain square brackets or control characters.")
+
     def _check_name_available(self):
         """
         Refuse a name that a unique-named Object on the same Site already holds.
@@ -1050,6 +1114,8 @@ class Object(models.Model, AccessibleMixin):
         # a new object (unsaved) cannot yet contain anything, so skip it there.
         if not unsaved and self.location and self.contains(self.location):
             raise exceptions.RecursiveError(f"{self} already contains {self.location}")
+        if unsaved or self.name != self._original_name:
+            self._check_name_text()
         if unsaved or self.name != self._original_name or self.unique_name != self._original_unique_name:
             self._check_name_available()
         with transaction.atomic():

@@ -147,7 +147,7 @@ must check the actor itself (see "Permissions/ACL" below).
 | External keys | `resolve_by_key`, `get_or_create_by_key` | O(1) idempotent resolve-or-create via an indexed `(site, namespace, key)` table, scoped to the active Site; wrapped in a transaction so a lost race never orphans an Object. |
 | Compute bounds | — | `MOO_TICK_BUDGET` caps per-task loop iterations (`TickLimitError`), finer than the Celery wall-clock kill. |
 | Object quota | `create` | `create()` raises `QuotaError` at zero; recycle refunds. Each avatar's `ownership_quota` row is Wizard-owned (`inherit_owner=True`), so a player cannot `@set` it. |
-| Actor checks | `caller_perms`, `require_caller_perms` | A command verb checks `context.player.is_allowed(...)`; a helper verb that changes `this` calls `require_caller_perms`. `$builder`/`$programmer` are not derivable by everyone. |
+| Actor checks | `caller_perms`, `require_caller_perms`, `within_reach` | A command verb checks `context.player.is_allowed(...)`; a helper verb that changes `this` calls `require_caller_perms`; a verb that moves an object for the player checks `within_reach`. `$builder`/`$programmer` are not derivable by everyone. Object names can't hold `[`, `]` or control characters. |
 | Transaction locks | `lock_until_commit` | Call before a read-modify-write of shared state. A Postgres advisory lock held until the task's transaction commits or rolls back; re-entrant; scoped to Site + calling verb's owner; raises `LockTimeout` after `wait` (max 10 s). No-op on SQLite. |
 
 New model-guard posture for a sandbox audit: `AuditLog` is append-only
@@ -162,10 +162,12 @@ A single deployment can host independent worlds. Each universe is a Django
 `Site` row. SSH has no protocol-level hostname indication, so connections
 either encode the Site domain in the username (`ssh user+sitedomain@host`)
 or are routed via the post-auth picker; webssh injects the suffix from the
-browser `Host` header automatically. Queries through `Object.objects` /
-`Property.objects` / `Verb.objects` are silently filtered to the active
-site by `SiteManager` (`moo/core/managers.py`), which also hides soft-recycled
-Objects (`recycled=True`). Use `Object.global_objects` for cross-site queries
+browser `Host` header automatically. Queries through `Object.objects` are
+silently filtered to the active site by `SiteManager` (`moo/core/managers.py`),
+which also hides soft-recycled Objects (`recycled=True`). `ExternalKey.objects`
+is filtered to the active site too. `Property.objects` and `Verb.objects` are
+**not** filtered: scope them through an Object (`origin__site=...`). Use
+`Object.global_objects` / `ExternalKey.global_objects` for cross-site queries
 or to see recycled rows (diagnostics, migrations, `@restore`).
 
 | Mechanism | Purpose |

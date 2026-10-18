@@ -559,6 +559,10 @@ _CONTEXT_VARS: dict[str, contextvars.ContextVar] = {
     # hot path mutates ``counter[0]`` in place rather than doing a contextvar
     # set per iteration. Fresh per session, reset on __exit__.
     "tick_counter": contextvars.ContextVar("tick_counter", default=None),
+    # Redis attribute-cache keys this session has written. The session neither reads
+    # nor fills Redis for them, so a value its transaction may still roll back never
+    # reaches another session. Fresh per session, reset on __exit__.
+    "dirty_cache_keys": contextvars.ContextVar("dirty_cache_keys", default=None),
 }
 
 
@@ -613,6 +617,10 @@ class ContextManager:
     @classmethod
     def get_prop_lookup_cache(cls) -> dict | None:
         return cls.get("prop_lookup_cache")
+
+    @classmethod
+    def get_dirty_cache_keys(cls) -> set | None:
+        return cls.get("dirty_cache_keys")
 
     @classmethod
     def get_scratch(cls) -> dict | None:
@@ -698,6 +706,7 @@ class ContextManager:
             "published_events": [] if track_events else None,
             "site": site,
             "tick_counter": [0],
+            "dirty_cache_keys": set(),
         }
 
     def set_parser(self, parser):

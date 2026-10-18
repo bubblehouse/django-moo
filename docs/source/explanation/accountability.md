@@ -65,7 +65,9 @@ caller is staff, because any verb can call it.
 
 Players report abuse with `report <player|here> for <reason>`. The report goes
 to the audit log with the target's account and the reporter's room, and to the
-`gripe_recipients` staff list by mail. Staff reading `@auditlog` or `@whereis`
+`gripe_recipients` staff list by mail. An account can file one report every
+`report_cooldown` seconds (a System Object property, 30 when unset), so a
+script cannot flood the staff mailbox. Staff reading `@auditlog` or `@whereis`
 see the account id beside each name, because a name can change and the account
 cannot. `emote` always puts the actor's name first, so no player can make
 another appear to act. An override of `emote1` receives that full line in
@@ -134,5 +136,9 @@ and recycling refunds it (a soft-recycle refunds once, and a later hard-destroy
 of an already-recycled object does not double-refund). Each avatar's quota row
 belongs to the Wizard (`inherit_owner=True` on `Generic Player`), so a player
 cannot raise their own quota with `@set`. The engine adjusts the row directly
-on `create()`, recycle, and restore. A future *measured* (byte) quota in
+on `create()`, recycle, and restore, and locks the row while it does, so two
+concurrent commands cannot both spend the last unit. A quota row whose value is
+not a whole number counts as used up, not as unlimited. Adding a parent never
+changes the owner of a row the object already has, so a parent made for the
+purpose cannot hand a player their own quota row. A future *measured* (byte) quota in
 addition to the object count is a possible later refinement, not a requirement.

@@ -5,17 +5,20 @@
 """
 This is a player command used to examine other objects in detail. It returns details of an object's `owner`,
 `location`, `parents`, and all the verbs and properties defined for the object, along with their values,
-if permissions allow.
+if permissions allow. The player needs `read` on the object, and on a verb or property shown by name.
 """
 
 from moo.sdk import context, open_paginator
 
 parser = context.parser
 player = context.player
+# This verb is Wizard-owned, so every read below succeeds; check the player instead.
 if not parser.has_pobj_str("on"):
     obj = parser.get_dobj(lookup=True)
+    player.is_allowed("read", obj, fatal=True)
 else:
     target = parser.get_pobj("on", lookup=True)
+    player.is_allowed("read", target, fatal=True)
     name = parser.get_dobj_str()
     obj = None
     try:
@@ -23,12 +26,13 @@ else:
     except Exception:  # pylint: disable=broad-except
         pass
     try:
-        obj = target.get_property(name, recurse=True)
+        obj = target.get_property(name, recurse=True, original=True)
     except Exception:  # pylint: disable=broad-except
         pass
     if obj is None:
         print(f"Couldn't find a verb or property named '{name}' on {target}.")
         return
+    player.is_allowed("read", obj, fatal=True)
 
 if obj.kind == "verb":
     open_paginator(context.player, obj.code, content_type="python")

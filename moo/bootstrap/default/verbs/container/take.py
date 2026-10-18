@@ -13,7 +13,7 @@ When you look at pipe now you should see:
     It is empty.
 """
 
-from moo.sdk import context, NoSuchObjectError
+from moo.sdk import context, within_reach, NoSuchObjectError
 
 if args:
     obj = args[0]
@@ -27,6 +27,11 @@ else:
         name = obj.title()
     except NoSuchObjectError:
         obj = this.find(name).first()
+
+# Called as a method, this verb gets no help from the parser, which only matches nearby things.
+if not within_reach(this):
+    print(f"You can't reach {this.title()} from here.")
+    return
 
 if not this.is_open():
     print(f"{this.title()} is closed.")

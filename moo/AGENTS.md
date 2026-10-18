@@ -196,6 +196,11 @@ check the actor before it changes anything for someone else.
   `context.player`, so a player can always move themselves through anyone's code.
   A Wizard-owned override that calls `passthrough()` needs its own check: the
   parent verb sees the Wizard as its caller.
+- **A verb that moves an object for the player checks `within_reach(obj)`.**
+  `take`, `put` and `give` call `moveto` as the Wizard. Typed as `take #N`, or
+  called as a method from `@eval` or a `@set ... to <expression>`, they get an
+  object from anywhere, including another player's inventory. `$exit.move`
+  moves only something standing at the exit's `source`.
 - **`set_property` never transfers a row.** An update keeps the row's owner and
   `inherit_owner`, and the `write` check runs against that owner. `write` on an
   object does not grant `write` on its existing property rows. A *new* row is

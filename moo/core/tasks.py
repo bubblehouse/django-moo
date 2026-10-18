@@ -175,4 +175,9 @@ def invoke_verb(
                     writer(f"[bold red]{prefix}{traceback.format_exc()}[/bold red]")
                 return
             if callback_verb_name and callback_this_id:
-                invoke_verb.delay(result, caller_id=caller_id, this_id=callback_this_id, verb_name=callback_verb_name)
+                # The callback sees this verb's writes, so queue it once they commit.
+                transaction.on_commit(
+                    lambda: invoke_verb.delay(
+                        result, caller_id=caller_id, this_id=callback_this_id, verb_name=callback_verb_name
+                    )
+                )

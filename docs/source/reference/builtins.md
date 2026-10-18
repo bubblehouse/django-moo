@@ -268,6 +268,8 @@ their id and inbound references.
    :no-index:
 .. autofunction:: moo.sdk.check_room_connectivity
    :no-index:
+.. autofunction:: moo.sdk.within_reach
+   :no-index:
 ```
 
 ## Indexed external keys

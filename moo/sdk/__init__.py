@@ -18,6 +18,7 @@ from .objects import (
     remove_player_record,
     resolve_by_key,
     get_or_create_by_key,
+    within_reach,
 )
 from .output import (
     write,
@@ -232,6 +233,7 @@ DIRECTION_SHORTCODES = {
 
 __all__ = [
     "lookup",
+    "within_reach",
     "create",
     "players",
     "connected_players",

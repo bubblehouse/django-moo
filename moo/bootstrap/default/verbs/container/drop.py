@@ -16,13 +16,19 @@ If pipe is open, then tobacco will be put into the pipe. If you look at pipe you
         tobacco
 """
 
-from moo.sdk import context, UsageError
+from moo.sdk import context, within_reach, UsageError
 
 if not args:
     if not (context.parser.has_pobj_str("in") or context.parser.has_pobj_str("on")):
         raise UsageError(f"Usage: {verb_name} <object> in/on {this.name}")
 
 obj = args[0] if args else context.parser.get_dobj()
+
+# Called as a method, this verb takes any object; only move what the player can reach.
+for item in (obj, this):
+    if not within_reach(item):
+        print(f"You can't reach {item.title()} from here.")
+        return
 
 if not this.is_open():
     print(f"{this.title()} is closed.")

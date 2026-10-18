@@ -13,7 +13,21 @@ value.
 from django.contrib.sites.models import Site
 from django.db import models
 
+from ..managers import _DB_NOT_READY, _current_site
 from .acl import WizardGuardedManager
+
+
+class SiteKeyManager(WizardGuardedManager):
+    """The guarded manager, filtered to the active Site the way ``Object.objects`` is."""
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        site = _current_site()
+        if site is _DB_NOT_READY:
+            return queryset
+        if site is None:
+            return queryset.none()
+        return queryset.filter(site=site)
 
 
 class ExternalKey(models.Model):
@@ -28,7 +42,9 @@ class ExternalKey(models.Model):
     # update/delete is refused. Row creation still follows normal object
     # ownership (a builder generating a keyed world is fine), so save() is not
     # wizard-gated — only the bulk-mutation paths are.
-    objects = WizardGuardedManager()
+    objects = SiteKeyManager()
+    #: Every Site's keys, for cross-universe diagnostics and the SDK, which picks the Site itself.
+    global_objects = WizardGuardedManager()
 
     #: The universe the key belongs to: always the Site of ``object``. Two
     #: universes that bootstrap the same dataset each get their own keys.

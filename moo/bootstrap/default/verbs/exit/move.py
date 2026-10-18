@@ -19,11 +19,19 @@ destination of the exit. Once this has been done, the arrive messages for the ex
 destination room's occupants.
 """
 
-from moo.sdk import context, room_info_payload, send_gmcp, NoSuchPropertyError
+from moo.sdk import context, room_info_payload, send_gmcp, require_caller_perms, NoSuchPropertyError
 
 thing = args[0]
 source = this.get_property("source")
 dest = this.get_property("dest")
+
+# This verb is Wizard-owned, so thing.moveto() below passes its move check. Only
+# something standing at the exit can go through it, and moving anything but the
+# player needs "move" permission for the code that called this verb.
+if thing.location != source:
+    return
+if context.player is None or thing.pk != context.player.pk:
+    require_caller_perms("move", thing)
 
 if not this.is_unlocked_for(thing):
     thing.tell(this.nogo_msg(source, dest))

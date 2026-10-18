@@ -106,10 +106,12 @@ universal wizard status is opt-in via this command.
 
 ## Site-scoped queries
 
-`Object.objects`, `Property.objects`, and `Verb.objects` all go through
-`SiteManager` and silently filter to the active site. To query across
-sites — for diagnostics, migrations, or admin tooling — use
-`Object.global_objects` (and the analogous globals on other models).
+`Object.objects` goes through `SiteManager` and silently filters to the
+active site, and `ExternalKey.objects` filters the same way.
+`Property.objects` and `Verb.objects` do not: filter them through their
+Object, for example `Property.objects.filter(origin__site=site)`. To query
+across sites (for diagnostics, migrations, or admin tooling), use
+`Object.global_objects` or `ExternalKey.global_objects`.
 
 Inside a verb, the active site is whatever the calling player connected
 to; you don't need to pass it explicitly. Inside management commands and

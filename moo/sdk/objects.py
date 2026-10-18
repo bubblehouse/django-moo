@@ -269,12 +269,9 @@ def create(name, *a, **kw):
             cache[_SYSTEM_KEY] = system
     default_parents = [system.root_class] if system.has_property("root_class") else []
     if context.caller:
-        # The quota row belongs to a wizard, so the engine adjusts it directly.
-        quota = context.caller._quota()  # pylint: disable=protected-access
-        if quota is not None:
-            if quota <= 0:
-                raise QuotaError(f"{context.caller} has run out of quota.")
-            context.caller._adjust_quota(-1)  # pylint: disable=protected-access
+        # The quota row belongs to a wizard, so the engine adjusts it directly. The
+        # adjustment locks the row and raises QuotaError when nothing is left.
+        context.caller._adjust_quota(-1, spend=True)  # pylint: disable=protected-access
         if "owner" not in kw:
             kw["owner"] = context.caller
     if "location" not in kw and "owner" in kw:
@@ -325,7 +322,7 @@ def resolve_by_key(namespace, key):
     from ..core.models import ExternalKey
 
     row = (
-        ExternalKey.objects.filter(site_id=_key_site_id(), namespace=namespace, key=key)
+        ExternalKey.global_objects.filter(site_id=_key_site_id(), namespace=namespace, key=key)
         .select_related("object")
         .first()
     )
@@ -362,7 +359,7 @@ def get_or_create_by_key(namespace, key, **kwargs):
         # orphaning it. ``atomic`` ensures that rollback when the insert raises.
         with transaction.atomic():
             obj = create(name, **kwargs)
-            ExternalKey.objects.create(site=obj.site, namespace=namespace, key=key, object=obj)
+            ExternalKey.global_objects.create(site=obj.site, namespace=namespace, key=key, object=obj)
         return obj, True
     except IntegrityError:
         # Another writer registered the same key first; return theirs.
@@ -370,6 +367,36 @@ def get_or_create_by_key(namespace, key, **kwargs):
         if existing is not None:
             return existing, False
         raise
+
+
+def within_reach(obj, who=None):
+    """
+    Return ``True`` if `who` could pick `obj` up or hand it over from where they stand.
+
+    `obj` is within reach when it is in `who`'s inventory, in `who`'s room, or nested
+    inside things that are, without passing through another player. The command parser
+    only matches nearby objects, but a verb called as a method takes any object, so a
+    Wizard-owned verb that moves an object on a player's behalf uses this check to
+    refuse one held by someone else or lying in another room.
+
+    :param obj: the Object to test
+    :param who: the player; defaults to ``context.player``
+    :rtype: bool
+    """
+    who = who if who is not None else context.player
+    if who is None or obj is None:
+        return False
+    room_id = who.location_id
+    holder = obj.location
+    seen = set()
+    while holder is not None and holder.pk not in seen:
+        if holder.pk == who.pk or (room_id is not None and holder.pk == room_id):
+            return True
+        if holder.is_player():
+            return False
+        seen.add(holder.pk)
+        holder = holder.location
+    return False
 
 
 def owned_objects(player_obj):

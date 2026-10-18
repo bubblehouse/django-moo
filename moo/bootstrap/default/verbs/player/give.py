@@ -8,7 +8,7 @@ the inventory of the indirect object. If, after the move, the object is still in
 is obvious that the recipient has rejected the gift. If this is the case, a suitable message is printed to the donor.
 """
 
-from moo.sdk import context
+from moo.sdk import context, within_reach
 
 player = context.player
 
@@ -27,6 +27,11 @@ if recipient == player:
     return
 
 gift = context.parser.get_dobj()
+
+# This verb is Wizard-owned, so moveto() lets it move anything; give only what the player can reach.
+if not within_reach(gift):
+    print(f"You can't reach {gift.title()} from here.")
+    return
 
 gift.moveto(recipient)
 if gift.location != recipient:

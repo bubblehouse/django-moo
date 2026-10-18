@@ -11,8 +11,14 @@ This is the verb to use for moving players through exits. It does not allow obje
 call to the exit's `move` verb is needed, with the object you wish to move through the exit as an argument.
 """
 
+from moo.sdk import context, require_caller_perms
+
 player = args[0]
 if not player.is_player():
     print("Only players can use exits.")
     return
+# The `move` verb trusts this Wizard-owned verb, so check the code that called it
+# before sending some other player through the exit.
+if context.player is None or player.pk != context.player.pk:
+    require_caller_perms("move", player)
 this.move(player)
