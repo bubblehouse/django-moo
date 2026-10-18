@@ -1,3 +1,9 @@
+## [1.19.2](https://gitlab.com/bubblehouse/django-moo/compare/v1.19.1...v1.19.2) (2026-10-18)
+
+### Bug Fixes
+
+* **core:** close holes found by the krustymoo audit ([fa78ced](https://gitlab.com/bubblehouse/django-moo/commit/fa78ced6bbcef72e90f86dea982a19170a3c9bbf)), closes [#N](https://gitlab.com/bubblehouse/django-moo/issues/N)
+
 ## [1.19.1](https://gitlab.com/bubblehouse/django-moo/compare/v1.19.0...v1.19.1) (2026-10-18)
 
 ### Bug Fixes
