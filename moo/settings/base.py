@@ -174,13 +174,15 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
-    "django.contrib.staticfiles",
     "django_ace",
     "django_extensions",
     "simplesshkey",
     "django_celery_beat",
     "django.contrib.sites",
     "moo.core",
+    # Below moo.core, whose collectstatic replaces this app's own: the first
+    # app in this list to define a command wins.
+    "django.contrib.staticfiles",
     "moo.shell",
     "allauth",
     "allauth.account",
